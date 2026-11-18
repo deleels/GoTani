@@ -10,10 +10,12 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 
+from core.pagination import paginate
 from inventory import services as inventory_services
 from inventory.models import Product, SpoilageRecord, StockLot
 
 from . import services
+
 from .access import FARM_ROLES, FINANCE_ROLES
 from .forms import (
     ActivityForm,
@@ -141,9 +143,10 @@ class ActivitiesView(FarmPage):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["activities"] = ActivityLog.objects.select_related(
+        ctx["page"] = paginate(self.request, ActivityLog.objects.select_related(
             "cycle__element", "cycle__variety", "input_item", "recorded_by"
-        )[:50]
+        ))
+        ctx["activities"] = ctx["page"].object_list
         return ctx
 
 
@@ -209,7 +212,8 @@ class ExpensesView(FarmPage):
         ctx = super().get_context_data(**kwargs)
         base = Expense.objects.select_related("category", "element", "cycle__variety", "absorbed_by")
         ctx["pending"] = base.filter(status=Expense.Status.PENDING).order_by("date_incurred", "id")
-        ctx["recent"] = base.exclude(status=Expense.Status.PENDING)[:40]
+        ctx["page"] = paginate(self.request, base.exclude(status=Expense.Status.PENDING))
+        ctx["recent"] = ctx["page"].object_list
         return ctx
 
 
@@ -257,9 +261,10 @@ class HarvestsView(FarmPage):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["batches"] = HarvestBatch.objects.select_related(
+        ctx["page"] = paginate(self.request, HarvestBatch.objects.select_related(
             "cycle__element", "cycle__variety"
-        ).order_by("-harvested_at", "-id")[:40]
+        ).order_by("-harvested_at", "-id"))
+        ctx["batches"] = ctx["page"].object_list
         return ctx
 
 
@@ -311,7 +316,8 @@ class SpoilageView(FarmPage):
         ctx["initial_product"] = next(
             (p["id"] for p in products.values() if initial_lot and int(initial_lot) in p["lots"]), None
         )
-        ctx["records"] = SpoilageRecord.objects.select_related("lot__product__variety", "recorded_by")[:40]
+        ctx["page"] = paginate(self.request, SpoilageRecord.objects.select_related("lot__product__variety", "recorded_by"))
+        ctx["records"] = ctx["page"].object_list
         return ctx
 
 

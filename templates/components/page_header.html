@@ -1,0 +1,7 @@
+{# Page header (D68): include with title= subtitle=; put actions in a following block. #}
+<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
+    {% if subtitle %}<p class="mt-1 text-sm text-stone-500">{{ subtitle }}</p>{% endif %}
+  </div>
+</div>

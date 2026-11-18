@@ -473,3 +473,48 @@ class ConcurrentCheckoutTests(TransactionTestCase):
 
         self.assertTrue(all(isinstance(r, SaleOrder) for r in results), results)
         self.assertEqual(len({r.order_number for r in results}), 2)
+
+
+class TaxTests(PosFixtures):
+    """Rules 19 & 21: tax-inclusive POS lines, snapshotted rate, analytics net of tax."""
+
+    def test_split_inclusive_tax_math(self):
+        from inventory.services import exclusive_tax, split_inclusive_tax
+
+        self.assertEqual(split_inclusive_tax(D("111000"), D("11")), (D("11000.00"), D("100000.00")))
+        self.assertEqual(split_inclusive_tax(D("15000"), 0), (D("0.00"), D("15000.00")))
+        self.assertEqual(split_inclusive_tax(D("10"), D("11")), (D("0.99"), D("9.01")))
+        self.assertEqual(exclusive_tax(D("100000"), D("11")), D("11000.00"))
+        with self.assertRaises(ValidationError):
+            split_inclusive_tax(D("1"), D("101"))
+
+    def test_untaxed_sale_keeps_gross_equal_net(self):
+        order = self.sell({self.high.pk: 10})
+        self.assertEqual((order.total_gross_idr, order.total_tax_idr, order.total_revenue_idr),
+                         (D("200000.00"), D("0.00"), D("200000.00")))
+
+    def test_taxed_line_snapshot_and_totals(self):
+        from inventory.models import Tax
+
+        ppn = Tax.objects.create(name="PPN", rate_pct=D("11"))
+        self.high.tax = ppn
+        self.high.save()
+        order = self.sell({self.high.pk: 10, self.low.pk: 5})
+        line = order.lines.get(product=self.high)
+        self.assertEqual(line.tax_rate_pct, D("11"))
+        self.assertEqual(line.tax_idr, D("19819.82"))  # 200000 x 11 / 111
+        self.assertEqual(line.net_revenue_idr, D("180180.18"))
+        self.assertEqual(order.total_gross_idr, D("240000.00"))
+        self.assertEqual(order.total_tax_idr, D("19819.82"))
+        self.assertEqual(order.total_revenue_idr, D("220180.18"))
+        ppn.rate_pct = D("12")
+        ppn.save()
+        line.refresh_from_db()
+        self.assertEqual(line.tax_rate_pct, D("11"))  # history unchanged
+
+    def test_inactive_tax_is_not_applied(self):
+        from inventory.models import Tax
+
+        self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"), is_active=False)
+        self.high.save()
+        self.assertEqual(self.sell({self.high.pk: 1}).total_tax_idr, D("0.00"))

@@ -25,7 +25,7 @@ def move_lot_stock(
 ) -> StockLot:
     """Apply a signed kg movement to one lot and log it. Returns the locked, updated lot.
 
-    Sign convention: HARVEST_IN / POS_VOID positive, POS_SALE / SPOILAGE negative.
+    Sign convention: HARVEST_IN / POS_VOID / INVOICE_VOID positive; POS_SALE / SPOILAGE / INVOICE_SALE negative.
     """
     qty_kg = Decimal(qty_kg).quantize(QTY_STEP)
     if qty_kg == 0:
@@ -208,3 +208,32 @@ def mass_balance_summary() -> dict:
         )["s"],
         "input_items": InputItem.objects.count(),
     }
+
+
+# ---------------------------------------------------------------------------
+# Tax math (rule 19, D46/D47). Money stays Decimal(14,2), ROUND_HALF_UP.
+# ---------------------------------------------------------------------------
+
+_CENT = Decimal("0.01")
+
+
+def _cents(value) -> Decimal:
+    return Decimal(value).quantize(_CENT, rounding=ROUND_HALF_UP)
+
+
+def split_inclusive_tax(gross, rate_pct) -> tuple[Decimal, Decimal]:
+    """POS: tax-inclusive gross -> (tax, net). tax = gross x rate / (100 + rate)."""
+    gross = _cents(gross)
+    rate = Decimal(rate_pct)
+    if rate < 0 or rate > 100:
+        raise ValidationError("Tarif pajak harus 0–100%.")
+    tax = _cents(gross * rate / (Decimal(100) + rate)) if rate else Decimal("0.00")
+    return tax, gross - tax
+
+
+def exclusive_tax(base, rate_pct) -> Decimal:
+    """Invoice: tax on a tax-exclusive base."""
+    rate = Decimal(rate_pct)
+    if rate < 0 or rate > 100:
+        raise ValidationError("Tarif pajak harus 0–100%.")
+    return _cents(Decimal(base) * rate / Decimal(100))

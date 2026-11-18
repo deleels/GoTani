@@ -13,7 +13,7 @@
         <td class="p-2">{{ o.created_at|date:"H:i" }}</td>
         <td class="p-2">{{ o.cashier }}</td>
         <td class="p-2">{{ o.get_payment_method_display }}</td>
-        <td class="p-2 text-right {% if o.status == 'VOIDED' %}line-through{% endif %}">{{ o.total_revenue_idr|rupiah }}</td>
+        <td class="p-2 text-right {% if o.status == 'VOIDED' %}line-through{% endif %}">{{ o.total_gross_idr|rupiah }}</td>
         <td class="p-2">{{ o.get_status_display }}</td>
         <td class="whitespace-nowrap p-2">
           <a class="text-emerald-700 underline" href="{% url 'pos:receipt' o.pk %}">Struk</a>

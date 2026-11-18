@@ -99,7 +99,7 @@ def forward_trace(cycle: CropCycle) -> ForwardTrace:
             for a in allocations:
                 if a.line.order.status == SaleOrder.Status.COMPLETED:
                     lt.sold_kg += a.qty_kg
-                    totals["revenue"] += a.qty_kg * a.line.unit_price_idr
+                    totals["revenue"] += a.line.net_revenue_idr * a.qty_kg / a.line.qty_kg
                     totals["cogs"] += a.qty_kg * a.unit_cogs_idr
                 else:
                     lt.voided_kg += a.qty_kg
@@ -279,7 +279,7 @@ def dashboard_metrics(start, end) -> dict:
         key = (line.product.variety.name, line.product.grade)
         row = by_product.setdefault(key, {"variety": key[0], "grade": key[1], "kg": ZERO, "revenue": ZERO, "cogs": ZERO})
         row["kg"] += line.qty_kg
-        row["revenue"] += line.qty_kg * line.unit_price_idr
+        row["revenue"] += line.net_revenue_idr
         row["cogs"] += sum((a.qty_kg * a.unit_cogs_idr for a in line.allocations.all()), ZERO)
     margin_rows = []
     for row in sorted(by_product.values(), key=lambda r: (r["variety"], r["grade"])):

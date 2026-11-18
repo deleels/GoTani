@@ -18,6 +18,27 @@ class Grade(models.TextChoices):
     LOW = "LOW", "Grade B (LOW)"
 
 
+class Tax(models.Model):
+    """Admin-editable tax rate (D46). Lines snapshot `rate_pct`; edits never rewrite history."""
+
+    name = models.CharField("nama", max_length=40)
+    rate_pct = models.DecimalField("tarif (%)", max_digits=5, decimal_places=2)
+    is_active = models.BooleanField("aktif", default=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "pajak"
+        verbose_name_plural = "pajak"
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(rate_pct__gte=0) & Q(rate_pct__lte=100), name="tax_rate_between_0_and_100"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.name} {self.rate_pct.normalize()}%"
+
+
 class Product(models.Model):
     variety = models.ForeignKey(
         Variety, on_delete=models.PROTECT, related_name="products", verbose_name="varietas"
@@ -27,6 +48,14 @@ class Product(models.Model):
     selling_price_idr = models.DecimalField(
         "harga jual per kg", null=True, blank=True, **MONEY
     )
+    # NULL = untaxed (fresh produce is generally PPN-exempt).
+    tax = models.ForeignKey(
+        Tax, on_delete=models.PROTECT, null=True, blank=True, related_name="products", verbose_name="pajak"
+    )
+
+    @property
+    def tax_rate_pct(self) -> Decimal:
+        return self.tax.rate_pct if self.tax is not None and self.tax.is_active else Decimal("0")
 
     class Meta:
         ordering = ["variety__name", "grade"]
@@ -133,6 +162,8 @@ class StockLedger(AppendOnlyModel):
         POS_SALE = "POS_SALE", "Penjualan POS"
         SPOILAGE = "SPOILAGE", "Susut/Rusak"
         POS_VOID = "POS_VOID", "Pembatalan POS"
+        INVOICE_SALE = "INVOICE_SALE", "Penjualan Invoice"
+        INVOICE_VOID = "INVOICE_VOID", "Pembatalan Invoice"
 
     # Sign convention per movement type (D20).
     SIGN = {
@@ -140,6 +171,8 @@ class StockLedger(AppendOnlyModel):
         MovementType.POS_SALE: -1,
         MovementType.SPOILAGE: -1,
         MovementType.POS_VOID: 1,
+        MovementType.INVOICE_SALE: -1,
+        MovementType.INVOICE_VOID: 1,
     }
 
     lot = models.ForeignKey(
@@ -157,8 +190,8 @@ class StockLedger(AppendOnlyModel):
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    Q(movement_type__in=["HARVEST_IN", "POS_VOID"], qty_kg__gt=0)
-                    | Q(movement_type__in=["POS_SALE", "SPOILAGE"], qty_kg__lt=0)
+                    Q(movement_type__in=["HARVEST_IN", "POS_VOID", "INVOICE_VOID"], qty_kg__gt=0)
+                    | Q(movement_type__in=["POS_SALE", "SPOILAGE", "INVOICE_SALE"], qty_kg__lt=0)
                 ),
                 name="stockledger_sign_matches_type",
             ),

@@ -19,7 +19,9 @@ class SaleOrder(models.Model):
     payment_method = models.CharField(
         "metode pembayaran", max_length=10, choices=PaymentMethod.choices
     )
-    total_revenue_idr = models.DecimalField("total pendapatan", default=0, **MONEY)
+    total_gross_idr = models.DecimalField("total dibayar", default=0, **MONEY)  # tax-inclusive
+    total_tax_idr = models.DecimalField("total pajak", default=0, **MONEY)
+    total_revenue_idr = models.DecimalField("total pendapatan", default=0, **MONEY)  # net of tax (D48)
     total_cogs_idr = models.DecimalField("total HPP", default=0, **MONEY)
     status = models.CharField(
         "status", max_length=10, choices=Status.choices, default=Status.COMPLETED
@@ -72,7 +74,10 @@ class OrderLineItem(models.Model):
         Product, on_delete=models.PROTECT, related_name="order_lines", verbose_name="produk"
     )
     qty_kg = models.DecimalField("kg", **QTY)
-    unit_price_idr = models.DecimalField("harga per kg", **MONEY)  # server-side snapshot
+    unit_price_idr = models.DecimalField("harga per kg", **MONEY)  # server-side snapshot, tax-inclusive
+    tax_rate_pct = models.DecimalField("tarif pajak (%)", max_digits=5, decimal_places=2, default=0)
+    tax_idr = models.DecimalField("pajak", default=0, **MONEY)
+    net_revenue_idr = models.DecimalField("pendapatan bersih", default=0, **MONEY)
     unit_cogs_idr = models.DecimalField("HPP per kg", **MONEY)  # weighted avg of allocations
 
     class Meta:

@@ -13,6 +13,7 @@ urlpatterns = [
     path("farm/", include("farm.urls")),
     path("pos/", include("pos.urls")),
     path("traceability/", include("reports.urls")),
+    path("", include("core.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
 ]

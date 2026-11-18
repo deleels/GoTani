@@ -20,7 +20,7 @@ from django.utils import timezone
 from farm.bootstrap import ROLE_CASHIER, ROLE_MANAGER, ROLE_OWNER, user_has_role
 from farm.models import PaymentMethod
 from inventory.models import Product, StockLedger, StockLot
-from inventory.services import move_lot_stock
+from inventory.services import move_lot_stock, split_inclusive_tax
 
 from .models import LineLotAllocation, OrderLineItem, SaleOrder
 
@@ -172,7 +172,7 @@ def checkout(items, payment_method: str, cashier, created_at=None) -> SaleOrder:
     created_at = created_at or timezone.now()
 
     product_ids = [line.product_id for line in cart]
-    products = Product.objects.select_related("variety").in_bulk(product_ids)
+    products = Product.objects.select_related("variety", "tax").in_bulk(product_ids)
     for line in cart:
         product = products.get(line.product_id)
         if product is None:
@@ -202,6 +202,8 @@ def checkout(items, payment_method: str, cashier, created_at=None) -> SaleOrder:
         raise ValidationError(shortages)
 
     order = _create_order(payment_method, cashier, created_at)
+    total_gross = ZERO
+    total_tax = ZERO
     total_revenue = ZERO
     total_cogs = ZERO
     for line in cart:
@@ -218,11 +220,17 @@ def checkout(items, payment_method: str, cashier, created_at=None) -> SaleOrder:
             line_cost += take * lot.unit_cogs_idr
             remaining -= take
 
+        rate = product.tax_rate_pct  # snapshot (D46); prices are tax-inclusive (D47)
+        gross = _q_money(line.qty_kg * price)
+        tax, net = split_inclusive_tax(gross, rate)
         order_line = OrderLineItem.objects.create(
             order=order,
             product=product,
             qty_kg=line.qty_kg,
             unit_price_idr=price,
+            tax_rate_pct=rate,
+            tax_idr=tax,
+            net_revenue_idr=net,
             unit_cogs_idr=_q_money(line_cost / line.qty_kg),
         )
         for lot, take in allocations:
@@ -236,12 +244,16 @@ def checkout(items, payment_method: str, cashier, created_at=None) -> SaleOrder:
                 reference=order.order_number,
                 timestamp=created_at,
             )
-        total_revenue += line.qty_kg * price
+        total_gross += gross
+        total_tax += tax
+        total_revenue += net
         total_cogs += line_cost
 
-    order.total_revenue_idr = _q_money(total_revenue)
+    order.total_gross_idr = total_gross
+    order.total_tax_idr = total_tax
+    order.total_revenue_idr = total_revenue
     order.total_cogs_idr = _q_money(total_cogs)
-    order.save(update_fields=["total_revenue_idr", "total_cogs_idr"])
+    order.save(update_fields=["total_gross_idr", "total_tax_idr", "total_revenue_idr", "total_cogs_idr"])
     return order
 
 
