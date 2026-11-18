@@ -129,7 +129,24 @@ if len(sys.argv) > 1 and sys.argv[1] == "test":
     # Fast hashing for tests only (fixtures create many users).
     PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
+# Errors (and gunicorn-served tracebacks) go to stdout -> journald on the VM.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "django": {"handlers": ["console"], "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"), "propagate": False},
+    },
+}
+
 if not DEBUG:
+    # Caddy terminates TLS (D33) and forwards X-Forwarded-Proto.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", default=True)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "3600"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # A *.duckdns.org subdomain cannot be submitted to the HSTS preload list (D39).
+    SILENCED_SYSTEM_CHECKS = ["security.W021"]

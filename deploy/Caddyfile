@@ -1,0 +1,30 @@
+# GoTani reverse proxy (D33/D39). setup_vm.sh replaces GOTANI_DOMAIN with the
+# DuckDNS hostname; Caddy then obtains and renews the HTTPS certificate itself.
+
+GOTANI_DOMAIN {
+	encode zstd gzip
+
+	# Uploaded expense receipts (MEDIA_ROOT). Static files are served by WhiteNoise.
+	handle_path /media/* {
+		root * /srv/gotani/media
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	request_body {
+		max_size 10MB
+	}
+
+	header {
+		-Server
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+	}
+
+	log {
+		output file /var/log/caddy/gotani.log
+	}
+}

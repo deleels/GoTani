@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: gotani
+          POSTGRES_PASSWORD: gotani
+          POSTGRES_DB: gotani
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gotani"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # D21: full suite on Postgres 16 so the select_for_update race test runs.
+      DATABASE_URL: postgres://gotani:gotani@localhost:5432/gotani
+      DEBUG: "True"
+      SECRET_KEY: ci-only-not-secret
+      DEMO_PASSWORD: ci-demo-password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Django system checks
+        run: python manage.py check
+
+      - name: No missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Tests with coverage
+        run: coverage run --source=farm,inventory,pos manage.py test --verbosity 2
+
+      - name: Coverage report (services.py >= 85%)
+        run: |
+          coverage report -m
+          coverage report -m --include="*/services.py" --fail-under=85
+
+      - name: seed_demo is idempotent and mass-balanced
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_demo
+          python manage.py seed_demo
+          python manage.py check_mass_balance
+
+      - name: Deployment checks
+        env:
+          DEBUG: "False"
+          SECRET_KEY: ci-deploy-check-${{ github.run_id }}-${{ github.sha }}-not-a-real-secret
+          ALLOWED_HOSTS: gotani.example.test
+        run: |
+          python manage.py check --deploy --fail-level WARNING
+          python manage.py collectstatic --noinput
