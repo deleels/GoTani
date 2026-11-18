@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Masuk{% endblock %}
+{% block content %}
+<div class="mx-auto mt-16 max-w-sm rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
+  <h1 class="mb-1 text-xl font-bold text-emerald-700">GoTani</h1>
+  <p class="mb-6 text-sm text-stone-500">Masuk untuk melanjutkan.</p>
+  {% if form.errors %}<p class="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-800">Nama pengguna atau kata sandi salah.</p>{% endif %}
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <label class="block text-sm">Nama pengguna
+      <input name="username" autofocus required autocomplete="username" class="mt-1 w-full rounded border-stone-300 px-3 py-2 border">
+    </label>
+    <label class="block text-sm">Kata sandi
+      <input type="password" name="password" required autocomplete="current-password" class="mt-1 w-full rounded border-stone-300 px-3 py-2 border">
+    </label>
+    <button class="w-full rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700">Masuk</button>
+  </form>
+</div>
+{% endblock %}

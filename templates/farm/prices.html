@@ -1,0 +1,36 @@
+{% extends "farm/_layout.html" %}
+{% load gotani %}
+{% block title %}Harga Produk{% endblock %}
+{% block content %}
+<h1 class="mb-1 text-lg font-semibold">Produk belum berharga</h1>
+<p class="mb-3 text-sm text-stone-500">Produk baru dari panen dibuat tanpa harga dan disembunyikan dari POS sampai harga ditetapkan.</p>
+<div class="mb-8 overflow-x-auto rounded-lg border bg-white">
+  <table class="w-full text-sm">
+    <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Produk</th><th class="p-2 text-right">Stok</th><th class="p-2">Tetapkan harga / kg</th></tr></thead>
+    <tbody>
+    {% for p in unpriced %}
+      <tr class="border-t"><td class="p-2">{{ p }}</td><td class="p-2 text-right">{{ p.stock_kg|kg }} kg</td>
+        <td class="p-2"><form method="post" class="flex gap-2">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
+          <input name="selling_price_idr" type="number" step="0.01" min="0.01" required placeholder="mis. 25000" class="w-40 rounded border border-stone-300 px-2 py-1">
+          <button class="rounded bg-emerald-600 px-3 py-1 text-white">Simpan</button></form></td></tr>
+    {% empty %}<tr><td colspan="3" class="p-3 text-stone-400">Semua produk sudah berharga.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="mb-3 font-semibold">Produk berharga</h2>
+<div class="overflow-x-auto rounded-lg border bg-white">
+  <table class="w-full text-sm">
+    <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Produk</th><th class="p-2 text-right">Stok</th><th class="p-2 text-right">Harga sekarang</th><th class="p-2">Ubah</th></tr></thead>
+    <tbody>
+    {% for p in priced %}
+      <tr class="border-t"><td class="p-2">{{ p }}</td><td class="p-2 text-right">{{ p.stock_kg|kg }} kg</td><td class="p-2 text-right">{{ p.selling_price_idr|rupiah }}</td>
+        <td class="p-2"><form method="post" class="flex flex-wrap gap-2">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
+          <input name="selling_price_idr" type="number" step="0.01" min="0.01" value="{{ p.selling_price_idr|stringformat:'s' }}" class="w-36 rounded border border-stone-300 px-2 py-1">
+          <button class="rounded bg-stone-800 px-3 py-1 text-white">Simpan</button>
+          <button name="clear" value="1" class="text-xs text-red-600 underline" formnovalidate onclick="return confirm('Hapus harga? Produk akan disembunyikan dari POS.')">Hapus harga</button></form></td></tr>
+    {% empty %}<tr><td colspan="4" class="p-3 text-stone-400">Belum ada.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

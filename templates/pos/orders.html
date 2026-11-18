@@ -1,0 +1,33 @@
+{% extends "pos/_layout.html" %}
+{% load gotani %}
+{% block title %}Order hari ini{% endblock %}
+{% block content %}
+<h1 class="mb-3 text-lg font-semibold">Order {{ today|date:"d-m-Y" }}</h1>
+<div class="overflow-x-auto rounded-lg border bg-white">
+  <table class="w-full text-sm">
+    <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Nomor</th><th class="p-2">Waktu</th><th class="p-2">Kasir</th><th class="p-2">Bayar</th><th class="p-2 text-right">Total</th><th class="p-2">Status</th><th class="p-2"></th></tr></thead>
+    <tbody>
+    {% for o in orders %}
+      <tr class="border-t {% if o.status == 'VOIDED' %}text-stone-400{% endif %}">
+        <td class="p-2 font-mono">{{ o.order_number }}</td>
+        <td class="p-2">{{ o.created_at|date:"H:i" }}</td>
+        <td class="p-2">{{ o.cashier }}</td>
+        <td class="p-2">{{ o.get_payment_method_display }}</td>
+        <td class="p-2 text-right {% if o.status == 'VOIDED' %}line-through{% endif %}">{{ o.total_revenue_idr|rupiah }}</td>
+        <td class="p-2">{{ o.get_status_display }}</td>
+        <td class="whitespace-nowrap p-2">
+          <a class="text-emerald-700 underline" href="{% url 'pos:receipt' o.pk %}">Struk</a>
+          {% if o.voidable %}
+          <form method="post" action="{% url 'pos:void' o.pk %}" class="inline" onsubmit="return confirm('Batalkan seluruh order {{ o.order_number }}? Stok akan dikembalikan.')">{% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'pos:orders' %}">
+            <button class="ml-2 text-red-600 underline">Batalkan</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}<tr><td colspan="7" class="p-3 text-stone-400">Belum ada order hari ini.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="mt-2 text-xs text-stone-400">Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER.</p>
+{% endblock %}

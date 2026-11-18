@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load gotani %}
+{% block title %}Telusur {{ order.order_number }}{% endblock %}
+{% block head %}<style>@page { size: A4 landscape; margin: 10mm; } @media print { table { font-size: 10px; } }</style>{% endblock %}
+{% block content %}
+<div class="no-print mb-4 flex flex-wrap gap-2 text-sm">
+  <a href="{% url 'reports:trace_index' %}" class="rounded bg-stone-100 px-3 py-1.5">← Ketertelusuran</a>
+  <a href="{% url 'pos:receipt' order.pk %}" class="rounded bg-stone-100 px-3 py-1.5">Struk</a>
+  <button onclick="window.print()" class="rounded bg-emerald-600 px-3 py-1.5 text-white">Cetak / Simpan PDF</button>
+  <a href="?format=csv" class="rounded bg-stone-800 px-3 py-1.5 text-white">Unduh CSV</a>
+</div>
+
+<h1 class="font-mono text-xl font-semibold">{{ order.order_number }}</h1>
+<p class="mb-4 text-sm text-stone-500">{{ order.created_at|date:"d-m-Y H:i" }} · kasir {{ order.cashier }} · {{ order.get_payment_method_display }} · {{ order.get_status_display }}{% if order.voided_at %} ({{ order.voided_at|date:"d-m-Y H:i" }} oleh {{ order.voided_by }}){% endif %} · total {{ order.total_revenue_idr|rupiah }} · HPP {{ order.total_cogs_idr|rupiah }}</p>
+
+{% for line in order.lines.all %}
+<section class="mb-4 rounded-lg border bg-white p-4">
+  <h2 class="font-medium">{{ line.product }} — {{ line.qty_kg|kg }} kg × {{ line.unit_price_idr|rupiah }} <span class="text-sm font-normal text-stone-500">(HPP rata-rata {{ line.unit_cogs_idr|rupiah }}/kg)</span></h2>
+  <div class="mt-2 overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-left text-stone-500"><tr><th class="p-1">Lot</th><th class="p-1 text-right">Kg</th><th class="p-1 text-right">HPP/kg</th><th class="p-1">Batch panen</th><th class="p-1">Siklus</th><th class="p-1">Elemen</th></tr></thead>
+      <tbody>
+      {% for a in line.allocations.all %}{% with b=a.lot.harvest_batch %}
+        <tr class="border-t">
+          <td class="p-1">#{{ a.lot_id }}</td>
+          <td class="p-1 text-right">{{ a.qty_kg|kg }}</td>
+          <td class="p-1 text-right">{{ a.unit_cogs_idr|rupiah }}</td>
+          <td class="p-1">#{{ b.pk }} · {{ b.harvested_at|date:"d-m-Y" }}</td>
+          <td class="p-1"><a class="text-emerald-700 underline" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }} (mulai {{ b.cycle.planting_start_date|date:"d-m-Y" }}, {{ b.cycle.get_stage_display }})</a></td>
+          <td class="p-1">{{ b.cycle.element }} · {{ b.cycle.element.get_element_type_display }}</td>
+        </tr>
+      {% endwith %}{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endfor %}
+{% endblock %}

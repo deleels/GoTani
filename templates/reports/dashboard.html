@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load gotani %}
+{% block title %}Dasbor{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  .viz-root { --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --grid: #e7e5e4; --ink-2: #57534e; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="viz-root">
+<form method="get" class="mb-5 flex flex-wrap items-end gap-3 text-sm">
+  <h1 class="mr-auto text-lg font-semibold">Dasbor analitik</h1>
+  <label>Dari<input type="date" name="start" value="{{ m.start|date:'Y-m-d' }}" class="ml-1 rounded border border-stone-300 px-2 py-1"></label>
+  <label>Sampai<input type="date" name="end" value="{{ m.end|date:'Y-m-d' }}" class="ml-1 rounded border border-stone-300 px-2 py-1"></label>
+  <button class="rounded bg-emerald-600 px-3 py-1.5 text-white">Terapkan</button>
+  {% if form.errors %}<p class="w-full text-right text-red-700">{{ form.non_field_errors|join:" " }} Menampilkan 30 hari terakhir.</p>{% endif %}
+</form>
+
+<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Pendapatan</div><div class="text-xl font-semibold">{{ k.revenue|rupiah }}</div><div class="text-xs text-stone-400">{{ k.orders }} order selesai</div></div>
+  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">HPP</div><div class="text-xl font-semibold">{{ k.cogs|rupiah }}</div></div>
+  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Laba kotor</div><div class="text-xl font-semibold">{{ k.gross_margin|rupiah }}</div><div class="text-xs text-stone-400">Margin {{ k.gross_margin_pct|pct }}</div></div>
+  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Kerugian susut/rusak</div><div class="text-xl font-semibold">{{ k.spoilage_loss|rupiah }}</div></div>
+  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Biaya siklus tak terserap</div><div class="text-xl font-semibold">{{ k.unabsorbed_cost|rupiah }}</div><div class="text-xs text-stone-400">Siklus ditutup dalam periode</div></div>
+  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Overhead umum</div><div class="text-xl font-semibold">{{ k.overhead|rupiah }}</div><div class="text-xs text-stone-400">Umum {{ k.overhead_general|rupiah }} + elemen tanpa siklus</div></div>
+  <div class="col-span-2 rounded-lg border-2 {% if k.net_profit < 0 %}border-red-300 bg-red-50{% else %}border-emerald-300 bg-emerald-50{% endif %} p-4">
+    <div class="text-xs text-stone-600">Laba bersih</div>
+    <div class="text-2xl font-bold">{{ k.net_profit|rupiah }}</div>
+    <div class="text-xs text-stone-500">Laba kotor − susut − tak terserap − overhead. Pembelian input (kas keluar, bukan beban): {{ k.input_purchases|rupiah }}</div>
+  </div>
+</div>
+
+{{ charts|json_script:"chart-data" }}
+<div class="grid gap-6 lg:grid-cols-2">
+  <section class="rounded-lg border bg-white p-4 lg:col-span-2">
+    <h2 class="mb-2 font-semibold">Pendapatan &amp; HPP harian</h2>
+    <div class="h-64"><canvas id="chart-daily" role="img" aria-label="Pendapatan dan HPP harian"></canvas></div>
+  </section>
+  <section class="rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">Margin per varietas × grade</h2>
+    <div class="h-64"><canvas id="chart-margin" role="img" aria-label="Pendapatan, HPP dan margin per varietas dan grade"></canvas></div>
+  </section>
+  <section class="rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">Hasil jual (kg/m²) per jenis elemen</h2>
+    <div class="h-64"><canvas id="chart-yield" role="img" aria-label="Kg layak jual per meter persegi per jenis elemen"></canvas></div>
+  </section>
+  <section class="rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">Produk terlaris (pendapatan)</h2>
+    <div class="h-64"><canvas id="chart-top" role="img" aria-label="Lima produk dengan pendapatan tertinggi"></canvas></div>
+  </section>
+  <section class="rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">Biaya per kategori (disetujui)</h2>
+    <div class="h-64"><canvas id="chart-expenses" role="img" aria-label="Biaya disetujui per kategori"></canvas></div>
+  </section>
+</div>
+
+<section class="mt-6 rounded-lg border bg-white p-4">
+  <h2 class="mb-2 font-semibold">Tabel margin per varietas × grade</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-left text-stone-500"><tr><th class="p-2">Varietas</th><th class="p-2">Grade</th><th class="p-2 text-right">Kg terjual</th><th class="p-2 text-right">Pendapatan</th><th class="p-2 text-right">HPP</th><th class="p-2 text-right">Margin</th><th class="p-2 text-right">%</th></tr></thead>
+      <tbody>
+      {% for r in m.margin_by_product %}
+        <tr class="border-t"><td class="p-2">{{ r.variety }}</td><td class="p-2">{{ r.grade }}</td><td class="p-2 text-right">{{ r.kg|kg }}</td><td class="p-2 text-right">{{ r.revenue|rupiah }}</td><td class="p-2 text-right">{{ r.cogs|rupiah }}</td><td class="p-2 text-right">{{ r.margin|rupiah }}</td><td class="p-2 text-right">{{ r.margin_pct|pct }}</td></tr>
+      {% empty %}<tr><td colspan="7" class="p-3 text-stone-400">Tidak ada penjualan pada periode ini.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if m.yield_by_type %}
+  <h3 class="mb-1 mt-4 text-sm font-medium text-stone-500">Hasil per jenis elemen</h3>
+  <table class="w-full text-sm">
+    {% for r in m.yield_by_type %}<tr class="border-t"><td class="p-2">{{ r.type }}</td><td class="p-2 text-right">{{ r.kg|kg }} kg</td><td class="p-2 text-right">{{ r.area_m2|kg }} m²</td><td class="p-2 text-right font-medium">{{ r.kg_per_m2|kg }} kg/m²</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+</section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  if (!window.Chart) return;
+  const data = JSON.parse(document.getElementById('chart-data').textContent);
+  const css = getComputedStyle(document.querySelector('.viz-root'));
+  const c = (name) => css.getPropertyValue(name).trim();
+  const rp = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
+  Chart.defaults.font.family = 'ui-sans-serif, system-ui, sans-serif';
+  Chart.defaults.color = c('--ink-2');
+  Chart.defaults.maintainAspectRatio = false;
+  const grid = { color: c('--grid') };
+  const moneyAxis = { beginAtZero: true, grid, ticks: { callback: (v) => rp(v) } };
+  const bar = { borderRadius: 4, borderSkipped: 'start', maxBarThickness: 36 };
+  const moneyTip = { callbacks: { label: (ctx) => `${ctx.dataset.label ? ctx.dataset.label + ': ' : ''}${rp(ctx.parsed.y ?? ctx.parsed.x ?? ctx.parsed)}` } };
+  const empty = (id, labels) => {
+    if (labels.length) return false;
+    document.getElementById(id).parentElement.innerHTML = '<p class="pt-20 text-center text-sm text-stone-400">Tidak ada data pada periode ini.</p>';
+    return true;
+  };
+
+  new Chart(document.getElementById('chart-daily'), {
+    type: 'line',
+    data: { labels: data.daily.labels, datasets: [
+      { label: 'Pendapatan', data: data.daily.revenue, borderColor: c('--series-1'), backgroundColor: c('--series-1'), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
+      { label: 'HPP', data: data.daily.cogs, borderColor: c('--series-2'), backgroundColor: c('--series-2'), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
+    ] },
+    options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: { grid: { display: false } } }, plugins: { tooltip: moneyTip } },
+  });
+
+  if (!empty('chart-margin', data.margin.labels)) new Chart(document.getElementById('chart-margin'), {
+    type: 'bar',
+    data: { labels: data.margin.labels, datasets: [
+      { label: 'Pendapatan', data: data.margin.revenue, backgroundColor: c('--series-1'), ...bar },
+      { label: 'HPP', data: data.margin.cogs, backgroundColor: c('--series-2'), ...bar },
+      { label: 'Margin', data: data.margin.margin, backgroundColor: c('--series-3'), ...bar },
+    ] },
+    options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: { grid: { display: false } } }, plugins: { tooltip: moneyTip } },
+  });
+
+  if (!empty('chart-yield', data.yield.labels)) new Chart(document.getElementById('chart-yield'), {
+    type: 'bar',
+    data: { labels: data.yield.labels, datasets: [{ label: 'kg/m²', data: data.yield.values, backgroundColor: c('--series-1'), ...bar }] },
+    options: { scales: { y: { beginAtZero: true, grid }, x: { grid: { display: false } } },
+               plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.parsed.y.toLocaleString('id-ID', { maximumFractionDigits: 3 }) + ' kg/m²' } } } },
+  });
+
+  const hbar = (id, labels, values) => {
+    if (empty(id, labels)) return;
+    new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: { labels, datasets: [{ data: values, backgroundColor: c('--series-1'), ...bar }] },
+      options: { indexAxis: 'y', scales: { x: { beginAtZero: true, grid, ticks: { callback: (v) => rp(v) } }, y: { grid: { display: false } } },
+                 plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => rp(ctx.parsed.x) } } } },
+    });
+  };
+  hbar('chart-top', data.top.labels, data.top.values);
+  hbar('chart-expenses', data.expenses.labels, data.expenses.values);
+})();
+</script>
+{% endblock %}

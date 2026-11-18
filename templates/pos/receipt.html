@@ -1,0 +1,66 @@
+{% extends "pos/_layout.html" %}
+{% load gotani %}
+{% block title %}Struk {{ order.order_number }}{% endblock %}
+{% block head %}
+<style>
+  .receipt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff; color: #000; }
+  .receipt.size-58 { width: 58mm; padding: 3mm; font-size: 11px; line-height: 1.35; }
+  .receipt.size-a4 { width: 100%; max-width: 180mm; padding: 10mm; font-size: 13px; }
+  .receipt .void-stamp { border: 2px solid #b91c1c; color: #b91c1c; text-align: center; font-weight: 700; padding: 2px; margin: 4px 0; }
+  @media print {
+    header, .no-print { display: none !important; }
+    main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+    .receipt { box-shadow: none !important; border: 0 !important; margin: 0 !important; }
+  }
+  {% if size == "58" %}@page { size: 58mm auto; margin: 0; }{% else %}@page { size: A4; margin: 12mm; }{% endif %}
+</style>
+{% endblock %}
+{% block content %}
+<div class="no-print mb-4 flex flex-wrap items-center gap-2 text-sm">
+  <a href="?size=58" class="rounded px-3 py-1.5 {% if size == '58' %}bg-stone-800 text-white{% else %}bg-stone-100{% endif %}">Thermal 58 mm</a>
+  <a href="?size=a4" class="rounded px-3 py-1.5 {% if size == 'a4' %}bg-stone-800 text-white{% else %}bg-stone-100{% endif %}">A4</a>
+  <button onclick="window.print()" class="rounded bg-emerald-600 px-3 py-1.5 text-white">Cetak</button>
+  <a href="{% url 'pos:register' %}" class="rounded bg-stone-100 px-3 py-1.5">Transaksi baru</a>
+  {% if can_void %}
+  <form method="post" action="{% url 'pos:void' order.pk %}" class="ml-auto" onsubmit="return confirm('Batalkan seluruh order {{ order.order_number }}? Stok akan dikembalikan.')">{% csrf_token %}
+    <button class="rounded border border-red-300 px-3 py-1.5 text-red-700">Batalkan order</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="receipt size-{{ size }} mx-auto border shadow-sm">
+  <div style="text-align:center">
+    <div style="font-weight:700;font-size:1.2em">GoTani</div>
+    <div>Hasil kebun segar</div>
+  </div>
+  <hr style="border-top:1px dashed #000;margin:6px 0">
+  <div>No   : {{ order.order_number }}</div>
+  <div>Tgl  : {{ order.created_at|date:"d-m-Y H:i" }}</div>
+  <div>Kasir: {{ order.cashier.get_full_name|default:order.cashier.username }}</div>
+  {% if order.status == 'VOIDED' %}<div class="void-stamp">DIBATALKAN {{ order.voided_at|date:"d-m-Y H:i" }}</div>{% endif %}
+  <hr style="border-top:1px dashed #000;margin:6px 0">
+  {% if size == "a4" %}
+  <table style="width:100%;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid #000;text-align:left"><th>Produk</th><th style="text-align:right">Kg</th><th style="text-align:right">Harga/kg</th><th style="text-align:right">Subtotal</th></tr></thead>
+    <tbody>
+    {% for line in order.lines.all %}
+      <tr><td>{{ line.product }}</td><td style="text-align:right">{{ line.qty_kg|kg }}</td><td style="text-align:right">{{ line.unit_price_idr|rupiah }}</td><td style="text-align:right">{{ line.subtotal_idr|rupiah }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% for line in order.lines.all %}
+  <div>{{ line.product.variety.name }} ({{ line.product.grade }})</div>
+  <div style="display:flex;justify-content:space-between"><span>&nbsp;{{ line.qty_kg|kg }} kg x {{ line.unit_price_idr|rupiah }}</span><span>{{ line.subtotal_idr|rupiah }}</span></div>
+  {% endfor %}
+  {% endif %}
+  <hr style="border-top:1px dashed #000;margin:6px 0">
+  <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1em"><span>TOTAL</span><span>{{ order.total_revenue_idr|rupiah }}</span></div>
+  <div style="display:flex;justify-content:space-between"><span>Bayar</span><span>{{ order.get_payment_method_display }}</span></div>
+  <hr style="border-top:1px dashed #000;margin:6px 0">
+  <div style="text-align:center">Terima kasih!</div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if is_new %}<script>try { localStorage.removeItem('gotani-cart'); } catch (e) {}</script>{% endif %}
+{% endblock %}

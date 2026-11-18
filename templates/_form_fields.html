@@ -1,0 +1,15 @@
+{% if form.non_field_errors %}
+<div class="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>
+{% endif %}
+<div class="grid gap-3 {{ cols|default:'sm:grid-cols-2' }}">
+{% for field in form %}
+  {% if field.is_hidden %}{{ field }}{% else %}
+  <label class="block text-sm {% if field.field.widget.input_type == 'textarea' or field.name == 'notes' %}sm:col-span-full{% endif %}">
+    <span class="text-stone-600">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</span>
+    <div class="mt-1">{{ field }}</div>
+    {% if field.help_text %}<span class="text-xs text-stone-400">{{ field.help_text }}</span>{% endif %}
+    {% for e in field.errors %}<span class="block text-xs text-red-600">{{ e }}</span>{% endfor %}
+  </label>
+  {% endif %}
+{% endfor %}
+</div>

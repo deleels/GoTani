@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block subnav %}
+<div class="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 text-sm">
+  {% with t=tab %}
+  <a href="{% url 'farm:cycles' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'cycles' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Elemen &amp; Siklus</a>
+  <a href="{% url 'farm:activities' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'activities' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Log Kegiatan</a>
+  <a href="{% url 'farm:inputs' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'inputs' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Input Produksi</a>
+  {% if roles.finance %}<a href="{% url 'farm:expenses' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'expenses' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Biaya &amp; Persetujuan</a>{% endif %}
+  <a href="{% url 'farm:harvests' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'harvests' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Panen</a>
+  <a href="{% url 'farm:spoilage' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'spoilage' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Susut/Rusak</a>
+  {% if roles.finance %}<a href="{% url 'farm:prices' %}" class="whitespace-nowrap rounded-full px-3 py-1 {% if t == 'prices' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Harga Produk</a>{% endif %}
+  {% endwith %}
+</div>
+{% endblock %}
