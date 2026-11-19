@@ -19,6 +19,7 @@ from django.utils import timezone
 
 from farm.bootstrap import ROLE_CASHIER, ROLE_MANAGER, ROLE_OWNER, user_has_role
 from farm.models import PaymentMethod
+from core.numbers import parse_id_decimal
 from inventory.models import Product, StockLedger, StockLot
 from inventory.services import move_lot_stock, split_inclusive_tax
 
@@ -34,7 +35,7 @@ _NUMBER_RETRIES = 5
 
 
 def _q_qty(value) -> Decimal:
-    return Decimal(value).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
+    return parse_id_decimal(value).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
 
 
 def _q_money(value) -> Decimal:

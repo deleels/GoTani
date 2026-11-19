@@ -6,6 +6,7 @@ Quantities change only through `inventory.services.move_lot_stock()` (rule 13).
 from decimal import Decimal
 
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F, Q, Sum
 from django.utils import timezone
@@ -48,6 +49,9 @@ class Product(models.Model):
     selling_price_idr = models.DecimalField(
         "harga jual per kg", null=True, blank=True, **MONEY
     )
+    # D81: kasir − / + step and quick-pick chips (step × 1, 2, 4, 10).
+    pos_step_kg = models.DecimalField("langkah kasir (kg)", max_digits=10, decimal_places=3, default=Decimal("0.5"),
+                                      validators=[MinValueValidator(Decimal("0.001"))])
     # NULL = untaxed (fresh produce is generally PPN-exempt).
     tax = models.ForeignKey(
         Tax, on_delete=models.PROTECT, null=True, blank=True, related_name="products", verbose_name="pajak"

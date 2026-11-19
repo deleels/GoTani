@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 
+from core.numbers import format_id_decimal, parse_id_decimal
 from core.pagination import paginate
 from core.services import get_farm_profile
 from farm.access import FINANCE_ROLES, RoleRequiredMixin
@@ -18,6 +19,14 @@ from inventory.models import Product
 from . import services
 from .forms import BuyerForm, CreditForm, InvoiceHeaderForm, IssueForm, PaymentForm, parse_invoice_lines
 from .models import Buyer, Invoice, InvoiceLine, InvoiceLineLotAllocation, InvoicePayment
+
+
+def _id_text(raw, places):
+    """Echo a submitted number back in Indonesian format; unparseable text is echoed as-is."""
+    try:
+        return format_id_decimal(parse_id_decimal(raw), places) if raw.strip() else ""
+    except Exception:
+        return raw
 
 ZERO = services.ZERO
 
@@ -190,7 +199,8 @@ class InvoiceEditorView(FinanceView):
                 "buyer": invoice.buyer_id, "discount_type": invoice.discount_type,
                 "discount_value": invoice.discount_value, "shipping_idr": invoice.shipping_idr, "notes": invoice.notes,
             })
-            lines = [{"product": ln.product_id, "qty": str(ln.qty_kg), "price": str(ln.unit_price_idr)}
+            lines = [{"product": ln.product_id, "qty": format_id_decimal(ln.qty_kg, 3),
+                      "price": format_id_decimal(ln.unit_price_idr, 2)}
                      for ln in invoice.lines.all()]
         else:
             form = InvoiceHeaderForm(initial={"buyer": request.GET.get("buyer")})
@@ -202,7 +212,8 @@ class InvoiceEditorView(FinanceView):
         form = InvoiceHeaderForm(request.POST)
         raw = list(zip(request.POST.getlist("product_id"), request.POST.getlist("qty_kg"),
                        request.POST.getlist("unit_price")))
-        echo = [{"product": int(p) if p.isdigit() else "", "qty": q, "price": pr} for p, q, pr in raw]
+        echo = [{"product": int(p) if p.isdigit() else "", "qty": _id_text(q, 3), "price": _id_text(pr, 2)}
+                for p, q, pr in raw]
         if form.is_valid():
             try:
                 lines = parse_invoice_lines(request.POST)

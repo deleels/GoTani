@@ -536,3 +536,32 @@ class TaxTests(PosFixtures):
         self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"), is_active=False)
         self.high.save()
         self.assertEqual(self.sell({self.high.pk: 1}).total_tax_idr, D("0.00"))
+
+
+class NumberFormatAndStepTests(PosFixtures):
+    """D81: Indonesian quantities at checkout and the per-product kasir step."""
+
+    def test_checkout_accepts_indonesian_and_machine_qty(self):
+        from django.urls import reverse
+
+        self.client.force_login(self.cashier)
+        self.client.post(reverse("pos:checkout"), {"product_id": [self.high.pk, self.low.pk],
+                                                   "qty_kg": ["1,5", "2.25"], "payment_method": "CASH"})
+        order = SaleOrder.objects.get()
+        self.assertEqual(order.lines.get(product=self.high).qty_kg, D("1.5"))
+        self.assertEqual(order.lines.get(product=self.low).qty_kg, D("2.25"))
+
+    def test_step_defaults_and_is_set_from_price_page(self):
+        from django.urls import reverse
+
+        self.assertEqual(self.high.pos_step_kg, D("0.5"))
+        self.client.force_login(self.manager)
+        self.client.post(reverse("farm:prices"), {"product": self.high.pk, "selling_price_idr": "25.000",
+                                                  "pos_step_kg": "0,25"})
+        self.high.refresh_from_db()
+        self.assertEqual((self.high.selling_price_idr, self.high.pos_step_kg), (D("25000"), D("0.25")))
+        self.client.force_login(self.cashier)
+        products = self.client.get(reverse("pos:stock"), HTTP_ACCEPT="application/json").json()["products"]
+        self.assertEqual({p["id"]: p["step"] for p in products}[self.high.pk], "0.250")
+        page = self.client.get(reverse("pos:register")).content.decode()
+        self.assertIn('data-num="kg"', page)

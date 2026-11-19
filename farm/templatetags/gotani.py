@@ -45,6 +45,14 @@ def kg(value):
 
 
 @register.filter
+def idnum(value, places=3):
+    """Pre-fill for a `data-num` input: `25000.00` → `25.000`, `0.500` → `0,5` (D81)."""
+    from core.numbers import format_id_decimal
+
+    return format_id_decimal(value, int(places)) if _dec(value) is not None else ""
+
+
+@register.filter
 def pct(value, places=1):
     d = _dec(value)
     if d is None:

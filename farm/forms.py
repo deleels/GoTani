@@ -6,6 +6,7 @@ from decimal import Decimal
 from django import forms
 from django.utils import timezone
 
+from core.numbers import IDDecimalField
 from inventory.models import SpoilageRecord, StockLot
 
 from .models import (
@@ -37,17 +38,14 @@ class StyledForm(forms.Form):
 
 
 def qty_field(label, required=True, min_value=Decimal("0.001")):
-    return forms.DecimalField(
-        label=label, max_digits=10, decimal_places=3, min_value=min_value, required=required,
-        widget=forms.NumberInput(attrs={"step": "0.001"}),
-    )
+    return IDDecimalField(label=label, max_digits=10, decimal_places=3, min_value=min_value, required=required,
+                          kind="kg")
 
 
-def money_field(label, required=True):
-    return forms.DecimalField(
-        label=label, max_digits=14, decimal_places=2, min_value=Decimal("0.01"), required=required,
-        widget=forms.NumberInput(attrs={"step": "0.01"}),
-    )
+def money_field(label, required=True, kind="money"):
+    """`kind="money"` = whole-Rupiah input (D81); `"money2"` also allows `,xx` (input purchase costs)."""
+    return IDDecimalField(label=label, max_digits=14, decimal_places=2, min_value=Decimal("0.01"),
+                          required=required, kind=kind)
 
 
 class DateTimeInput(forms.DateTimeInput):
@@ -175,7 +173,7 @@ class ActivityForm(StyledForm):
 class PurchaseForm(StyledForm):
     item = forms.ModelChoiceField(label="Input", queryset=InputItem.objects.all())
     qty = qty_field("Jumlah")
-    cost_per_unit_idr = money_field("Harga per satuan (Rp)")
+    cost_per_unit_idr = money_field("Harga per satuan (Rp)", kind="money2")
     supplier = forms.CharField(label="Pemasok", max_length=150, required=False)
 
 
@@ -243,6 +241,7 @@ class SpoilageForm(StyledForm):
 
 class PriceForm(StyledForm):
     selling_price_idr = money_field("Harga jual per kg (Rp)")
+    pos_step_kg = qty_field("Langkah kasir (kg)", required=False)
 
 
 class StageForm(forms.Form):

@@ -28,6 +28,7 @@ def catalog_payload():
             "grade_label": p.get_grade_display(),
             "price": str(p.selling_price_idr),
             "available": str(p.available_kg),
+            "step": str(p.pos_step_kg),
         }
         for p in services.pos_catalog()
     ]

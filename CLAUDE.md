@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D80); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D81); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -16,6 +16,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ## Units & Money
 - Quantities: kg only, `Decimal(10,3)`. Inputs use their own fixed `unit`; no conversion — an activity's unit must equal its `InputItem.unit`. Single exception: `CropCycle.planted_qty` is a plant **count** (D60).
+- Input format (D81): money and kg inputs use Indonesian format (`15.000`, `1,5`) via `data-num` + `core.numbers`; the browser submits machine numbers, the server accepts both.
 - Money: `Decimal(14,2)` everywhere (including unit COGS and tax). Round to whole Rupiah with `ROUND_HALF_UP` only for display, receipt and invoice totals. Format as `Rp 15.000`. IDR only.
 
 ## Django Apps & Data Models
@@ -42,7 +43,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ### 2. `inventory` (Lot-Level Mass-Balance Ledger)
 - `Tax`: `name` (e.g. PPN), `rate_pct` (Decimal(5,2), 0–100), `is_active` — admin-editable.
-- `Product`: `variety` (FK), `grade` (HIGH / LOW), `selling_price_idr` (nullable Decimal), `tax` (nullable FK Tax; default none — fresh produce is generally PPN-exempt) — sellable catalog entry. `UniqueConstraint(variety, grade)`. `stock_kg` is derived (Σ open lots), never stored.
+- `Product`: `variety` (FK), `grade` (HIGH / LOW), `selling_price_idr` (nullable Decimal), `tax` (nullable FK Tax; default none — fresh produce is generally PPN-exempt), `pos_step_kg` (Decimal, default 0.5 — kasir −/+ step and chips, D81) — sellable catalog entry. `UniqueConstraint(variety, grade)`. `stock_kg` is derived (Σ open lots), never stored.
 - `StockLot`: `product` (FK), `harvest_batch` (FK), `qty_initial_kg`, `qty_remaining_kg` (Decimal), `unit_cogs_idr` (Decimal), `harvested_at`
   - Constraint: `CheckConstraint(qty_remaining_kg >= 0)` — DB-level oversell backstop.
 - `SpoilageRecord`: `lot` (FK), `qty_kg` (> 0), `reason` (ROT / PHYSICAL_DAMAGE / PEST / SHRINKAGE / OTHER), `notes`, `loss_idr` (= qty × lot.unit_cogs_idr), `recorded_by`, `recorded_at`

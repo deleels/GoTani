@@ -6,6 +6,7 @@ from django import forms
 from django.utils import timezone
 
 from core.forms import StyledMixin
+from core.numbers import IDDecimalField, parse_id_decimal
 from farm.models import PaymentMethod
 from inventory.models import Product
 
@@ -22,10 +23,10 @@ class BuyerForm(StyledMixin, forms.ModelForm):
 class InvoiceHeaderForm(StyledMixin, forms.Form):
     buyer = forms.ModelChoiceField(label="Pembeli", queryset=Buyer.objects.filter(is_active=True))
     discount_type = forms.ChoiceField(label="Diskon", choices=Invoice.DiscountType.choices, initial="NONE")
-    discount_value = forms.DecimalField(label="Nilai diskon", min_value=0, max_digits=14, decimal_places=2,
-                                        required=False, initial=0)
-    shipping_idr = forms.DecimalField(label="Ongkos kirim", min_value=0, max_digits=14, decimal_places=2,
-                                      required=False, initial=0)
+    discount_value = IDDecimalField(label="Nilai diskon", min_value=0, max_digits=14, decimal_places=2,
+                                    required=False, initial=0, kind="money2")
+    shipping_idr = IDDecimalField(label="Ongkos kirim", min_value=0, max_digits=14, decimal_places=2,
+                                  required=False, initial=0, kind="money")
     notes = forms.CharField(label="Catatan", required=False, widget=forms.Textarea(attrs={"rows": 2}))
 
 
@@ -43,8 +44,8 @@ def parse_invoice_lines(post):
         if product is None:
             raise ValueError("Pilih produk untuk setiap baris.")
         try:
-            qty_d = Decimal(qty)
-            price_d = Decimal(price) if price.strip() else None
+            qty_d = parse_id_decimal(qty)
+            price_d = parse_id_decimal(price) if price.strip() else None
         except (InvalidOperation, AttributeError):
             raise ValueError(f"Angka tidak valid pada baris {product}.")
         lines.append((product, qty_d, price_d))
@@ -58,8 +59,8 @@ class IssueForm(StyledMixin, forms.Form):
 
 
 class PaymentForm(StyledMixin, forms.Form):
-    amount_idr = forms.DecimalField(label="Jumlah diterima (Rp)", min_value=Decimal("0.01"), max_digits=14,
-                                    decimal_places=2)
+    amount_idr = IDDecimalField(label="Jumlah diterima (Rp)", min_value=Decimal("0.01"), max_digits=14,
+                                decimal_places=2, kind="money")
     method = forms.ChoiceField(label="Metode", choices=PaymentMethod.choices)
     paid_on = forms.DateField(label="Tanggal bayar", initial=timezone.localdate,
                               widget=forms.DateInput(attrs={"type": "date"}))
@@ -69,7 +70,8 @@ class PaymentForm(StyledMixin, forms.Form):
 
 class CreditForm(StyledMixin, forms.Form):
     invoice = forms.ModelChoiceField(queryset=Invoice.objects.none())
-    amount_idr = forms.DecimalField(label="Jumlah", min_value=Decimal("0.01"), max_digits=14, decimal_places=2)
+    amount_idr = IDDecimalField(label="Jumlah", min_value=Decimal("0.01"), max_digits=14, decimal_places=2,
+                                kind="money")
 
     def __init__(self, *args, buyer=None, **kwargs):
         super().__init__(*args, **kwargs)

@@ -34,10 +34,10 @@
                   <template x-for="p in products" :key="p.id"><option :value="p.id" x-text="p.name" :selected="p.id === ln.product"></option></template>
                 </select>
                 <p class="mt-1 text-xs text-stone-400" x-show="prod(ln)" x-text="prod(ln) ? 'Stok ' + fmtKg(prod(ln).available) + ' kg' + (Number(prod(ln).tax) ? ' · PPN ' + prod(ln).tax + '%' : '') : ''"></p>
-                <p class="text-xs text-red-600" x-show="prod(ln) && Number(ln.qty) > Number(prod(ln).available)">Melebihi stok saat ini.</p>
+                <p class="text-xs text-red-600" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">Melebihi stok saat ini.</p>
               </td>
-              <td class="px-3 py-2"><input name="qty_kg" type="number" step="0.001" min="0.001" x-model="ln.qty" required></td>
-              <td class="px-3 py-2"><input name="unit_price" type="number" step="0.01" min="0.01" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? prod(ln).price : 'wajib'"></td>
+              <td class="px-3 py-2"><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required></td>
+              <td class="px-3 py-2"><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : 'wajib'"></td>
               <td class="px-3 py-2 text-right" x-text="rp(sub(ln))"></td>
               <td class="px-2 py-2"><button type="button" @click="lines.splice(i,1)" class="rounded p-1 text-stone-400 hover:bg-stone-100" aria-label="Hapus baris">{% icon "x" 16 %}</button></td>
             </tr>
@@ -86,16 +86,16 @@ function invoiceEditor() {
       const f = this.$root;
       const sync = () => {
         this.dtype = f.querySelector("[name=discount_type]").value;
-        this.dval = Number(f.querySelector("[name=discount_value]").value || 0);
-        this.ship = Number(f.querySelector("[name=shipping_idr]").value || 0);
+        this.dval = idNum.parse(f.querySelector("[name=discount_value]").value) || 0;
+        this.ship = idNum.parse(f.querySelector("[name=shipping_idr]").value) || 0;
       };
       sync(); f.addEventListener("input", sync); f.addEventListener("change", sync);
     },
     add() { this.lines.push(mk({})); },
     prod(ln) { return this.products.find(p => p.id === Number(ln.product)); },
-    defaultPrice(ln) { const p = this.prod(ln); if (p && !ln.price && p.price) ln.price = p.price; },
-    price(ln) { const p = this.prod(ln); return Number(ln.price || (p && p.price) || 0); },
-    sub(ln) { return Math.round(Number(ln.qty || 0) * this.price(ln) * 100) / 100; },
+    defaultPrice(ln) { const p = this.prod(ln); if (p && !ln.price && p.price) ln.price = idNum.format(p.price, 'money'); },
+    price(ln) { const p = this.prod(ln); return (ln.price ? idNum.parse(ln.price) : Number(p && p.price)) || 0; },
+    sub(ln) { return Math.round((idNum.parse(ln.qty) || 0) * this.price(ln) * 100) / 100; },
     totals() {
       const subs = this.lines.map(l => this.sub(l));
       const subtotal = subs.reduce((a, b) => a + b, 0);

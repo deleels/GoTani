@@ -38,11 +38,24 @@
               <span><span x-text="product(line.id)?.name"></span> <span class="text-xs text-stone-500" x-text="product(line.id)?.grade"></span></span>
               <button type="button" class="text-xs text-red-600" @click="remove(i)">hapus</button>
             </div>
-            <div class="mt-1 flex items-center gap-2">
-              <input type="number" name="qty_kg" step="0.001" min="0.001" :max="product(line.id)?.available" x-model="line.qty" @input="save()"
-                     class="w-24 rounded border border-stone-300 px-2 py-1 text-sm" required>
-              <span class="text-xs text-stone-500">kg × <span x-text="rp(product(line.id)?.price)"></span></span>
-              <span class="ml-auto text-sm font-medium" x-text="rp(subtotal(line))"></span>
+            <div class="mt-1 flex items-center gap-1.5">
+              <button type="button" @click="bump(line, -1)" :disabled="qty(line) <= stepOf(line)" aria-label="Kurangi"
+                      class="h-8 w-8 rounded border border-stone-300 text-lg leading-none hover:bg-stone-100 disabled:opacity-40">−</button>
+              <input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="line.qty" @input="save()" aria-label="Jumlah kg"
+                     class="h-8 min-w-0 flex-1 rounded border border-stone-300 px-2 text-right text-sm" required>
+              <button type="button" @click="bump(line, 1)" :disabled="qty(line) + stepOf(line) > available(line)" aria-label="Tambah"
+                      class="h-8 w-8 rounded border border-stone-300 text-lg leading-none hover:bg-stone-100 disabled:opacity-40">+</button>
+              <span class="text-xs text-stone-500">kg</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between text-xs text-stone-500">
+              <span>× <span x-text="rp(product(line.id)?.price)"></span>/kg</span>
+              <span class="text-sm font-medium text-stone-800" x-text="rp(subtotal(line))"></span>
+            </div>
+            <div class="mt-1 flex flex-wrap gap-1">
+              <template x-for="c in chips(line)" :key="c">
+                <button type="button" @click="setQty(line, c)" :class="qty(line) === c ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-stone-200 text-stone-600'"
+                        class="rounded-full border px-2 py-0.5 text-xs hover:border-emerald-500" x-text="idNum.format(c, 'kg') + ' kg'"></button>
+              </template>
             </div>
             <p class="text-xs text-red-600" x-show="over(line)">Melebihi stok tersedia (<span x-text="fmtKg(product(line.id)?.available)"></span> kg)</p>
           </li>
@@ -56,7 +69,7 @@
         </select>
       </label>
       <button class="mt-4 w-full rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-              :disabled="cart.length === 0 || submitting || cart.some(l => over(l) || !(Number(l.qty) > 0))">Bayar</button>
+              :disabled="cart.length === 0 || submitting || cart.some(l => over(l) || !(qty(l) > 0))">Bayar</button>
       <button type="button" class="mt-2 w-full text-xs text-stone-500 underline" x-show="cart.length" @click="cart = []; save()">Kosongkan keranjang</button>
     </form>
   </aside>
@@ -71,7 +84,9 @@
       cart: [], query: '', submitting: false, updatedAt: '',
       init() {
         try { this.cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch (e) { this.cart = []; }
-        this.cart = this.cart.filter(l => this.product(l.id));
+        // Older carts stored qty as a number; the input now holds Indonesian text (D81).
+        this.cart = this.cart.filter(l => this.product(l.id))
+          .map(l => ({ id: l.id, qty: typeof l.qty === 'number' ? idNum.format(l.qty, 'kg') : String(l.qty) }));
         setInterval(() => this.refresh(), 15000);
       },
       async refresh() {
@@ -85,18 +100,32 @@
       save() { try { localStorage.setItem(CART_KEY, JSON.stringify(this.cart)); } catch (e) {} },
       product(id) { return this.products.find(p => p.id === id); },
       filtered() { const q = this.query.toLowerCase(); return this.products.filter(p => (p.name + ' ' + p.grade_label).toLowerCase().includes(q)); },
-      inCart(id) { const l = this.cart.find(l => l.id === id); return l ? Number(l.qty) || 0 : 0; },
+      qty(line) { return idNum.parse(line.qty) || 0; },
+      r3(v) { return Math.round(v * 1000) / 1000; },
+      stepOf(line) { const p = this.product(line.id); return Number(p && p.step) || 0.5; },
+      available(line) { const p = this.product(line.id); return p ? Number(p.available) : 0; },
+      setQty(line, v) { line.qty = idNum.format(this.r3(v), 'kg'); this.save(); },
+      bump(line, dir) {
+        const s = this.stepOf(line);
+        const next = this.r3(Math.min(Math.max(this.qty(line) + dir * s, s), this.available(line)));
+        this.setQty(line, next);
+      },
+      chips(line) {
+        const s = this.stepOf(line), avail = this.available(line);
+        return [1, 2, 4, 10].map(m => this.r3(m * s)).filter(c => c <= avail);
+      },
+      inCart(id) { const l = this.cart.find(l => l.id === id); return l ? this.qty(l) : 0; },
       remaining(p) { return Number(p.available) - this.inCart(p.id); },
       add(p) {
         const line = this.cart.find(l => l.id === p.id);
-        const step = Math.min(1, this.remaining(p));
+        const step = this.r3(Math.min(Number(p.step) || 0.5, this.remaining(p)));
         if (step <= 0) return;
-        if (line) line.qty = +(Number(line.qty) + step).toFixed(3); else this.cart.push({ id: p.id, qty: step });
-        this.save();
+        if (line) this.setQty(line, this.qty(line) + step);
+        else { this.cart.push({ id: p.id, qty: idNum.format(step, 'kg') }); this.save(); }
       },
       remove(i) { this.cart.splice(i, 1); this.save(); },
-      over(line) { const p = this.product(line.id); return p && Number(line.qty) > Number(p.available); },
-      subtotal(line) { const p = this.product(line.id); return p ? Number(line.qty || 0) * Number(p.price) : 0; },
+      over(line) { const p = this.product(line.id); return p && this.qty(line) > Number(p.available); },
+      subtotal(line) { const p = this.product(line.id); return p ? this.qty(line) * Number(p.price) : 0; },
       total() { return this.cart.reduce((s, l) => s + this.subtotal(l), 0); },
       rp(v) { return 'Rp ' + Math.round(Number(v || 0)).toLocaleString('id-ID'); },
       fmtKg(v) { return Number(v || 0).toLocaleString('id-ID', { maximumFractionDigits: 3 }); },

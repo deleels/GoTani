@@ -463,6 +463,8 @@ class PricesView(FarmPage):
         elif form.is_valid():
             try:
                 inventory_services.set_product_price(product, form.cleaned_data["selling_price_idr"])
+                if form.cleaned_data.get("pos_step_kg"):
+                    inventory_services.set_pos_step(product, form.cleaned_data["pos_step_kg"])
             except ValidationError as exc:
                 messages.error(request, error_text(exc))
             else:

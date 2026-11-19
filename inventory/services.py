@@ -115,6 +115,16 @@ def set_product_price(product: Product, price_idr) -> Product:
     return product
 
 
+def set_pos_step(product: Product, step_kg) -> Product:
+    """Kasir quantity step (D81): − / + change the line by this many kg; chips are its multiples."""
+    step_kg = Decimal(step_kg).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
+    if step_kg <= 0:
+        raise ValidationError("Langkah kasir harus lebih dari 0 kg.")
+    product.pos_step_kg = step_kg
+    product.save(update_fields=["pos_step_kg"])
+    return product
+
+
 # ---------------------------------------------------------------------------
 # Mass-balance invariants (rule 15, D20)
 # ---------------------------------------------------------------------------
