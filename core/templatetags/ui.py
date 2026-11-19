@@ -111,3 +111,12 @@ def void_confirm(title, body, action, level=1):
         'data-confirm-choices="{}" data-confirm-choice-name="void_reason" data-confirm-other="{}" data-confirm-reason="Catatan"',
         title, body, action, level, json.dumps([[v, str(lbl)] for v, lbl in VoidReason.choices]), VoidReason.OTHER,
     )
+
+
+@register.simple_tag
+def info_tip(text, label="Penjelasan"):
+    """Footnote behind an info chip (user preference): shown on hover, focus or tap via confirm.js."""
+    return format_html(
+        '<button type="button" class="app-tip" data-tip="{}" aria-label="{}" aria-describedby="gt-tip">{}</button>',
+        text, label, icon("info", 14),
+    )

@@ -285,3 +285,44 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 .app-weather__rain { color: var(--ink-muted); min-width: 3.5rem; text-align: right; }
 .app-weather__rain--wet { color: var(--info-ink); font-weight: 500; }
 .app-weather .gt-row__value { min-width: 4.5rem; text-align: right; }
+
+/* Info tip (footnotes behind a chip; user preference). */
+.app-tip { position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: var(--space-1);
+  border: 0; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink-muted); cursor: help; vertical-align: middle; flex: none; padding: 0; }
+.app-tip::after { content: ""; position: absolute; inset: -12px; } /* 44px tap target */
+.app-tip:hover, .app-tip:focus-visible { background: var(--green-100); color: var(--green-700); }
+.gt-metric .app-tip, .gt-card .app-tip { background: var(--surface); }
+.gt-metric:not(.gt-metric--raised) .app-tip { background: var(--surface-raised); }
+:is(.gt-stat--featured, .gt-hero, .gt-dark) .app-tip { background: rgba(255, 255, 255, .16); color: var(--ink-inverse); }
+.app-tip__bubble { position: fixed; z-index: 70; max-width: min(18rem, calc(100vw - 16px)); padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised); color: var(--ink); border: 1px solid var(--divider); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float); font: 400 13px/18px var(--font-sans); pointer-events: none; }
+.app-tip__bubble[hidden] { display: none; }
+
+/* ---- Phase 4b: Analitik ---- */
+.app-dash__head h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.15; display: flex; align-items: center; gap: var(--space-1); }
+.app-dash__range { flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+.app-dash__dates { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
+.app-dash__date { display: flex; flex-direction: column; width: 10.5rem; }
+.app-dash__date .app-label { font-size: 12px; line-height: 16px; color: var(--ink-muted); }
+@media (max-width: 767.98px) { .app-dash__range { align-items: stretch; width: 100%; } .app-dash__range .gt-tabs--boxed { display: flex; } .app-dash__date { flex: 1; width: auto; } }
+.app-dash__stats { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-bottom: var(--space-3); }
+.app-stat__money { font-size: clamp(30px, 2.6vw, 40px); letter-spacing: -.8px; }
+.gt-stat .gt-stat__trend.app-stat__neutral { color: var(--ink-muted); }
+.gt-stat__title { display: flex; align-items: center; gap: var(--space-1); }
+.app-dash__row { display: grid; gap: var(--space-3); margin-bottom: var(--space-3); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1024px) { .app-dash__row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
+.app-dash__metrics { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.app-dash__metrics--2 { grid-template-columns: 1fr; }
+.gt-metric__label { display: flex; align-items: center; gap: 2px; }
+.app-dash__charts { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); margin-bottom: var(--space-3); }
+.app-dash__charts > *, .app-dash__row > * { min-width: 0; }
+.gt-card__head { flex-wrap: wrap; }
+@media (min-width: 1024px) { .app-dash__charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } .app-dash__wide { grid-column: 1 / -1; } }
+.app-legend { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: 13px; color: var(--ink-muted); }
+.app-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.app-legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.app-chart-empty { padding-top: 5rem; text-align: center; }
+.app-muted { color: var(--ink-muted); }
+.gt-root .app-subhead { margin: var(--space-4) 0 var(--space-2); font: 500 16px/22px var(--font-sans); }
+.app-dash__tables .gt-table th, .app-dash__charts .gt-table th { color: var(--ink-muted); }

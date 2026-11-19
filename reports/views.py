@@ -80,8 +80,18 @@ class DashboardView(RoleRequiredMixin, TemplateView):
             if not form.is_bound:
                 form = DateRangeForm(initial={"start": start, "end": end})
         metrics = services.dashboard_metrics(start, end)
-        ctx.update(nav="dashboard", form=form, m=metrics, k=metrics["kpis"], charts=self._chart_data(metrics))
+        ctx.update(nav="dashboard", form=form, m=metrics, k=metrics["kpis"], charts=self._chart_data(metrics),
+                   presets=self._presets(start, end))
         return ctx
+
+    @staticmethod
+    def _presets(start, end):
+        """Quick ranges for the boxed range switch; the active one matches the shown range exactly."""
+        today = timezone.localdate()
+        ranges = [("7 hari", today - timedelta(days=6), today), ("30 hari", today - timedelta(days=29), today),
+                  ("90 hari", today - timedelta(days=89), today), ("Tahun ini", today.replace(month=1, day=1), today)]
+        return [{"label": label, "start": a.isoformat(), "end": b.isoformat(), "active": (a, b) == (start, end)}
+                for label, a, b in ranges]
 
     @staticmethod
     def _chart_data(m):

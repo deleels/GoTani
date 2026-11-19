@@ -175,3 +175,41 @@
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
 })();
+
+/* Info tips ({% info_tip %}): one floating bubble, shown on hover, keyboard focus or tap; Esc, scroll or a tap elsewhere hides it.
+   Fixed-positioned in <body> so cards with overflow:hidden never clip it. */
+(function () {
+  var bubble, current = null;
+  function ensure() {
+    if (bubble) return bubble;
+    bubble = document.createElement('div');
+    bubble.id = 'gt-tip'; bubble.className = 'app-tip__bubble'; bubble.setAttribute('role', 'tooltip'); bubble.hidden = true;
+    document.body.appendChild(bubble);
+    return bubble;
+  }
+  function show(btn) {
+    var b = ensure();
+    current = btn;
+    b.textContent = btn.getAttribute('data-tip');
+    b.hidden = false;
+    var r = btn.getBoundingClientRect(), w = b.offsetWidth, h = b.offsetHeight;
+    var left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+    var top = r.top - h - 8;
+    if (top < 8) top = r.bottom + 8;
+    b.style.left = left + 'px'; b.style.top = top + 'px';
+  }
+  function hide() { if (bubble) bubble.hidden = true; current = null; }
+  function tipOf(e) { return e.target && e.target.closest ? e.target.closest('.app-tip') : null; }
+  document.addEventListener('mouseover', function (e) { var t = tipOf(e); if (t) show(t); });
+  document.addEventListener('mouseout', function (e) { var t = tipOf(e); if (t && t === current && document.activeElement !== t) hide(); });
+  document.addEventListener('focusin', function (e) { var t = tipOf(e); if (t) show(t); });
+  document.addEventListener('focusout', function (e) { if (tipOf(e)) hide(); });
+  document.addEventListener('click', function (e) {
+    var t = tipOf(e);
+    if (t) { e.preventDefault(); if (current === t && bubble && !bubble.hidden) hide(); else show(t); }
+    else hide();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('resize', hide);
+})();
