@@ -12,7 +12,7 @@
     <p class="mb-3 text-sm text-stone-500">Nomor order → baris → lot → batch panen → siklus → elemen.</p>
     <form method="get" class="flex gap-2">
       <input name="order" placeholder="GT-20261119-0001 atau INV-202611-0001" value="{{ not_found|default:'' }}" class="flex-1 rounded border border-stone-300 px-2 py-1.5 font-mono text-sm" required>
-      <button class="gt-btn gt-btn--primary gt-btn--sm">Telusuri</button>
+      <button class="gt-btn gt-btn--solid gt-btn--sm">Telusuri</button>
     </form>
     {% if not_found %}<p class="mt-2 text-sm text-red-700">Order {{ not_found }} tidak ditemukan.</p>{% endif %}
     <h3 class="mb-1 mt-4 text-sm font-medium text-stone-500">Order terbaru</h3>

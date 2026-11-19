@@ -623,9 +623,9 @@ class ShiftAndCashTests(PosFixtures):
         first = self.shift()
         services.close_shift(first, self.cashier, {})
         with self.assertRaises(ValidationError):  # cash refund needs an open drawer
-            services.void_order(order, self.manager, reason="CUSTOMER_CANCELLED")
+            services.void_order(order, self.manager, reason="CUSTOMER_CANCELLED", now=NOON)
         second = services.open_shift(self.cashier, 100000)
-        services.void_order(order, self.manager, reason="CUSTOMER_CANCELLED")
+        services.void_order(order, self.manager, reason="CUSTOMER_CANCELLED", now=NOON)
         refund = second.movements.get()
         self.assertEqual((refund.kind, refund.amount_idr), ("SALE_REFUND", D("40000")))
         self.assertEqual(services.shift_summary(second)["expected"], D("60000"))

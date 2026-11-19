@@ -1,1 +1,1 @@
-Copied unchanged from `C:\Users\derry\Documents\UI Inspo\GoTani inspo\GoTani-design-system` on 2026-11-19. Re-copy when the design system changes; never hand-edit these files (D104).
+Copied unchanged from `C:\Users\derry\Documents\UI Inspo\GoTani inspo\GoTani-design-system` on 2026-11-19, re-copied 2026-11-20 (button hierarchy, InfoTip, DatePicker, scrollbar). Re-copy when the design system changes; never hand-edit these files (D104).

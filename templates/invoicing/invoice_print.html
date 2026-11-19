@@ -15,7 +15,7 @@
 {% block body %}
 <div class="no-print flex justify-center gap-2 p-4 text-sm">
   <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md">Cetak / Simpan PDF</button>
-  <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="rounded bg-stone-200 px-4 py-2">Kembali</a>
+  <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Kembali</a>
 </div>
 <div class="sheet shadow">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">

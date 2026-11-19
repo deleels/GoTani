@@ -1,14 +1,14 @@
 {# Weather widget (D73, D89): current + spray window + 7-day forecast + rain warning, loaded async from geo:weather. Dispatches `weather-loaded` so the Cuaca page can reuse the same response. #}
 {% load ui %}
 <section class="gt-card app-weather" x-data="weatherWidget('{% url 'geo:weather' %}')" x-init="load()" aria-labelledby="h-weather">
-  <div class="gt-card__head"><h2 class="gt-card__title" id="h-weather">Cuaca</h2><span class="gt-card__hint">Open-Meteo</span></div>
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-weather">Cuaca</h2>{% info_tip "Prakiraan dari Open-Meteo, diperbarui tiap jam." %}</div>
   <template x-if="state === 'loading'"><p class="gt-card__hint">Memuat prakiraan…</p></template>
   <template x-if="state === 'error'"><p class="gt-card__hint">Tidak dapat memuat cuaca · <button type="button" class="app-link" @click="load()">Coba lagi</button></p></template>
   <template x-if="state === 'empty'"><p class="gt-card__hint" x-text="message"></p></template>
   <template x-if="state === 'ok'">
     <div class="app-weather__body">
       <div class="app-weather__now">
-        <span class="app-weather__temp" x-text="Math.round(w.current.temp) + '°'"></span>
+        <span class="app-weather__temp" x-text="Math.round(w.current.temp) + '°C'"></span>
         <span><span class="app-weather__label" x-text="w.current.label"></span>
           <span class="app-row__meta" x-text="'Lembap ' + (w.current.humidity ?? '—') + '% · angin ' + (w.current.wind ?? '—') + ' km/j'"></span></span>
       </div>
@@ -23,7 +23,7 @@
           <li class="gt-row app-weather__day">
             <span class="gt-row__body"><span class="gt-row__title" x-text="new Date(d.date + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long' })"></span><span class="app-row__meta" x-text="d.label"></span></span>
             <span class="gt-row__trail"><span class="app-weather__rain" :class="d.rain_mm >= 10 && 'app-weather__rain--wet'" x-text="Math.round(d.rain_mm) + ' mm'"></span>
-              <span class="gt-row__value" x-text="Math.round(d.tmax) + '° / ' + Math.round(d.tmin) + '°'"></span></span>
+              <span class="gt-row__value" x-text="Math.round(d.tmax) + '° / ' + Math.round(d.tmin) + '°C'"></span></span>
           </li>
         </template>
       </ul>

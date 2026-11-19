@@ -1,14 +1,14 @@
-{% load ui %}{# KPI (D68). Default: gt-metric tile. stat=True: gt-stat card (+ featured=True, + href → link with ↗). cls maps old colour classes to tones. #}
+{% load ui %}{# KPI (D68). Default: gt-metric tile. stat=True: gt-stat card (+ featured=True, + href → link with ↗). cls maps old colour classes to tones. tip= puts an explanation behind an info chip next to the label. #}
 {% if stat %}
 <{% if href %}a href="{{ href }}"{% else %}div{% endif %} class="gt-stat{% if featured %} gt-stat--featured{% endif %} app-stat">
-  <span class="gt-stat__title">{{ label }}</span>
+  <span class="gt-stat__title">{{ label }}{% if tip %}{% info_tip tip %}{% endif %}</span>
   {% if href %}<span class="gt-stat__arrow" aria-hidden="true">{% icon "arrow" 16 %}</span>{% endif %}
   <span class="gt-stat__value {{ cls|value_tone }}">{{ value }}</span>
   {% if hint %}<span class="gt-stat__trend">{{ hint }}</span>{% endif %}
 </{% if href %}a{% else %}div{% endif %}>
 {% else %}
 <div class="gt-metric gt-metric--raised">
-  <span class="gt-metric__label">{{ label }}</span>
+  <span class="gt-metric__label">{{ label }}{% if tip %}{% info_tip tip %}{% endif %}</span>
   <span class="gt-metric__value {{ cls|value_tone }}">{{ value }}</span>
   {% if hint %}<span class="gt-metric__note app-metric__note">{{ hint }}</span>{% endif %}
 </div>

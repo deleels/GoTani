@@ -74,7 +74,7 @@
 {{ charts|json_script:"chart-data" }}
 <div class="app-dash__charts">
   <section class="gt-card app-dash__wide" aria-labelledby="h-daily">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">Pendapatan &amp; HPP harian</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>Pendapatan</span><span><i class="app-legend__dot" style="background:var(--green-400)"></i>HPP</span></span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">Pendapatan &amp; HPP harian</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>Pendapatan</span><span><i class="app-legend__line"></i>HPP</span></span></div>
     <div class="relative h-72"><canvas id="chart-daily" role="img" aria-label="Pendapatan dan HPP harian"></canvas></div>
   </section>
   <section class="gt-card" aria-labelledby="h-margin">
@@ -82,12 +82,12 @@
     <div class="relative h-64"><canvas id="chart-margin" role="img" aria-label="Pendapatan, HPP dan margin per varietas dan grade"></canvas></div>
   </section>
   <section class="gt-card" aria-labelledby="h-yield">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-yield">Hasil jual per jenis elemen</h2><span class="gt-card__hint">kg/m²</span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-yield">Hasil jual per jenis elemen {% info_tip "Kg layak jual per meter persegi, per jenis elemen." %}</h2></div>
     <div class="relative h-64"><canvas id="chart-yield" role="img" aria-label="Kg layak jual per meter persegi per jenis elemen"></canvas></div>
   </section>
   <section class="gt-card" aria-labelledby="h-channel">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-channel">Pembagian kanal</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>Kasir (POS)</span><span><i class="app-legend__dot" style="background:var(--green-400)"></i>Invoice</span></span></div>
-    <div class="relative h-64"><canvas id="chart-channel" role="img" aria-label="Pendapatan per kanal penjualan"></canvas></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-channel">Pembagian kanal {% info_tip "Bagian pendapatan periode ini dari kasir (POS) dan dari invoice." %}</h2></div>
+    {% gauge channel_parts caption="Belum ada penjualan" uid="channel" %}
   </section>
   <section class="gt-card" aria-labelledby="h-pay">
     <div class="gt-card__head"><h2 class="gt-card__title" id="h-pay">Uang masuk per metode {% info_tip "POS per tanggal jual · pembayaran invoice per tanggal bayar (basis kas)." %}</h2></div>
@@ -102,11 +102,11 @@
     </div>
   </section>
   <section class="gt-card" aria-labelledby="h-top">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-top">Produk terlaris</h2><span class="gt-card__hint">Pendapatan</span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-top">Produk terlaris {% info_tip "Lima varietas × grade dengan pendapatan tertinggi pada periode ini." %}</h2></div>
     <div class="relative h-64"><canvas id="chart-top" role="img" aria-label="Lima produk dengan pendapatan tertinggi"></canvas></div>
   </section>
   <section class="gt-card" aria-labelledby="h-exp">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-exp">Biaya per kategori</h2><span class="gt-card__hint">Disetujui</span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-exp">Biaya per kategori {% info_tip "Hanya biaya yang sudah disetujui." %}</h2></div>
     <div class="relative h-64"><canvas id="chart-expenses" role="img" aria-label="Biaya disetujui per kategori"></canvas></div>
   </section>
 </div>
@@ -152,48 +152,48 @@
     return true;
   };
 
-  new Chart(document.getElementById('chart-daily'), {
-    type: 'line',
+  // Daily revenue as varied pill bars (peak dark, latest day light with its value tag); HPP as a dashed reference line.
+  // "Latest" = the most recent day with sales, so the tag never sits on an empty day.
+  const last = data.daily.revenue.reduce((at, v, i) => (v > 0 ? i : at), data.daily.revenue.length - 1);
+  if (!empty('chart-daily', data.daily.labels)) new Chart(document.getElementById('chart-daily'), {
     data: { labels: data.daily.labels, datasets: [
-      { label: 'Pendapatan', data: data.daily.revenue, borderColor: C1, backgroundColor: C1, ...G.LINE },
-      { label: 'HPP', data: data.daily.cogs, borderColor: C3, backgroundColor: C3, ...G.LINE },
+      { type: 'line', label: 'HPP', data: data.daily.cogs, borderColor: T('--outline'), backgroundColor: T('--outline'), borderDash: [4, 4], ...G.LINE, borderWidth: 1.5, order: 0 },
+      { type: 'bar', label: 'Pendapatan', data: data.daily.revenue, backgroundColor: G.vary(data.daily.revenue, { current: last }), ...G.BAR, order: 1 },
     ] },
-    options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: { ...flat, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
-               plugins: { ...noLegend, tooltip: moneyTip } },
+    options: { interaction: { mode: 'index', intersect: false }, layout: { padding: { top: 30 } },
+               scales: { y: moneyAxis, x: { ...flat, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
+               plugins: { ...noLegend, tooltip: moneyTip, gtTag: { dataset: 1, index: last, text: G.rpShort(data.daily.revenue[last] || 0) } } },
   });
 
   if (!empty('chart-margin', data.margin.labels)) new Chart(document.getElementById('chart-margin'), {
     type: 'bar',
     data: { labels: data.margin.labels, datasets: [
-      { label: 'Pendapatan', data: data.margin.revenue, backgroundColor: C1, ...G.BAR, maxBarThickness: 16 },
-      { label: 'HPP', data: data.margin.cogs, backgroundColor: C2, ...G.BAR, maxBarThickness: 16 },
-      { label: 'Margin', data: data.margin.margin, backgroundColor: C3, ...G.BAR, maxBarThickness: 16 },
+      { label: 'Pendapatan', data: data.margin.revenue, backgroundColor: C1, ...G.BAR, maxBarThickness: 22 },
+      { label: 'HPP', data: data.margin.cogs, backgroundColor: C2, ...G.BAR, maxBarThickness: 22 },
+      { label: 'Margin', data: data.margin.margin, backgroundColor: C3, ...G.BAR, maxBarThickness: 22 },
     ] },
     options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: flat }, plugins: { ...noLegend, tooltip: moneyTip } },
   });
 
   if (!empty('chart-yield', data.yield.labels)) new Chart(document.getElementById('chart-yield'), {
     type: 'bar',
-    data: { labels: data.yield.labels, datasets: [{ label: 'kg/m²', data: data.yield.values, backgroundColor: C1, ...G.BAR }] },
-    options: { scales: { y: G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 5, callback: (v) => G.num(v, 2) } }), x: flat },
-               plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => G.num(ctx.parsed.y, 3) + ' kg/m²' } } } },
+    data: { labels: data.yield.labels, datasets: [{ label: 'kg/m²', data: data.yield.values, backgroundColor: G.vary(data.yield.values), ...G.BAR }] },
+    options: { layout: { padding: { top: 30 } }, scales: { y: G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 5, callback: (v) => G.num(v, 2) } }), x: flat },
+               plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => G.num(ctx.parsed.y, 3) + ' kg/m²' } },
+                         gtTag: { index: G.peakIndex(data.yield.values), text: G.num(Math.max(...data.yield.values), 2) + ' kg/m²' } } },
   });
 
   const hbar = (id, labels, values) => {
     if (empty(id, labels)) return;
     new Chart(document.getElementById(id), {
       type: 'bar',
-      data: { labels, datasets: [{ data: values, backgroundColor: C1, ...G.BAR, maxBarThickness: 18 }] },
-      options: { indexAxis: 'y', scales: { x: G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 4, callback: (v) => G.rpShort(v) } }), y: { grid: { display: false }, border: { display: false } } },
-                 plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => rp(ctx.parsed.x) } } } },
+      data: { labels, datasets: [{ data: values, backgroundColor: G.vary(values), ...G.BAR, maxBarThickness: 22 }] },
+      options: { indexAxis: 'y', layout: { padding: { right: 72 } }, scales: { x: G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 4, callback: (v) => G.rpShort(v) } }), y: { grid: { display: false }, border: { display: false } } },
+                 plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => rp(ctx.parsed.x) } },
+                            gtTag: { index: G.peakIndex(values), text: G.rpShort(Math.max(...values)) } } },
     });
   };
   hbar('chart-top', data.top.labels, data.top.values);
-  if (data.channel.values.some((v) => v > 0)) new Chart(document.getElementById('chart-channel'), {
-    type: 'doughnut',
-    data: { labels: data.channel.labels, datasets: [{ data: data.channel.values, backgroundColor: [C1, C3], borderWidth: 4, borderColor: T('--surface-raised'), borderRadius: 8 }] },
-    options: { cutout: '68%', plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + rp(ctx.parsed) } } } },
-  }); else empty('chart-channel', []);
   hbar('chart-expenses', data.expenses.labels, data.expenses.values);
 })();
 </script>

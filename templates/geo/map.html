@@ -45,7 +45,7 @@
             <template x-for="h in (w ? w.hours : [])" :key="h.time">
               <div class="w-11 shrink-0 rounded-lg bg-stone-50 py-1.5" :title="'Hujan ' + (h.rain_pct ?? 0) + '% · angin ' + Math.round(h.wind || 0) + ' km/j'">
                 <p class="text-stone-500" x-text="hourLabel(h.time)"></p>
-                <p class="font-semibold" x-text="Math.round(h.temp) + '°'"></p>
+                <p class="font-semibold" x-text="Math.round(h.temp) + '°C'"></p>
                 <p :class="(h.rain_pct || 0) >= 50 ? 'text-sky-700 font-medium' : 'text-stone-400'" x-text="(h.rain_pct ?? 0) + '%'"></p>
                 <p class="text-stone-400" x-text="Math.round(h.wind || 0)"></p>
                 <div class="mx-auto mt-1 h-1.5 w-7 rounded-full" :class="h.spray === 'GOOD' ? 'bg-emerald-500' : h.spray === 'FAIR' ? 'bg-amber-400' : 'bg-red-500'"></div>
@@ -145,12 +145,12 @@
                 <template x-if="p.element"><p class="rounded-lg bg-stone-50 px-2 py-1.5 text-xs">Terpetakan <b x-text="fmtM2(p.area_m2)"></b> m² · tercatat <b x-text="fmtM2(p.element_area_m2)"></b> m²</p></template>
                 <template x-if="canEdit">
                   <div class="space-y-2">
-                    <div class="flex gap-1"><input x-model="p.name" class="text-xs"><button type="button" class="rounded bg-stone-100 px-2 text-xs" @click="save(p, { name: p.name })">Ganti nama</button></div>
+                    <div class="flex gap-1"><input x-model="p.name" class="text-xs"><button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="save(p, { name: p.name })">Ganti nama</button></div>
                     <div class="flex gap-1"><select class="text-xs" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">— tautkan ke elemen —</option>
                       <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
                     <div class="flex flex-wrap gap-2">
-                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--primary gt-btn--sm" @click="useArea(p)">Pakai luas terpetakan</button>
-                      <button type="button" class="rounded px-2 py-1 text-xs text-red-700 underline" @click="remove(p)">Hapus</button>
+                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--solid gt-btn--sm" @click="useArea(p)">Pakai luas terpetakan</button>
+                      <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" @click="remove(p)">Hapus</button>
                     </div>
                   </div>
                 </template>
@@ -178,15 +178,15 @@ function forecastPanel() {
       if (!window.Chart || !this.w) return;
       if (chart) chart.destroy();
       const h = this.w.history, G = window.gtCharts;
-      // Measured rain, so solid bars (hatching is only for pending/target values); the wettest day in green-800.
-      const top = Math.max(...h.map((d) => d.rain_mm || 0));
+      // Measured rain: varied solid bars (wettest day dark, today light with its value tag); hatching is only for pending values.
       const day = (d) => new Date(d.date + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       chart = new Chart(document.getElementById("rain-chart"), {
         type: "bar",
         data: { labels: h.map(day),
                 datasets: [{ label: "Hujan", data: h.map((d) => d.rain_mm || 0), ...(G ? G.BAR : {}), maxBarThickness: 14,
-                             backgroundColor: h.map((d) => (top > 0 && d.rain_mm === top) ? (G ? G.token("--green-800") : "#13452d") : (G ? G.token("--green-600") : "#227d53")) }] },
-        options: { maintainAspectRatio: false, plugins: { legend: { display: false },
+                             backgroundColor: G ? G.vary(h.map((d) => d.rain_mm || 0), { current: h.length - 1 }) : "#227d53" }] },
+        options: { maintainAspectRatio: false, layout: { padding: { top: 30 } }, plugins: { legend: { display: false },
+                     gtTag: { index: h.length - 1, text: this.fmtNum(h.length ? h[h.length - 1].rain_mm || 0 : 0, 1) + " mm" },
                      tooltip: { callbacks: { title: (it) => h[it[0].dataIndex] ? new Date(h[it[0].dataIndex].date + "T00:00:00").toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" }) : "",
                                              label: (ctx) => this.fmtNum(ctx.parsed.y, 1) + " mm" } } },
                    scales: { x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },

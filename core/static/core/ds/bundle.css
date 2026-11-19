@@ -27,6 +27,13 @@
 .gt-btn--on-dark{background:rgba(255,255,255,.16);color:var(--ink-inverse)}
 .gt-btn--on-dark:hover{background:rgba(255,255,255,.26)}
 .gt-btn--danger{background:var(--danger);color:var(--ink-inverse)}
+/* Hierarchy: --primary (gradient) only for the page's one headline action, in the page head or a flow footer.
+   --solid (flat green-700) for main actions lower down: card, form, sheet and dialog submits, the promo Download. */
+.gt-btn--solid{background:var(--green-700);color:var(--ink-inverse)}
+.gt-btn--solid:hover{background:var(--green-800)}
+.gt-btn--outline-danger{background:transparent;color:var(--danger);border-color:rgba(222,54,51,.45)}
+.gt-btn--outline-danger:hover{background:var(--pending-bg);border-color:var(--danger)}
+a.gt-btn{text-decoration:none}
 .gt-btn--sm{height:34px;padding:0 var(--space-4);font-size:14px;gap:var(--space-1)}
 .gt-btn--sm .gt-ico{width:16px;height:16px}
 .gt-btn--md{height:44px;padding:0 var(--space-5);font-size:16px}
@@ -542,3 +549,51 @@ a.gt-stat{text-decoration:none}
 .gt-gauge__value{bottom:0}
 .gt-gauge__value strong{font-size:clamp(28px,17cqi,56px)}
 .gt-gauge__value span{font-size:clamp(11px,5cqi,14px)}
+
+/* ---------- Tooltip (InfoTip): footnotes live behind a small (i) chip, shown on hover, focus or tap ---------- */
+.gt-tip{position:relative;display:inline-grid;place-items:center;width:20px;height:20px;margin-left:var(--space-1);padding:0;border:0;border-radius:var(--radius-pill);background:var(--surface);color:var(--ink-muted);cursor:help;vertical-align:middle;flex:none;font:inherit}
+.gt-tip::after{content:"";position:absolute;inset:-12px}
+.gt-tip svg{width:14px;height:14px}
+.gt-tip:hover,.gt-tip:focus-visible{background:var(--green-100);color:var(--green-700)}
+.gt-tip:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+:is(.gt-card,.gt-metric--raised) .gt-tip{background:var(--surface)}
+.gt-metric:not(.gt-metric--raised) .gt-tip{background:var(--surface-raised)}
+:is(.gt-stat--featured,.gt-hero,.gt-dark) .gt-tip{background:rgba(255,255,255,.16);color:var(--ink-inverse)}
+.gt-tip__bubble{position:fixed;z-index:70;max-width:min(18rem,calc(100vw - 16px));padding:var(--space-2) var(--space-3);background:var(--surface-raised);color:var(--ink);border:1px solid var(--divider);border-radius:var(--radius-md);box-shadow:var(--shadow-float);font:400 13px/18px var(--font-sans);pointer-events:none}
+.gt-tip__bubble[hidden]{display:none}
+
+/* ---------- Scrollbar: thin pill thumb, no track, no arrow buttons ---------- */
+html:has(.gt-root)::-webkit-scrollbar,.gt-root ::-webkit-scrollbar{width:12px;height:12px}
+html:has(.gt-root)::-webkit-scrollbar-track,.gt-root ::-webkit-scrollbar-track,html:has(.gt-root)::-webkit-scrollbar-corner,.gt-root ::-webkit-scrollbar-corner{background:transparent}
+html:has(.gt-root)::-webkit-scrollbar-thumb,.gt-root ::-webkit-scrollbar-thumb{background:rgba(24,54,39,.22);border:3px solid transparent;background-clip:padding-box;border-radius:var(--radius-pill)}
+html:has(.gt-root)::-webkit-scrollbar-thumb:hover,.gt-root ::-webkit-scrollbar-thumb:hover{background-color:var(--green-600)}
+html:has(.gt-root)::-webkit-scrollbar-button,.gt-root ::-webkit-scrollbar-button{display:none;width:0;height:0}
+@supports not selector(::-webkit-scrollbar){html:has(.gt-root),.gt-root *{scrollbar-width:thin;scrollbar-color:rgba(24,54,39,.28) transparent}}
+
+/* ---------- DatePicker: never the native calendar. Themes flatpickr 4.6 (load its base CSS first) ---------- */
+.flatpickr-calendar{width:auto;padding:var(--space-3);border:0;border-radius:var(--radius-lg);background:var(--surface-raised);box-shadow:var(--shadow-overlay);font-family:var(--font-sans)}
+.flatpickr-calendar::before,.flatpickr-calendar::after{display:none}
+.flatpickr-calendar.open{animation:gt-fade 180ms ease}
+.flatpickr-months{align-items:center;margin-bottom:var(--space-2)}
+.flatpickr-months .flatpickr-month{height:40px;color:var(--ink);fill:var(--ink)}
+.flatpickr-current-month{padding-top:8px;font-size:16px;font-weight:500}
+.flatpickr-current-month .flatpickr-monthDropdown-months{font-weight:500;border-radius:var(--radius-pill)}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover,.flatpickr-current-month input.cur-year:hover,.numInputWrapper:hover{background:var(--green-100)}
+.flatpickr-current-month input.cur-year{font-weight:500}
+.flatpickr-months .flatpickr-prev-month,.flatpickr-months .flatpickr-next-month{position:static;display:grid;place-items:center;width:36px;height:36px;padding:0;border-radius:50%;color:var(--ink);fill:var(--ink)}
+.flatpickr-months .flatpickr-prev-month:hover,.flatpickr-months .flatpickr-next-month:hover{background:var(--green-100)}
+.flatpickr-months .flatpickr-prev-month:hover svg,.flatpickr-months .flatpickr-next-month:hover svg{fill:var(--green-700)}
+.flatpickr-months .flatpickr-prev-month svg,.flatpickr-months .flatpickr-next-month svg{width:12px;height:12px}
+span.flatpickr-weekday{color:var(--ink-subtle);font:500 12px/16px var(--font-sans)}
+.flatpickr-days,.dayContainer{width:294px;min-width:294px;max-width:294px}
+.flatpickr-day{max-width:42px;height:40px;line-height:40px;border:0;border-radius:var(--radius-pill);color:var(--ink);font-size:14px}
+.flatpickr-day:hover,.flatpickr-day:focus{background:var(--green-100);color:var(--ink)}
+.flatpickr-day.today{box-shadow:inset 0 0 0 1.5px var(--green-600)}
+.flatpickr-day.today:hover{background:var(--green-100);color:var(--ink)}
+.flatpickr-day.selected,.flatpickr-day.selected:hover,.flatpickr-day.selected:focus{background:var(--green-700);color:var(--ink-inverse);box-shadow:none}
+.flatpickr-day.prevMonthDay,.flatpickr-day.nextMonthDay{color:var(--ink-subtle)}
+.flatpickr-day.flatpickr-disabled,.flatpickr-day.flatpickr-disabled:hover{color:var(--ink-subtle);opacity:.4;background:transparent;cursor:not-allowed}
+.flatpickr-time{border-top:1px solid var(--divider)!important;margin-top:var(--space-2)}
+.flatpickr-time input,.flatpickr-time .flatpickr-am-pm{color:var(--ink);font:500 16px var(--font-sans)}
+.flatpickr-time input:hover,.flatpickr-time input:focus{background:var(--green-100)}
+.flatpickr-calendar.hasTime .flatpickr-time{height:44px;line-height:44px}

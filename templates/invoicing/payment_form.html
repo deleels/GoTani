@@ -24,7 +24,7 @@
           <td class="px-4 py-2">{{ inv.due_date|date:"d M Y" }}</td>
           <td class="px-4 py-2 text-right">{{ inv.outstanding|rupiah }}</td>
           <td class="px-4 py-2"><div class="flex gap-1"><input name="alloc_{{ inv.pk }}" type="number" step="0.01" min="0" max="{{ inv.outstanding|stringformat:'.2f' }}" x-model="allocs[{{ inv.pk }}]">
-            <button type="button" class="rounded bg-stone-100 px-2 text-xs hover:bg-stone-200" @click="allocs[{{ inv.pk }}] = '{{ inv.outstanding|stringformat:'.2f' }}'">Lunas</button></div></td>
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="allocs[{{ inv.pk }}] = '{{ inv.outstanding|stringformat:'.2f' }}'">Lunas</button></div></td>
         </tr>
       {% empty %}
         <tr><td colspan="4" class="px-4 py-8 text-center text-stone-500">Tidak ada invoice terbuka — seluruh pembayaran akan menjadi kredit.</td></tr>
@@ -35,7 +35,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm">
       <p>Dialokasikan <strong x-text="gtRupiah(used)"></strong> · menjadi kredit
         <strong :class="amount - used < 0 ? 'text-red-700' : 'text-emerald-700'" x-text="gtRupiah(amount - used)"></strong></p>
-      <button class="gt-btn gt-btn--primary gt-btn--md">Simpan Pembayaran</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan Pembayaran</button>
     </div>
   </div>
 </form>

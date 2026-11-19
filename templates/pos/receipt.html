@@ -16,16 +16,18 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="no-print mb-4 flex flex-wrap items-center gap-2 text-sm">
-  <a href="?size=58" class="rounded px-3 py-1.5 {% if size == '58' %}bg-stone-800 text-white{% else %}bg-stone-100{% endif %}">Thermal 58 mm</a>
-  <a href="?size=a4" class="rounded px-3 py-1.5 {% if size == 'a4' %}bg-stone-800 text-white{% else %}bg-stone-100{% endif %}">A4</a>
-  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm">Cetak</button>
-  <a href="{% url 'pos:register' %}" class="rounded bg-stone-100 px-3 py-1.5">Transaksi baru</a>
+<div class="no-print app-receipt__bar">
+  <div class="gt-tabs gt-tabs--boxed" role="tablist" aria-label="Ukuran struk">
+    <a href="?size=58" class="gt-tab" role="tab" {% if size == '58' %}aria-selected="true"{% endif %}>Thermal 58 mm</a>
+    <a href="?size=a4" class="gt-tab" role="tab" {% if size == 'a4' %}aria-selected="true"{% endif %}>A4</a>
+  </div>
+  <a href="{% url 'pos:register' %}" class="gt-btn gt-btn--outline gt-btn--sm">Transaksi baru</a>
   {% if can_void %}
-  <form method="post" action="{% url 'pos:void' order.pk %}" class="ml-auto" {% void_confirm "Batalkan order "|add:order.order_number|add:"?" "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka." "Batalkan order" %}>{% csrf_token %}
-    <button class="rounded border border-red-300 px-3 py-1.5 text-red-700">Batalkan order</button>
+  <form method="post" action="{% url 'pos:void' order.pk %}" {% void_confirm "Batalkan order "|add:order.order_number|add:"?" "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka." "Batalkan order" %}>{% csrf_token %}
+    <button class="gt-btn gt-btn--outline-danger gt-btn--sm">Batalkan order</button>
   </form>
   {% endif %}
+  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm app-receipt__print">Cetak</button>
 </div>
 
 <div class="receipt size-{{ size }} mx-auto border shadow-sm">

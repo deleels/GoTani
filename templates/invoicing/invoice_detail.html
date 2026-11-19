@@ -12,11 +12,11 @@
   <div class="flex flex-wrap gap-2">
     {% if invoice.status == 'DRAFT' %}
       <a href="{% url 'invoicing:invoice_edit' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Ubah</a>
-      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'delete' %}" data-confirm-title="Hapus draf?" data-confirm="Draf ini belum memotong stok dan akan dihapus permanen." data-confirm-action="Hapus draf" data-confirm-danger>{% csrf_token %}<button class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Hapus</button></form>
+      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'delete' %}" data-confirm-title="Hapus draf?" data-confirm="Draf ini belum memotong stok dan akan dihapus permanen." data-confirm-action="Hapus draf" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--md">Hapus</button></form>
     {% elif invoice.status == 'ISSUED' %}
       <a href="{% url 'invoicing:invoice_print' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Cetak A4</a>
       {% if outstanding %}<a href="{% url 'invoicing:buyer_payment_new' invoice.buyer_id %}?invoice={{ invoice.pk }}" class="gt-btn gt-btn--primary gt-btn--md">Catat Pembayaran</a>{% endif %}
-      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'void' %}" {% void_confirm "Batalkan invoice?" "Stok dikembalikan ke lot asal dan pembayaran yang sudah dialokasikan menjadi kredit pembeli. Tidak bisa dibatalkan." "Batalkan invoice" 2 %}>{% csrf_token %}<button class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Batalkan</button></form>
+      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'void' %}" {% void_confirm "Batalkan invoice?" "Stok dikembalikan ke lot asal dan pembayaran yang sudah dialokasikan menjadi kredit pembeli. Tidak bisa dibatalkan." "Batalkan invoice" 2 %}>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--md">Batalkan</button></form>
     {% endif %}
   </div>
 </div>
@@ -30,7 +30,7 @@
   <label class="w-44">{{ issue_form.issue_date.label }}{{ issue_form.issue_date }}</label>
   <label class="w-44">{{ issue_form.due_date.label }}{{ issue_form.due_date }}</label>
   <span class="text-xs text-stone-500">Termin pembeli: {{ invoice.buyer.payment_terms_days }} hari</span>
-  <button class="ml-auto rounded-lg bg-sky-700 px-4 py-2 font-medium text-white">Terbitkan</button>
+  <button class="ml-auto gt-btn gt-btn--solid gt-btn--md">Terbitkan</button>
 </form>
 {% endif %}
 
@@ -90,7 +90,7 @@
       <h2 class="mb-2 font-semibold">Pembayaran</h2>
       {% for a in invoice.allocations.all %}
       <div class="flex items-center justify-between gap-2 border-t border-stone-100 py-1.5 first:border-0"><span>{{ a.payment.paid_on|date:"d M Y" }} · {{ a.payment.get_method_display }}</span><span class="ml-auto">{{ a.amount_idr|rupiah }}</span>
-        {% if invoice.status == 'ISSUED' %}<form method="post" action="{% url 'invoicing:allocation_remove' a.pk %}" data-confirm-title="Lepas pembayaran ini?" data-confirm="{{ a.amount_idr|rupiah }} dilepas dari {{ invoice }} dan kembali menjadi kredit {{ invoice.buyer }}. Status pembayaran invoice ikut berubah." data-confirm-action="Lepas pembayaran" data-confirm-reason="Alasan">{% csrf_token %}<button class="text-xs text-red-600 underline">Lepas</button></form>{% endif %}</div>
+        {% if invoice.status == 'ISSUED' %}<form method="post" action="{% url 'invoicing:allocation_remove' a.pk %}" data-confirm-title="Lepas pembayaran ini?" data-confirm="{{ a.amount_idr|rupiah }} dilepas dari {{ invoice }} dan kembali menjadi kredit {{ invoice.buyer }}. Status pembayaran invoice ikut berubah." data-confirm-action="Lepas pembayaran" data-confirm-reason="Alasan">{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Lepas</button></form>{% endif %}</div>
       {% endfor %}
     </div>
     {% endif %}

@@ -47,7 +47,7 @@
   {% if roles.finance %}
   <div class="mb-5 grid gap-3 sm:grid-cols-3">
     {% include "components/kpi.html" with label="Biaya terserap ke panen" value=trace.totals.absorbed_cost|rupiah %}
-    {% include "components/kpi.html" with label="Biaya belum terserap" value=unabsorbed|rupiah hint="Dihapusbukukan bila siklus ditutup" %}
+    {% include "components/kpi.html" with label="Biaya belum terserap" value=unabsorbed|rupiah tip="Dihapusbukukan bila siklus ditutup." %}
     {% include "components/kpi.html" with label="Pendapatan (POS + invoice)" value=trace.totals.revenue|rupiah %}
   </div>
   {% endif %}
@@ -73,7 +73,7 @@
       <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--primary gt-btn--md">Simpan</button></div>
+          <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button></div>
       </form>
   {% include "components/sheet.html" with end=True %}
   {% endif %}

@@ -1,98 +1,112 @@
 {% extends "pos/_layout.html" %}
-{% load gotani %}
+{% load gotani ui %}
 {% block title %}Kasir{% endblock %}
 {% block content %}
+{# Kasir (Phase 4c): product card grid + sticky cart on the design system; on phones the cart is a bottom sheet behind a total bar. Alpine logic and posted field names are unchanged. #}
 {{ products|json_script:"pos-products" }}
+<div class="gt-pagehead">
+  <div class="app-pagehead__text">
+    <h1>Kasir</h1>
+    <p class="app-pagehead__sub">{% if shift %}Shift dibuka {{ shift.opened_at|date:"H:i" }}{% else %}Shift belum dibuka{% endif %} {% info_tip "Stok diperbarui otomatis tiap 15 detik. Total final dihitung server dengan harga resmi." %}</p>
+  </div>
+  <div class="gt-pagehead__actions"><a href="{% url 'pos:orders' %}" class="gt-btn gt-btn--outline gt-btn--md">Riwayat penjualan</a></div>
+</div>
 {% if not shift %}
-<div class="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-amber-300 p-4 text-sm">
-  <div class="mr-auto"><p class="font-semibold text-amber-700">Shift kasir belum dibuka</p><p class="text-stone-500">Buka shift dengan modal awal di laci sebelum berjualan.</p></div>
-  <form method="post" action="{% url 'pos:shift' %}" class="flex items-end gap-2">{% csrf_token %}
+<div class="gt-callout gt-callout--warning app-pos__shift" role="status">
+  {% icon "alert" 18 %}
+  <div class="app-pos__shift-text"><span class="gt-callout__title">Shift kasir belum dibuka</span><span class="gt-callout__body">Buka shift dengan modal awal di laci sebelum berjualan.</span></div>
+  <form method="post" action="{% url 'pos:shift' %}" class="app-pos__shift-form">{% csrf_token %}
     <input type="hidden" name="action" value="open"><input type="hidden" name="next" value="{% url 'pos:register' %}">
-    <label><span class="text-stone-600">Modal awal (Rp)</span><input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="mt-1 w-36 rounded-lg border border-stone-300 px-2 py-1.5"></label>
-    <button class="gt-btn gt-btn--primary gt-btn--md">Buka shift</button>
+    <label><span class="app-label">Modal awal (Rp)</span><input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="app-field app-field--sm"></label>
+    <button class="gt-btn gt-btn--solid gt-btn--md">Buka shift</button>
   </form>
 </div>
 {% endif %}
-<div x-data="register()" class="grid gap-6 lg:grid-cols-3">
-  <section class="lg:col-span-2">
-    <div class="mb-3 flex items-center gap-3">
-      <h1 class="text-lg font-semibold">Produk</h1>
-      <input type="search" x-model="query" placeholder="Cari produk…" class="ml-auto w-48 rounded border border-stone-300 px-2 py-1 text-sm">
-      <span class="text-xs text-stone-400" x-text="updatedAt ? 'Stok diperbarui ' + updatedAt : ''"></span>
+<div x-data="register()" class="app-pos" @keydown.escape.window="cartOpen = false">
+  <section class="app-pos__catalog" aria-labelledby="h-products">
+    <div class="app-pos__toolbar">
+      <h2 class="gt-card__title" id="h-products">Produk</h2>
+      <label class="app-pos__search">{% icon "search" 18 %}<span class="sr-only">Cari produk</span><input type="search" x-model="query" placeholder="Cari produk…" class="app-field app-field--sm"></label>
+      <span class="app-row__meta" x-show="updatedAt" x-text="'Stok ' + updatedAt"></span>
     </div>
     <template x-if="products.length === 0">
-      <p class="rounded border border-dashed p-6 text-center text-stone-500">Belum ada produk berharga. Tetapkan harga di menu Harga Produk.</p>
+      <div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada produk berharga.</span><span class="gt-callout__body">Tetapkan harga di menu Harga Produk.</span></div></div>
     </template>
-    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div class="app-pos__grid">
       <template x-for="p in filtered()" :key="p.id">
-        <button type="button" @click="add(p)" :disabled="remaining(p) <= 0"
-                class="rounded-lg border bg-white p-3 text-left shadow-sm transition hover:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-50">
-          <div class="font-medium" x-text="p.name"></div>
-          <div class="text-xs" :class="p.grade === 'HIGH' ? 'text-emerald-700' : 'text-amber-700'" x-text="p.grade_label"></div>
-          <div class="mt-2 text-sm font-semibold" x-text="rp(p.price) + ' / kg'"></div>
-          <div class="text-xs text-stone-500">Tersedia <span x-text="fmtKg(p.available)"></span> kg</div>
+        <button type="button" @click="add(p)" :disabled="remaining(p) <= 0" class="gt-card app-product" :class="inCart(p.id) && 'app-product--in'">
+          <span class="app-product__head">
+            <span class="app-product__name" x-text="p.name"></span>
+            <span class="app-product__add" aria-hidden="true">{% icon "plus" 16 %}</span>
+          </span>
+          <span class="gt-chip gt-chip--sm app-product__grade" :class="p.grade === 'HIGH' ? 'gt-chip--tint' : ''" x-text="p.grade_label"></span>
+          <span class="app-product__price"><span x-text="rp(p.price)"></span><small>/kg</small></span>
+          <span class="app-product__stock" :class="low(p) && 'app-product__stock--low'"><i class="gt-dot" :class="low(p) ? 'gt-dot--danger' : ''"></i><span x-text="fmtKg(remaining(p)) + ' kg tersedia'"></span></span>
+          <span x-show="inCart(p.id)" class="app-product__qty" x-text="fmtKg(inCart(p.id)) + ' kg di keranjang'"></span>
         </button>
       </template>
     </div>
   </section>
 
-  <aside class="self-start rounded-lg border bg-white p-4 lg:sticky lg:top-4">
-    <h2 class="mb-3 font-semibold">Keranjang</h2>
-    <form method="post" action="{% url 'pos:checkout' %}" @submit="submitting = true" data-confirm="" data-confirm-if="posWarn(form)">
+  <div class="app-pos__scrim" x-show="cartOpen" x-cloak @click="cartOpen = false"></div>
+  <aside class="gt-card app-pos__cart" :class="cartOpen && 'is-open'" aria-labelledby="h-cart">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-cart">Keranjang</h2>
+      <span class="app-pos__cart-tools">
+        <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" x-show="cart.length" @click="cart = []; save()">Kosongkan</button>
+        <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken app-pos__close" @click="cartOpen = false" aria-label="Tutup keranjang">{% icon "x" 16 %}</button>
+      </span></div>
+    <form method="post" action="{% url 'pos:checkout' %}" @submit="submitting = true" data-confirm="" data-confirm-if="posWarn(form)" class="app-pos__form">
       {% csrf_token %}
-      <template x-if="cart.length === 0"><p class="text-sm text-stone-400">Keranjang kosong. Klik produk untuk menambah.</p></template>
-      <ul class="divide-y">
+      <template x-if="cart.length === 0"><p class="app-muted app-pos__empty">Keranjang kosong. Ketuk produk untuk menambah.</p></template>
+      <ul class="app-pos__lines">
         <template x-for="(line, i) in cart" :key="line.id">
-          <li class="py-2">
+          <li class="app-line">
             <input type="hidden" name="product_id" :value="line.id">
-            <div class="flex items-center justify-between text-sm">
-              <span><span x-text="product(line.id)?.name"></span> <span class="text-xs text-stone-500" x-text="product(line.id)?.grade"></span></span>
-              <button type="button" class="text-xs text-red-600" @click="remove(i)">hapus</button>
+            <div class="app-line__top">
+              <span class="app-line__name"><b x-text="product(line.id)?.name"></b><span class="app-row__meta app-block" x-text="(product(line.id)?.grade_label || '') + ' · ' + rp(product(line.id)?.price) + '/kg'"></span></span>
+              <span class="app-line__total" x-text="rp(subtotal(line))"></span>
             </div>
-            <div class="mt-1 flex items-center gap-1.5">
-              <button type="button" @click="bump(line, -1)" :disabled="qty(line) <= stepOf(line)" aria-label="Kurangi"
-                      class="h-8 w-8 rounded border border-stone-300 text-lg leading-none hover:bg-stone-100 disabled:opacity-40">−</button>
-              <input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="line.qty" @input="save()" aria-label="Jumlah kg"
-                     class="h-8 min-w-0 flex-1 rounded border border-stone-300 px-2 text-right text-sm" required>
-              <button type="button" @click="bump(line, 1)" :disabled="qty(line) + stepOf(line) > available(line)" aria-label="Tambah"
-                      class="h-8 w-8 rounded border border-stone-300 text-lg leading-none hover:bg-stone-100 disabled:opacity-40">+</button>
-              <span class="text-xs text-stone-500">kg</span>
+            <div class="app-line__qty">
+              <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="bump(line, -1)" :disabled="qty(line) <= stepOf(line)" aria-label="Kurangi">{% icon "minus" 16 %}</button>
+              <input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="line.qty" @input="save()" aria-label="Jumlah kg" class="app-field app-field--sm app-line__input" required>
+              <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="bump(line, 1)" :disabled="qty(line) + stepOf(line) > available(line)" aria-label="Tambah">{% icon "plus" 16 %}</button>
+              <span class="app-row__meta app-line__unit">kg</span>
+              <button type="button" class="gt-iconbtn gt-iconbtn--sm app-line__remove" @click="remove(i)" aria-label="Hapus dari keranjang">{% icon "trash" 16 %}</button>
             </div>
-            <div class="mt-1 flex items-center justify-between text-xs text-stone-500">
-              <span>× <span x-text="rp(product(line.id)?.price)"></span>/kg</span>
-              <span class="text-sm font-medium text-stone-800" x-text="rp(subtotal(line))"></span>
-            </div>
-            <div class="mt-1 flex flex-wrap gap-1">
+            <div class="app-chips">
               <template x-for="c in chips(line)" :key="c">
-                <button type="button" @click="setQty(line, c)" :class="qty(line) === c ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-stone-200 text-stone-600'"
-                        class="rounded-full border px-2 py-0.5 text-xs hover:border-emerald-500" x-text="idNum.format(c, 'kg') + ' kg'"></button>
+                <button type="button" @click="setQty(line, c)" class="gt-chip gt-chip--sm app-chipbtn" :class="qty(line) === c && 'is-on'" x-text="idNum.format(c, 'kg') + ' kg'"></button>
               </template>
             </div>
-            <p class="text-xs text-red-600" x-show="over(line)">Melebihi stok tersedia (<span x-text="fmtKg(product(line.id)?.available)"></span> kg)</p>
+            <p class="app-error" x-show="over(line)">Melebihi stok tersedia (<span x-text="fmtKg(product(line.id)?.available)"></span> kg)</p>
           </li>
         </template>
       </ul>
-      <div class="mt-3 flex justify-between border-t pt-3 font-semibold"><span>Total</span><span x-text="rp(total())"></span></div>
-      <p class="text-xs text-stone-400">Perkiraan; total final dihitung server dengan harga resmi.</p>
-      <label class="mt-3 block text-sm">Pembayaran
-        <select name="payment_method" x-model="method" class="mt-1 w-full rounded border border-stone-300 px-2 py-1.5">
-          {% for value, label in payment_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
-        </select>
-      </label>
-      <div x-show="method === 'CASH'" class="mt-3 text-sm">
-        <label class="block">Uang diterima <span class="text-xs text-stone-400">(kosong = uang pas)</span>
-          <input name="cash_received" x-model="cash" data-num="money" inputmode="decimal" autocomplete="off" class="mt-1 w-full rounded border border-stone-300 px-2 py-1.5"></label>
-        <div class="mt-1 flex flex-wrap gap-1">
-          <template x-for="c in cashChips()" :key="c"><button type="button" @click="cash = idNum.format(c, 'money')" class="rounded-full border border-stone-200 px-2 py-0.5 text-xs hover:border-emerald-500" x-text="c === dueTotal() ? 'Uang pas' : rp(c)"></button></template>
+      <dl class="gt-kv app-pos__total"><div><dt>Total {% info_tip "Perkiraan dari harga di layar. Total final, termasuk PPN bila ada, dihitung server dengan harga resmi." %}</dt><dd x-text="rp(total())"></dd></div></dl>
+      <fieldset class="app-pos__pay"><legend class="app-label">Pembayaran</legend>
+        <div class="app-pos__methods">{% for value, label in payment_methods %}
+          <label class="gt-radio app-pos__method"><input type="radio" name="payment_method" value="{{ value }}" x-model="method"><span class="gt-radio__title">{{ label }}</span></label>{% endfor %}
         </div>
-        <p class="mt-2 flex justify-between font-semibold" x-show="cash"><span>Kembalian</span><span :class="change() < 0 ? 'text-red-600' : ''" x-text="change() < 0 ? 'Kurang ' + rp(-change()) : rp(change())"></span></p>
+      </fieldset>
+      <div x-show="method === 'CASH'" class="app-pos__cash">
+        <div class="app-labelrow"><label class="app-label" for="pos-cash">Uang diterima</label>{% info_tip "Kosongkan bila pembeli membayar uang pas." %}</div>
+        <input id="pos-cash" name="cash_received" x-model="cash" data-num="money" inputmode="decimal" autocomplete="off" class="app-field">
+        <div class="app-chips">
+          <template x-for="c in cashChips()" :key="c"><button type="button" @click="cash = idNum.format(c, 'money')" class="gt-chip gt-chip--sm app-chipbtn" x-text="c === dueTotal() ? 'Uang pas' : rp(c)"></button></template>
+        </div>
+        <div class="gt-metric app-pos__change" x-show="cash"><span class="gt-metric__label">Kembalian</span><span class="gt-metric__value" :class="change() < 0 && 'app-value--danger'" x-text="change() < 0 ? 'Kurang ' + rp(-change()) : rp(change())"></span></div>
       </div>
-      <button class="mt-4 gt-btn gt-btn--primary gt-btn--md gt-btn--block"
-              :disabled="!hasShift || cart.length === 0 || submitting || cart.some(l => over(l) || !(qty(l) > 0)) || (method === 'CASH' && cash && change() < 0)">Bayar</button>
-      <p x-show="!hasShift" class="mt-1 text-center text-xs text-amber-700">Buka shift untuk mulai berjualan.</p>
-      <button type="button" class="mt-2 w-full text-xs text-stone-500 underline" x-show="cart.length" @click="cart = []; save()">Kosongkan keranjang</button>
+      <button class="gt-btn gt-btn--primary gt-btn--md gt-btn--block app-pos__paybtn"
+              :disabled="!hasShift || cart.length === 0 || submitting || cart.some(l => over(l) || !(qty(l) > 0)) || (method === 'CASH' && cash && change() < 0)"
+              x-text="cart.length ? 'Bayar ' + rp(total()) : 'Bayar'">Bayar</button>
+      <p x-show="!hasShift" class="app-help app-pos__note">Buka shift untuk mulai berjualan.</p>
     </form>
   </aside>
+
+  <div class="gt-bottombar app-pos__bar" x-show="!cartOpen">
+    <span class="app-pos__bartotal"><span class="app-row__meta" x-text="cart.length + ' produk'"></span><b x-text="rp(total())"></b></span>
+    <button type="button" class="gt-btn gt-btn--solid gt-btn--md" @click="cartOpen = true" :disabled="!cart.length">Lihat keranjang</button>
+  </div>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -101,7 +115,7 @@
   function register() {
     return {
       products: JSON.parse(document.getElementById('pos-products').textContent),
-      cart: [], query: '', submitting: false, updatedAt: '',
+      cart: [], query: '', submitting: false, updatedAt: '', cartOpen: false,
       hasShift: {{ shift|yesno:"true,false" }}, method: '{{ payment_methods.0.0 }}', cash: '',
       dueTotal() { return Math.round(this.total()); },
       change() { return (idNum.parse(this.cash) || 0) - this.dueTotal(); },
@@ -157,6 +171,8 @@
       },
       inCart(id) { const l = this.cart.find(l => l.id === id); return l ? this.qty(l) : 0; },
       remaining(p) { return Number(p.available) - this.inCart(p.id); },
+      // Low stock on the tile: two steps or less left.
+      low(p) { return this.remaining(p) <= 2 * (Number(p.step) || 0.5); },
       add(p) {
         const line = this.cart.find(l => l.id === p.id);
         const step = this.r3(Math.min(Number(p.step) || 0.5, this.remaining(p)));

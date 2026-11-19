@@ -38,25 +38,25 @@
             <td class="px-4 py-3">{% if not u.is_active %}{% pill "Nonaktif" "INACTIVE" %}{% elif u.profile.must_change_password %}{% pill "Menunggu ganti sandi" tone="yellow" %}{% else %}{% pill "Aktif" "ACTIVE" %}{% endif %}</td>
             <td class="px-4 py-3 text-right">
               <div class="relative inline-block text-left" x-data="{ open: false, pw: false }" @click.outside="open=false">
-                <button type="button" @click="open=!open" class="rounded-md p-1.5 hover:bg-stone-100" aria-label="Aksi">{% icon "dots" %}</button>
+                <button type="button" @click="open=!open" class="gt-iconbtn gt-iconbtn--sm" aria-label="Aksi">{% icon "dots" %}</button>
                 <div x-show="open" x-cloak class="absolute right-0 z-10 mt-1 w-64 rounded-xl border border-stone-200 bg-white p-2 text-left shadow-lg">
                   {% if not u.is_superuser %}
                   <form method="post" action="{% url 'core:staff_action' u.pk 'role' %}" class="flex gap-2 p-1">{% csrf_token %}
                     <select name="role">{% for r in roles_list %}<option value="{{ r }}" {% if r == u.role %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
-                    <button class="rounded-md bg-stone-100 px-3 text-xs font-medium hover:bg-stone-200">Ubah</button>
+                    <button class="gt-btn gt-btn--outline gt-btn--sm">Ubah</button>
                   </form>
                   {% endif %}
-                  <button type="button" @click="pw=!pw" class="block w-full rounded-md px-2 py-1.5 text-left hover:bg-stone-100">Atur ulang kata sandi</button>
+                  <button type="button" @click="pw=!pw" class="app-menu__item">Atur ulang kata sandi</button>
                   <form x-show="pw" x-cloak method="post" action="{% url 'core:staff_action' u.pk 'password' %}" class="flex gap-2 p-1">{% csrf_token %}
                     <input type="password" name="temp_password" placeholder="Sandi sementara" required>
-                    <button class="rounded-md bg-stone-100 px-3 text-xs font-medium hover:bg-stone-200">Simpan</button>
+                    <button class="gt-btn gt-btn--outline gt-btn--sm">Simpan</button>
                   </form>
                   {% if u.is_active %}
                   <form method="post" action="{% url 'core:staff_action' u.pk 'deactivate' %}" data-confirm-title="Nonaktifkan {{ u.username }}?" data-confirm="Pengguna tidak bisa masuk lagi sampai diaktifkan kembali. Riwayat penjualan dan laporannya tetap tersimpan." data-confirm-action="Nonaktifkan" data-confirm-danger>{% csrf_token %}
-                    <button class="block w-full rounded-md px-2 py-1.5 text-left text-red-700 hover:bg-stone-100">Nonaktifkan</button></form>
+                    <button class="app-menu__item app-value--danger">Nonaktifkan</button></form>
                   {% else %}
                   <form method="post" action="{% url 'core:staff_action' u.pk 'activate' %}">{% csrf_token %}
-                    <button class="block w-full rounded-md px-2 py-1.5 text-left hover:bg-stone-100">Aktifkan kembali</button></form>
+                    <button class="app-menu__item">Aktifkan kembali</button></form>
                   {% endif %}
                 </div>
               </div>
@@ -80,7 +80,7 @@
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <div class="app-sheet__foot">
           <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--primary gt-btn--md">Buat Akun</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">Buat Akun</button>
         </div>
       </form>
   {% include "components/sheet.html" with end=True %}

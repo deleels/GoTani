@@ -81,6 +81,7 @@ class DashboardView(RoleRequiredMixin, TemplateView):
                 form = DateRangeForm(initial={"start": start, "end": end})
         metrics = services.dashboard_metrics(start, end)
         ctx.update(nav="dashboard", form=form, m=metrics, k=metrics["kpis"], charts=self._chart_data(metrics),
+                   channel_parts=[("Kasir (POS)", metrics["kpis"]["revenue_pos"]), ("Invoice", metrics["kpis"]["revenue_invoice"])],
                    presets=self._presets(start, end))
         return ctx
 

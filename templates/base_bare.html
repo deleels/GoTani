@@ -8,6 +8,7 @@
   <link rel="manifest" href="{% url 'manifest' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/icons/favicon-32.png' %}">
   <link rel="apple-touch-icon" href="{% static 'core/icons/apple-touch-icon.png' %}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
   <link rel="stylesheet" href="{% static 'core/ds/tokens.css' %}">
   <link rel="stylesheet" href="{% static 'core/ds/bundle.css' %}">
   {# Tailwind Play CDN: accepted non-production compromise (D33). #}
@@ -47,6 +48,9 @@
   <script src="{% static 'core/confirm.js' %}" defer></script>
   <script src="{% static 'core/stage.js' %}" defer></script>
   <script src="{% static 'core/warnings.js' %}" defer></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/id.js"></script>
+  <script src="{% static 'core/datepicker.js' %}" defer></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <link rel="stylesheet" href="{% static 'core/gotani.css' %}">
   {% block head %}{% endblock %}

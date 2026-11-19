@@ -27,9 +27,12 @@ ICONS = {
     "menu": '<path d="M4 6h16M4 12h16M4 18h16"/>',
     "panel": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
     "chevron": '<path d="m6 9 6 6 6-6"/>',
+    "chevron-left": '<path d="m15 18-6-6 6-6"/>',
     "dots": '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
     "plus": '<path d="M12 5v14M5 12h14"/>',
     "x": '<path d="M18 6 6 18M6 6l12 12"/>',
+    "minus": '<path d="M5 12h14"/>',
+    "trash": '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
     "check": '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
     "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
     "arrow": '<path d="M7 17 17 7M8 7h9v9"/>',
@@ -117,6 +120,34 @@ def void_confirm(title, body, action, level=1):
 def info_tip(text, label="Penjelasan"):
     """Footnote behind an info chip (user preference): shown on hover, focus or tap via confirm.js."""
     return format_html(
-        '<button type="button" class="app-tip" data-tip="{}" aria-label="{}" aria-describedby="gt-tip">{}</button>',
+        '<button type="button" class="gt-tip" data-tip="{}" aria-label="{}" aria-describedby="gt-tip">{}</button>',
         text, label, icon("info", 14),
     )
+
+
+def _arc_point(frac):
+    """Point on the Gauge's half circle (centre 100,100, r 80) at `frac` of the way from left to right."""
+    import math
+
+    a = math.pi * (1 - max(0.0, min(1.0, frac)))
+    return f"{100 + 80 * math.cos(a):.2f} {100 - 80 * math.sin(a):.2f}"
+
+
+@register.inclusion_tag("components/gauge.html")
+def gauge(parts, caption="", uid="g"):
+    """Design-system Gauge (half donut) for a share of a whole (user preference: never a doughnut).
+
+    `parts`: up to two (label, value) pairs → green-600, green-800; whatever is left of the whole stays hatched.
+    The centre shows the first part's share."""
+    values = [max(float(v or 0), 0.0) for _, v in parts]
+    total = sum(values)
+    fracs = [v / total for v in values] if total else [0.0 for _ in values]
+    tones = ["done", "prog"]
+    segs, acc = [], 0.0
+    for (label, value), frac, tone in zip(parts, fracs, tones):
+        acc += frac
+        segs.append({"label": label, "value": value, "tone": tone, "end": acc, "pct": round(frac * 100)})
+    # Draw the longest (cumulative) arc first so each earlier part sits on top with its round cap.
+    paths = [{"tone": s["tone"], "d": f"M20 100 A80 80 0 0 1 {_arc_point(s['end'])}"} for s in reversed(segs) if s["end"] > 0]
+    return {"segs": segs, "paths": paths, "lead": segs[0] if segs and total else None, "caption": caption,
+            "uid": uid, "empty": not total}

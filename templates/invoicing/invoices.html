@@ -39,13 +39,13 @@
           <td class="px-4 py-3">{% pill inv.pay_label inv.pill_key %}</td>
           <td class="px-4 py-3 text-right">
             <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open=false">
-              <button type="button" @click="open=!open" class="rounded-md p-1.5 hover:bg-stone-100" aria-label="Aksi">{% icon "dots" %}</button>
+              <button type="button" @click="open=!open" class="gt-iconbtn gt-iconbtn--sm" aria-label="Aksi">{% icon "dots" %}</button>
               <div x-show="open" x-cloak class="absolute right-0 z-10 mt-1 w-48 rounded-xl border border-stone-200 bg-white p-1 text-left shadow-lg">
-                <a href="{% url 'invoicing:invoice_detail' inv.pk %}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Lihat</a>
-                {% if inv.status == 'DRAFT' %}<a href="{% url 'invoicing:invoice_edit' inv.pk %}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Ubah draf</a>{% endif %}
+                <a href="{% url 'invoicing:invoice_detail' inv.pk %}" class="app-menu__item">Lihat</a>
+                {% if inv.status == 'DRAFT' %}<a href="{% url 'invoicing:invoice_edit' inv.pk %}" class="app-menu__item">Ubah draf</a>{% endif %}
                 {% if inv.status == 'ISSUED' %}
-                <a href="{% url 'invoicing:invoice_print' inv.pk %}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Cetak</a>
-                {% if inv.pay_status != 'PAID' %}<a href="{% url 'invoicing:buyer_payment_new' inv.buyer_id %}?invoice={{ inv.pk }}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Catat pembayaran</a>{% endif %}
+                <a href="{% url 'invoicing:invoice_print' inv.pk %}" class="app-menu__item">Cetak</a>
+                {% if inv.pay_status != 'PAID' %}<a href="{% url 'invoicing:buyer_payment_new' inv.buyer_id %}?invoice={{ inv.pk }}" class="app-menu__item">Catat pembayaran</a>{% endif %}
                 {% endif %}
               </div>
             </div>

@@ -1,4 +1,4 @@
-{% load ui %}{# Form fields (D104 Phase 3): label above (14px ink 500), app-field, help tied with aria-describedby (Django adds it), errors under the field. #}
+{% load ui %}{# Form fields (D104 Phase 3): label above (14px ink 500), app-field, help behind an info tip next to the label (user preference) and still tied with aria-describedby (Django adds it), errors under the field. #}
 {% if form.non_field_errors %}
 <div class="gt-callout gt-callout--danger mb-4" role="alert">{% icon "alert" 18 %}<div>{% for e in form.non_field_errors %}<span class="gt-callout__title">{{ e }}</span>{% endfor %}</div></div>
 {% endif %}
@@ -9,19 +9,19 @@
     {% if field.widget_type == 'checkbox' %}
       <label class="gt-check" for="{{ field.id_for_label }}">{{ field }}<span><span class="gt-check__title">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</span>{% if field.help_text %}<span class="gt-check__desc" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}</span></label>
     {% elif field.widget_type == 'checkboxselectmultiple' %}
-      <fieldset><legend class="app-label">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</legend>
+      <fieldset><legend class="app-label app-labelrow">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}{% if field.help_text %}{% info_tip field.help_text %}{% endif %}</legend>
         {% for opt in field %}<label class="gt-check" for="{{ opt.id_for_label }}">{{ opt.tag }}<span class="gt-check__title">{{ opt.choice_label }}</span></label>{% endfor %}
       </fieldset>
-      {% if field.help_text %}<p class="app-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+      {% if field.help_text %}<span class="sr-only" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}
     {% elif field.widget_type == 'radioselect' and field.field.choices|length <= 4 %}
-      <fieldset><legend class="app-label">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</legend>
+      <fieldset><legend class="app-label app-labelrow">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}{% if field.help_text %}{% info_tip field.help_text %}{% endif %}</legend>
         <div class="app-radios">{% for opt in field %}<label class="gt-radio" for="{{ opt.id_for_label }}">{{ opt.tag }}<span class="gt-radio__body"><span class="gt-radio__title">{{ opt.choice_label }}</span></span></label>{% endfor %}</div>
       </fieldset>
-      {% if field.help_text %}<p class="app-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+      {% if field.help_text %}<span class="sr-only" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}
     {% else %}
-      <label class="app-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</label>
+      <div class="app-labelrow"><label class="app-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</label>{% if field.help_text %}{% info_tip field.help_text %}{% endif %}</div>
       {{ field }}
-      {% if field.help_text %}<p class="app-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+      {% if field.help_text %}<span class="sr-only" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}
     {% endif %}
     {% for e in field.errors %}<p class="app-error">{{ e }}</p>{% endfor %}
   </div>

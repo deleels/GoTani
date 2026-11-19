@@ -12,7 +12,7 @@
           <template x-for="s in p.stages" :key="s.value"><option :value="s.value" x-text="s.label" :selected="s.value === stage"></option></template>
         </select>
       </template>
-      <button class="gt-btn gt-btn--primary gt-btn--sm">Majukan tahap</button>
+      <button class="gt-btn gt-btn--solid gt-btn--sm">Majukan tahap</button>
       <label class="inline-flex items-center gap-1 text-xs text-stone-500" x-show="p.stages.length > 1">
         <input type="checkbox" name="skip" x-model="skip" @change="if (!skip) stage = p.stages[0].value"> Lewati tahap
       </label>
@@ -22,7 +22,7 @@
   <form method="post" action="{% url 'farm:cycle_stage_undo' cycle.pk %}" class="mt-2 text-xs"
         data-confirm-title="Batalkan perpindahan tahap?" data-confirm="{{ panel.cycle }} kembali dari {{ panel.undo.from }} ke {{ panel.undo.to }}.{% if panel.undo.from == 'Pembersihan' %} Siklus dibuka kembali.{% endif %} Hanya bisa hari ini dan selama belum ada catatan baru."
         data-confirm-action="Batalkan perpindahan" data-confirm-reason="Alasan pembatalan">{% csrf_token %}
-    <button class="text-amber-700 underline">Batalkan perpindahan terakhir ({{ panel.undo.from }} → {{ panel.undo.to }})</button>
+    <button class="gt-btn gt-btn--outline gt-btn--sm">Batalkan perpindahan terakhir ({{ panel.undo.from }} → {{ panel.undo.to }})</button>
   </form>
   {% endif %}
 </div>

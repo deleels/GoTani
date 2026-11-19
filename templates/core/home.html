@@ -9,7 +9,7 @@
 <div class="gt-pagehead app-home__head">
   <div class="app-pagehead__text">
     <h1>{{ greeting }}, {{ user.first_name|default:user.username }}</h1>
-    <p>{{ today_label }} · {% subtitle "Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar." worker="Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan." %}</p>
+    <p class="app-pagehead__sub">{{ today_label }} {% subtitle "Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar." worker="Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan." as sub %}{% info_tip sub %}</p>
   </div>
   <div class="gt-pagehead__actions"><a href="{% url 'farm:activities' %}?new=1" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Catat Kerja Hari Ini</a></div>
 </div>
@@ -34,14 +34,14 @@
 <div class="app-home__grid">
   <div class="app-home__col app-home__col--main">
   <section class="gt-card" style="--gt-row:1" aria-labelledby="h-stage">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">Tanaman per Tahap</h2><span class="gt-card__hint">Siklus aktif</span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">Tanaman per Tahap {% info_tip "Jumlah siklus aktif di tiap tahap tanam." %}</h2></div>
     {{ chart|json_script:"stage-data" }}
     <div class="relative h-64"><canvas id="stage-chart" role="img" aria-label="Jumlah siklus aktif per tahap"></canvas></div>
   </section>
   {% if finance %}
   <section class="gt-hero" style="--gt-row:2" aria-labelledby="h-finance">
-    <div class="gt-hero__head"><h2 id="h-finance" class="app-hero__title">Total penjualan</h2><a href="{% url 'dashboard' %}" class="gt-btn gt-btn--on-dark gt-btn--sm">Buka Analitik {% icon "arrow" 16 %}</a></div>
-    <div class="gt-hero__value"><strong>{{ finance.sales|rupiah }}</strong><span class="app-hero__note">POS + invoice, sepanjang waktu</span></div>
+    <div class="gt-hero__head"><h2 id="h-finance" class="app-hero__title">Total penjualan {% info_tip "POS + invoice, sepanjang waktu." %}</h2><a href="{% url 'dashboard' %}" class="gt-btn gt-btn--on-dark gt-btn--sm">Buka Analitik {% icon "arrow" 16 %}</a></div>
+    <div class="gt-hero__value"><strong>{{ finance.sales|rupiah }}</strong></div>
     <div class="gt-hero__stats">
       <div><span>Total biaya disetujui</span><b>{{ finance.expenses|rupiah }}</b></div>
       <div><span>Biaya umum</span><b>{{ finance.expenses_general|rupiah }}</b></div>
@@ -105,8 +105,10 @@
   const d = JSON.parse(document.getElementById("stage-data").textContent), G = window.gtCharts;
   new Chart(canvas, {
     type: "bar",
-    data: { labels: d.labels, datasets: [{ label: "Siklus", data: d.values, ...G.BAR, maxBarThickness: 18, backgroundColor: G.token("--green-600") }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.parsed.x + " siklus" } } },
+    data: { labels: d.labels, datasets: [{ label: "Siklus", data: d.values, ...G.BAR, maxBarThickness: 20, backgroundColor: G.vary(d.values) }] },
+    options: { maintainAspectRatio: false, layout: { padding: { right: 72 } },
+               plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.parsed.x + " siklus" } },
+                          gtTag: { index: G.peakIndex(d.values), text: Math.max(0, ...d.values) + " siklus" } },
                // Horizontal: eight stage names never fit under vertical bars in a half-width card.
                indexAxis: "y",
                scales: { x: G.axis({ beginAtZero: true, ticks: { precision: 0, padding: 8, maxTicksLimit: 5 } }),

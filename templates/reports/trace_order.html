@@ -4,8 +4,8 @@
 {% block head %}<style>@page { size: A4 landscape; margin: 10mm; } @media print { table { font-size: 10px; } }</style>{% endblock %}
 {% block content %}
 <div class="no-print mb-4 flex flex-wrap gap-2 text-sm">
-  <a href="{% url 'reports:trace_index' %}" class="rounded bg-stone-100 px-3 py-1.5">← Ketertelusuran</a>
-  <a href="{% url 'pos:receipt' order.pk %}" class="rounded bg-stone-100 px-3 py-1.5">Struk</a>
+  <a href="{% url 'reports:trace_index' %}" class="gt-btn gt-btn--outline gt-btn--sm">← Ketertelusuran</a>
+  <a href="{% url 'pos:receipt' order.pk %}" class="gt-btn gt-btn--outline gt-btn--sm">Struk</a>
   <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm">Cetak / Simpan PDF</button>
   <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--sm">Unduh CSV</a>
 </div>

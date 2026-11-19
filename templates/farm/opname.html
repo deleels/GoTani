@@ -17,7 +17,7 @@
       <label class="block"><span class="text-stone-600">Stok fisik (kg)</span>
         <input name="counted_kg" data-num="kg" inputmode="decimal" autocomplete="off" required class="mt-1 w-full rounded border border-stone-300 px-2 py-1.5"></label>
       <label class="block"><span class="text-stone-600">Catatan</span><input name="note" class="mt-1 w-full rounded border border-stone-300 px-2 py-1.5"></label>
-      <button class="gt-btn gt-btn--primary gt-btn--md gt-btn--block">Simpan hitungan</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Simpan hitungan</button>
     </form>
     {% else %}<p class="text-sm text-stone-500">Belum ada produk dengan lot. Catat panen dulu.</p>{% endif %}
   </aside>
@@ -50,7 +50,7 @@
               {% if c.status == 'PENDING' %}{% pill "Menunggu" tone="yellow" %}
                 {% if roles.finance %}<div class="mt-1 flex gap-2 text-xs">
                   <form method="post" data-confirm-title="Setujui opname {{ c.product }}?" data-confirm="{% if c.shortfall_kg %}Kekurangan {{ c.shortfall_kg|kg }} kg dihapusbukukan FIFO dari lot tertua sebagai susut (penyusutan).{% else %}Tidak ada kekurangan; stok tidak berubah.{% endif %}" data-confirm-action="Setujui" data-confirm-level="2">{% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="count" value="{{ c.pk }}"><button class="text-emerald-700 underline">Setujui</button></form>
-                  <form method="post" data-confirm-title="Tolak opname?" data-confirm="Hitungan ini tidak dipakai; stok tidak berubah." data-confirm-action="Tolak" data-confirm-reason="Alasan" data-confirm-reason-optional>{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="count" value="{{ c.pk }}"><button class="text-red-700 underline">Tolak</button></form>
+                  <form method="post" data-confirm-title="Tolak opname?" data-confirm="Hitungan ini tidak dipakai; stok tidak berubah." data-confirm-action="Tolak" data-confirm-reason="Alasan" data-confirm-reason-optional>{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="count" value="{{ c.pk }}"><button class="gt-btn gt-btn--outline-danger gt-btn--sm">Tolak</button></form>
                 </div>{% endif %}
               {% elif c.status == 'APPROVED' %}{% pill "Disetujui" tone="green" %}<p class="text-xs text-stone-500">{{ c.written_off_kg|kg }} kg dihapus</p>
               {% else %}{% pill "Ditolak" tone="red" %}{% endif %}

@@ -133,7 +133,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 | CASHIER | POS register and receipts only |
 
 ## UI (FarmCloud layout, GoTani's own brand — D66)
-- **Brand:** GoTani-design-system (tokens + CSS components, `gt-` classes), light theme only (D104). Bahasa Indonesia copy.
+- **Brand:** GoTani-design-system (tokens + CSS components, `gt-` classes), light theme only (D104). Button hierarchy, info-tip footnotes, themed date picker, varied bars and gauge: D107. Bahasa Indonesia copy.
 - **Shell:** left sidebar 16rem, collapses to a 3rem icon rail (Ctrl/⌘+B, state in localStorage); mobile = slide-in sheet from a hamburger. Header slot shows FarmProfile name/logo + user's role. Groups (role-filtered):
   - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
   - **PENJUALAN:** Kasir (POS) · Pesanan · Shift & Kas · Invoice · Pembeli

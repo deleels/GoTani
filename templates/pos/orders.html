@@ -2,44 +2,50 @@
 {% load gotani ui %}
 {% block title %}Pesanan{% endblock %}
 {% block content %}
-<div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">Pesanan {{ today|date:"d M Y" }}</h1>
-    <p class="mt-1 text-sm text-stone-500">Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER.</p>
+{# Pesanan (Phase 4c): table page pattern — page head with the date, three stat cards, gt-table; void via the shared reason dialog. #}
+<div class="gt-pagehead app-pagehead--sm">
+  <div class="app-pagehead__text">
+    <h1 class="app-pagehead__title">Pesanan {% info_tip "Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER." %}</h1>
+    <p>{{ today|date:"l, j F Y" }}</p>
   </div>
-  <form method="get" class="flex items-end gap-2 text-sm"><label class="w-44">Tanggal<input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" onchange="this.form.submit()"></label>
-    {% if not is_today %}<a href="?" class="gt-btn gt-btn--outline gt-btn--sm">Hari ini</a>{% endif %}</form>
+  <form method="get" class="gt-pagehead__actions app-orders__date">
+    <label><span class="sr-only">Tanggal</span><input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" class="app-field app-field--sm" onchange="this.form.submit()"></label>
+    {% if not is_today %}<a href="?" class="gt-btn gt-btn--outline gt-btn--sm">Hari ini</a>{% endif %}
+    <a href="{% url 'pos:register' %}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Transaksi baru</a>
+  </form>
 </div>
-<div class="mb-5 grid gap-3 sm:grid-cols-3">
-  {% include "components/kpi.html" with label="Order selesai" value=kpi.count %}
-  {% include "components/kpi.html" with label="Total dibayar" value=kpi.gross|rupiah %}
-  {% include "components/kpi.html" with label="Dibatalkan" value=kpi.voided %}
+<div class="gt-grid app-orders__stats">
+  {% include "components/kpi.html" with stat=True featured=True label="Total dibayar" value=kpi.gross|rupiah %}
+  {% include "components/kpi.html" with stat=True label="Order selesai" value=kpi.count %}
+  {% include "components/kpi.html" with stat=True label="Dibatalkan" value=kpi.voided %}
 </div>
-<div class="overflow-x-auto rounded-lg border bg-white">
-  <table class="w-full text-sm">
-    <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Nomor</th><th class="p-2">Waktu</th><th class="p-2">Kasir</th><th class="p-2">Bayar</th><th class="p-2 text-right">Total</th><th class="p-2">Status</th><th class="p-2"></th></tr></thead>
-    <tbody>
-    {% for o in orders %}
-      <tr class="border-t {% if o.status == 'VOIDED' %}text-stone-400{% endif %}">
-        <td class="p-2 font-mono">{{ o.order_number }}</td>
-        <td class="p-2">{{ o.created_at|date:"H:i" }}</td>
-        <td class="p-2">{{ o.cashier }}</td>
-        <td class="p-2">{{ o.get_payment_method_display }}</td>
-        <td class="p-2 text-right {% if o.status == 'VOIDED' %}line-through{% endif %}">{{ o.total_gross_idr|rupiah }}</td>
-        <td class="p-2">{% pill o.get_status_display o.status %}</td>
-        <td class="whitespace-nowrap p-2">
-          <a class="text-emerald-700 underline" href="{% url 'pos:receipt' o.pk %}">Struk</a>
-          {% if o.voidable %}
-          <form method="post" action="{% url 'pos:void' o.pk %}" class="inline" {% void_confirm "Batalkan order "|add:o.order_number|add:"?" "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka." "Batalkan order" %}>{% csrf_token %}
-            <input type="hidden" name="next" value="{% url 'pos:orders' %}">
-            <button class="ml-2 text-red-600 underline">Batalkan</button>
-          </form>
-          {% endif %}
-        </td>
-      </tr>
-    {% empty %}<tr><td colspan="7" class="px-4 py-10 text-center"><p class="font-medium">Belum ada order pada tanggal ini.</p><p class="mt-1 text-sm text-stone-500">Penjualan dari Kasir (POS) muncul di sini lengkap dengan struknya.</p></td></tr>{% endfor %}
-    </tbody>
-  </table>
-</div>
-<p class="mt-2 text-xs text-stone-400">Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER.</p>
+<section class="gt-card" aria-labelledby="h-orders">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-orders">Daftar order</h2></div>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>Nomor</th><th>Waktu</th><th>Kasir</th><th>Bayar</th><th class="num">Total</th><th>Status</th><th class="num"><span class="sr-only">Aksi</span></th></tr></thead>
+      <tbody>
+      {% for o in orders %}
+        <tr{% if o.status == 'VOIDED' %} class="app-row--void"{% endif %}>
+          <td class="app-mono">{{ o.order_number }}</td>
+          <td>{{ o.created_at|date:"H:i" }}</td>
+          <td>{{ o.cashier }}</td>
+          <td>{{ o.get_payment_method_display }}</td>
+          <td class="num"><b>{{ o.total_gross_idr|rupiah }}</b></td>
+          <td>{% pill o.get_status_display o.status %}</td>
+          <td class="num"><span class="app-actions">
+            <a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'pos:receipt' o.pk %}">Struk</a>
+            {% if o.voidable %}
+            <form method="post" action="{% url 'pos:void' o.pk %}" {% void_confirm "Batalkan order "|add:o.order_number|add:"?" "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka." "Batalkan order" %}>{% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'pos:orders' %}">
+              <button class="gt-btn gt-btn--outline-danger gt-btn--sm">Batalkan</button>
+            </form>
+            {% endif %}
+          </span></td>
+        </tr>
+      {% empty %}<tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada order pada tanggal ini.</span><span class="gt-callout__body">Penjualan dari Kasir (POS) muncul di sini lengkap dengan struknya.</span></div></div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 {% endblock %}

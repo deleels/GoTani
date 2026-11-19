@@ -12,10 +12,10 @@
       <button type="button" @click="picker=!picker" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Laporan Baru {% icon "chevron" 14 %}</button>
       <div x-show="picker" x-cloak class="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-stone-200 bg-white p-1 text-sm shadow-lg">
         {% for key, label, t in report_tabs %}
-          {% if key == 'panen' %}<a href="{% url 'farm:harvests' %}" class="block rounded-md px-3 py-2 hover:bg-stone-100">{{ label }}</a>
-          {% elif key == 'susut' %}<a href="{% url 'farm:spoilage' %}" class="block rounded-md px-3 py-2 hover:bg-stone-100">{{ label }}</a>
-          {% elif key == 'prapanen' %}<a href="{% url 'farm:preharvest_new' %}" class="block rounded-md px-3 py-2 hover:bg-stone-100">Cek {{ label }}</a>
-          {% else %}<a href="?tab={{ key }}&new=1" class="block rounded-md px-3 py-2 hover:bg-stone-100">{{ label }}</a>{% endif %}
+          {% if key == 'panen' %}<a href="{% url 'farm:harvests' %}" class="app-menu__item">{{ label }}</a>
+          {% elif key == 'susut' %}<a href="{% url 'farm:spoilage' %}" class="app-menu__item">{{ label }}</a>
+          {% elif key == 'prapanen' %}<a href="{% url 'farm:preharvest_new' %}" class="app-menu__item">Cek {{ label }}</a>
+          {% else %}<a href="?tab={{ key }}&new=1" class="app-menu__item">{{ label }}</a>{% endif %}
         {% endfor %}
       </div>
     </div>
@@ -87,7 +87,7 @@
             {% else %}<td class="px-4 py-3">{% if a.input_item %}<a class="hover:underline" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}—{% endif %}</td><td class="px-4 py-3 text-right">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td>{% endif %}
             <td class="px-4 py-3 text-stone-600">{{ a.application_method }}{% if a.application_method and a.notes %} · {% endif %}{{ a.notes|truncatechars:80 }}</td>
             <td class="px-4 py-3">{{ a.recorded_by|default:"—" }}</td>
-            {% if roles.finance %}<td class="px-4 py-3 text-right"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" data-confirm-title="Hapus kegiatan?" data-confirm="Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen)." data-confirm-action="Hapus kegiatan" data-confirm-danger>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="text-xs text-red-600 underline">Hapus</button></form></td>{% endif %}
+            {% if roles.finance %}<td class="px-4 py-3 text-right"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" data-confirm-title="Hapus kegiatan?" data-confirm="Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen)." data-confirm-action="Hapus kegiatan" data-confirm-danger>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="gt-btn gt-btn--outline-danger gt-btn--sm">Hapus</button></form></td>{% endif %}
           </tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=8 msg="Belum ada laporan jenis ini. Klik “Laporan Baru” untuk mencatat pekerjaan lapangan." %}{% endfor %}
         </tbody>
@@ -106,7 +106,7 @@
         {% if report_tab == 'pemupukan' or report_tab == 'pestisida' or report_tab == 'penanaman' %}<p class="mt-2 text-xs text-stone-400">Memilih input akan memotong stok input dengan satuannya sendiri.</p>{% endif %}
         <div class="app-sheet__foot">
           <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--primary gt-btn--md">Simpan</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button>
         </div>
       </form>
   {% include "components/sheet.html" with end=True %}

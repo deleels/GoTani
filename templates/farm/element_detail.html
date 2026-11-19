@@ -54,7 +54,7 @@
       <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--primary gt-btn--md">Mulai</button></div>
+          <button class="gt-btn gt-btn--solid gt-btn--md">Mulai</button></div>
       </form>
   {% include "components/sheet.html" with end=True %}
 </div>

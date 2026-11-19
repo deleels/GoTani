@@ -113,7 +113,8 @@ class ElementCreateView(FarmPage):
     tab = "cycles"
     success_url_name = "farm:cycles"
     success_message = "Elemen kebun ditambahkan."
-    extra_context = {"page_title": "Tambah elemen kebun"}
+    extra_context = {"page_title": "Tambah elemen kebun", "back_url": "farm:cycles",
+                     "page_help": "Elemen adalah satu bedengan, bak hidroponik atau area tanam. Luasnya dipakai untuk hasil per m² dan untuk membagi biaya."}
 
     def perform(self, form):
         return FarmElement.objects.create(**form.cleaned_data)
@@ -263,7 +264,8 @@ class PreHarvestCheckView(FarmPage):
     template_name = "farm/form_page.html"
     form_class = PreHarvestForm
     success_message = "Cek pra-panen dicatat."
-    extra_context = {"page_title": "Cek pra-panen"}
+    extra_context = {"page_title": "Cek pra-panen", "back_url": "farm:activities", "back_query": "?tab=prapanen",
+                     "page_help": "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya."}
 
     def get_initial(self):
         return {"cycle": self.request.GET.get("cycle")}

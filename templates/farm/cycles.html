@@ -1,5 +1,5 @@
 {% extends "farm/_layout.html" %}
-{% load gotani %}
+{% load gotani ui %}
 {% block title %}Elemen & Siklus{% endblock %}
 {% block content %}
 <div class="mb-5">
@@ -16,7 +16,7 @@
   <section class="lg:col-span-2">
     <div class="mb-3 flex items-center justify-between">
       <h2 class="text-lg font-semibold">Elemen kebun</h2>
-      {% if roles.finance %}<a href="{% url 'farm:element_create' %}" class="rounded bg-stone-800 px-3 py-1.5 text-sm text-white">+ Elemen</a>{% endif %}
+      {% if roles.finance %}<a href="{% url 'farm:element_create' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} Elemen</a>{% endif %}
     </div>
     <div class="space-y-3">
       {% for el in elements %}
@@ -65,7 +65,7 @@
       <h2 class="mb-3 font-semibold">Mulai siklus tanam</h2>
       <form method="post">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <button class="mt-3 gt-btn gt-btn--primary gt-btn--md gt-btn--block">Mulai siklus</button>
+        <button class="mt-3 gt-btn gt-btn--solid gt-btn--md gt-btn--block">Mulai siklus</button>
       </form>
     </div>
   </aside>

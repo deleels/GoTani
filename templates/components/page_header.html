@@ -1,8 +1,8 @@
-{# Page head (D68): include with title= subtitle= and optionally actions= (rendered HTML, e.g. from {% with %} or a context var). #}
+{% load ui %}{# Page head (D68): include with title=, subtitle= (an explanation: shown behind an info tip, user preference), note= (short inline context such as a date) and optionally actions= (rendered HTML). #}
 <div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
-    <h1>{{ title }}</h1>
-    {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
+    <h1 class="app-pagehead__title">{{ title }}{% if subtitle %} {% info_tip subtitle %}{% endif %}</h1>
+    {% if note %}<p>{{ note }}</p>{% endif %}
   </div>
   {% if actions %}<div class="gt-pagehead__actions">{{ actions }}</div>{% endif %}
 </div>

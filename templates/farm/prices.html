@@ -18,7 +18,7 @@
       <tr class="border-t"><td class="p-2">{{ p }}</td><td class="p-2 text-right">{{ p.stock_kg|kg }} kg</td>
         <td class="p-2"><form method="post" class="flex gap-2" data-confirm="" data-confirm-if="priceWarn(form)" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
           <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required placeholder="mis. 25.000" class="w-40 rounded border border-stone-300 px-2 py-1">
-          <button class="gt-btn gt-btn--primary gt-btn--sm">Simpan</button></form></td></tr>
+          <button class="gt-btn gt-btn--solid gt-btn--sm">Simpan</button></form></td></tr>
     {% empty %}<tr><td colspan="3" class="p-3 text-stone-400">Semua produk sudah berharga.</td></tr>{% endfor %}
     </tbody>
   </table>
@@ -35,8 +35,8 @@
           <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" value="{{ p.selling_price_idr|idnum:0 }}" class="w-36 rounded border border-stone-300 px-2 py-1" aria-label="Harga per kg">
           <input name="pos_step_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.pos_step_kg|idnum:3 }}" class="w-20 rounded border border-stone-300 px-2 py-1" aria-label="Langkah kasir (kg)" title="Tombol − / + di kasir mengubah jumlah sebesar ini">
           <input name="min_alert_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.min_alert_kg|idnum:3 }}" placeholder="—" class="w-20 rounded border border-stone-300 px-2 py-1" aria-label="Batas stok menipis (kg)" title="Notifikasi bila stok ≤ angka ini; kosongkan untuk mematikan">
-          <button class="rounded bg-stone-800 px-3 py-1 text-white">Simpan</button>
-          <button name="clear" value="1" class="text-xs text-red-600 underline" formnovalidate data-confirm-title="Hapus harga {{ p }}?" data-confirm="Produk akan disembunyikan dari kasir sampai diberi harga lagi." data-confirm-action="Hapus harga" data-confirm-danger>Hapus harga</button></form></td></tr>
+          <button class="gt-btn gt-btn--solid gt-btn--sm">Simpan</button>
+          <button name="clear" value="1" class="gt-btn gt-btn--outline-danger gt-btn--sm" formnovalidate data-confirm-title="Hapus harga {{ p }}?" data-confirm="Produk akan disembunyikan dari kasir sampai diberi harga lagi." data-confirm-action="Hapus harga" data-confirm-danger>Hapus harga</button></form></td></tr>
     {% empty %}<tr><td colspan="4" class="p-3 text-stone-400">Belum ada.</td></tr>{% endfor %}
     </tbody>
   </table>

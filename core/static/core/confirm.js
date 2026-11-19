@@ -109,7 +109,7 @@
     dlg.querySelector('[data-check]').checked = false;
     var ok = dlg.querySelector('[data-ok]');
     ok.textContent = opts.action || 'Lanjutkan';
-    ok.className = 'gt-btn gt-btn--md ' + (opts.danger ? 'gt-btn--danger' : 'gt-btn--primary');
+    ok.className = 'gt-btn gt-btn--md ' + (opts.danger ? 'gt-btn--danger' : 'gt-btn--solid');
     dlg.returnValue = '';
     dlg._sync();
     dlg.showModal();
@@ -183,7 +183,7 @@
   function ensure() {
     if (bubble) return bubble;
     bubble = document.createElement('div');
-    bubble.id = 'gt-tip'; bubble.className = 'app-tip__bubble'; bubble.setAttribute('role', 'tooltip'); bubble.hidden = true;
+    bubble.id = 'gt-tip'; bubble.className = 'gt-tip__bubble'; bubble.setAttribute('role', 'tooltip'); bubble.hidden = true;
     document.body.appendChild(bubble);
     return bubble;
   }
@@ -199,7 +199,7 @@
     b.style.left = left + 'px'; b.style.top = top + 'px';
   }
   function hide() { if (bubble) bubble.hidden = true; current = null; }
-  function tipOf(e) { return e.target && e.target.closest ? e.target.closest('.app-tip') : null; }
+  function tipOf(e) { return e.target && e.target.closest ? e.target.closest('.gt-tip') : null; }
   document.addEventListener('mouseover', function (e) { var t = tipOf(e); if (t) show(t); });
   document.addEventListener('mouseout', function (e) { var t = tipOf(e); if (t && t === current && document.activeElement !== t) hide(); });
   document.addEventListener('focusin', function (e) { var t = tipOf(e); if (t) show(t); });
