@@ -61,6 +61,7 @@ PILL_TONES = {
     "blue": "app-pill--info",
     "teal": "app-pill--partial",
     "red": "gt-pill--pending",
+    "orange": "gt-pill--late",
     "green": "gt-pill--completed",
     "gray": "app-pill--neutral",
 }
@@ -69,7 +70,7 @@ DOT_STATUSES = {"IN_PROGRESS", "OVERDUE"}
 STATUS_TONES = {
     "PENDING": "yellow", "DRAFT": "gray", "UNPAID": "blue",
     "APPROVED": "blue", "ISSUED": "blue", "PARTIALLY_PAID": "teal",
-    "OVERDUE": "red", "VOID": "red", "VOIDED": "red", "REJECTED": "red", "INACTIVE": "red",
+    "OVERDUE": "orange", "VOID": "red", "VOIDED": "red", "REJECTED": "red", "INACTIVE": "red",
     "PAID": "green", "COMPLETED": "green", "ACTIVE": "green",
 }
 

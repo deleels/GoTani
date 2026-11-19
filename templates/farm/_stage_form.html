@@ -2,24 +2,24 @@
 {{ panel|json_script:panel.dom_id }}
 <div x-data="stageForm('{{ panel.dom_id }}')" class="{{ wrap_class|default:'' }}">
   <template x-if="p.stages.length">
-    <form method="post" action="{% url 'farm:cycle_stage' cycle.pk %}" @submit.prevent="confirmAdvance($el)" class="flex flex-wrap items-center gap-2 text-sm">{% csrf_token %}
+    <form method="post" action="{% url 'farm:cycle_stage' cycle.pk %}" @submit.prevent="confirmAdvance($el)" class="app-stage">{% csrf_token %}
       {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
       <input type="hidden" name="stage" :value="stage">
-      <span class="text-stone-600">Berikutnya:</span>
-      <template x-if="!skip"><span class="font-medium" x-text="p.stages[0].label"></span></template>
+      <span class="app-row__meta">Berikutnya</span>
+      <template x-if="!skip"><span class="gt-chip gt-chip--sm" x-text="p.stages[0].label"></span></template>
       <template x-if="skip">
-        <select x-model="stage" class="w-auto rounded border border-stone-300 px-2 py-1" aria-label="Tahap tujuan">
+        <select x-model="stage" class="app-field app-field--sm app-field--auto" aria-label="Tahap tujuan">
           <template x-for="s in p.stages" :key="s.value"><option :value="s.value" x-text="s.label" :selected="s.value === stage"></option></template>
         </select>
       </template>
       <button class="gt-btn gt-btn--solid gt-btn--sm">Majukan tahap</button>
-      <label class="inline-flex items-center gap-1 text-xs text-stone-500" x-show="p.stages.length > 1">
-        <input type="checkbox" name="skip" x-model="skip" @change="if (!skip) stage = p.stages[0].value"> Lewati tahap
+      <label class="gt-check app-check--inline" x-show="p.stages.length > 1">
+        <input type="checkbox" name="skip" x-model="skip" @change="if (!skip) stage = p.stages[0].value"><span class="gt-check__title">Lewati tahap</span>
       </label>
     </form>
   </template>
   {% if panel.undo %}
-  <form method="post" action="{% url 'farm:cycle_stage_undo' cycle.pk %}" class="mt-2 text-xs"
+  <form method="post" action="{% url 'farm:cycle_stage_undo' cycle.pk %}" class="app-stage app-stage--undo"
         data-confirm-title="Batalkan perpindahan tahap?" data-confirm="{{ panel.cycle }} kembali dari {{ panel.undo.from }} ke {{ panel.undo.to }}.{% if panel.undo.from == 'Pembersihan' %} Siklus dibuka kembali.{% endif %} Hanya bisa hari ini dan selama belum ada catatan baru."
         data-confirm-action="Batalkan perpindahan" data-confirm-reason="Alasan pembatalan">{% csrf_token %}
     <button class="gt-btn gt-btn--outline gt-btn--sm">Urungkan</button> {% info_tip "Batalkan perpindahan terakhir: "|add:panel.undo.from|add:" → "|add:panel.undo.to %}

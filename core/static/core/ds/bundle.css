@@ -63,11 +63,12 @@ a.gt-btn{text-decoration:none}
 .gt-badge--dark{background:var(--green-800);color:var(--ink-inverse);border-radius:var(--radius-xs);height:18px;min-width:0;padding:0 6px;font-size:10px}
 
 /* ---------- StatusPill ---------- */
-.gt-pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:var(--radius-xs);border:1px solid currentColor;font:500 10px/1 var(--font-sans);white-space:nowrap}
+.gt-pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:var(--radius-xs);border:0;font:500 10px/1 var(--font-sans);white-space:nowrap}
 .gt-pill .gt-ico{width:11px;height:11px;stroke-width:2}
 .gt-pill--completed{color:var(--success-ink);background:var(--green-100)}
 .gt-pill--progress{color:var(--warning-ink);background:var(--warning-bg)}
 .gt-pill--pending{color:var(--pending-ink);background:var(--pending-bg)}
+.gt-pill--late{color:var(--late-ink);background:var(--late-bg)}
 .gt-pill--dot{border-color:transparent}
 .gt-pill--dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
 .gt-pill--plain{border:0;background:transparent;padding:0;font-size:12px}
@@ -337,14 +338,16 @@ a.gt-btn{text-decoration:none}
 .gt-doc__signed{display:inline-flex;align-items:center;gap:4px;font:500 13px/1 var(--font-sans);color:var(--green-600)}
 
 /* ---------- Callout ---------- */
-.gt-callout{display:flex;gap:var(--space-3);align-items:flex-start;padding:var(--space-4);border-radius:var(--radius-md);background:var(--surface);font-size:14px;line-height:20px}
-.gt-callout .gt-ico{width:18px;height:18px;margin-top:1px;color:var(--ink-muted)}
+/* Callout: a quiet neutral row; the tone lives only in the round icon disc (no big coloured fills). */
+.gt-callout{display:flex;gap:var(--space-3);align-items:center;padding:var(--space-3) var(--space-4) var(--space-3) var(--space-3);border-radius:var(--radius-lg);background:var(--surface);font-size:14px;line-height:20px}
+.gt-callout>.gt-ico{flex:none;box-sizing:content-box;width:18px;height:18px;padding:9px;border-radius:50%;background:var(--surface-raised);color:var(--ink-muted)}
 .gt-callout__title{display:block;font-weight:500;font-size:15px;line-height:22px}
 .gt-callout__body{color:var(--ink-muted)}
-.gt-callout--warning{background:var(--highlight)}.gt-callout--warning .gt-ico{color:var(--warning-text)}
-.gt-callout--danger{background:var(--pending-bg)}.gt-callout--danger .gt-ico{color:var(--pending-ink)}
-.gt-callout--success{background:var(--green-100)}.gt-callout--success .gt-ico{color:var(--green-600)}
+.gt-callout--warning>.gt-ico{background:var(--late-bg);color:var(--late-ink)}
+.gt-callout--danger>.gt-ico{background:var(--pending-bg);color:var(--pending-ink)}
+.gt-callout--success>.gt-ico{background:var(--green-100);color:var(--green-700)}
 .gt-callout--on-white{background:var(--surface)}
+.gt-callout--raised{background:var(--surface-raised)}
 .gt-banner{padding:var(--space-2) var(--space-4);border-radius:var(--radius-pill);background:var(--highlight);font-size:13px;line-height:18px;text-align:center}
 
 /* ---------- Stepper (vertical timeline) ---------- */

@@ -3,70 +3,76 @@
 {% block title %}{{ cycle.variety }} @ {{ cycle.element }}{% endblock %}
 {% block content %}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
-  <a href="{% url 'farm:element_detail' cycle.element_id %}" class="text-sm text-stone-500 hover:underline">← {{ cycle.element }}</a>
-  <div class="mb-5 mt-1 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="flex flex-wrap items-center gap-3 text-2xl font-bold tracking-tight">{{ cycle.variety }}
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text">
+      <a href="{% url 'farm:element_detail' cycle.element_id %}" class="app-back">{% icon "chevron-left" 16 %} {{ cycle.element }}</a>
+      <h1 class="app-pagehead__title">{{ cycle.variety }}
         {% if cycle.is_active %}{% pill cycle.get_stage_display tone="green" %}{% else %}{% pill "Ditutup" tone="gray" %}{% endif %}
-        {% if overdue %}{% pill "Panen terlewat" tone="red" %}{% endif %}</h1>
-      <p class="mt-1 text-sm text-stone-500">{{ cycle.element }} · mulai {{ cycle.planting_start_date|date:"d M Y" }} · {{ days }} hari{% if not cycle.is_active %} · ditutup {{ cycle.closed_at|date:"d M Y" }}{% endif %}</p>
+        {% if overdue %}{% pill "Panen terlewat" tone="orange" %}{% endif %}</h1>
+      <p>{{ cycle.element }} · mulai {{ cycle.planting_start_date|date:"d M Y" }} · {{ days }} hari{% if not cycle.is_active %} · ditutup {{ cycle.closed_at|date:"d M Y" }}{% endif %}</p>
     </div>
-    <div class="flex flex-wrap gap-2">
+    <div class="gt-pagehead__actions">
       {% if cycle.is_active %}
-      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md">Ubah perkiraan</button>
+      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md" title="Ubah perkiraan siklus">Perkiraan</button>
       <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--outline gt-btn--md">Cek pra-panen</a>
       {% endif %}
       {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Telusuri</a>{% endif %}
     </div>
   </div>
 
-  <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    {% with ys=yield_summary %}
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Perkiraan panen</p>
-      <p class="mt-1 text-xl font-semibold {% if overdue %}text-red-700{% endif %}">{{ cycle.expected_harvest_date|date:"d M Y"|default:"—" }}</p>
-      {% if cycle.variety.days_to_harvest %}<p class="text-xs text-stone-400">Umur panen varietas {{ cycle.variety.days_to_harvest }} hari</p>{% endif %}</div>
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Hasil layak jual vs perkiraan</p>
-      <p class="mt-1 text-xl font-semibold">{{ ys.actual_kg|kg }} kg{% if ys.expected_kg %} <span class="text-sm font-normal text-stone-500">/ {{ ys.expected_kg|kg }} kg</span>{% endif %}</p>
-      {% if ys.pct is not None %}<div class="mt-2 h-1.5 rounded-full bg-stone-100"><div class="h-1.5 rounded-full bg-emerald-500" style="width: {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></div></div><p class="mt-1 text-xs text-stone-400">{{ ys.pct|pct }} dari perkiraan</p>{% endif %}</div>
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Jumlah tanaman</p>
-      <p class="mt-1 text-xl font-semibold">{{ cycle.planted_qty|default:"—" }}</p>
-      {% if ys.per_plant_kg is not None %}<p class="text-xs text-stone-400">{{ ys.per_plant_kg|kg }} kg per tanaman</p>{% endif %}</div>
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Cek pra-panen terakhir</p>
-      {% if latest_check %}<p class="mt-1 text-xl font-semibold {% if latest_check.completed_pct < 100 %}text-amber-700{% else %}text-emerald-700{% endif %}">{{ latest_check.completed_pct|pct:0 }}</p><p class="text-xs text-stone-400">{{ latest_check.recorded_at|date:"d M Y H:i" }}</p>
-      {% else %}<p class="mt-1 text-xl font-semibold text-stone-400">Belum ada</p>{% endif %}</div>
-    {% endwith %}
-  </div>
+  {# Stage track: done green, current dark, still-to-come hatched ("not yet"). #}
+  <section class="gt-card app-section" aria-labelledby="h-stage">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">Tahap tanam</h2><span class="gt-card__hint">{% if cycle.is_active %}{{ cycle.get_stage_display }}{% else %}Ditutup{% endif %}</span></div>
+    <div class="app-stages">
+      <div class="gt-seg app-stages__bar" aria-hidden="true">{% for value, label in stage_choices %}<i class="{% if value == cycle.stage %}{% elif forloop.counter0 < cycle.stage_index %}ok{% else %}todo{% endif %}"></i>{% endfor %}</div>
+      <ol class="app-stages__labels">{% for value, label in stage_choices %}<li class="{% if value == cycle.stage %}is-current{% elif forloop.counter0 < cycle.stage_index %}is-done{% endif %}"{% if value == cycle.stage %} aria-current="step"{% endif %}>{{ label }}</li>{% endfor %}</ol>
+    </div>
+    {% if panel.stages or panel.undo %}{% include "farm/_stage_form.html" with next_url=request.path %}{% endif %}
+  </section>
 
-  {% if panel.stages or panel.undo %}
-  <div class="mb-5 rounded-xl border border-stone-200 bg-white p-4 text-sm">
-    {% include "farm/_stage_form.html" with next_url=request.path %}
-    <ol class="mt-3 flex w-full flex-wrap gap-1 text-xs">{% for value, label in stage_choices %}<li class="rounded-full px-2 py-0.5 {% if value == cycle.stage %}bg-emerald-600 text-white{% elif forloop.counter0 < cycle.stage_index %}bg-emerald-100 text-emerald-800{% else %}bg-stone-100 text-stone-500{% endif %}">{{ label }}</li>{% endfor %}</ol>
-  </div>
-  {% endif %}
+  {% with ys=yield_summary %}
+  <section class="gt-card app-section" aria-labelledby="h-short">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-short">Ringkas</h2></div>
+    <div class="gt-metrics app-metrics4">
+      <div class="gt-metric"><span class="gt-metric__label">Perkiraan panen{% if cycle.variety.days_to_harvest %} {% with t=cycle.variety.days_to_harvest|stringformat:"d" %}{% info_tip "Umur panen varietas "|add:t|add:" hari." %}{% endwith %}{% endif %}</span>
+        <span class="gt-metric__value {% if overdue %}app-value--late{% endif %}">{{ cycle.expected_harvest_date|date:"d/m/Y"|default:"—" }}</span></div>
+      <div class="gt-metric"><span class="gt-metric__label">Hasil layak jual</span>
+        <span class="gt-metric__value">{{ ys.actual_kg|kg }} kg</span>
+        {% if ys.pct is not None %}<span class="gt-seg app-yield" aria-hidden="true"><i class="ok" style="flex: 0 0 {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></i><i class="todo"></i></span>
+        <span class="gt-metric__note">{{ ys.pct|pct }} dari {{ ys.expected_kg|kg }} kg</span>{% elif ys.expected_kg %}<span class="gt-metric__note">dari {{ ys.expected_kg|kg }} kg</span>{% endif %}</div>
+      <div class="gt-metric"><span class="gt-metric__label">Jumlah tanaman</span>
+        <span class="gt-metric__value">{{ cycle.planted_qty|default:"—" }}</span>
+        {% if ys.per_plant_kg is not None %}<span class="gt-metric__note">{{ ys.per_plant_kg|kg }} kg per tanaman</span>{% endif %}</div>
+      <div class="gt-metric"><span class="gt-metric__label">Cek pra-panen</span>
+        {% if latest_check %}<span class="gt-metric__value {% if latest_check.completed_pct < 100 %}app-value--late{% else %}app-value--positive{% endif %}">{{ latest_check.completed_pct|pct:0 }}</span><span class="gt-metric__note">{{ latest_check.recorded_at|date:"d M Y H:i" }}</span>
+        {% else %}<span class="gt-metric__value app-muted">—</span><span class="gt-metric__note">Belum ada</span>{% endif %}</div>
+    </div>
+  </section>
+  {% endwith %}
 
   {% if roles.finance %}
-  <div class="mb-5 grid gap-3 sm:grid-cols-3">
-    {% include "components/kpi.html" with label="Biaya terserap ke panen" value=trace.totals.absorbed_cost|rupiah %}
-    {% include "components/kpi.html" with label="Biaya belum terserap" value=unabsorbed|rupiah tip="Dihapusbukukan bila siklus ditutup." %}
-    {% include "components/kpi.html" with label="Pendapatan (POS + invoice)" value=trace.totals.revenue|rupiah %}
+  <div class="gt-grid app-kpis">
+    {% include "components/kpi.html" with stat=True featured=True label="Biaya terserap" value=trace.totals.absorbed_cost|rupiah tip="Biaya yang sudah masuk ke HPP panen." %}
+    {% include "components/kpi.html" with stat=True label="Belum terserap" value=unabsorbed|rupiah tip="Dihapusbukukan bila siklus ditutup." %}
+    {% include "components/kpi.html" with stat=True label="Pendapatan" value=trace.totals.revenue|rupiah tip="POS + invoice dari panen siklus ini." %}
   </div>
   {% endif %}
 
-  <div class="rounded-xl border border-stone-200 bg-white">
-    <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Linimasa</h2></div>
-    <ol class="divide-y divide-stone-100">
+  <section class="gt-card" aria-labelledby="h-time">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-time">Linimasa</h2></div>
+    <ol class="gt-stepper">
       {% for e in events %}
-      <li class="flex gap-3 px-4 py-3 text-sm">
-        <span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {% if e.kind == 'harvest' %}bg-emerald-500{% elif e.kind == 'spoilage' %}bg-red-500{% elif e.kind == 'check' %}bg-sky-500{% elif e.kind == 'start' or e.kind == 'close' %}bg-stone-800{% else %}bg-amber-400{% endif %}"></span>
-        <div class="min-w-0 flex-1">
-          <p><span class="font-medium">{{ e.title }}</span> <span class="text-stone-500">{{ e.body }}</span></p>
-          <p class="text-xs text-stone-400">{{ e.at|date:"d M Y H:i" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</p>
-          {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="Foto pengamatan" class="mt-2 h-24 rounded-lg object-cover"></a>{% endif %}
+      <li class="gt-step gt-step--done app-step app-step--{{ e.kind }}">
+        <span class="gt-step__mark"></span>
+        <div class="app-step__body">
+          <span class="gt-step__title">{{ e.title }}</span>{% if e.body %} <span class="app-muted">{{ e.body }}</span>{% endif %}
+          <span class="gt-step__meta app-block">{{ e.at|date:"d M Y H:i" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</span>
+          {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="Foto pengamatan" class="app-photo"></a>{% endif %}
         </div>
       </li>
       {% endfor %}
     </ol>
-  </div>
+  </section>
 
   {% if cycle.is_active %}
   {% include "components/sheet.html" with title="Perkiraan siklus" %}

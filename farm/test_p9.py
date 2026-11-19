@@ -279,7 +279,7 @@ class PageAnatomyTests(P9Fixtures):
         self.client.force_login(self.worker)
         for name in ("farm:harvests", "farm:inputs", "farm:spoilage", "farm:cycles"):
             r = self.client.get(reverse(name))
-            self.assertContains(r, "text-2xl font-bold")
+            self.assertContains(r, "gt-pagehead")
             self.assertNotRegex(r.content.decode(), r"Rp\d")
 
 

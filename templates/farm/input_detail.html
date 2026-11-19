@@ -3,49 +3,53 @@
 {% block title %}{{ item.name }}{% endblock %}
 {% block content %}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
-  <a href="{% url 'farm:inputs' %}" class="text-sm text-stone-500 hover:underline">← Inventaris Input</a>
-  <div class="mb-5 mt-1 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="flex items-center gap-3 text-2xl font-bold tracking-tight">{{ item.name }} {% if item.is_low_stock %}{% pill "Stok menipis" tone="yellow" %}{% endif %}</h1>
-      <p class="mt-1 text-sm text-stone-500">{{ item.get_item_type_display }} · satuan {{ item.unit }}</p>
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text">
+      <a href="{% url 'farm:inputs' %}" class="app-back">{% icon "chevron-left" 16 %} Inventaris Input</a>
+      <h1 class="app-pagehead__title">{{ item.name }} {% if item.is_low_stock %}{% pill "Stok menipis" tone="orange" %}{% endif %}</h1>
+      <p>{{ item.get_item_type_display }} · satuan {{ item.unit }}</p>
     </div>
-    {% if roles.finance %}<button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Tambah stok</button>{% endif %}
+    {% if roles.finance %}<div class="gt-pagehead__actions"><button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Tambah stok</button></div>{% endif %}
   </div>
 
-  <div class="mb-5 grid gap-3 sm:grid-cols-3">
-    {% with v=item.stock_qty|kg|add:" "|add:item.unit h=item.min_alert_qty|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with label="Stok saat ini" value=v hint="Batas peringatan "|add:h %}{% endwith %}
-    {% with v=used_total|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with label="Total terpakai" value=v %}{% endwith %}
-    {% if roles.finance %}{% include "components/kpi.html" with label="Biaya rata-rata per satuan" value=item.avg_cost_per_unit_idr|rupiah %}{% endif %}
+  <div class="gt-grid app-kpis">
+    {% with v=item.stock_qty|kg|add:" "|add:item.unit h=item.min_alert_qty|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with stat=True featured=True compact=True label="Stok saat ini" value=v hint="Batas peringatan "|add:h %}{% endwith %}
+    {% with v=used_total|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with stat=True compact=True label="Total terpakai" value=v %}{% endwith %}
+    {% if roles.finance %}{% include "components/kpi.html" with stat=True label="Biaya rata-rata" value=item.avg_cost_per_unit_idr|rupiah tip="Biaya rata-rata per satuan." %}{% endif %}
   </div>
 
-  <div class="grid gap-5 lg:grid-cols-3">
-    <div class="rounded-xl border border-stone-200 bg-white lg:col-span-2">
-      <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Riwayat mutasi</h2></div>
-      <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200"><th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Dipakai di</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3 text-right">Saldo</th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+  <div class="app-split">
+    <section class="gt-card app-tablecard">
+      <div class="gt-card__head"><h2 class="gt-card__title">Riwayat mutasi</h2></div>
+      <div class="app-table-wrap">
+      <table class="gt-table">
+        <thead><tr><th>Waktu</th><th>Jenis</th><th>Dipakai di</th><th class="num">Jumlah</th><th class="num">Saldo</th></tr></thead>
+        <tbody>
         {% for r in page.object_list %}
-          <tr><td class="whitespace-nowrap px-4 py-3">{{ r.timestamp|date:"d M Y H:i" }}</td><td class="px-4 py-3">{{ r.get_movement_type_display }}</td>
-            <td class="px-4 py-3">{% if r.activity %}<a class="hover:underline" href="{% url 'farm:cycle_detail' r.activity.cycle_id %}">{{ r.activity.cycle.variety }} @ {{ r.activity.cycle.element }}</a> <span class="text-xs text-stone-400">{{ r.activity.get_activity_type_display }}</span>{% else %}<span class="text-stone-400">{{ r.reference|default:"—" }}</span>{% endif %}</td>
-            <td class="px-4 py-3 text-right {% if r.qty < 0 %}text-red-700{% else %}text-emerald-700{% endif %}">{{ r.qty|kg }}</td><td class="px-4 py-3 text-right">{{ r.balance|kg }}</td></tr>
+          <tr><td class="whitespace-nowrap">{{ r.timestamp|date:"d M Y H:i" }}</td><td>{{ r.get_movement_type_display }}</td>
+            <td>{% if r.activity %}<a class="app-link--plain" href="{% url 'farm:cycle_detail' r.activity.cycle_id %}">{{ r.activity.cycle.variety }} @ {{ r.activity.cycle.element }}</a> <span class="app-row__meta">{{ r.activity.get_activity_type_display }}</span>{% else %}<span class="app-muted">{{ r.reference|default:"—" }}</span>{% endif %}</td>
+            <td class="num {% if r.qty < 0 %}app-value--danger{% else %}app-value--positive{% endif %}">{{ r.qty|kg }}</td><td class="num">{{ r.balance|kg }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=5 msg="Belum ada mutasi. Pembelian menambah stok; pemakaian di Laporan Kerja menguranginya." %}{% endfor %}
         </tbody>
       </table>
       </div>
       {% include "components/pagination.html" %}
-    </div>
-    <aside class="space-y-5">
-      <div class="rounded-xl border border-stone-200 bg-white p-4 text-sm">
-        <h2 class="mb-2 font-semibold">Pemakaian per siklus</h2>
-        {% for cycle, qty in by_cycle %}<div class="flex justify-between border-t border-stone-100 py-1.5 first:border-0"><a class="hover:underline" href="{% url 'farm:cycle_detail' cycle.pk %}">{{ cycle.variety }} @ {{ cycle.element }}</a><span>{{ qty|kg }} {{ item.unit }}</span></div>
-        {% empty %}<p class="text-stone-500">Belum dipakai.</p>{% endfor %}
-      </div>
+    </section>
+    <aside class="app-side">
+      <section class="gt-card">
+        <div class="gt-card__head"><h2 class="gt-card__title">Pemakaian per siklus</h2></div>
+        <ul class="gt-list gt-list--divided">
+        {% for cycle, qty in by_cycle %}<li class="gt-row"><span class="gt-row__body"><a class="gt-row__title app-link--plain" href="{% url 'farm:cycle_detail' cycle.pk %}">{{ cycle.variety }}</a><span class="app-row__meta">{{ cycle.element }}</span></span><span class="gt-row__value">{{ qty|kg }} {{ item.unit }}</span></li>
+        {% empty %}<li class="app-muted">Belum dipakai.</li>{% endfor %}
+        </ul>
+      </section>
       {% if roles.finance and purchases %}
-      <div class="rounded-xl border border-stone-200 bg-white p-4 text-sm">
-        <h2 class="mb-2 font-semibold">Pembelian</h2>
-        {% for p in purchases %}<div class="border-t border-stone-100 py-1.5 first:border-0"><div class="flex justify-between"><span>{{ p.purchased_at|date:"d M Y" }}</span><span>{{ p.qty|kg }} {{ item.unit }}</span></div><p class="text-xs text-stone-500">@ {{ p.cost_per_unit_idr|rupiah }} · {{ p.supplier|default:"—" }}</p></div>{% endfor %}
-      </div>
+      <section class="gt-card">
+        <div class="gt-card__head"><h2 class="gt-card__title">Pembelian</h2></div>
+        <ul class="gt-list gt-list--divided">
+        {% for p in purchases %}<li class="gt-row"><span class="gt-row__body"><span class="gt-row__title">{{ p.qty|kg }} {{ item.unit }}</span><span class="app-row__meta">@ {{ p.cost_per_unit_idr|rupiah }} · {{ p.supplier|default:"—" }}</span></span><span class="gt-row__trail app-row__meta">{{ p.purchased_at|date:"d M Y" }}</span></li>{% endfor %}
+        </ul>
+      </section>
       {% endif %}
     </aside>
   </div>
@@ -55,7 +59,7 @@
       {{ input_costs|json_script:"input-costs" }}
       <form method="post" class="app-sheet__form" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <p class="mt-2 text-xs text-stone-400">Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah.</p>
+        <p class="app-row__meta">Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah.</p>
         <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
           <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button></div>
       </form>

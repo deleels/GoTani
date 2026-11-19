@@ -74,7 +74,7 @@
 {{ charts|json_script:"chart-data" }}
 <div class="app-dash__charts">
   <section class="gt-card app-dash__wide" aria-labelledby="h-daily">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">Pendapatan &amp; HPP harian</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>Pendapatan</span><span><i class="app-legend__line"></i>HPP</span></span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">Pendapatan &amp; HPP harian</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>Laba kotor</span><span><i class="hatch"></i>HPP</span><span><i class="app-legend__loss"></i>Rugi</span>{% info_tip "Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Bila HPP lebih besar dari pendapatan, kelebihannya bergaris merah di atas batang." %}</span></div>
     <div class="relative h-72"><canvas id="chart-daily" role="img" aria-label="Pendapatan dan HPP harian"></canvas></div>
   </section>
   <section class="gt-card" aria-labelledby="h-margin">
@@ -152,17 +152,37 @@
     return true;
   };
 
-  // Daily revenue as varied pill bars (peak dark, latest day light with its value tag); HPP as a dashed reference line.
-  // "Latest" = the most recent day with sales, so the tag never sits on an empty day.
-  const last = data.daily.revenue.reduce((at, v, i) => (v > 0 ? i : at), data.daily.revenue.length - 1);
+  // Daily bars, one pill per day: the hatched bottom is HPP, the solid top is gross profit (revenue − HPP, varied:
+  // peak dark, latest light with its value tag). When HPP is above revenue, the part of HPP over revenue is
+  // red-hatched on top, so a loss day sticks out above its own revenue.
+  const rev = data.daily.revenue, cogs = data.daily.cogs;
+  const covered = rev.map((r, i) => Math.min(cogs[i] || 0, r || 0));
+  const profit = rev.map((r, i) => Math.max((r || 0) - (cogs[i] || 0), 0));
+  const loss = rev.map((r, i) => Math.max((cogs[i] || 0) - (r || 0), 0));
+  const stack = [covered, profit, loss];
+  const last = rev.reduce((at, v, i) => (v > 0 ? i : at), rev.length - 1);
+  const topOf = (i) => (loss[i] > 0 ? 2 : profit[i] > 0 ? 1 : 0);
+  // Round only the outer ends of each day's stack so the whole day reads as one pill.
+  const radius = (k) => (ctx) => {
+    const i = ctx.dataIndex, top = topOf(i), bottom = covered[i] > 0 ? 0 : profit[i] > 0 ? 1 : 2, R = 999;
+    return { topLeft: k === top ? R : 0, topRight: k === top ? R : 0, bottomLeft: k === bottom ? R : 0, bottomRight: k === bottom ? R : 0 };
+  };
+  const seg = { borderSkipped: false, maxBarThickness: 44, categoryPercentage: 0.72, barPercentage: 0.92, stack: 'day' };
   if (!empty('chart-daily', data.daily.labels)) new Chart(document.getElementById('chart-daily'), {
+    type: 'bar',
     data: { labels: data.daily.labels, datasets: [
-      { type: 'line', label: 'HPP', data: data.daily.cogs, borderColor: T('--outline'), backgroundColor: T('--outline'), borderDash: [4, 4], ...G.LINE, borderWidth: 1.5, order: 0 },
-      { type: 'bar', label: 'Pendapatan', data: data.daily.revenue, backgroundColor: G.vary(data.daily.revenue, { current: last }), ...G.BAR, order: 1 },
+      { label: 'HPP', data: covered, backgroundColor: G.hatch(), borderRadius: radius(0), ...seg },
+      { label: 'Laba kotor', data: profit, backgroundColor: G.vary(profit, { current: last }), borderRadius: radius(1), ...seg },
+      { label: 'HPP di atas pendapatan', data: loss, backgroundColor: G.hatch(T('--danger'), T('--pending-bg')), borderRadius: radius(2), ...seg },
     ] },
     options: { interaction: { mode: 'index', intersect: false }, layout: { padding: { top: 30 } },
-               scales: { y: moneyAxis, x: { ...flat, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
-               plugins: { ...noLegend, tooltip: moneyTip, gtTag: { dataset: 1, index: last, text: G.rpShort(data.daily.revenue[last] || 0) } } },
+               scales: { y: { ...moneyAxis, stacked: true }, x: { ...flat, stacked: true, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
+               plugins: { ...noLegend,
+                 tooltip: { filter: (it) => it.parsed.y > 0, callbacks: {
+                   title: (items) => data.daily.labels[items[0].dataIndex],
+                   beforeBody: (items) => 'Pendapatan ' + rp(rev[items[0].dataIndex] || 0) + ' · HPP ' + rp(cogs[items[0].dataIndex] || 0),
+                   label: (ctx) => (ctx.datasetIndex === 2 ? 'Rugi ' : ctx.datasetIndex === 1 ? 'Laba kotor ' : 'HPP tertutup ') + rp(ctx.parsed.y) } },
+                 gtTag: { dataset: topOf(last), index: last, text: G.rpShort(rev[last] || 0) } } },
   });
 
   if (!empty('chart-margin', data.margin.labels)) new Chart(document.getElementById('chart-margin'), {

@@ -16,11 +16,12 @@
     titleFont: { weight: "500" },
   });
 
-  function hatch() {
+  /* Diagonal hatch fill; `stroke` / `bg` override the grey-on-white default (e.g. red stripes for a loss). */
+  function hatch(stroke, bg) {
     const c = document.createElement("canvas"); c.width = c.height = 8;
     const g = c.getContext("2d");
-    g.fillStyle = t("--surface-raised"); g.fillRect(0, 0, 8, 8);
-    g.strokeStyle = t("--hatch"); g.lineWidth = 1.5;
+    g.fillStyle = bg || t("--surface-raised"); g.fillRect(0, 0, 8, 8);
+    g.strokeStyle = stroke || t("--hatch"); g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(-2, 10); g.lineTo(10, -2); g.moveTo(-2, 2); g.lineTo(2, -2); g.moveTo(6, 10); g.lineTo(10, 6); g.stroke();
     return g.createPattern(c, "repeat");
   }

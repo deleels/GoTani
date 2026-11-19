@@ -2,73 +2,66 @@
 {% load gotani ui %}
 {% block title %}Panen{% endblock %}
 {% block content %}
-<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">Panen</h1>
-    <p class="mt-1 text-sm text-stone-500">Setiap panen dipilah menjadi grade HIGH dan LOW; tiap grade menjadi lot stok dengan HPP-nya sendiri.</p>
-  </div>
+{% include "components/page_header.html" with title="Panen" subtitle="Setiap panen dipilah menjadi grade HIGH dan LOW; tiap grade menjadi lot stok dengan HPP-nya sendiri." %}
+<div class="gt-grid app-kpis">
+  {% include "components/kpi.html" with stat=True featured=True label="Panen bulan ini" value=kpi.n %}
+  {% with v=kpi.high|kg|add:" kg" %}{% include "components/kpi.html" with stat=True label="Grade HIGH" value=v %}{% endwith %}
+  {% with v=kpi.low|kg|add:" kg" h=kpi.loss|kg|add:" kg susut panen" %}{% include "components/kpi.html" with stat=True label="Grade LOW" value=v hint=h %}{% endwith %}
+  {% include "components/kpi.html" with stat=True label="Siap panen" value=kpi.harvesting tip="Siklus yang sedang di tahap Panen." %}
 </div>
-<div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-  {% include "components/kpi.html" with label="Panen bulan ini" value=kpi.n %}
-  {% with v=kpi.high|kg|add:" kg" %}{% include "components/kpi.html" with label="Grade HIGH bulan ini" value=v %}{% endwith %}
-  {% with v=kpi.low|kg|add:" kg" h=kpi.loss|kg|add:" kg susut panen" %}{% include "components/kpi.html" with label="Grade LOW bulan ini" value=v hint=h %}{% endwith %}
-  {% include "components/kpi.html" with label="Siklus siap panen" value=kpi.harvesting %}
-</div>
-<div class="grid gap-6 lg:grid-cols-3">
-  <aside class="self-start rounded-lg border bg-white p-4 lg:order-2">
-    <h2 class="mb-3 font-semibold">Catat panen</h2>
+<div class="app-split app-split--rev">
+  <aside class="gt-card app-split__sticky">
+    <div class="gt-card__head"><h2 class="gt-card__title">Catat panen {% info_tip "Batch tidak bisa diubah setelah disimpan; hapus dan catat ulang selama belum ada penjualan atau susut." %}</h2></div>
     {% if form.fields.cycle.queryset.exists %}
-    <form method="post">{% csrf_token %}
+    <form method="post" class="app-stackform">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <p class="mt-2 text-xs text-stone-400">Batch tidak bisa diubah setelah disimpan; hapus dan catat ulang selama belum ada penjualan/susut.</p>
       {% if review %}
       <input type="hidden" name="review_sig" value="{{ review_sig }}">
-      <div class="mt-3 rounded-lg border border-emerald-300 p-3 text-sm" data-harvest-review>
-        <p class="font-semibold">Tinjau sebelum menyimpan</p>
-        <dl class="mt-2 space-y-1">
-          <div class="flex justify-between"><dt class="text-stone-500">Siap jual (HIGH + LOW)</dt><dd>{{ review.sellable_kg|kg }} kg</dd></div>
-          {% if review.expected_kg %}<div class="flex justify-between"><dt class="text-stone-500">Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} / {{ review.expected_kg|kg }} kg ({{ review.pct_after|pct }})</dd></div>
-          {% else %}<div class="flex justify-between"><dt class="text-stone-500">Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} kg <span class="text-xs text-stone-400">(tanpa perkiraan)</span></dd></div>{% endif %}
-          {% if review.batch_avg_kg %}<div class="flex justify-between"><dt class="text-stone-500">Rata-rata batch sebelumnya</dt><dd>{{ review.batch_avg_kg|kg }} kg</dd></div>{% endif %}
+      <div class="app-review" data-harvest-review>
+        <span class="app-review__title">Tinjau sebelum menyimpan {% info_tip "Mengubah angka di atas memerlukan tinjauan ulang." %}</span>
+        <dl class="gt-kv gt-kv--compact">
+          <div><dt>Siap jual (HIGH + LOW)</dt><dd>{{ review.sellable_kg|kg }} kg</dd></div>
+          {% if review.expected_kg %}<div><dt>Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} / {{ review.expected_kg|kg }} kg ({{ review.pct_after|pct }})</dd></div>
+          {% else %}<div><dt>Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} kg <span class="app-row__meta">(tanpa perkiraan)</span></dd></div>{% endif %}
+          {% if review.batch_avg_kg %}<div><dt>Rata-rata batch sebelumnya</dt><dd>{{ review.batch_avg_kg|kg }} kg</dd></div>{% endif %}
           {% if roles.finance %}
-          <div class="flex justify-between"><dt class="text-stone-500">Biaya yang diserap</dt><dd>{{ review.pool_idr|rupiah }} <span class="text-xs text-stone-400">({{ review.expenses }} biaya)</span></dd></div>
-          <div class="flex justify-between"><dt class="text-stone-500">HPP/kg HIGH · LOW</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}—{% endif %}</dd></div>
+          <div><dt>Biaya yang diserap</dt><dd>{{ review.pool_idr|rupiah }} <span class="app-row__meta">({{ review.expenses }} biaya)</span></dd></div>
+          <div><dt>HPP/kg HIGH · LOW</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}—{% endif %}</dd></div>
           {% endif %}
         </dl>
-        {% for w in review.warnings %}<p class="mt-2 rounded border border-amber-400 p-2 text-amber-700">⚠ {{ w }}</p>{% endfor %}
-        <p class="mt-2 text-xs text-stone-500">Mengubah angka di atas memerlukan tinjauan ulang.</p>
+        {% for w in review.warnings %}<div class="gt-callout gt-callout--warning gt-callout--raised">{% icon "alert" 18 %}<div><span class="gt-callout__title">{{ w }}</span></div></div>{% endfor %}
       </div>
-      <button class="mt-3 gt-btn gt-btn--solid gt-btn--md gt-btn--block"
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block"
               {% if review.warnings %}data-confirm-title="Simpan panen dengan peringatan?" data-confirm="{{ review.warnings|join:' ' }}" data-confirm-action="Simpan panen" data-confirm-level="2"{% endif %}>Simpan panen</button>
       {% else %}
-      <button class="mt-3 gt-btn gt-btn--solid gt-btn--md gt-btn--block">Tinjau panen</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Tinjau panen</button>
       {% endif %}
     </form>
     {% else %}
-    <p class="text-sm text-stone-500">Tidak ada siklus di tahap Panen. Majukan tahap siklus terlebih dahulu.</p>
+    <p class="app-muted">Tidak ada siklus di tahap Panen. Majukan tahap siklus terlebih dahulu.</p>
     {% endif %}
   </aside>
-  <section class="lg:col-span-2 lg:order-1">
-    <h2 class="mb-3 font-semibold">Batch panen</h2>
-    <div class="overflow-x-auto rounded-lg border bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">#</th><th class="p-2">Waktu</th><th class="p-2">Siklus</th><th class="p-2 text-right">HIGH</th><th class="p-2 text-right">LOW</th><th class="p-2 text-right">Susut</th>{% if roles.finance %}<th class="p-2 text-right">Biaya terserap</th><th class="p-2 text-right">HPP/kg H · L</th><th></th>{% endif %}</tr></thead>
+  <section class="gt-card app-tablecard">
+    <div class="gt-card__head"><h2 class="gt-card__title">Batch panen</h2></div>
+    <div>
+      <table class="gt-table">
+        <thead><tr><th>#</th><th>Waktu</th><th>Siklus</th><th class="num">HIGH</th><th class="num">LOW</th><th class="num">Susut</th>{% if roles.finance %}<th class="num">Biaya terserap</th><th class="num">HPP/kg H · L</th><th></th>{% endif %}</tr></thead>
         <tbody>
         {% for b in batches %}
-          <tr class="border-t">
-            <td class="p-2">{{ b.pk }}</td>
-            <td class="whitespace-nowrap p-2">{{ b.harvested_at|date:"d-m-Y H:i" }}</td>
-            <td class="p-2"><a class="hover:underline" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
-            <td class="p-2 text-right">{{ b.high_quality_kg|kg }} kg</td>
-            <td class="p-2 text-right">{{ b.low_quality_kg|kg }} kg</td>
-            <td class="p-2 text-right text-stone-500">{{ b.harvest_loss_kg|kg }} kg</td>
+          <tr>
+            <td>{{ b.pk }}</td>
+            <td class="whitespace-nowrap">{{ b.harvested_at|date:"d-m-Y H:i" }}</td>
+            <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
+            <td class="num">{{ b.high_quality_kg|kg }} kg</td>
+            <td class="num">{{ b.low_quality_kg|kg }} kg</td>
+            <td class="num app-muted">{{ b.harvest_loss_kg|kg }} kg</td>
             {% if roles.finance %}
-            <td class="p-2 text-right">{{ b.absorbed_cost_idr|rupiah }}</td>
-            <td class="whitespace-nowrap p-2 text-right">{{ b.unit_cogs_high_idr|rupiah }} · {{ b.unit_cogs_low_idr|rupiah }}</td>
-            <td class="p-2"><form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="Hapus batch panen #{{ b.pk }}?" data-confirm="Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut." data-confirm-action="Hapus batch" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Hapus</button></form></td>
+            <td class="num">{{ b.absorbed_cost_idr|rupiah }}</td>
+            <td class="whitespace-nowrap num">{{ b.unit_cogs_high_idr|rupiah }} · {{ b.unit_cogs_low_idr|rupiah }}</td>
+            <td><form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="Hapus batch panen #{{ b.pk }}?" data-confirm="Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut." data-confirm-action="Hapus batch" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Hapus</button></form></td>
             {% endif %}
           </tr>
-        {% empty %}<tr><td colspan="9" class="p-3 text-stone-400">Belum ada panen.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="9" class="app-empty-cell app-muted">Belum ada panen.</td></tr>{% endfor %}
         </tbody>
       </table>
       {% include "components/pagination.html" %}

@@ -1,9 +1,13 @@
-{# Spray-window hint on the pesticide report (D89): advice only, never blocks saving. #}
+{# Spray-window hint on the pesticide report (D89): advice only, never blocks saving. Quiet callout; tone in the icon disc. #}
+{% load ui %}
 <div x-data="{ s: null, next: null, async load() { try { const r = await fetch('{% url 'geo:weather' %}'); const d = await r.json(); if (d.weather) { this.s = d.weather.spray; this.next = d.weather.next_good_spray; } } catch (e) {} } }"
-     x-init="load()" x-show="s" x-cloak class="mb-3 rounded-lg border px-3 py-2 text-xs"
-     :class="!s ? '' : s.level === 'GOOD' ? 'border-emerald-300 text-emerald-700' : s.level === 'FAIR' ? 'border-amber-300 text-amber-700' : 'border-red-300 text-red-700'">
-  <p class="font-semibold" x-text="s ? 'Waktu semprot saat ini: ' + s.label : ''"></p>
-  <p x-text="s && s.reasons.length ? s.reasons.join(', ') : 'Angin tenang dan tidak ada hujan dalam 4 jam.'"></p>
-  <p x-show="s && s.level !== 'GOOD' && next" x-text="next ? 'Waktu baik berikutnya: ' + new Date(next).toLocaleString('id-ID', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''"></p>
-  <p class="mt-1 text-stone-400">Saran saja — laporan tetap bisa disimpan.</p>
+     x-init="load()" x-show="s" x-cloak class="gt-callout"
+     :class="!s ? '' : s.level === 'GOOD' ? 'gt-callout--success' : s.level === 'FAIR' ? 'gt-callout--warning' : 'gt-callout--danger'">
+  {% icon "info" 18 %}
+  <div>
+    <span class="gt-callout__title" x-text="s ? 'Waktu semprot saat ini: ' + s.label : ''"></span>
+    <span class="gt-callout__body app-block" x-text="s && s.reasons.length ? s.reasons.join(', ') : 'Angin tenang dan tidak ada hujan dalam 4 jam.'"></span>
+    <span class="gt-callout__body app-block" x-show="s && s.level !== 'GOOD' && next" x-text="next ? 'Waktu baik berikutnya: ' + new Date(next).toLocaleString('id-ID', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''"></span>
+  </div>
+  {% info_tip "Saran saja; laporan tetap bisa disimpan." %}
 </div>

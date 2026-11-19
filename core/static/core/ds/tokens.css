@@ -23,6 +23,8 @@
   --warning-bg: #fdf9e8; /* In Progress status pill background. */
   --pending-ink: #ac5460; /* Pending status pill text, on pending-bg. ~5.0:1. */
   --pending-bg: #fceced; /* Pending status pill background. */
+  --late-bg: #fdeedd; /* DERIVED. Orange tint: overdue / late (Jatuh tempo) pill and warning icon disc. */
+  --late-ink: #a4500f; /* DERIVED. Orange ink on late-bg, ~5.3:1. Overdue words and warning icons. */
   --warning-text: #8a6a0f; /* DERIVED. Readable yellow for warning sentences outside pills ("Expires Wed 2 Dec", "Waiting on you, by Mon 23 Nov"). ~5.0:1 on white and surface. */
   --highlight: #fbefc4; /* DERIVED. Marker highlight behind the selected cell in a table and yellow notice banners; ink text on it. */
   --danger: #de3633; /* Stop / destructive control fill (Time Tracker stop button), white icon on it. A state colour: keep it small. */

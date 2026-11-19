@@ -1,39 +1,39 @@
-{# "Satelit & Tanah" on the element detail page (D90): the same data as the map side panel, for the linked polygon. #}
-<div class="mb-5 rounded-xl border border-stone-200 bg-white" x-data="elementSat('{% url 'geo:polygon_data' poly.pk %}')" x-init="load()">
-  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3">
-    <h2 class="font-semibold">Satelit &amp; Tanah <span class="text-xs font-normal text-stone-500">· {{ poly.name }}</span></h2>
-    <a href="{% url 'geo:map' %}" class="text-sm text-emerald-700 underline">Buka peta</a>
+{% load ui %}{# "Satelit & Tanah" on the element detail page (D90): the same data as the map side panel, for the linked polygon. #}
+<section class="gt-card app-section" x-data="elementSat('{% url 'geo:polygon_data' poly.pk %}')" x-init="load()">
+  <div class="gt-card__head">
+    <h2 class="gt-card__title">Satelit &amp; Tanah <span class="gt-chip gt-chip--sm">{{ poly.name }}</span></h2>
+    <a href="{% url 'geo:map' %}" class="gt-btn gt-btn--outline gt-btn--sm">Buka peta</a>
   </div>
-  <div class="p-4 text-sm">
-    <template x-if="state === 'loading'"><p class="text-stone-500">Memuat data…</p></template>
-    <template x-if="state === 'error'"><p class="text-stone-500">Tidak dapat memuat data satelit · <button type="button" class="underline" @click="load()">Coba lagi</button></p></template>
+  <div class="app-geo__parts">
+    <template x-if="state === 'loading'"><p class="app-muted">Memuat data…</p></template>
+    <template x-if="state === 'error'"><p class="app-muted">Tidak dapat memuat data satelit · <button type="button" class="app-link" @click="load()">Coba lagi</button></p></template>
     <template x-if="state === 'ok'">
-      <div class="space-y-4">
-        <p x-show="d.message" class="rounded-lg border border-amber-300 px-3 py-2 text-amber-700" x-text="d.message"></p>
+      <div class="app-geo__parts">
+        <div x-show="d.message" class="gt-callout gt-callout--warning">{% icon "info" 18 %}<span class="gt-callout__title" x-text="d.message"></span></div>
         <template x-if="d.satellite && d.satellite.passes.length">
-          <div class="grid gap-3 sm:grid-cols-3">
+          <div class="gt-metrics app-metrics3">
             <template x-for="k in ['ndvi', 'evi', 'ndwi']" :key="k">
-              <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs uppercase text-stone-500" x-text="k + ' rata-rata terakhir'"></p>
-                <p class="text-lg font-semibold" x-text="d.satellite.passes[0][k] ? Number(d.satellite.passes[0][k].mean).toFixed(3) : '—'"></p></div>
+              <div class="gt-metric"><span class="gt-metric__label" x-text="k.toUpperCase() + ' rata-rata'"></span>
+                <span class="gt-metric__value" x-text="d.satellite.passes[0][k] ? Number(d.satellite.passes[0][k].mean).toFixed(3) : '—'"></span></div>
             </template>
           </div>
         </template>
         <template x-if="d.soil">
           <div>
-            <h3 class="text-sm font-semibold">Tanah <span class="text-xs font-normal text-stone-500">· perkiraan model Open-Meteo, bukan sensor</span></h3>
-            <div class="mt-2 grid gap-3 sm:grid-cols-2">
-              <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah</p>
-                <template x-for="t in d.soil.temperature" :key="t.depth"><p class="flex justify-between"><span class="text-stone-500" x-text="t.depth"></span><b x-text="t.value != null ? num(t.value, 1) + ' °C' : '—'"></b></p></template></div>
-              <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Kelembapan tanah (volume air)</p>
-                <template x-for="m in d.soil.moisture" :key="m.depth"><p class="flex justify-between"><span class="text-stone-500" x-text="m.depth"></span><b x-text="m.value != null ? num(m.value * 100, 1) + '%' : '—'"></b></p></template></div>
+            <h3 class="app-subtitle">Tanah {% info_tip "Perkiraan model Open-Meteo, bukan sensor." %}</h3>
+            <div class="app-soil">
+              <div class="gt-metric"><span class="gt-metric__label">Suhu tanah</span>
+                <dl class="gt-kv gt-kv--compact"><template x-for="t in d.soil.temperature" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? num(t.value, 1) + ' °C' : '—'"></dd></div></template></dl></div>
+              <div class="gt-metric"><span class="gt-metric__label">Kelembapan tanah {% info_tip "Persentase volume air di tanah." %}</span>
+                <dl class="gt-kv gt-kv--compact"><template x-for="m in d.soil.moisture" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? num(m.value * 100, 1) + '%' : '—'"></dd></div></template></dl></div>
             </div>
           </div>
         </template>
-        <p x-show="!d.soil" class="text-xs text-stone-500">Data tanah tidak tersedia saat ini.</p>
+        <p x-show="!d.soil" class="app-row__meta">Data tanah tidak tersedia saat ini.</p>
       </div>
     </template>
   </div>
-</div>
+</section>
 <script>
   function elementSat(url) {
     return {
