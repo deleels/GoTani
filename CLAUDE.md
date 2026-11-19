@@ -17,7 +17,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 ## Units & Money
 - Quantities: kg only, `Decimal(10,3)`. Inputs use their own fixed `unit`; no conversion — an activity's unit must equal its `InputItem.unit`. Single exception: `CropCycle.planted_qty` is a plant **count** (D60).
 - Input format (D81): money and kg inputs use Indonesian format (`15.000`, `1,5`) via `data-num` + `core.numbers`; the browser submits machine numbers, the server accepts both.
-- Money: `Decimal(14,2)` everywhere (including unit COGS and tax). Round to whole Rupiah with `ROUND_HALF_UP` only for display, receipt and invoice totals. Format as `Rp 15.000`. IDR only.
+- Money: `Decimal(14,2)` everywhere (including unit COGS and tax). Round to whole Rupiah with `ROUND_HALF_UP` only for display, receipt and invoice totals. Format as `Rp15.000` (D105). IDR only.
 
 ## Django Apps & Data Models
 
@@ -133,19 +133,19 @@ An engineering programming class project modeling end-to-end agricultural produc
 | CASHIER | POS register and receipts only |
 
 ## UI (FarmCloud layout, GoTani's own brand — D66)
-- **Brand:** own palette, logo, free Google Fonts, Bahasa Indonesia copy. Light/dark mode (system default, toggle saved in localStorage; Chart.js colours follow theme).
+- **Brand:** GoTani-design-system (tokens + CSS components, `gt-` classes), light theme only (D104). Bahasa Indonesia copy.
 - **Shell:** left sidebar 16rem, collapses to a 3rem icon rail (Ctrl/⌘+B, state in localStorage); mobile = slide-in sheet from a hamburger. Header slot shows FarmProfile name/logo + user's role. Groups (role-filtered):
   - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
   - **PENJUALAN:** Kasir (POS) · Pesanan · Shift & Kas · Invoice · Pembeli
   - **KEUANGAN:** Biaya · Harga Produk · Analitik · Omzet & PPh
   - **ALAT:** Telusuri · Log aktivitas (OWNER/MANAGER, D82) · Staf · Pengaturan
-- **Top bar** (h-16, translucent blur): sidebar toggle left; right: 🔔 bell, ◐ theme toggle, divider, 👤 menu (Profil, Ganti Password, Keluar).
+- **Top bar** (h-16, translucent blur): sidebar toggle left; right: 🔔 bell, divider, 👤 menu (Profil, Ganti Password, Keluar).
 - **Page anatomy** (reusable template includes + Alpine): title + role-specific subtitle; primary action top-right; KPI stat cards; status tabs synced to `?tab=`; toolbar (search, date range, "Atur kolom" column visibility in localStorage); table with ⋯ row menu; footer "Baris per halaman · Halaman x dari y · « ‹ › »", default 10.
 - **Forms:** short create/edit forms open in a right-side sheet (server validation errors reopen it); invoice editor, payment allocation, harvest entry and POS are full pages.
 - **Ringkasan** (home for farm roles): weekly work-report strip by type + "Catat Kerja Hari Ini", weather widget, "Tanaman per Tahap" chart, counters per element type + staff; finance card (all-time sales, expenses, general vs element-specific) for OWNER/MANAGER only. CASHIER lands on POS.
 - **Laporan Kerja:** tabs Pemupukan · Pestisida · Irigasi · Scouting · Penanaman · Pra-panen · Panen · Susut, per-type columns; "Laporan Baru" picker opens the per-type form.
 - **Detail pages** (cycle, element, input item, buyer, invoice): overview card + tabs + timeline from ledgers/logs (cycle timeline reuses `forward_trace`).
-- **Status pills:** pending = yellow, issued/approved = blue, partially paid = teal, overdue/void/rejected = red, paid/completed = green. Every empty state explains the feature + CTA; async widgets show "Tidak dapat memuat … · Coba lagi".
+- **Status pills:** pending = yellow, issued/approved = blue (info), partially paid = teal (partial), overdue/void/rejected = red, paid/completed = green, draft = neutral. Every empty state explains the feature + CTA; async widgets show "Tidak dapat memuat … · Coba lagi".
 - **Login:** split screen — dark left panel (logo, headline, tagline), form right (username, password with eye toggle, "Masuk"); no sign-up, no forgot-password.
 - **Existing screens** (kept, migrated onto the shell): POS register + receipt + void; Traceability forward/backward with print-CSS PDF + CSV; Analitik dashboard (date range, Chart.js: revenue, COGS, gross margin & %, spoilage, unabsorbed cycle cost, overhead, other income, net, PPN collected, channel split, receivables; margin by variety × grade; kg/m² by element type; top products; expenses by category).
 - **Cuaca & Satelit:** Leaflet map with polygon list; draw/edit with Leaflet.draw; per polygon NDVI/EVI/NDWI min/mean/max per pass, historical NDVI chart, latest NDVI image overlay, soil temperature/moisture. Weather widget: current + 7-day forecast + rain warning.
