@@ -30,6 +30,7 @@ GROUPS = [
         ("Biaya", "farm:expenses", "wallet", "finance", ("farm:expense",)),
         ("Harga Produk", "farm:prices", "tag", "finance", ("farm:prices",)),
         ("Analitik", "dashboard", "chart", "finance", ("dashboard",)),
+        ("Omzet & PPh", "omzet_pph", "file", "finance", ("omzet_pph",)),
     ]),
     ("ALAT", [
         ("Telusuri", "reports:trace_index", "search", "finance", ("reports:",)),

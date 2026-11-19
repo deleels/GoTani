@@ -252,6 +252,45 @@ def _sum(qs, field_name) -> Decimal:
     return qs.aggregate(s=Sum(field_name))["s"] or ZERO
 
 
+PPH_FINAL_RATE = Decimal("0.005")  # PP 55/2022 UMKM final income tax, 0,5% of monthly turnover
+PPH_EXEMPT_IDR = Decimal("500000000")  # individual taxpayer: first Rp500 jt of turnover per year untaxed
+ID_MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
+                  "Oktober", "November", "Desember"]
+
+
+def omzet_pph(year: int) -> dict:
+    """Monthly turnover and PPh Final 0,5% (D103).
+
+    Turnover = POS completed sales (gross, excluding any PPN) by sale date + ISSUED invoices by issue date at
+    their gross before discount plus shipping (excluding PPN). Voided sales/invoices are excluded. The first
+    Rp500 jt of the year is exempt; tax applies to the part of each month above the running total's
+    threshold. Whole Rupiah, ROUND_HALF_UP. An estimate to confirm with a tax consultant."""
+    from datetime import date
+
+    from invoicing.models import Invoice
+
+    rows, cumulative = [], ZERO
+    for m in range(1, 13):
+        start = date(year, m, 1)
+        end = date(year + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
+        lo, hi = day_bounds(start, end)
+        orders = SaleOrder.objects.filter(status=SaleOrder.Status.COMPLETED, created_at__gte=lo, created_at__lt=hi)
+        pos = _sum(orders, "total_gross_idr") - _sum(orders, "total_tax_idr")
+        invoices = Invoice.objects.filter(status=Invoice.Status.ISSUED, issue_date__gte=start, issue_date__lte=end)
+        inv = _sum(invoices, "subtotal_idr") + _sum(invoices, "shipping_idr")
+        omzet = pos + inv
+        before = cumulative
+        cumulative += omzet
+        taxable = max(cumulative - PPH_EXEMPT_IDR, ZERO) - max(before - PPH_EXEMPT_IDR, ZERO)
+        pph = (taxable * PPH_FINAL_RATE).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        rows.append({"month": m, "label": ID_MONTH_NAMES[m - 1], "pos": pos, "invoice": inv, "omzet": omzet,
+                     "cumulative": cumulative, "taxable": taxable, "pph": pph,
+                     "due": date(year + (m == 12), m % 12 + 1, 15)})
+    totals = {k: sum((r[k] for r in rows), ZERO) for k in ("pos", "invoice", "omzet", "taxable", "pph")}
+    return {"year": year, "rows": rows, "totals": totals, "exempt": PPH_EXEMPT_IDR,
+            "exempt_left": max(PPH_EXEMPT_IDR - cumulative, ZERO), "rate_pct": PPH_FINAL_RATE * 100}
+
+
 def payment_split(start, end) -> list:
     """Money received per method (D97): POS sales by sale date (completed orders, what the customer paid)
     plus invoice payments by paid date. Cash basis — it answers "how much came in as QRIS this week"."""
@@ -261,10 +300,12 @@ def payment_split(start, end) -> list:
     lo, hi = day_bounds(start, end)
     pos_rows = dict(SaleOrder.objects.filter(status=SaleOrder.Status.COMPLETED, created_at__gte=lo, created_at__lt=hi)
                     .values_list("payment_method").annotate(s=Sum("total_gross_idr")))
-    inv_rows = dict(InvoicePayment.objects.filter(paid_on__gte=start, paid_on__lte=end)
+    inv_rows = dict(InvoicePayment.objects.filter(paid_on__gte=start, paid_on__lte=end, voided_at__isnull=True)
                     .values_list("method").annotate(s=Sum("amount_idr")))
     rows = []
-    for value, label in PaymentMethod.choices:
+    from invoicing.models import InvoicePaymentMethod
+
+    for value, label in InvoicePaymentMethod.choices:  # includes "Potongan PPh" (invoice only, D101)
         p, i = pos_rows.get(value) or ZERO, inv_rows.get(value) or ZERO
         if p or i:
             rows.append({"method": label, "pos": p, "invoice": i, "total": p + i})

@@ -123,11 +123,14 @@ class InvoicingViewTests(InvoiceFixtures):
         self.client.post(reverse("invoicing:invoice_action", args=[d.pk, "delete"]))
         self.assertFalse(Invoice.objects.exists())
         p = inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="CASH", paid_on=timezone.localdate())
-        self.client.post(reverse("invoicing:buyer_payment_delete", args=[p.pk]))
-        self.assertFalse(InvoicePayment.objects.exists())
+        self.client.post(reverse("invoicing:buyer_payment_void", args=[p.pk]), {"reason": "dobel"})
+        p.refresh_from_db()
+        self.assertIsNotNone(p.voided_at)  # D100: voided, kept
+        page = self.client.get(reverse("invoicing:buyer_detail", args=[self.buyer.pk]), {"tab": "payments"})
+        self.assertContains(page, "dobel")
         p = inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="CASH", paid_on=timezone.localdate())
         self.login(self.manager)
-        self.assertEqual(self.client.post(reverse("invoicing:buyer_payment_delete", args=[p.pk])).status_code, 403)
+        self.assertEqual(self.client.post(reverse("invoicing:buyer_payment_void", args=[p.pk]), {"reason": "x"}).status_code, 403)
 
     def test_payment_over_allocation_rejected(self):
         invoice = self.issue(self.draft([(self.high, 1, None)]))

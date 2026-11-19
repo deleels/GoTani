@@ -8,6 +8,7 @@ from django.utils import timezone
 from core.forms import StyledMixin
 from core.numbers import IDDecimalField, parse_id_decimal
 from farm.models import PaymentMethod
+from invoicing.models import InvoicePaymentMethod
 from inventory.models import Product
 
 from .models import Buyer, Invoice
@@ -61,11 +62,13 @@ class IssueForm(StyledMixin, forms.Form):
 class PaymentForm(StyledMixin, forms.Form):
     amount_idr = IDDecimalField(label="Jumlah diterima (Rp)", min_value=Decimal("0.01"), max_digits=14,
                                 decimal_places=2, kind="money")
-    method = forms.ChoiceField(label="Metode", choices=PaymentMethod.choices)
+    method = forms.ChoiceField(label="Metode", choices=InvoicePaymentMethod.choices)
     paid_on = forms.DateField(label="Tanggal bayar", initial=timezone.localdate,
                               widget=forms.DateInput(attrs={"type": "date"}))
     reference = forms.CharField(label="Referensi", max_length=120, required=False)
     proof = forms.FileField(label="Bukti", required=False)
+    withholding_slip_no = forms.CharField(label="Nomor bukti potong", max_length=60, required=False,
+                                          help_text="Wajib untuk metode Potongan PPh (PPh yang dipotong pembeli).")
     into_drawer = forms.BooleanField(label="Masuk laci kasir", required=False,
                                      help_text="Tunai yang disimpan di laci shift yang sedang buka (D96).")
 

@@ -54,15 +54,15 @@
           <th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3 text-right">Sisa (kredit)</th><th></th></tr></thead>
         <tbody class="divide-y divide-stone-100">
         {% for p in payments %}
-          <tr class="align-top">
-            <td class="px-4 py-3">{{ p.paid_on|date:"d M Y" }}</td>
-            <td class="px-4 py-3">{{ p.get_method_display }}</td>
+          <tr class="align-top {% if p.voided_at %}text-stone-400{% endif %}">
+            <td class="px-4 py-3">{{ p.paid_on|date:"d M Y" }}{% if p.voided_at %}<p>{% pill "Dibatalkan" tone="gray" %}</p><p class="text-xs">{{ p.void_reason }}</p>{% endif %}</td>
+            <td class="px-4 py-3">{{ p.get_method_display }}{% if p.withholding_slip_no %}<p class="text-xs text-stone-500">Bukti potong {{ p.withholding_slip_no }}</p>{% endif %}</td>
             <td class="px-4 py-3">{{ p.reference|default:"—" }}{% if p.proof %} · <a class="text-emerald-700 underline" href="{{ p.proof.url }}">bukti</a>{% endif %}</td>
             <td class="px-4 py-3">{% for a in p.allocations.all %}<p><a class="font-mono hover:underline" href="{% url 'invoicing:invoice_detail' a.invoice_id %}">{{ a.invoice }}</a> {{ a.amount_idr|rupiah }}</p>{% empty %}<span class="text-stone-400">—</span>{% endfor %}</td>
             <td class="px-4 py-3 text-right font-medium">{{ p.amount_idr|rupiah }}</td>
             <td class="px-4 py-3 text-right">{{ p.unallocated_idr|rupiah }}</td>
-            <td class="px-4 py-3 text-right">{% if roles.label == 'OWNER' and not p.allocations.all %}
-              <form method="post" action="{% url 'invoicing:buyer_payment_delete' p.pk %}" data-confirm-title="Hapus pembayaran?" data-confirm="Pembayaran yang belum dialokasikan ini dihapus." data-confirm-action="Hapus pembayaran" data-confirm-danger>{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form>{% endif %}</td>
+            <td class="px-4 py-3 text-right">{% if roles.label == 'OWNER' and not p.allocations.all and not p.voided_at %}
+              <form method="post" action="{% url 'invoicing:buyer_payment_void' p.pk %}" data-confirm-title="Batalkan pembayaran?" data-confirm="Pembayaran yang belum dialokasikan ini dibatalkan dan tidak dihitung lagi sebagai kredit. Catatannya tetap disimpan (arsip 10 tahun)." data-confirm-action="Batalkan pembayaran" data-confirm-reason="Alasan" data-confirm-danger>{% csrf_token %}<button class="text-xs text-red-600 underline">Batalkan</button></form>{% endif %}</td>
           </tr>
         {% empty %}
           <tr><td colspan="7" class="px-4 py-12 text-center"><p class="font-medium">Belum ada pembayaran.</p><p class="mt-1 text-sm text-stone-500">Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit.</p></td></tr>

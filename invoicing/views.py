@@ -359,7 +359,7 @@ class PaymentCreateView(FinanceView):
                 payment = services.record_payment(
                     request.user, buyer, amount_idr=d["amount_idr"], method=d["method"], paid_on=d["paid_on"],
                     reference=d["reference"], proof=d["proof"], allocations=allocations,
-                    into_drawer=d["into_drawer"],
+                    into_drawer=d["into_drawer"], withholding_slip_no=d["withholding_slip_no"],
                 )
             except (ValidationError, ArithmeticError, ValueError) as exc:
                 form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else "Jumlah alokasi tidak valid.")
@@ -370,15 +370,17 @@ class PaymentCreateView(FinanceView):
         return self.render_page(request, buyer, form, status=400, entered=entered)
 
 
-class PaymentDeleteView(FinanceView):
+class PaymentVoidView(FinanceView):
+    """Payments are voided with a reason, never deleted (D100)."""
+
     http_method_names = ["post"]
 
     def post(self, request, pk):
         payment = get_object_or_404(InvoicePayment, pk=pk)
         try:
-            services.delete_payment(request.user, payment)
+            services.void_payment(request.user, payment, request.POST.get("reason", ""))
         except ValidationError as exc:
             messages.error(request, error_text(exc))
         else:
-            messages.success(request, "Pembayaran dihapus.")
+            messages.success(request, "Pembayaran dibatalkan; catatannya tetap disimpan.")
         return redirect(reverse("invoicing:buyer_detail", args=[payment.buyer_id]) + "?tab=payments")

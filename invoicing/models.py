@@ -95,6 +95,13 @@ class Invoice(models.Model):
     def paid_idr(self) -> Decimal:
         return self.allocations.aggregate(s=Sum("amount_idr"))["s"] or ZERO
 
+    # D102: UU 10/2020 — a document stating an amount above Rp5.000.000 carries Rp10.000 bea meterai.
+    METERAI_THRESHOLD = Decimal("5000000")
+
+    @property
+    def needs_meterai(self) -> bool:
+        return self.total_idr > self.METERAI_THRESHOLD
+
     @property
     def outstanding_idr(self) -> Decimal:
         if self.status != self.Status.ISSUED:
@@ -147,12 +154,26 @@ class InvoiceLineLotAllocation(models.Model):
         constraints = [models.CheckConstraint(condition=Q(qty_kg__gt=0), name="invoicealloc_qty_positive")]
 
 
+class InvoicePaymentMethod(models.TextChoices):
+    """Invoice settlement methods: the POS methods plus PPh withheld by the buyer (D101) — not money received."""
+
+    CASH = "CASH", "Tunai"
+    QRIS = "QRIS", "QRIS"
+    TRANSFER = "TRANSFER", "Transfer"
+    PPH_WITHHELD = "PPH_WITHHELD", "Potongan PPh"
+
+
 class InvoicePayment(models.Model):
-    """Money received, recorded by hand (D55) — no gateway."""
+    """Money received, recorded by hand (D55) — no gateway. Never deleted: voided with a reason (D100)."""
 
     buyer = models.ForeignKey(Buyer, on_delete=models.PROTECT, related_name="payments", verbose_name="pembeli")
     amount_idr = models.DecimalField("jumlah", **MONEY)
-    method = models.CharField("metode", max_length=10, choices=PaymentMethod.choices)
+    method = models.CharField("metode", max_length=20, choices=InvoicePaymentMethod.choices)
+    withholding_slip_no = models.CharField("nomor bukti potong", max_length=60, blank=True)
+    voided_at = models.DateTimeField("dibatalkan pada", null=True, blank=True)
+    voided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+                                  related_name="+", verbose_name="dibatalkan oleh")
+    void_reason = models.TextField("alasan batal", blank=True)
     paid_on = models.DateField("tanggal bayar")
     reference = models.CharField("referensi", max_length=120, blank=True)
     proof = models.FileField("bukti", upload_to="payments/%Y/%m/", blank=True)
@@ -174,7 +195,7 @@ class InvoicePayment(models.Model):
 
     @property
     def unallocated_idr(self) -> Decimal:
-        return self.amount_idr - self.allocated_idr
+        return ZERO if self.voided_at else self.amount_idr - self.allocated_idr
 
 
 class PaymentAllocation(models.Model):

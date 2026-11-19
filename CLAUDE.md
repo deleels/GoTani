@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D99); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D103); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -64,7 +64,7 @@ An engineering programming class project modeling end-to-end agricultural produc
   - Payment status (UNPAID / PARTIALLY_PAID / PAID / OVERDUE) is **derived**, never stored.
 - `InvoiceLine`: `invoice` (FK), `product` (FK), `qty_kg`, `unit_price_idr` (tax-exclusive; defaults to catalog price, overridable), `line_subtotal_idr`, `discount_share_idr`, `tax_rate_pct` (snapshot), `tax_idr`, `net_revenue_idr` (= subtotal − discount share), `unit_cogs_idr`
 - `InvoiceLineLotAllocation`: `line` (FK), `lot` (FK), `qty_kg`, `unit_cogs_idr`
-- `InvoicePayment`: `buyer` (FK), `amount_idr` (> 0), `method` (CASH / QRIS / TRANSFER), `paid_on`, `reference`, `proof` (optional FileField), `recorded_by`, `created_at` — manually recorded money received; no gateway.
+- `InvoicePayment`: `buyer` (FK), `amount_idr` (> 0), `method` (CASH / QRIS / TRANSFER / PPH_WITHHELD "Potongan PPh" — needs `withholding_slip_no`, never cash, D101), `paid_on`, `reference`, `proof` (optional FileField), `recorded_by`, `created_at`, `voided_at/by` + `void_reason` (D100) — manually recorded money received; no gateway; never deleted.
 - `PaymentAllocation`: `payment` (FK), `invoice` (FK), `amount_idr` (> 0)
 
 ### 5. `geo` (Field Map, Satellite & Weather)
@@ -109,11 +109,12 @@ An engineering programming class project modeling end-to-end agricultural produc
 26. **Totals (tax-exclusive):** `subtotal = Σ qty × price`; discount PERCENT (0–100) → `round(subtotal × pct / 100, 2)`, AMOUNT → value (0 ≤ value ≤ subtotal). Discount is allocated to lines **proportionally to line subtotal**, the last line taking the rounding remainder so Σ shares == discount exactly. `line tax = (line subtotal − share) × rate / 100`. `total = subtotal − discount + Σ tax + shipping`. Shipping is untaxed.
 27. **Payments & credit:** (an allocation can be removed by OWNER/MANAGER with a reason; the money returns to credit — D88.) an `InvoicePayment` belongs to a buyer and may be split by `PaymentAllocation` across that buyer's ISSUED invoices. Σ allocations per payment ≤ payment amount; each allocation ≤ that invoice's outstanding (`total − Σ allocations`). Unallocated payment amount is the buyer's **credit**: `credit = Σ payments − Σ allocations` (derived, never stored, always ≥ 0). Applying credit = allocating an older payment's unallocated remainder to an invoice.
 28. **Derived payment status:** PAID when outstanding == 0; PARTIALLY_PAID when 0 < allocated < total; OVERDUE when outstanding > 0 and `due_date <` today (Asia/Jakarta); otherwise UNPAID.
-29. **Void:** OWNER/MANAGER, any date; in one transaction restores exact kg to exact lots (`INVOICE_VOID`), deletes its allocations (money returns to buyer credit), sets VOID. No refunds: credit is only usable on future invoices; a payment may be deleted (OWNER) only while fully unallocated.
+29. **Void:** OWNER/MANAGER, any date; in one transaction restores exact kg to exact lots (`INVOICE_VOID`), deletes its allocations (money returns to buyer credit), sets VOID. No refunds: credit is only usable on future invoices; a payment is never deleted — OWNER may void it with a reason only while fully unallocated (kept for the 10-year retention, excluded from credit and reports; drawer cash goes back out of the open shift — D100). Invoices above Rp5.000.000 show a Rp10.000 bea meterai reminder and a meterai box on the print (D102).
 
 ### Analytics
 29a. **Ageing (D97):** outstanding per buyer in buckets 0 (not yet due) / 1–30 / 31–60 / 61–90 / > 90 days past due.
 29b. **Produce stock (D98, D99):** `Product.min_alert_kg` raises a bell alert when stock ≤ it. Opname: count per product (system stock snapshotted); OWNER/MANAGER approve; only a shortfall is written off, FIFO from the oldest lots, as SHRINKAGE spoilage, capped at current stock; a surplus is recorded, never booked.
+29c. **Omzet & PPh Final (D103):** monthly turnover = POS completed (gross excl. PPN) by sale date + ISSUED invoices by issue date at subtotal before discount + shipping (excl. PPN), voids excluded; PPh Final 0,5% on the part of the running yearly total above Rp500 jt; whole Rupiah; CSV; labelled "konfirmasi ke konsultan pajak".
 30. Revenue, gross margin, margin by variety × grade, and net are **net of tax and of invoice discount** (line `net_revenue_idr`). Invoice revenue and COGS count on `issue_date` (accrual). Shipping is "other income" (in net, not in gross margin). Show separately: PPN collected, channel split (POS vs Invoice), receivables outstanding and overdue.
 
 ### Staff, notifications, external data
@@ -136,7 +137,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 - **Shell:** left sidebar 16rem, collapses to a 3rem icon rail (Ctrl/⌘+B, state in localStorage); mobile = slide-in sheet from a hamburger. Header slot shows FarmProfile name/logo + user's role. Groups (role-filtered):
   - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
   - **PENJUALAN:** Kasir (POS) · Pesanan · Shift & Kas · Invoice · Pembeli
-  - **KEUANGAN:** Biaya · Harga Produk · Analitik
+  - **KEUANGAN:** Biaya · Harga Produk · Analitik · Omzet & PPh
   - **ALAT:** Telusuri · Log aktivitas (OWNER/MANAGER, D82) · Staf · Pengaturan
 - **Top bar** (h-16, translucent blur): sidebar toggle left; right: 🔔 bell, ◐ theme toggle, divider, 👤 menu (Profil, Ganti Password, Keluar).
 - **Page anatomy** (reusable template includes + Alpine): title + role-specific subtitle; primary action top-right; KPI stat cards; status tabs synced to `?tab=`; toolbar (search, date range, "Atur kolom" column visibility in localStorage); table with ⋯ row menu; footer "Baris per halaman · Halaman x dari y · « ‹ › »", default 10.

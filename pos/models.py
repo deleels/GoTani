@@ -125,8 +125,10 @@ class CashMovement(models.Model):
         EXPENSE = "EXPENSE", "Bayar biaya"
         SALE_REFUND = "SALE_REFUND", "Pengembalian order batal"
         INVOICE_PAYMENT = "INVOICE_PAYMENT", "Pembayaran invoice"
+        PAYMENT_VOID = "PAYMENT_VOID", "Batal pembayaran invoice"
 
-    SIGN = {Kind.TOP_UP: 1, Kind.INVOICE_PAYMENT: 1, Kind.DEPOSIT: -1, Kind.EXPENSE: -1, Kind.SALE_REFUND: -1}
+    SIGN = {Kind.TOP_UP: 1, Kind.INVOICE_PAYMENT: 1, Kind.DEPOSIT: -1, Kind.EXPENSE: -1, Kind.SALE_REFUND: -1,
+            Kind.PAYMENT_VOID: -1}
 
     shift = models.ForeignKey(Shift, on_delete=models.PROTECT, related_name="movements", verbose_name="shift")
     kind = models.CharField("jenis", max_length=20, choices=Kind.choices)

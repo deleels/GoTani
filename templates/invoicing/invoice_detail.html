@@ -64,6 +64,9 @@
   </div>
 
   <aside class="space-y-5">
+    {% if invoice.needs_meterai and invoice.status != 'VOID' %}
+    <p class="rounded-xl border border-amber-300 p-3 text-sm text-amber-700"><b>Bea meterai:</b> total di atas Rp5.000.000 — tempel meterai Rp10.000 (atau e-meterai) pada invoice yang diserahkan ke pembeli.</p>
+    {% endif %}
     <div class="rounded-xl border border-stone-200 bg-white p-4 text-sm">
       <dl class="space-y-1.5">
         <div class="flex justify-between"><dt class="text-stone-500">Subtotal</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>

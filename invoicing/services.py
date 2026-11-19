@@ -20,6 +20,7 @@ from inventory.models import StockLedger, StockLot
 from inventory.services import exclusive_tax, move_lot_stock
 from pos.services import format_kg
 
+from .models import InvoicePaymentMethod
 from .models import (
     Buyer,
     Invoice,
@@ -316,8 +317,9 @@ def void_invoice(invoice, actor, *, reason: str = "", note: str = "", now=None) 
 
 
 def buyer_credit(buyer) -> Decimal:
-    paid = InvoicePayment.objects.filter(buyer=buyer).aggregate(s=Sum("amount_idr"))["s"] or ZERO
-    allocated = PaymentAllocation.objects.filter(payment__buyer=buyer).aggregate(s=Sum("amount_idr"))["s"] or ZERO
+    paid = InvoicePayment.objects.filter(buyer=buyer, voided_at__isnull=True).aggregate(s=Sum("amount_idr"))["s"] or ZERO
+    allocated = PaymentAllocation.objects.filter(payment__buyer=buyer, payment__voided_at__isnull=True) \
+        .aggregate(s=Sum("amount_idr"))["s"] or ZERO
     return paid - allocated
 
 
@@ -333,6 +335,8 @@ def allocate_payment(actor, payment, invoice, amount) -> PaymentAllocation:
         raise ValidationError(f"{invoice} belum terbit atau sudah dibatalkan.")
     if invoice.buyer_id != payment.buyer_id:
         raise ValidationError("Pembayaran dan invoice harus milik pembeli yang sama.")
+    if payment.voided_at:
+        raise ValidationError("Pembayaran ini sudah dibatalkan.")
     if amount > payment.unallocated_idr:
         raise ValidationError(f"Sisa pembayaran hanya {payment.unallocated_idr}.")
     if amount > invoice.outstanding_idr:
@@ -363,17 +367,26 @@ def remove_allocation(actor, allocation, reason: str):
 
 @transaction.atomic
 def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", proof=None,
-                   allocations=(), into_drawer=False) -> InvoicePayment:
+                   allocations=(), into_drawer=False, withholding_slip_no="") -> InvoicePayment:
     """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit.
     `into_drawer` (CASH only, D96): the cash goes into the open shift's drawer."""
     require_finance(actor)
     amount = q_money(amount_idr)
     if amount <= 0:
         raise ValidationError("Jumlah pembayaran harus lebih dari 0.")
-    if method not in PaymentMethod.values:
+    if method not in InvoicePaymentMethod.values:
         raise ValidationError("Metode pembayaran tidak dikenal.")
+    slip = (withholding_slip_no or "").strip()
+    if method == InvoicePaymentMethod.PPH_WITHHELD:
+        if not slip:
+            raise ValidationError("Potongan PPh wajib disertai nomor bukti potong.")
+        if into_drawer:
+            raise ValidationError("Potongan PPh bukan uang tunai; tidak bisa masuk laci.")
+    else:
+        slip = ""
     payment = InvoicePayment.objects.create(buyer=buyer, amount_idr=amount, method=method, paid_on=paid_on,
-                                            reference=reference, proof=proof or "", recorded_by=actor)
+                                            reference=reference, proof=proof or "", recorded_by=actor,
+                                            withholding_slip_no=slip)
     if into_drawer:
         from pos.models import CashMovement, Shift
 
@@ -391,13 +404,33 @@ def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", p
 
 
 @transaction.atomic
-def delete_payment(actor, payment):
+def void_payment(actor, payment, reason: str):
+    """OWNER voids a fully unallocated payment with a reason (D100). The record is kept for the 10-year
+    bookkeeping retention; it drops out of credit and reports. Cash that went into the drawer goes back
+    out of the open shift."""
+    from core.audit import log_event
+    from pos.models import CashMovement, Shift
+
     if not user_has_role(actor, ROLE_OWNER):
-        raise PermissionDenied("Hanya OWNER yang dapat menghapus pembayaran.")
+        raise PermissionDenied("Hanya OWNER yang dapat membatalkan pembayaran.")
+    if not (reason or "").strip():
+        raise ValidationError("Alasan pembatalan wajib diisi.")
     payment = InvoicePayment.objects.select_for_update().get(pk=payment.pk)
+    if payment.voided_at:
+        raise ValidationError("Pembayaran ini sudah dibatalkan.")
     if payment.allocations.exists():
-        raise ValidationError("Pembayaran yang sudah dialokasikan tidak dapat dihapus.")
-    payment.delete()
+        raise ValidationError("Lepas dulu alokasinya dari invoice sebelum membatalkan pembayaran.")
+    if payment.cash_movements.filter(kind=CashMovement.Kind.INVOICE_PAYMENT).exists():
+        shift = Shift.objects.select_for_update().filter(is_open=True).first()
+        if shift is None:
+            raise ValidationError("Uang ini masuk laci kasir; buka shift agar pengembaliannya tercatat.")
+        CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.PAYMENT_VOID, amount_idr=payment.amount_idr,
+                                    payment=payment, note=reason.strip()[:255], created_by=actor)
+    payment.voided_at, payment.voided_by, payment.void_reason = timezone.now(), actor, reason.strip()
+    payment.save(update_fields=["voided_at", "voided_by", "void_reason"])
+    log_event(actor, "PAYMENT_VOID", payment, f"Batal {payment}", before={"amount_idr": payment.amount_idr},
+              after={"amount_idr": Decimal("0")}, reason=payment.void_reason)
+    return payment
 
 
 def receivables_summary(today=None):
@@ -456,7 +489,7 @@ def apply_credit(actor, buyer, invoice, amount) -> list:
         raise ValidationError(f"Kredit pembeli hanya {buyer_credit(buyer)}.")
     created = []
     remaining = amount
-    for payment in InvoicePayment.objects.filter(buyer=buyer).order_by("paid_on", "id"):
+    for payment in InvoicePayment.objects.filter(buyer=buyer, voided_at__isnull=True).order_by("paid_on", "id"):
         if remaining <= 0:
             break
         take = min(remaining, payment.unallocated_idr)

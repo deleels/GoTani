@@ -117,6 +117,26 @@ class DashboardView(RoleRequiredMixin, TemplateView):
         }
 
 
+class OmzetPphView(RoleRequiredMixin, TemplateView):
+    """Omzet & PPh Final 0,5% per month (D103), with CSV."""
+
+    allowed_roles = FINANCE_ROLES
+    template_name = "reports/omzet_pph.html"
+
+    def get(self, request, *args, **kwargs):
+        try:
+            year = int(request.GET.get("year") or timezone.localdate().year)
+        except ValueError:
+            year = timezone.localdate().year
+        data = services.omzet_pph(year)
+        if request.GET.get("format") == "csv":
+            rows = [["bulan", "omzet_pos", "omzet_invoice", "omzet", "kumulatif", "dasar_pengenaan", "pph_final", "setor_paling_lambat"]]
+            rows += [[f"{year}-{r['month']:02d}", r["pos"], r["invoice"], r["omzet"], r["cumulative"], r["taxable"], r["pph"],
+                      r["due"].isoformat()] for r in data["rows"]]
+            return csv_response(f"omzet-pph-{year}.csv", rows)
+        return render(request, self.template_name, {"nav": "finance", "d": data, "years": range(year - 2, year + 2)})
+
+
 class TraceIndexView(RoleRequiredMixin, TemplateView):
     allowed_roles = FINANCE_ROLES
     template_name = "reports/trace_index.html"
