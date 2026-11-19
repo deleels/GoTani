@@ -74,16 +74,14 @@
 (function () {
   if (!window.Chart) { document.getElementById("stage-chart").parentElement.innerHTML = '<p class="pt-16 text-center text-sm text-stone-400">Tidak dapat memuat grafik.</p>'; return; }
   const d = JSON.parse(document.getElementById("stage-data").textContent);
-  const ink = () => document.documentElement.classList.contains("dark") ? "#c3ccc6" : "#57534e";
-  const grid = () => document.documentElement.classList.contains("dark") ? "#2a322d" : "#e7e5e4";
-  const chart = new Chart(document.getElementById("stage-chart"), {
+  const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const ink = () => tok("--ink-muted");
+  const grid = () => tok("--divider");
+  new Chart(document.getElementById("stage-chart"), {
     type: "bar",
-    data: { labels: d.labels, datasets: [{ data: d.values, backgroundColor: "#10b981", borderRadius: 4, maxBarThickness: 36 }] },
+    data: { labels: d.labels, datasets: [{ data: d.values, backgroundColor: tok("--green-600"), borderRadius: 4, maxBarThickness: 36 }] },
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } },
                scales: { y: { beginAtZero: true, ticks: { precision: 0, color: ink() }, grid: { color: grid() } }, x: { ticks: { color: ink() }, grid: { display: false } } } },
-  });
-  window.addEventListener("gotani-theme", () => {
-    chart.options.scales.y.ticks.color = ink(); chart.options.scales.x.ticks.color = ink(); chart.options.scales.y.grid.color = grid(); chart.update();
   });
 })();
 </script>

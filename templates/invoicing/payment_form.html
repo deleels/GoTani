@@ -33,8 +33,8 @@
     </table>
     </div>
     <div class="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm">
-      <p>Dialokasikan <strong x-text="'Rp ' + Math.round(used).toLocaleString('id-ID')"></strong> · menjadi kredit
-        <strong :class="amount - used < 0 ? 'text-red-700' : 'text-emerald-700'" x-text="'Rp ' + Math.round(amount - used).toLocaleString('id-ID')"></strong></p>
+      <p>Dialokasikan <strong x-text="gtRupiah(used)"></strong> · menjadi kredit
+        <strong :class="amount - used < 0 ? 'text-red-700' : 'text-emerald-700'" x-text="gtRupiah(amount - used)"></strong></p>
       <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700">Simpan Pembayaran</button>
     </div>
   </div>

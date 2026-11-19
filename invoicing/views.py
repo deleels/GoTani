@@ -365,7 +365,7 @@ class PaymentCreateView(FinanceView):
                 form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else "Jumlah alokasi tidak valid.")
             else:
                 left = payment.unallocated_idr
-                messages.success(request, "Pembayaran dicatat." + (f" Sisa Rp {left:,.0f} menjadi kredit pembeli.".replace(",", ".") if left else ""))
+                messages.success(request, "Pembayaran dicatat." + (f" Sisa Rp{left:,.0f} menjadi kredit pembeli.".replace(",", ".") if left else ""))
                 return redirect("invoicing:buyer_detail", pk=buyer.pk)
         return self.render_page(request, buyer, form, status=400, entered=entered)
 

@@ -108,7 +108,7 @@ function invoiceEditor() {
       });
       return { subtotal, discount, tax, shipping: this.ship, total: subtotal - discount + tax + this.ship };
     },
-    rp(v) { return "Rp " + Math.round(v || 0).toLocaleString("id-ID"); },
+    rp(v) { return window.gtRupiah(v); },
     fmtKg(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 3 }); },
   };
 }

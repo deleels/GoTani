@@ -4,23 +4,45 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}GoTani{% endblock %} · GoTani</title>
-  <meta name="theme-color" content="#059669">
+  <meta name="theme-color" content="#175738">
   <link rel="manifest" href="{% url 'manifest' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/icons/favicon-32.png' %}">
   <link rel="apple-touch-icon" href="{% static 'core/icons/apple-touch-icon.png' %}">
-  <script>
-    /* Theme before paint (D67): saved choice, else system. */
-    (function () {
-      var t = null; try { t = localStorage.getItem("gotani-theme"); } catch (e) {}
-      var dark = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-      if (dark) document.documentElement.classList.add("dark");
-    })();
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="{% static 'core/ds/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'core/ds/bundle.css' %}">
   {# Tailwind Play CDN: accepted non-production compromise (D33). #}
   <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-  <script>tailwind.config = { darkMode: "class" };</script>
+  <script>
+    tailwind.config = {
+      /* Utilities become `html .x` (0,1,1) so they tie with, and (loaded later) win over, the design
+         system's `.gt-root p/h1-h3 { margin: 0 }` reset, which would otherwise zero every mt-* and mb-* margin. */
+      important: "html",
+      theme: {
+        extend: {
+          colors: {
+            /* Semantic names: use these in new and converted markup. */
+            canvas: "var(--canvas)", surface: "var(--surface)", raised: "var(--surface-raised)",
+            line: "var(--divider)", "line-strong": "var(--line-strong)",
+            ink: { DEFAULT: "var(--ink)", muted: "var(--ink-muted)", subtle: "var(--ink-subtle)", inverse: "var(--ink-inverse)" },
+            brand: { 900: "var(--green-900)", 800: "var(--green-800)", 700: "var(--green-700)",
+                     600: "var(--green-600)", 400: "var(--green-400)", 100: "var(--green-100)" },
+            lime: { 400: "var(--lime-400)" },
+            danger: "var(--danger)", "warning-text": "var(--warning-text)", highlight: "var(--highlight)",
+            /* Temporary alias layer: shifts every unconverted page onto the new palette.
+               Remove in Phase 6 once no template uses stone-* or emerald-*. */
+            stone: { 50: "#f7f7f7", 100: "#eef0ef", 200: "#e9ebea", 300: "#d4d8d6", 400: "#8c918f",
+                     500: "#737373", 600: "#5c605e", 700: "#3a3d3c", 800: "#000000", 900: "#000000" },
+            emerald: { 50: "#edf6ee", 100: "#edf6ee", 200: "#cfe6d7", 500: "#5fbd92",
+                       600: "#227d53", 700: "#175738", 800: "#13452d" },
+          },
+          borderRadius: { xs: "var(--radius-xs)", tile: "var(--radius-md)", card: "var(--radius-lg)",
+                          frame: "var(--radius-xl)", pill: "var(--radius-pill)" },
+          fontFamily: { sans: ["var(--font-sans)"] },
+          fontWeight: { bold: "600" }, /* only 400/500/600 files ship */
+        },
+      },
+    };
+  </script>
   <script src="{% static 'core/numbers.js' %}"></script>
   <script src="{% static 'core/confirm.js' %}" defer></script>
   <script src="{% static 'core/stage.js' %}" defer></script>
@@ -29,10 +51,10 @@
   <link rel="stylesheet" href="{% static 'core/gotani.css' %}">
   {% block head %}{% endblock %}
 </head>
-<body class="min-h-screen bg-stone-50 text-stone-800 antialiased">
+<body class="gt-root min-h-screen bg-surface text-ink antialiased" data-motion="{% block motion %}calm{% endblock %}">
   {% block body %}{% endblock %}
-  <div id="sw-update" hidden class="no-print fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-3 rounded-xl bg-stone-900 px-4 py-3 text-sm text-white shadow-lg" role="status">
-    <span>Versi baru tersedia</span><button type="button" class="rounded-lg bg-emerald-500 px-3 py-1 font-medium text-white">Muat ulang</button>
+  <div id="sw-update" hidden class="no-print fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-3 rounded-card bg-brand-900 px-4 py-3 text-sm text-ink-inverse shadow-lg" role="status">
+    <span>Versi baru tersedia</span><button type="button" class="gt-btn gt-btn--on-dark gt-btn--sm">Muat ulang</button>
   </div>
   <script src="{% static 'core/pwa.js' %}" defer></script>
   {% block scripts %}{% endblock %}

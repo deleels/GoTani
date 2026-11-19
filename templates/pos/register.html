@@ -168,7 +168,7 @@
       over(line) { const p = this.product(line.id); return p && this.qty(line) > Number(p.available); },
       subtotal(line) { const p = this.product(line.id); return p ? this.qty(line) * Number(p.price) : 0; },
       total() { return this.cart.reduce((s, l) => s + this.subtotal(l), 0); },
-      rp(v) { return 'Rp ' + Math.round(Number(v || 0)).toLocaleString('id-ID'); },
+      rp(v) { return window.gtRupiah(v); },
       fmtKg(v) { return Number(v || 0).toLocaleString('id-ID', { maximumFractionDigits: 3 }); },
     };
   }

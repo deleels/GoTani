@@ -19,7 +19,7 @@ function stageForm(dataId) {
         level = 2;
         lines.push('Pembersihan menutup siklus; tidak ada panen lagi setelah ini.');
         if (p.writeoff !== null) {
-          lines.push(p.writeoff > 0 ? 'Biaya belum terserap Rp ' + Math.round(p.writeoff).toLocaleString('id-ID') + ' dicatat sebagai biaya siklus tak terserap (write-off).'
+          lines.push(p.writeoff > 0 ? 'Biaya belum terserap ' + window.gtRupiah(p.writeoff) + ' dicatat sebagai biaya siklus tak terserap (write-off).'
             : 'Tidak ada biaya yang belum terserap.');
         }
       }

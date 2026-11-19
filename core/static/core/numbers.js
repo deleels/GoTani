@@ -80,3 +80,6 @@
   document.addEventListener('DOMContentLoaded', function () { init(); });
   window.idNum = { parse: parse, format: format, init: init };
 })();
+
+/* D105: money is written "Rp15.000" (no space) everywhere in JS. */
+window.gtRupiah = (v) => "Rp" + Math.round(Number(v || 0)).toLocaleString("id-ID");

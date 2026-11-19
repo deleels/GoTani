@@ -479,7 +479,7 @@ class Expense(models.Model):
         indexes = [models.Index(fields=["cycle", "status", "absorbed_by"])]
 
     def __str__(self):
-        return f"{self.category.code} Rp {self.amount_idr} ({self.get_status_display()})"
+        return f"{self.category.code} Rp{self.amount_idr} ({self.get_status_display()})"
 
 
 class HarvestBatch(models.Model):

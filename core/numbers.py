@@ -21,16 +21,18 @@ def parse_id_decimal(value, kind=None):
     """'1.500,25' -> 1500.25, '1.500.000' -> 1500000, '2,75' -> 2.75, '1.5' -> 1.5.
 
     A single dot without a comma is a decimal point (machine numbers, which the browser submits),
-    except in a whole-Rupiah field (`kind="money"`), where '15.000' means fifteen thousand.
+    except in a whole-Rupiah field (`kind="money"`) or after an "Rp" prefix (pasted display text,
+    D105), where '15.000' means fifteen thousand.
     Raises InvalidOperation."""
     if isinstance(value, (Decimal, int)):
         return Decimal(value)
     text = str(value).strip().replace(" ", "").replace(" ", "")
-    if text.lower().startswith("rp"):
+    has_rp = text.lower().startswith("rp")
+    if has_rp:
         text = text[2:]
     if "," in text:
         text = text.replace(".", "").replace(",", ".")
-    elif _MULTI_DOT.match(text) or (kind == "money" and _ONE_GROUP.match(text)):
+    elif _MULTI_DOT.match(text) or ((kind == "money" or has_rp) and _ONE_GROUP.match(text)):
         text = text.replace(".", "")
     if not text:
         raise InvalidOperation(value)

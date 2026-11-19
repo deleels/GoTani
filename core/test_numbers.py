@@ -10,7 +10,7 @@ class IndonesianNumberTests(TestCase):
 
     def test_parse(self):
         cases = {"1.500,25": D("1500.25"), "2,75": D("2.75"), "1.500.000": D("1500000"), "1.5": D("1.5"),
-                 "0.333": D("0.333"), "Rp 15.000,5": D("15000.5"), "25000.00": D("25000.00")}
+                 "0.333": D("0.333"), "Rp 15.000,5": D("15000.5"), "Rp15.000": D("15000"), "Rp15.000,5": D("15000.5"), "25000.00": D("25000.00")}
         for text, expected in cases.items():
             self.assertEqual(parse_id_decimal(text), expected, text)
         self.assertEqual(parse_id_decimal("15.000", "money"), D("15000"))  # whole-Rupiah field

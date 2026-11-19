@@ -1,4 +1,4 @@
-"""Display filters: `Rp 15.000` (whole Rupiah, ROUND_HALF_UP), kg and percentages."""
+"""Display filters: `Rp15.000` (whole Rupiah, ROUND_HALF_UP), kg and percentages."""
 
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -27,7 +27,7 @@ def rupiah(value):
         return "-"
     whole = d.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
     sign = "-" if whole < 0 else ""
-    return f"{sign}Rp {_thousands(abs(whole))}"
+    return f"{sign}Rp{_thousands(abs(whole))}"
 
 
 @register.filter

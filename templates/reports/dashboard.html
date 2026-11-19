@@ -111,7 +111,7 @@
   const data = JSON.parse(document.getElementById('chart-data').textContent);
   const css = getComputedStyle(document.querySelector('.viz-root'));
   const c = (name) => css.getPropertyValue(name).trim();
-  const rp = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
+  const rp = window.gtRupiah;
   Chart.defaults.font.family = 'ui-sans-serif, system-ui, sans-serif';
   Chart.defaults.color = c('--ink-2');
   Chart.defaults.maintainAspectRatio = false;
@@ -167,14 +167,6 @@
     options: { plugins: { tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + rp(ctx.parsed) } } } },
   }); else empty('chart-channel', []);
   hbar('chart-expenses', data.expenses.labels, data.expenses.values);
-  window.addEventListener('gotani-theme', () => {
-    const st = getComputedStyle(document.querySelector('.viz-root'));
-    Chart.defaults.color = st.getPropertyValue('--ink-2').trim();
-    Object.values(Chart.instances).forEach((ch) => {
-      Object.values(ch.options.scales || {}).forEach((sc) => { if (sc.grid) sc.grid.color = st.getPropertyValue('--grid').trim(); });
-      ch.update();
-    });
-  });
 })();
 </script>
 {% endblock %}

@@ -636,7 +636,7 @@ class Command(BaseCommand):
             note="Pembeli mengganti pesanan dengan invoice baru.", now=ts))
         self._invoice(2, "resto_draft", "resto", [("Cabai Rawit", Grade.HIGH, "5", None)], issue=False,
                       discount_type="AMOUNT", discount_value=10000)
-        # Overpays the first invoice → Rp 100.000 buyer credit.
+        # Overpays the first invoice → Rp100.000 buyer credit.
         self._pay(12, "resto", "TRANSFER", lambda inv: (inv[0].total_idr + 100000, [(inv[0], inv[0].total_idr)])
                   if inv else (D("100000"), []), allocate_to=["resto_paid"])
         self._pay(5, "hotel", "TRANSFER", lambda inv: (D("500000"), [(inv[0], min(D("500000"), inv[0].total_idr))])

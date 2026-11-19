@@ -189,7 +189,7 @@ class RoleMatrixTests(SiteFixtures):
             self.assertEqual(response.status_code, 200)
             self.assertTemplateUsed(response, "core/home.html")  # Ringkasan (D70)
             if role == ROLE_WORKER:
-                self.assertNotContains(response, "Rp ")
+                self.assertNotRegex(response.content.decode(), r"Rp\d")
             else:
                 self.assertContains(response, "Total penjualan")
 
@@ -205,11 +205,11 @@ class RoleMatrixTests(SiteFixtures):
             with self.subTest(page=name):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
-                self.assertNotContains(response, "Rp ")
+                self.assertNotRegex(response.content.decode(), r"Rp\d")
                 self.assertNotContains(response, "Biaya")
         # The same pages do show money to a manager.
         self.login(ROLE_MANAGER)
-        self.assertContains(self.client.get(reverse("farm:harvests")), "Rp 10.000")
+        self.assertContains(self.client.get(reverse("farm:harvests")), "Rp10.000")
 
     def test_nav_reflects_role(self):
         self.login(ROLE_CASHIER)
@@ -243,7 +243,7 @@ class FarmViewTests(SiteFixtures):
         self.assertContains(response, "Stok menipis: NPK")
         self.assertContains(response, "1 biaya menunggu persetujuan")
         self.assertContains(response, "Majukan tahap")
-        self.assertContains(response, "Rp 75.000")  # unabsorbed cost of the closed cycle
+        self.assertContains(response, "Rp75.000")  # unabsorbed cost of the closed cycle
 
     def test_stage_advance_and_backward_rejected(self):
         self.login(ROLE_WORKER)
@@ -399,7 +399,7 @@ class PosViewTests(SiteFixtures):
         self.assertEqual(order.total_revenue_idr, D("58000"))
         receipt = self.client.get(reverse("pos:receipt", args=[order.pk]))
         self.assertContains(receipt, order.order_number)
-        self.assertContains(receipt, "Rp 58.000")
+        self.assertContains(receipt, "Rp58.000")
         self.assertContains(receipt, "size: 58mm")
         self.assertNotContains(receipt, "HPP")
         a4 = self.client.get(reverse("pos:receipt", args=[order.pk]), {"size": "a4"})
@@ -601,8 +601,8 @@ class AnalyticsTests(SiteFixtures):
     def test_dashboard_page(self):
         self.login(ROLE_MANAGER)
         response = self.client.get(reverse("dashboard"))
-        self.assertContains(response, "Rp 200.000")
-        self.assertContains(response, "-Rp 295.000")
+        self.assertContains(response, "Rp200.000")
+        self.assertContains(response, "-Rp295.000")
         self.assertContains(response, "chart.umd.min.js")
         self.assertIn("margin", response.context["charts"])
         today = timezone.localdate()
@@ -618,9 +618,9 @@ class FilterTests(TestCase):
         return Template("{% load gotani %}" + tpl).render(Context(ctx))
 
     def test_rupiah(self):
-        self.assertEqual(self.render("{{ v|rupiah }}", v=D("15000.00")), "Rp 15.000")
-        self.assertEqual(self.render("{{ v|rupiah }}", v=D("1234567.50")), "Rp 1.234.568")
-        self.assertEqual(self.render("{{ v|rupiah }}", v=D("-2500.4")), "-Rp 2.500")
+        self.assertEqual(self.render("{{ v|rupiah }}", v=D("15000.00")), "Rp15.000")
+        self.assertEqual(self.render("{{ v|rupiah }}", v=D("1234567.50")), "Rp1.234.568")
+        self.assertEqual(self.render("{{ v|rupiah }}", v=D("-2500.4")), "-Rp2.500")
         self.assertEqual(self.render("{{ v|rupiah }}", v=None), "-")
 
     def test_kg_and_pct(self):

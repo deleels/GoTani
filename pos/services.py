@@ -292,7 +292,7 @@ def whole_rupiah(value) -> Decimal:
 
 
 def format_rp(value) -> str:
-    return "Rp " + f"{int(whole_rupiah(value)):,}".replace(",", ".")
+    return "Rp" + f"{int(whole_rupiah(value)):,}".replace(",", ".")
 
 
 def validate_void_reason(reason: str, note: str) -> tuple[str, str]:
@@ -412,7 +412,7 @@ def close_shift(shift, user, denominations: dict, note: str = "", now=None) -> S
         try:
             n = int(raw)
         except (TypeError, ValueError):
-            raise ValidationError(f"Jumlah lembar/keping Rp {denom} tidak valid.") from None
+            raise ValidationError(f"Jumlah lembar/keping Rp{denom} tidak valid.") from None
         if n < 0:
             raise ValidationError("Jumlah lembar/keping tidak boleh negatif.")
         if n:

@@ -148,7 +148,7 @@ class P9ViewTests(P9Fixtures):
         for tab in ("pemupukan", "pestisida", "irigasi", "scouting", "penanaman", "prapanen", "panen", "susut", "bogus"):
             r = self.client.get(url, {"tab": tab, "new": "1"})
             self.assertEqual(r.status_code, 200, tab)
-            self.assertNotContains(r, "Rp ")
+            self.assertNotRegex(r.content.decode(), r"Rp\d")
         r = self.client.get(url, {"tab": "irigasi"})
         self.assertIn("duration_minutes", r.context["form"].fields)
         self.assertNotIn("input_item", r.context["form"].fields)
@@ -182,11 +182,11 @@ class P9ViewTests(P9Fixtures):
         for url in pages:
             r = self.client.get(url)
             self.assertEqual(r.status_code, 200, url)
-            self.assertNotContains(r, "Rp ")
+            self.assertNotRegex(r.content.decode(), r"Rp\d")
         self.assertContains(self.client.get(pages[0]), "Panen #")  # timeline
         self.assertContains(self.client.get(pages[2]), "GH-1")  # where the fertilizer went
         self.client.force_login(self.manager)
-        self.assertContains(self.client.get(pages[0]), "Rp ")
+        self.assertRegex(self.client.get(pages[0]).content.decode(), r"Rp\d")
         self.client.force_login(self.cashier)
         for url in pages:
             self.assertEqual(self.client.get(url).status_code, 403)
@@ -280,7 +280,7 @@ class PageAnatomyTests(P9Fixtures):
         for name in ("farm:harvests", "farm:inputs", "farm:spoilage", "farm:cycles"):
             r = self.client.get(reverse(name))
             self.assertContains(r, "text-2xl font-bold")
-            self.assertNotContains(r, "Rp ")
+            self.assertNotRegex(r.content.decode(), r"Rp\d")
 
 
 class StageAdvanceUndoTests(TestCase):

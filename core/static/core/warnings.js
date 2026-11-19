@@ -1,7 +1,7 @@
 /* Soft data-entry warnings (D87), wired through the shared dialog's data-confirm-if (confirm.js).
    Each function returns true when the dialog should open, after writing its text onto the form. */
 (function () {
-  function rp(v) { return 'Rp ' + Math.round(v).toLocaleString('id-ID'); }
+  var rp = window.gtRupiah;
   function pct(v) { return Math.round(v * 100) + '%'; }
   function data(id) { var el = document.getElementById(id); return el ? JSON.parse(el.textContent) : {}; }
   function show(form, title, lines, action) {

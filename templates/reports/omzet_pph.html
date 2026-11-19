@@ -5,7 +5,7 @@
 <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
   <div>
     <h1 class="text-2xl font-bold tracking-tight">Omzet &amp; PPh Final {{ d.rate_pct|pct:1 }}</h1>
-    <p class="mt-1 max-w-3xl text-sm text-stone-500">Omzet bulanan untuk PPh Final UMKM (PP 55/2022): penjualan kasir per tanggal jual ditambah invoice terbit per tanggal terbit (nilai sebelum diskon + ongkos kirim, tanpa PPN); penjualan/invoice yang dibatalkan tidak dihitung. Rp{{ d.exempt|rupiah|cut:"Rp " }} pertama setiap tahun tidak dikenai pajak (wajib pajak orang pribadi).</p>
+    <p class="mt-1 max-w-3xl text-sm text-stone-500">Omzet bulanan untuk PPh Final UMKM (PP 55/2022): penjualan kasir per tanggal jual ditambah invoice terbit per tanggal terbit (nilai sebelum diskon + ongkos kirim, tanpa PPN); penjualan/invoice yang dibatalkan tidak dihitung. {{ d.exempt|rupiah }} pertama setiap tahun tidak dikenai pajak (wajib pajak orang pribadi).</p>
   </div>
   <form method="get" class="flex items-center gap-2 text-sm">
     <select name="year" onchange="this.form.submit()" class="w-auto rounded-lg border border-stone-300 px-2 py-1.5" aria-label="Tahun">{% for y in years %}<option value="{{ y }}" {% if y == d.year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>

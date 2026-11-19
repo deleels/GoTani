@@ -50,9 +50,6 @@
       <button type="button" class="hidden rounded-lg p-2 hover:bg-stone-100 md:block" @click="toggle()" aria-label="Ciutkan sidebar">{% icon "panel" %}</button>
       <span class="flex-1"></span>
       {% include "components/bell.html" %}
-      <button type="button" class="rounded-lg p-2 hover:bg-stone-100" @click="toggleTheme()" :aria-label="dark ? 'Mode terang' : 'Mode gelap'">
-        <span x-show="!dark">{% icon "moon" %}</span><span x-show="dark" x-cloak>{% icon "sun" %}</span>
-      </button>
       <span class="mx-1 h-6 border-l border-dashed border-stone-300"></span>
       <div class="relative" x-data="{ open: false }" @click.outside="open=false">
         <button type="button" @click="open=!open" class="flex items-center gap-2 rounded-lg p-1.5 hover:bg-stone-100">
@@ -91,16 +88,10 @@
   }
   function shell() {
     return {
-      collapsed: false, mobile: false, dark: document.documentElement.classList.contains("dark"),
+      collapsed: false, mobile: false,
       init() { try { this.collapsed = localStorage.getItem("gotani-sidebar") === "collapsed"; } catch (e) {} },
       save() { try { localStorage.setItem("gotani-sidebar", this.collapsed ? "collapsed" : "open"); } catch (e) {} },
       toggle() { this.collapsed = !this.collapsed; this.save(); },
-      toggleTheme() {
-        this.dark = !this.dark;
-        document.documentElement.classList.toggle("dark", this.dark);
-        try { localStorage.setItem("gotani-theme", this.dark ? "dark" : "light"); } catch (e) {}
-        window.dispatchEvent(new CustomEvent("gotani-theme", { detail: { dark: this.dark } }));
-      },
     };
   }
 </script>

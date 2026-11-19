@@ -76,7 +76,7 @@ def build_notifications(roles, today=None):
             if outstanding > 0:
                 out.append({
                     "kind": "overdue_invoice", "title": f"Invoice jatuh tempo: {inv.number}",
-                    "body": f"{inv.buyer} · sisa Rp {outstanding:,.0f}".replace(",", "."),
+                    "body": f"{inv.buyer} · sisa Rp{outstanding:,.0f}".replace(",", "."),
                     "url": reverse("invoicing:invoice_detail", args=[inv.pk]),
                     "at": _aware(inv.due_date + timedelta(days=1)),
                 })

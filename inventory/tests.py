@@ -165,7 +165,7 @@ class SpoilageTests(InventoryFixtures):
     def test_loss_rounds_half_up_to_cents(self):
         rec = services.record_spoilage(self.lot_low, D("0.001"), Reason.SHRINKAGE)
         self.assertEqual(rec.loss_idr, D("4.00"))  # 4000 × 0.001
-        # 0.1 kg × Rp 0.05 = 0.005 → rounds half-up to 0.01
+        # 0.1 kg × Rp0.05 = 0.005 → rounds half-up to 0.01
         lot = StockLot.objects.create(
             product=self.low,
             harvest_batch=farm.record_harvest(self.cycle, 1),
