@@ -183,9 +183,13 @@ class AuditLogView(RoleRequiredMixin, View):
         "PRICE_CHANGE": "Harga", "POS_STEP_CHANGE": "Langkah kasir", "PKP_CHANGE": "Status PKP",
         "PRODUCT_ADMIN_EDIT": "Produk (admin)", "STAGE_ADVANCE": "Tahap maju", "STAGE_UNDO": "Tahap dibatalkan",
         "SPOILAGE_REVERSAL": "Susut dibatalkan", "ALLOCATION_REMOVED": "Alokasi dilepas",
+        "SHIFT_CLOSE": "Tutup shift", "SHIFT_REVIEW": "Tinjau selisih kas", "PAYMENT_VOID": "Pembayaran dibatalkan",
+        "STOCK_COUNT_APPROVED": "Opname disetujui", "STOCK_COUNT_REJECTED": "Opname ditolak",
     }
 
     FIELDS = {"selling_price_idr": "harga/kg", "pos_step_kg": "langkah (kg)", "is_pkp": "PKP", "tax_id": "pajak", "stage": "tahap", "qty_kg": "kg", "amount_idr": "jumlah (Rp)", "payment_id": "pembayaran #",
+              "expected_idr": "seharusnya (Rp)", "counted_idr": "dihitung (Rp)", "difference_idr": "selisih (Rp)",
+              "system_kg": "stok sistem (kg)", "counted_kg": "stok fisik (kg)", "written_off_kg": "dihapus (kg)",
               "is_active": "aktif"}
 
     def get(self, request):
