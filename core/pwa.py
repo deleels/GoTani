@@ -57,8 +57,8 @@ def manifest(request):
         "start_url": "/?source=pwa",
         "scope": "/",
         "display": "standalone",
-        "background_color": "#fafaf9",
-        "theme_color": "#059669",
+        "background_color": "#f7f7f7",
+        "theme_color": "#175738",
         "icons": [
             {"src": static("core/icons/icon-192.png"), "sizes": "192x192", "type": "image/png"},
             {"src": static("core/icons/icon-512.png"), "sizes": "512x512", "type": "image/png"},

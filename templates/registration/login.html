@@ -1,44 +1,39 @@
 {% extends "base_bare.html" %}
-{% load ui %}
+{% load static ui %}
 {% block title %}Masuk{% endblock %}
 {% block body %}
 <div class="grid min-h-screen lg:grid-cols-2">
-  <section class="relative hidden flex-col justify-between overflow-hidden bg-[#0f1f17] p-10 text-white lg:flex">
-    <div class="flex items-center gap-3">
-      <span class="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500 text-white">{% icon "leaf" 22 %}</span>
-      <span class="text-lg font-semibold">GoTani</span>
+  <section class="app-login__panel hidden flex-col justify-between lg:flex">
+    <img src="{% static 'core/ds/logos/gotani-lockup-white.svg' %}" alt="GoTani" class="app-login__lockup">
+    <div class="max-w-lg">
+      <h1 class="app-login__headline">Dari benih sampai struk, semua tercatat.</h1>
+      <p class="app-login__tagline">Catat siklus tanam, panen per grade, stok per lot, dan penjualan kasir maupun grosir — dengan HPP yang bisa ditelusuri sampai ke biaya asalnya.</p>
     </div>
-    <div class="max-w-md">
-      <h1 class="text-4xl font-bold leading-tight">Dari benih sampai struk, semua tercatat.</h1>
-      <p class="mt-4 text-emerald-100/80">Catat siklus tanam, panen per grade, stok per lot, dan penjualan kasir maupun grosir — dengan HPP yang bisa ditelusuri sampai ke biaya asalnya.</p>
-    </div>
-    <p class="text-sm text-emerald-100/60">Satu kebun · Ketertelusuran penuh · Neraca massa terjaga</p>
-    <div class="pointer-events-none absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl"></div>
+    <p class="app-login__foot">Satu kebun · Ketertelusuran penuh · Neraca massa terjaga</p>
   </section>
-  <section class="flex items-center justify-center bg-white px-6 py-12">
+  <section class="app-login__form flex items-center justify-center px-6 py-12">
     <div class="w-full max-w-sm" x-data="{ show: false }">
-      <div class="mb-8 flex items-center gap-2 lg:hidden">
-        <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600 text-white">{% icon "leaf" 20 %}</span>
-        <span class="text-lg font-semibold">GoTani</span>
-      </div>
-      <h2 class="text-2xl font-bold">Selamat datang kembali</h2>
-      <p class="mb-6 mt-1 text-sm text-stone-500">Masuk dengan akun yang diberikan pemilik kebun.</p>
-      {% if form.errors %}<p class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">Nama pengguna atau kata sandi salah.</p>{% endif %}
-      <form method="post" class="space-y-4">
+      <img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="GoTani" class="app-login__lockup mb-10 lg:hidden">
+      <h2 class="app-login__title">Selamat datang kembali</h2>
+      <p class="app-login__sub mb-8 mt-2">Masuk dengan akun yang diberikan pemilik kebun.</p>
+      {% if form.errors %}<div class="gt-callout gt-callout--danger mb-6" role="alert"><span class="gt-callout__title">Nama pengguna atau kata sandi salah.</span></div>{% endif %}
+      <form method="post" class="space-y-5">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next }}">
-        <label class="block text-sm font-medium">Nama pengguna
-          <input name="username" autofocus required autocomplete="username" class="mt-1">
-        </label>
-        <label class="block text-sm font-medium">Kata sandi
-          <span class="relative mt-1 block">
-            <input :type="show ? 'text' : 'password'" type="password" name="password" required autocomplete="current-password" class="pr-10">
-            <button type="button" @click="show=!show" class="absolute inset-y-0 right-0 px-3 text-stone-400 hover:text-stone-700" :aria-label="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'">{% icon "eye" 16 %}</button>
-          </span>
-        </label>
-        <button class="w-full rounded-lg bg-emerald-600 px-4 py-2.5 font-medium text-white hover:bg-emerald-700">Masuk</button>
+        <div>
+          <label class="app-label" for="id_username">Nama pengguna</label>
+          <input id="id_username" name="username" autofocus required autocomplete="username" class="app-field">
+        </div>
+        <div>
+          <label class="app-label" for="id_password">Kata sandi</label>
+          <div class="app-field-wrap">
+            <input id="id_password" :type="show ? 'text' : 'password'" type="password" name="password" required autocomplete="current-password" class="app-field">
+            <button type="button" @click="show=!show" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" :aria-label="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'" :aria-pressed="show">{% icon "eye" 16 "gt-ico" %}</button>
+          </div>
+        </div>
+        <button class="gt-btn gt-btn--primary gt-btn--md gt-btn--block">Masuk</button>
       </form>
-      <p class="mt-6 text-center text-xs text-stone-400">Lupa kata sandi? Minta pemilik kebun mengatur ulang di halaman Staf.</p>
+      <p class="app-login__sub mt-8 text-center">Lupa kata sandi? Minta pemilik kebun mengatur ulang di halaman Staf.</p>
     </div>
   </section>
 </div>

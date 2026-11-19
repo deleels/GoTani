@@ -11,7 +11,7 @@
 body { font-family: var(--font-sans); }
 @media print { .no-print { display: none !important; } body { background: #fff !important; } .print-full { margin: 0 !important; padding: 0 !important; } }
 
-input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea {
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.app-field), select:not(.app-field), textarea:not(.app-field) {
   border: 1px solid var(--line-strong); border-radius: .5rem; padding: .45rem .7rem; background: var(--surface-raised); font-size: .875rem; width: 100%;
 }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 2px; border-color: var(--focus); }
@@ -19,3 +19,120 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); out
 #sw-update[hidden] { display: none !important; }
 
 /* App extensions */
+
+/* Shell frame (Phase 2). The design system's .gt-app clips with overflow:hidden, which would stop
+   the sticky sidebar; overflow:clip keeps the rounded frame without creating a scroll container. */
+html body:has(> .app-frame) { background: var(--canvas); }
+.app-frame { min-height: 100vh; overflow: clip; }
+.app-sidebar { overflow-y: auto; overscroll-behavior: contain; gap: var(--space-6); }
+.app-sidebar .gt-nav { gap: 2px; }
+.app-sidebar .gt-nav__item { min-height: 40px; font-size: 16px; line-height: 24px; }
+.app-sidebar .gt-nav__item .gt-ico { width: 20px; height: 20px; }
+.app-main { flex: 1; }
+.app-main__inner { width: 100%; max-width: 80rem; margin: 0 auto; }
+/* The shell's own entrance would replay on every navigation, so it never animates. */
+.gt-root .gt-sidebar, .gt-root .gt-topbar { animation: none; }
+
+.app-brand { font-size: 18px; line-height: 24px; letter-spacing: -.2px; min-width: 0; }
+.app-brand__logo { border-radius: var(--radius-md); object-fit: cover; }
+.app-brand__text { display: flex; flex-direction: column; min-width: 0; }
+.app-brand__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-brand__role { font: 400 14px/20px var(--font-sans); color: var(--ink-muted); letter-spacing: 0; }
+
+.app-nav__parent { width: 100%; border: 0; background: none; text-align: left; font-family: inherit; }
+.app-nav__parent--active { color: var(--ink); }
+.app-nav__parent--active .gt-ico { stroke: var(--green-600); }
+.app-nav__chev { margin-left: auto; display: inline-flex; transition: transform var(--dur-fast) var(--ease-out); }
+.app-nav__chev--open { transform: rotate(180deg); }
+.app-nav__children { margin-top: 2px; }
+.app-sidebar .app-nav__child { padding-left: calc(var(--space-6) + var(--space-8)); min-height: 36px; font-size: 16px; }
+.app-install { min-height: 176px; }
+.app-install .gt-dark__title { font-weight: 500; }
+.app-install__note { font-size: 12px; line-height: 16px; opacity: .85; }
+.app-install .gt-btn { margin-top: auto; }
+
+.app-rail { display: none; gap: var(--space-2); border-radius: var(--radius-lg); overflow-y: auto; }
+.app-rail .gt-rail__logo { margin-bottom: var(--space-4); }
+.app-rail__btn { border: 0; }
+.app-rail__btn:not(.gt-rail__item--active):not(:hover) { background: none; }
+.app-rail .gt-rail__item--active:hover { background: var(--green-700); color: var(--ink-inverse); }
+
+.app-scrim { position: fixed; inset: 0; z-index: 30; background: var(--scrim); }
+.app-topbar { gap: var(--space-2); }
+.app-user { border: 0; background: none; padding: 0; cursor: pointer; text-align: left; font-family: inherit; color: var(--ink); border-radius: var(--radius-pill); }
+.app-user__text { font-size: 16px; line-height: 22px; }
+.app-user__text span { font-size: 14px; line-height: 20px; }
+
+@media (max-width: 767.98px) {
+  .app-frame { display: block; padding: 0; border-radius: 0; background: var(--surface); }
+  .gt-app--framed > .gt-sidebar.app-sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 40; width: 288px; max-width: 85vw; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+    padding: var(--space-6) var(--space-5) var(--space-5) 0; box-shadow: var(--shadow-overlay); transform: translateX(-100%); visibility: hidden;
+    transition: transform var(--dur-base) var(--ease-out), visibility 0s linear var(--dur-base); }
+  .gt-app--framed.app-frame--mobile > .gt-sidebar.app-sidebar { transform: none; visibility: visible; transition: transform var(--dur-base) var(--ease-out); }
+  .app-topbar { padding: var(--space-3) var(--space-4); border-radius: 0; }
+  .app-frame .gt-main { padding: var(--space-4); border-radius: 0; }
+  .app-user__text { display: none; }
+}
+@media (min-width: 768px) {
+  .app-frame { margin: var(--space-3); min-height: calc(100vh - 2 * var(--space-3)); }
+  .app-sidebar, .app-rail { position: sticky; top: calc(2 * var(--space-3)); align-self: start; max-height: calc(100vh - 4 * var(--space-3)); }
+  .app-frame--rail > .app-sidebar { display: none; }
+  .app-frame--rail > .app-rail { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) { .app-sidebar, .gt-app--framed > .gt-sidebar.app-sidebar, .app-nav__chev { transition: none; } }
+
+/* Menus (bell, account): raised, radius-lg, shadow-float; rows are gt-row. */
+.app-menu { position: absolute; right: 0; top: calc(100% + var(--space-2)); z-index: 30; width: 15rem; padding: var(--space-2);
+  background: var(--surface-raised); border-radius: var(--radius-lg); box-shadow: var(--shadow-float); }
+.app-menu--bell { width: 22rem; max-width: calc(100vw - 2rem); padding: 0; }
+.app-menu__head { display: flex; align-items: baseline; justify-content: space-between; padding: var(--space-4) var(--space-4) var(--space-2); }
+.app-menu__title { font: 500 16px/22px var(--font-sans); }
+.app-menu__meta, .app-menu .app-menu__at { color: var(--ink-muted); font-size: 12px; line-height: 16px; }
+.app-menu__scroll { max-height: 24rem; overflow-y: auto; padding: 0 var(--space-2) var(--space-2); }
+.app-menu__empty { padding: var(--space-6) var(--space-4); text-align: center; color: var(--ink-muted); font-size: 14px; }
+.app-menu__item { width: 100%; padding: var(--space-2) var(--space-3); border: 0; background: none; border-radius: var(--radius-md); cursor: pointer;
+  text-align: left; font-family: inherit; color: var(--ink); align-items: flex-start; }
+.app-menu__item:hover { background: var(--surface); }
+.app-menu__item .gt-row__lead { color: var(--ink-muted); padding-top: 2px; }
+.app-menu__item--danger .gt-row__lead, .app-menu__item--danger .gt-row__title { color: var(--danger); }
+.app-menu__dot { width: 8px; padding-top: 7px; }
+.app-menu__body { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+
+/* Form field (login now; Phase 3 rolls it out everywhere). */
+.app-field { display: block; width: 100%; height: 44px; padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill);
+  background: var(--surface-raised); color: var(--ink); font: 400 16px/24px var(--font-sans); }
+textarea.app-field { height: auto; min-height: 96px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); }
+.app-field:focus { outline: none; }
+.app-field:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.app-label { display: block; font: 500 14px/20px var(--font-sans); color: var(--ink); margin-bottom: var(--space-1); }
+.app-field-wrap { position: relative; }
+.app-field-wrap .app-field { padding-right: 52px; }
+.app-field-wrap .gt-iconbtn { position: absolute; right: 4px; top: 4px; }
+
+/* D106: calm pages keep hover/press/focus transitions and dialog/checkbox feedback only. */
+.gt-root[data-motion="calm"] :is(.gt-rail,.gt-sidebar,.gt-topbar,.gt-pagehead,.gt-stat,.gt-card,.gt-dark,
+  .gt-hero,.gt-offer,.gt-radio,.gt-scenario,.gt-gallery,.gt-stat__value,.gt-hero__value strong,.gt-dark__timer,
+  .gt-bar__fill,.gt-gbar__b,.gt-bar__val,.gt-bar__tip,.gt-seg i,.gt-media--hatch,.gt-legend i,.gt-gauge path,
+  .gt-gauge__value,.gt-line__path,.gt-line__pt,.gt-line__end,.gt-line__tip,.gt-line__halo,.gt-count,.gt-nav__badge,
+  .gt-badge,.gt-step__mark,.gt-pill),
+.gt-root[data-motion="calm"] :is(.gt-list,.gt-feed,.gt-nav,.gt-stepper,.gt-kv,.gt-metrics,.gt-hero__stats,.gt-legend)>*,
+.gt-root[data-motion="calm"] .gt-card>.gt-action,
+.gt-root[data-motion="calm"] :is(.gt-dark,.gt-stat--featured,.gt-nav__item,.gt-dark__controls .gt-iconbtn--danger)::before,
+.gt-root[data-motion="calm"] :is(.gt-dark,.gt-stat--featured)::after { animation: none; }
+
+@media print {
+  html body:has(> .app-frame) { background: #fff; }
+  .app-frame { display: block; margin: 0; padding: 0; min-height: 0; background: #fff; overflow: visible; }
+  .app-frame .gt-main { padding: 0; background: #fff; }
+}
+
+/* Login (Phase 2): design-system dark panel left, raised form right. */
+.app-login__panel { padding: var(--space-10); background: var(--green-900); color: var(--ink-inverse); }
+.app-login__lockup { height: 40px; width: auto; align-self: flex-start; }
+.app-login__headline { font: var(--text-display); letter-spacing: -.8px; }
+.gt-root .app-login__tagline { margin-top: var(--space-5); font: var(--text-body-lg); color: rgba(255, 255, 255, .8); }
+.app-login__foot { font: var(--text-label); color: rgba(255, 255, 255, .8); }
+.app-login__form { background: var(--surface-raised); }
+.app-login__title { font: var(--text-heading-lg); letter-spacing: -.6px; }
+.app-login__sub { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
