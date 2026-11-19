@@ -458,13 +458,14 @@ class PricesView(FarmPage):
         product = get_object_or_404(Product, pk=request.POST.get("product"))
         form = PriceForm(request.POST, roles=self.roles)
         if request.POST.get("clear"):
-            inventory_services.set_product_price(product, None)
+            inventory_services.set_product_price(product, None, actor=request.user)
             messages.success(request, f"Harga {product} dihapus; produk disembunyikan dari POS.")
         elif form.is_valid():
             try:
-                inventory_services.set_product_price(product, form.cleaned_data["selling_price_idr"])
+                inventory_services.set_product_price(product, form.cleaned_data["selling_price_idr"],
+                                                     actor=request.user)
                 if form.cleaned_data.get("pos_step_kg"):
-                    inventory_services.set_pos_step(product, form.cleaned_data["pos_step_kg"])
+                    inventory_services.set_pos_step(product, form.cleaned_data["pos_step_kg"], actor=request.user)
             except ValidationError as exc:
                 messages.error(request, error_text(exc))
             else:

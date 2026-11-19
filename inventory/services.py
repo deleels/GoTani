@@ -104,24 +104,38 @@ def record_spoilage(
     return record
 
 
-def set_product_price(product: Product, price_idr) -> Product:
-    """Set (or clear with None) a product's selling price; unpriced = hidden from POS (D24)."""
+@transaction.atomic
+def set_product_price(product: Product, price_idr, actor=None, reason: str = "") -> Product:
+    """Set (or clear with None) a product's selling price; unpriced = hidden from POS (D24).
+    Every change is written to the audit log (price history, D82)."""
     if price_idr is not None:
         price_idr = Decimal(price_idr).quantize(MONEY_STEP, rounding=ROUND_HALF_UP)
         if price_idr <= 0:
             raise ValidationError("Harga jual harus lebih dari 0.")
+    old = product.selling_price_idr
     product.selling_price_idr = price_idr
     product.save(update_fields=["selling_price_idr"])
+    if old != price_idr:
+        from core.audit import log_event
+
+        log_event(actor, "PRICE_CHANGE", product, f"Harga {product}",
+                  before={"selling_price_idr": old}, after={"selling_price_idr": price_idr}, reason=reason)
     return product
 
 
-def set_pos_step(product: Product, step_kg) -> Product:
+def set_pos_step(product: Product, step_kg, actor=None) -> Product:
     """Kasir quantity step (D81): − / + change the line by this many kg; chips are its multiples."""
     step_kg = Decimal(step_kg).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
     if step_kg <= 0:
         raise ValidationError("Langkah kasir harus lebih dari 0 kg.")
+    old = product.pos_step_kg
     product.pos_step_kg = step_kg
     product.save(update_fields=["pos_step_kg"])
+    if old != step_kg:
+        from core.audit import log_event
+
+        log_event(actor, "POS_STEP_CHANGE", product, f"Langkah kasir {product}",
+                  before={"pos_step_kg": old}, after={"pos_step_kg": step_kg})
     return product
 
 

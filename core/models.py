@@ -42,3 +42,36 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Profil {self.user}"
+
+
+class AuditLog(models.Model):
+    """Append-only "Log aktivitas" (D82): who changed what, before → after, and why.
+
+    Written only through `core.audit.log_event()`; never updated or deleted (10-year trail)."""
+
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+                              related_name="audit_entries", verbose_name="oleh")
+    action = models.CharField("aksi", max_length=40, db_index=True)
+    target_type = models.CharField("jenis objek", max_length=40, db_index=True)
+    target_id = models.PositiveIntegerField("id objek", null=True, blank=True)
+    summary = models.CharField("ringkasan", max_length=255)
+    before = models.JSONField("sebelum", null=True, blank=True)
+    after = models.JSONField("sesudah", null=True, blank=True)
+    reason = models.TextField("alasan", blank=True)
+    created_at = models.DateTimeField("waktu", auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        verbose_name = "log aktivitas"
+        verbose_name_plural = "log aktivitas"
+
+    def __str__(self):
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.action} {self.summary}"
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            raise ValueError("AuditLog is append-only.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("AuditLog is append-only.")

@@ -45,10 +45,17 @@ def update_farm_profile(actor, **fields) -> FarmProfile:
     if lat is not None and not (-90 <= lat <= 90 and -180 <= lon <= 180):
         raise ValidationError("Koordinat di luar jangkauan.")
     profile = get_farm_profile()
+    was_pkp = profile.is_pkp
     for key, value in fields.items():
         setattr(profile, key, value)
     profile.full_clean()
-    profile.save()
+    with transaction.atomic():
+        profile.save()
+        if profile.is_pkp != was_pkp:
+            from .audit import log_event
+
+            log_event(actor, "PKP_CHANGE", profile, "Status PKP " + ("aktif" if profile.is_pkp else "nonaktif"),
+                      before={"is_pkp": was_pkp}, after={"is_pkp": profile.is_pkp})
     return profile
 
 

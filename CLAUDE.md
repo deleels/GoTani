@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D81); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D82); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -24,6 +24,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 ### 0. `core` (Farm profile, staff, shell)
 - `FarmProfile` (singleton, pk=1): `name`, `address`, `phone`, `latitude`, `longitude` (nullable Decimal), `logo` (optional ImageField), `is_pkp` (bool, default False, D80) — used by weather, map centre, invoice/receipt header. OWNER edits in Pengaturan.
 - `UserProfile` (one-to-one User): `must_change_password` (bool), `notifications_seen_at` (nullable datetime)
+- `AuditLog` (append-only, D82): `actor`, `action`, `target_type`, `target_id`, `summary`, `before`/`after` (JSON), `reason`, `created_at` — written only via `core.audit.log_event()`; price, kasir step and PKP changes are logged.
 
 ### 1. `farm` (Upstream Production)
 - `Variety`: `name` (unique, e.g., Melon Golden, Cabai Rawit, Kakao Forastero), `crop`, `days_to_harvest` (nullable positive int)
