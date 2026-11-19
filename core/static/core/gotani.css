@@ -25,7 +25,8 @@ html body:has(> .app-frame) { background: var(--canvas); }
 .app-main { flex: 1; }
 .app-main__inner { width: 100%; max-width: 80rem; margin: 0 auto; }
 /* The shell's own entrance would replay on every navigation, so it never animates. */
-.gt-root .gt-sidebar, .gt-root .gt-topbar { animation: none; }
+.gt-root .gt-sidebar, .gt-root .gt-topbar, .gt-root .gt-rail,
+.gt-root :is(.gt-sidebar, .gt-rail) :is(.gt-nav > *, .gt-nav__item::before, .gt-rail__item, .gt-dark, .gt-dark::before, .gt-dark::after) { animation: none; }
 
 .app-brand { font-size: 18px; line-height: 24px; letter-spacing: -.2px; min-width: 0; }
 .app-brand__logo { border-radius: var(--radius-md); object-fit: cover; }
@@ -240,3 +241,47 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 .gt-card > .gt-table, .gt-card .app-table-wrap { margin: 0; }
 .app-table-wrap { overflow-x: auto; }
 .gt-table th.num, .gt-table td.num { text-align: right; }
+
+/* ---- Phase 4a: Ringkasan ---- */
+.app-link { color: var(--green-700); text-decoration: underline; text-underline-offset: 2px; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+.app-link--plain { text-decoration: none; color: var(--ink); }
+.app-link--plain:hover { text-decoration: underline; }
+.gt-root .app-row__meta { display: block; font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+
+.app-home__head h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.15; }
+.app-home__stats { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); margin-bottom: var(--space-3); }
+.app-home__stats .gt-stat__value { font-size: clamp(40px, 4vw, 60px); }
+.app-stat__chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.gt-stat--featured .gt-stat__value small { color: rgba(255, 255, 255, .8); }
+/* Three independent stacks (main 2fr · weather · side) so a tall card never leaves a gap beside it. */
+.app-home__grid { display: grid; gap: var(--space-3); grid-template-columns: 1fr; align-items: start; }
+.app-home__col { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+@media (min-width: 768px) {
+  .app-home__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-home__col--main { grid-column: 1 / -1; }
+}
+@media (min-width: 1280px) {
+  .app-home__grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .app-home__col--main { grid-column: auto; }
+}
+.app-home__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.app-home__notice { align-self: start; }
+.app-notice__row { display: block; padding: 2px 0; color: var(--ink); text-decoration: none; }
+.app-notice__row:hover { text-decoration: underline; }
+.app-hero__title { font: 500 16px/22px var(--font-sans); }
+.app-hero__note { font-size: 14px; line-height: 20px; opacity: .8; }
+.gt-hero__value strong { font-size: clamp(40px, 5vw, 60px); }
+@media (max-width: 639.98px) { .gt-hero__stats { grid-template-columns: 1fr; } }
+
+/* Weather widget (Ringkasan + Cuaca & Satelit) */
+.app-weather__body { display: flex; flex-direction: column; gap: var(--space-3); }
+.app-weather__now { display: flex; align-items: center; gap: var(--space-4); }
+.app-weather__temp { font: var(--text-display); letter-spacing: -1px; }
+.app-weather__label { display: block; font: 500 18px/26px var(--font-sans); }
+.app-weather__next { display: block; margin-top: 2px; }
+.app-weather__warn { font-size: 14px; line-height: 20px; }
+.app-weather__day { padding: var(--space-2) 0; }
+.app-weather__day .gt-row__title { text-transform: capitalize; font-size: 15px; }
+.app-weather__rain { color: var(--ink-muted); min-width: 3.5rem; text-align: right; }
+.app-weather__rain--wet { color: var(--info-ink); font-weight: 500; }
+.app-weather .gt-row__value { min-width: 4.5rem; text-align: right; }

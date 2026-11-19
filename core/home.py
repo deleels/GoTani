@@ -64,6 +64,40 @@ def finance_card():
             "expenses_general": general, "expenses_element": element}
 
 
+ID_DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+ID_MONTHS_LONG = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
+                  "Oktober", "November", "Desember"]
+
+
+def id_day_label(day):
+    """"Kamis 19 November" — always Indonesian (LocaleMiddleware may follow an English browser)."""
+    return f"{ID_DAYS[day.weekday()]} {day.day} {ID_MONTHS_LONG[day.month - 1]}"
+
+
+def greeting(now=None):
+    """Indonesian greeting by Jakarta local hour (Ringkasan page head)."""
+    hour = timezone.localtime(now).hour
+    if hour < 11:
+        return "Selamat pagi"
+    if hour < 15:
+        return "Selamat siang"
+    if hour < 18:
+        return "Selamat sore"
+    return "Selamat malam"
+
+
+def staff_list(limit=6):
+    """Active staff for the Ringkasan team card: name, initial, role label."""
+    users = get_user_model().objects.filter(is_active=True).prefetch_related("groups").order_by("first_name", "username")
+    rows = []
+    for u in users[:limit]:
+        name = u.get_full_name() or u.username
+        group = next(iter(u.groups.all()), None)
+        role = group.name if group else ("OWNER" if u.is_superuser else "")
+        rows.append({"name": name, "initial": name[:1].upper(), "role": role.lower().capitalize()})
+    return rows
+
+
 def home_summary(roles):
     today = timezone.localdate()
     active = list(CropCycle.objects.filter(is_active=True).select_related("variety", "element"))
@@ -74,8 +108,12 @@ def home_summary(roles):
         "work": weekly_work(), "stages": cycles_by_stage(), "elements": element_counters(),
         "staff_count": get_user_model().objects.filter(is_active=True).count(),
         "active_cycles": sorted(active, key=lambda c: (c.expected_harvest_date or today + timedelta(days=3650))),
-        "low_stock": [], "today": today,
+        "low_stock": [], "today": today, "greeting": greeting(), "today_label": id_day_label(today), "staff": staff_list(),
     }
+    work = ctx["work"]
+    field = [w for w in work if w["key"] not in ("prapanen", "panen", "susut")]
+    ctx["work_field"] = {"count": sum(w["count"] for w in field), "rows": field}
+    ctx["work_other"] = [w for w in work if w["key"] in ("prapanen", "panen", "susut")]
     from farm.models import InputItem
 
     ctx["low_stock"] = [i for i in InputItem.objects.all() if i.is_low_stock]
