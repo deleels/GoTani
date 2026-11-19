@@ -6,7 +6,7 @@
 {% with c=trace.cycle t=trace.totals %}
 <div class="no-print mb-4 flex flex-wrap gap-2 text-sm">
   <a href="{% url 'reports:trace_index' %}" class="gt-btn gt-btn--outline gt-btn--sm">← Ketertelusuran</a>
-  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm">Cetak / Simpan PDF</button>
+  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm" title="Cetak atau simpan sebagai PDF">Cetak</button>
   <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--sm">Unduh CSV</a>
 </div>
 

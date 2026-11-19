@@ -8,7 +8,7 @@
       <h1 class="text-2xl font-bold tracking-tight">Staf Kebun</h1>
       <p class="mt-1 text-sm text-stone-500">Buat akun, atur peran, dan nonaktifkan akses. Akun tidak pernah dihapus karena tercatat di penjualan dan log.</p>
     </div>
-    <button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Tambah Staf</button>
+    <button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Tambah staf</button>
   </div>
 
   <div class="mb-5 grid gap-3 sm:grid-cols-3">
@@ -80,7 +80,7 @@
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <div class="app-sheet__foot">
           <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--solid gt-btn--md">Buat Akun</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">Buat akun</button>
         </div>
       </form>
   {% include "components/sheet.html" with end=True %}

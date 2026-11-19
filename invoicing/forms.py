@@ -62,7 +62,7 @@ class IssueForm(StyledMixin, forms.Form):
 class PaymentForm(StyledMixin, forms.Form):
     amount_idr = IDDecimalField(label="Jumlah diterima (Rp)", min_value=Decimal("0.01"), max_digits=14,
                                 decimal_places=2, kind="money")
-    method = forms.ChoiceField(label="Metode", choices=InvoicePaymentMethod.choices)
+    method = forms.ChoiceField(label="Metode", choices=InvoicePaymentMethod.choices, widget=forms.RadioSelect, initial="CASH")
     paid_on = forms.DateField(label="Tanggal bayar", initial=timezone.localdate,
                               widget=forms.DateInput(attrs={"type": "date"}))
     reference = forms.CharField(label="Referensi", max_length=120, required=False)

@@ -63,7 +63,7 @@ class InvoicingViewTests(InvoiceFixtures):
         invoice = Invoice.objects.get()
         self.assertRedirects(r, reverse("invoicing:invoice_detail", args=[invoice.pk]))
         self.assertEqual(invoice.total_idr, D("185000.00"))  # 200k − 10% + 5k shipping
-        self.assertContains(self.client.get(reverse("invoicing:invoice_edit", args=[invoice.pk])), "Simpan Draf")
+        self.assertContains(self.client.get(reverse("invoicing:invoice_edit", args=[invoice.pk])), "Simpan draf")
 
         today = timezone.localdate()
         self.client.post(reverse("invoicing:invoice_action", args=[invoice.pk, "issue"]),

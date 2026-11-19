@@ -12,6 +12,8 @@ class StyledMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
+            if isinstance(field, forms.ModelChoiceField) and field.empty_label in ("---------", "- Select an option -"):
+                field.empty_label = "— pilih —"  # Indonesian placeholder, same everywhere
             if not isinstance(field.widget, (forms.CheckboxInput, forms.ClearableFileInput, forms.RadioSelect, forms.CheckboxSelectMultiple)):
                 field.widget.attrs.setdefault("class", INPUT)
 

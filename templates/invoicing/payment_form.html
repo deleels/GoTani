@@ -2,41 +2,48 @@
 {% load ui gotani %}
 {% block title %}Catat Pembayaran{% endblock %}
 {% block content %}
-<a href="{% url 'invoicing:buyer_detail' buyer.pk %}" class="text-sm text-stone-500 hover:underline">← {{ buyer.name }}</a>
-<div class="mb-5 mt-1">
-  <h1 class="text-2xl font-bold tracking-tight">Catat Pembayaran</h1>
-  <p class="mt-1 text-sm text-stone-500">Uang dari {{ buyer }}. Bagi ke invoice yang masih terbuka; sisa yang tidak dialokasikan menjadi kredit pembeli (tidak bisa dicairkan, hanya untuk invoice berikutnya).</p>
-</div>
-<form method="post" enctype="multipart/form-data" x-data="{ amount: Number('{{ form.amount_idr.value|default:0 }}'.replace(',', '.')) || 0, allocs: {} , get used() { return Object.values(this.allocs).reduce((a, b) => a + (Number(b) || 0), 0) } }" class="grid gap-5 lg:grid-cols-3">{% csrf_token %}
-  <div class="rounded-xl border border-stone-200 bg-white p-4" @input="if ($event.target.name === 'amount_idr') amount = idNum.parse($event.target.value) || 0">
-    {% include "_form_fields.html" with cols="grid-cols-1" %}
-    {% if credit %}<p class="mt-3 text-xs text-emerald-700">Kredit yang sudah ada: {{ credit|rupiah }}</p>{% endif %}
+{# Payment form (Phase 4d): details card (method as radio cards) + allocation table with a live kv summary and Batal · Simpan. Posted names unchanged. #}
+<div class="gt-pagehead app-pagehead--sm">
+  <div class="app-pagehead__text">
+    <a href="{% url 'invoicing:buyer_detail' buyer.pk %}" class="app-back">{% icon "chevron-left" 16 %} {{ buyer.name }}</a>
+    <h1 class="app-pagehead__title">Catat pembayaran {% info_tip "Bagi uang ke invoice yang masih terbuka. Sisa yang tidak dialokasikan menjadi kredit pembeli (tidak bisa dicairkan, hanya untuk invoice berikutnya)." %}</h1>
+    <p>Uang dari {{ buyer }}</p>
   </div>
-  <div class="rounded-xl border border-stone-200 bg-white lg:col-span-2">
-    <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Alokasi ke invoice</h2></div>
-    <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr><th class="px-4 py-2">Invoice</th><th class="px-4 py-2">Jatuh tempo</th><th class="px-4 py-2 text-right">Sisa</th><th class="w-44 px-4 py-2">Dibayar</th></tr></thead>
-      <tbody class="divide-y divide-stone-100">
+</div>
+<form method="post" enctype="multipart/form-data" x-data="{ amount: Number('{{ form.amount_idr.value|default:0 }}'.replace(',', '.')) || 0, allocs: {} , get used() { return Object.values(this.allocs).reduce((a, b) => a + (Number(b) || 0), 0) } }" class="app-split app-split--rev">{% csrf_token %}
+  <section class="gt-card" aria-labelledby="h-alloc">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-alloc">Alokasi ke invoice</h2></div>
+    <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>Invoice</th><th>Jatuh tempo</th><th class="num">Sisa</th><th class="app-alloc__col">Dibayar</th></tr></thead>
+      <tbody>
       {% for inv in open_invoices %}
         <tr x-init="allocs[{{ inv.pk }}] = '{{ inv.entered }}'">
-          <td class="px-4 py-2 font-mono">{{ inv }}</td>
-          <td class="px-4 py-2">{{ inv.due_date|date:"d M Y" }}</td>
-          <td class="px-4 py-2 text-right">{{ inv.outstanding|rupiah }}</td>
-          <td class="px-4 py-2"><div class="flex gap-1"><input name="alloc_{{ inv.pk }}" type="number" step="0.01" min="0" max="{{ inv.outstanding|stringformat:'.2f' }}" x-model="allocs[{{ inv.pk }}]">
+          <td class="app-mono">{{ inv }}</td>
+          <td class="app-muted">{{ inv.due_date|date:"d M Y" }}</td>
+          <td class="num">{{ inv.outstanding|rupiah }}</td>
+          <td><div class="app-alloc"><input name="alloc_{{ inv.pk }}" type="number" step="0.01" min="0" max="{{ inv.outstanding|stringformat:'.2f' }}" x-model="allocs[{{ inv.pk }}]" class="app-field app-field--sm app-num" aria-label="Dibayar untuk {{ inv }}">
             <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="allocs[{{ inv.pk }}] = '{{ inv.outstanding|stringformat:'.2f' }}'">Lunas</button></div></td>
         </tr>
       {% empty %}
-        <tr><td colspan="4" class="px-4 py-8 text-center text-stone-500">Tidak ada invoice terbuka — seluruh pembayaran akan menjadi kredit.</td></tr>
+        <tr><td colspan="4" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Tidak ada invoice terbuka.</span><span class="gt-callout__body">Seluruh pembayaran akan menjadi kredit.</span></div></div></td></tr>
       {% endfor %}
       </tbody>
     </table>
     </div>
-    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm">
-      <p>Dialokasikan <strong x-text="gtRupiah(used)"></strong> · menjadi kredit
-        <strong :class="amount - used < 0 ? 'text-red-700' : 'text-emerald-700'" x-text="gtRupiah(amount - used)"></strong></p>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan Pembayaran</button>
+    <dl class="gt-kv app-kv-total">
+      <div><dt>Dialokasikan</dt><dd x-text="gtRupiah(used)"></dd></div>
+      <div><dt>Menjadi kredit</dt><dd :class="amount - used < 0 ? 'app-value--danger' : 'app-value--positive'" x-text="gtRupiah(amount - used)"></dd></div>
+    </dl>
+    <div class="app-formfoot">
+      <a href="{% url 'invoicing:buyer_detail' buyer.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Batal</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button>
     </div>
-  </div>
+  </section>
+  <section class="gt-card" aria-labelledby="h-payd" @input="if ($event.target.name === 'amount_idr') amount = idNum.parse($event.target.value) || 0">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-payd">Detail pembayaran</h2></div>
+    {% include "_form_fields.html" with cols="grid-cols-1" %}
+    {% if credit %}<div class="gt-callout gt-callout--success">{% icon "check" 18 %}<div><span class="gt-callout__title">Kredit yang sudah ada: {{ credit|rupiah }}</span></div></div>{% endif %}
+  </section>
 </form>
 {% endblock %}

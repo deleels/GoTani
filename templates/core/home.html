@@ -11,7 +11,7 @@
     <h1>{{ greeting }}, {{ user.first_name|default:user.username }}</h1>
     <p class="app-pagehead__sub">{{ today_label }} {% subtitle "Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar." worker="Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan." as sub %}{% info_tip sub %}</p>
   </div>
-  <div class="gt-pagehead__actions"><a href="{% url 'farm:activities' %}?new=1" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Catat Kerja Hari Ini</a></div>
+  <div class="gt-pagehead__actions"><a href="{% url 'farm:activities' %}?new=1" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Catat kerja</a></div>
 </div>
 
 {# Work report strip: last 7 days. The featured card sums field work and lists each type. #}
@@ -40,7 +40,7 @@
   </section>
   {% if finance %}
   <section class="gt-hero" style="--gt-row:2" aria-labelledby="h-finance">
-    <div class="gt-hero__head"><h2 id="h-finance" class="app-hero__title">Total penjualan {% info_tip "POS + invoice, sepanjang waktu." %}</h2><a href="{% url 'dashboard' %}" class="gt-btn gt-btn--on-dark gt-btn--sm">Buka Analitik {% icon "arrow" 16 %}</a></div>
+    <div class="gt-hero__head"><h2 id="h-finance" class="app-hero__title">Total penjualan {% info_tip "POS + invoice, sepanjang waktu." %}</h2><a href="{% url 'dashboard' %}" class="gt-btn gt-btn--on-dark gt-btn--sm">Analitik {% icon "arrow" 16 %}</a></div>
     <div class="gt-hero__value"><strong>{{ finance.sales|rupiah }}</strong></div>
     <div class="gt-hero__stats">
       <div><span>Total biaya disetujui</span><b>{{ finance.expenses|rupiah }}</b></div>

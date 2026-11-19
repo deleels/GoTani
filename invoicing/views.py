@@ -62,7 +62,7 @@ class BuyersView(FinanceView):
         summary = services.receivables_summary()
         return {
             "page": page, "tab": tab, "q": q, "form": form or BuyerForm(),
-            "sheet_open": bool(form is not None and form.errors),
+            "sheet_open": bool(form is not None and form.errors) or self.request.GET.get("new") == "1",
             "stats": {"buyers": Buyer.objects.filter(is_active=True).count(), **summary},
             "ageing": services.receivables_ageing(),
         }

@@ -241,7 +241,7 @@ class FarmViewTests(SiteFixtures):
         self.login(ROLE_MANAGER)
         response = self.client.get(reverse("farm:cycles"))
         self.assertContains(response, "Stok menipis: NPK")
-        self.assertContains(response, "1 biaya menunggu persetujuan")
+        self.assertContains(response, "1 biaya menunggu")
         self.assertContains(response, "Majukan tahap")
         self.assertContains(response, "Rp75.000")  # unabsorbed cost of the closed cycle
 
@@ -479,7 +479,7 @@ class TraceabilityTests(SiteFixtures):
         page = self.client.get(url)
         self.assertContains(page, "Batch #%d" % self.batch.pk)
         self.assertContains(page, self.order.order_number)
-        self.assertContains(page, "Cetak / Simpan PDF")
+        self.assertContains(page, "Cetak atau simpan sebagai PDF")
         response = self.client.get(url, {"format": "csv"})
         self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
         self.assertIn("attachment", response["Content-Disposition"])

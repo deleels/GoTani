@@ -16,7 +16,7 @@
       <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md">Ubah perkiraan</button>
       <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--outline gt-btn--md">Cek pra-panen</a>
       {% endif %}
-      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Telusuri &amp; CSV</a>{% endif %}
+      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Telusuri</a>{% endif %}
     </div>
   </div>
 

@@ -2,100 +2,105 @@
 {% load ui gotani %}
 {% block title %}{{ buyer.name }}{% endblock %}
 {% block content %}
+{# Buyer detail (Phase 4d): head with actions, contact card + metrics, credit callout form, tabbed tables. Posted field names unchanged. #}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
-  <a href="{% url 'invoicing:buyers' %}" class="text-sm text-stone-500 hover:underline">← Pembeli</a>
-  <div class="mb-5 mt-1 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">{{ buyer.name }} {% if not buyer.is_active %}{% pill "Nonaktif" "INACTIVE" %}{% endif %}</h1>
-      <p class="mt-1 text-sm text-stone-500">{{ buyer.company|default:"Perorangan" }} · termin {% if buyer.payment_terms_days %}{{ buyer.payment_terms_days }} hari{% else %}saat diterima{% endif %}</p>
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text">
+      <a href="{% url 'invoicing:buyers' %}" class="app-back">{% icon "chevron-left" 16 %} Pembeli</a>
+      <h1 class="app-pagehead__title">{{ buyer.name }} {% if not buyer.is_active %}{% pill "Nonaktif" "INACTIVE" %}{% endif %}</h1>
+      <p>{{ buyer.company|default:"Perorangan" }} · termin {% if buyer.payment_terms_days %}{{ buyer.payment_terms_days }} hari{% else %}saat diterima{% endif %}</p>
     </div>
-    <div class="flex flex-wrap gap-2">
+    <div class="gt-pagehead__actions">
       <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md">Ubah</button>
-      <a href="{% url 'invoicing:buyer_payment_new' buyer.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Catat Pembayaran</a>
+      <a href="{% url 'invoicing:buyer_payment_new' buyer.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Catat bayar</a>
       <a href="{% url 'invoicing:invoice_new' %}?buyer={{ buyer.pk }}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Invoice</a>
     </div>
   </div>
 
-  <div class="mb-5 grid gap-3 lg:grid-cols-4">
-    <div class="rounded-xl border border-stone-200 bg-white p-4 text-sm lg:col-span-1">
-      <p class="text-xs text-stone-500">Kontak</p>
-      <p class="mt-1">{{ buyer.phone|default:"—" }}</p>
-      {% if buyer.email %}<p>{{ buyer.email }}</p>{% endif %}
-      {% if buyer.address %}<p class="mt-1 whitespace-pre-line text-stone-600">{{ buyer.address }}</p>{% endif %}
-      {% if buyer.notes %}<p class="mt-2 text-xs text-stone-500">{{ buyer.notes }}</p>{% endif %}
-    </div>
-    {% include "components/kpi.html" with label="Piutang" value=outstanding|rupiah %}
-    {% include "components/kpi.html" with label="Jatuh tempo" value=overdue|rupiah cls="text-red-700" %}
-    {% include "components/kpi.html" with label="Kredit tersedia" value=credit|rupiah cls="text-emerald-700" hint="Sisa pembayaran yang belum dialokasikan" %}
+  <div class="app-split app-section">
+    <section class="gt-card" aria-labelledby="h-money">
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-money">Posisi tagihan</h2></div>
+      <div class="gt-metrics app-buyer__metrics">
+        <div class="gt-metric"><span class="gt-metric__label">Piutang</span><span class="gt-metric__value">{{ outstanding|rupiah }}</span></div>
+        <div class="gt-metric"><span class="gt-metric__label">Jatuh tempo</span><span class="gt-metric__value {% if overdue %}app-value--danger{% endif %}">{{ overdue|rupiah }}</span></div>
+        <div class="gt-metric"><span class="gt-metric__label">Kredit tersedia {% info_tip "Sisa pembayaran yang belum dialokasikan. Tidak bisa dicairkan, hanya untuk invoice berikutnya." %}</span><span class="gt-metric__value {% if credit %}app-value--positive{% endif %}">{{ credit|rupiah }}</span></div>
+      </div>
+      {% if credit and open_invoices %}
+      <form method="post" class="gt-callout gt-callout--success app-credit">{% csrf_token %}
+        <input type="hidden" name="action" value="credit">
+        <div class="app-credit__body">
+          <span class="gt-callout__title">Pakai kredit {{ credit|rupiah }}</span>
+          <div class="app-credit__fields">
+            <label><span class="app-label">Invoice</span><select name="invoice" class="app-field app-field--sm">{% for i in open_invoices %}<option value="{{ i.pk }}">{{ i }} · sisa {{ i.outstanding|rupiah }}</option>{% endfor %}</select></label>
+            <label class="app-credit__amt"><span class="app-label">Jumlah</span><input name="amount_idr" type="number" step="0.01" min="0.01" value="{{ credit|stringformat:'.2f' }}" class="app-field app-field--sm"></label>
+            <button class="gt-btn gt-btn--solid gt-btn--sm">Terapkan</button>
+          </div>
+        </div>
+      </form>
+      {% endif %}
+    </section>
+    <section class="gt-card" aria-labelledby="h-contact">
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-contact">Kontak</h2></div>
+      <dl class="gt-kv gt-kv--compact">
+        <div><dt>Telepon</dt><dd>{{ buyer.phone|default:"—" }}</dd></div>
+        {% if buyer.email %}<div><dt>Email</dt><dd>{{ buyer.email }}</dd></div>{% endif %}
+        {% if buyer.address %}<div><dt>Alamat</dt><dd class="app-pre">{{ buyer.address }}</dd></div>{% endif %}
+      </dl>
+      {% if buyer.notes %}<p class="app-muted app-note">{{ buyer.notes }}</p>{% endif %}
+      <form method="post" class="app-note" data-confirm-title="Ubah status pembeli?" data-confirm="Pembeli nonaktif tidak muncul saat membuat invoice baru; invoice lamanya tetap ada." data-confirm-action="Ubah status">{% csrf_token %}<input type="hidden" name="action" value="toggle">
+        {% if buyer.is_active %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Nonaktifkan</button>{% else %}<button class="gt-btn gt-btn--outline gt-btn--sm">Aktifkan</button>{% endif %}</form>
+    </section>
   </div>
 
-  {% if credit and open_invoices %}
-  <form method="post" class="mb-5 flex flex-wrap items-end gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm">{% csrf_token %}
-    <input type="hidden" name="action" value="credit">
-    <p class="w-full font-medium text-emerald-800">Gunakan kredit {{ credit|rupiah }} untuk melunasi invoice</p>
-    <label class="min-w-[12rem] flex-1">Invoice<select name="invoice">{% for i in open_invoices %}<option value="{{ i.pk }}">{{ i }} · sisa {{ i.outstanding|rupiah }}</option>{% endfor %}</select></label>
-    <label class="w-40">Jumlah<input name="amount_idr" type="number" step="0.01" min="0.01" value="{{ credit|stringformat:'.2f' }}"></label>
-    <button class="gt-btn gt-btn--solid gt-btn--md">Terapkan</button>
-  </form>
-  {% endif %}
-
-  <div class="rounded-xl border border-stone-200 bg-white">
-    <div class="border-b border-stone-200 p-3">
-      <div class="flex gap-1 rounded-lg bg-stone-100 p-1 text-sm w-fit">
-        <a href="?tab=invoices" class="rounded-md px-3 py-1 {% if tab != 'payments' %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">Invoice ({{ invoices|length }})</a>
-        <a href="?tab=payments" class="rounded-md px-3 py-1 {% if tab == 'payments' %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">Pembayaran ({{ payments|length }})</a>
-      </div>
+  <section class="gt-card app-section" aria-label="Riwayat pembeli">
+    <div class="app-toolbar">
+      <nav class="gt-tabs" aria-label="Riwayat">
+        <a href="?tab=invoices" class="gt-tab app-tab{% if tab != 'payments' %} gt-tab--active{% endif %}"{% if tab != 'payments' %} aria-current="page"{% endif %}>Invoice <span class="app-tab__count">{{ invoices|length }}</span></a>
+        <a href="?tab=payments" class="gt-tab app-tab{% if tab == 'payments' %} gt-tab--active{% endif %}"{% if tab == 'payments' %} aria-current="page"{% endif %}>Pembayaran <span class="app-tab__count">{{ payments|length }}</span></a>
+      </nav>
     </div>
-    <div class="overflow-x-auto">
+    <div class="app-table-wrap">
     {% if tab == 'payments' %}
-      <table class="w-full text-sm">
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-          <th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Metode</th><th class="px-4 py-3">Referensi</th><th class="px-4 py-3">Dialokasikan ke</th>
-          <th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3 text-right">Sisa (kredit)</th><th></th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+      <table class="gt-table">
+        <thead><tr><th>Tanggal</th><th>Metode</th><th>Referensi</th><th>Dialokasikan ke</th><th class="num">Jumlah</th><th class="num">Sisa (kredit)</th><th class="num"><span class="sr-only">Aksi</span></th></tr></thead>
+        <tbody>
         {% for p in payments %}
-          <tr class="align-top {% if p.voided_at %}text-stone-400{% endif %}">
-            <td class="px-4 py-3">{{ p.paid_on|date:"d M Y" }}{% if p.voided_at %}<p>{% pill "Dibatalkan" tone="gray" %}</p><p class="text-xs">{{ p.void_reason }}</p>{% endif %}</td>
-            <td class="px-4 py-3">{{ p.get_method_display }}{% if p.withholding_slip_no %}<p class="text-xs text-stone-500">Bukti potong {{ p.withholding_slip_no }}</p>{% endif %}</td>
-            <td class="px-4 py-3">{{ p.reference|default:"—" }}{% if p.proof %} · <a class="text-emerald-700 underline" href="{{ p.proof.url }}">bukti</a>{% endif %}</td>
-            <td class="px-4 py-3">{% for a in p.allocations.all %}<p><a class="font-mono hover:underline" href="{% url 'invoicing:invoice_detail' a.invoice_id %}">{{ a.invoice }}</a> {{ a.amount_idr|rupiah }}</p>{% empty %}<span class="text-stone-400">—</span>{% endfor %}</td>
-            <td class="px-4 py-3 text-right font-medium">{{ p.amount_idr|rupiah }}</td>
-            <td class="px-4 py-3 text-right">{{ p.unallocated_idr|rupiah }}</td>
-            <td class="px-4 py-3 text-right">{% if roles.label == 'OWNER' and not p.allocations.all and not p.voided_at %}
+          <tr{% if p.voided_at %} class="app-row--void"{% endif %}>
+            <td>{{ p.paid_on|date:"d M Y" }}{% if p.voided_at %}<span class="app-sub">{% pill "Dibatalkan" tone="gray" %} {% info_tip p.void_reason "Alasan" %}</span>{% endif %}</td>
+            <td>{{ p.get_method_display }}{% if p.withholding_slip_no %}<span class="app-sub">Bukti potong {{ p.withholding_slip_no }}</span>{% endif %}</td>
+            <td>{{ p.reference|default:"—" }}{% if p.proof %} · <a class="app-link" href="{{ p.proof.url }}">bukti</a>{% endif %}</td>
+            <td>{% for a in p.allocations.all %}<span class="app-block"><a class="app-mono app-link--plain" href="{% url 'invoicing:invoice_detail' a.invoice_id %}">{{ a.invoice }}</a> {{ a.amount_idr|rupiah }}</span>{% empty %}<span class="app-muted">—</span>{% endfor %}</td>
+            <td class="num"><b>{{ p.amount_idr|rupiah }}</b></td>
+            <td class="num">{{ p.unallocated_idr|rupiah }}</td>
+            <td class="num">{% if roles.label == 'OWNER' and not p.allocations.all and not p.voided_at %}
               <form method="post" action="{% url 'invoicing:buyer_payment_void' p.pk %}" data-confirm-title="Batalkan pembayaran?" data-confirm="Pembayaran yang belum dialokasikan ini dibatalkan dan tidak dihitung lagi sebagai kredit. Catatannya tetap disimpan (arsip 10 tahun)." data-confirm-action="Batalkan pembayaran" data-confirm-reason="Alasan" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Batalkan</button></form>{% endif %}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="px-4 py-12 text-center"><p class="font-medium">Belum ada pembayaran.</p><p class="mt-1 text-sm text-stone-500">Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit.</p></td></tr>
+          <tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada pembayaran.</span><span class="gt-callout__body">Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit.</span></div></div></td></tr>
         {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <table class="w-full text-sm">
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-          <th class="px-4 py-3">Nomor</th><th class="px-4 py-3">Terbit</th><th class="px-4 py-3">Jatuh tempo</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3">Status</th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+      <table class="gt-table">
+        <thead><tr><th>Nomor</th><th>Terbit</th><th>Jatuh tempo</th><th class="num">Total</th><th>Status</th></tr></thead>
+        <tbody>
         {% for inv in invoices %}
           <tr>
-            <td class="px-4 py-3 font-mono"><a class="hover:underline" href="{% url 'invoicing:invoice_detail' inv.pk %}">{{ inv }}</a></td>
-            <td class="px-4 py-3">{{ inv.issue_date|date:"d M Y"|default:"—" }}</td>
-            <td class="px-4 py-3">{{ inv.due_date|date:"d M Y"|default:"—" }}</td>
-            <td class="px-4 py-3 text-right">{{ inv.total_idr|rupiah }}</td>
-            <td class="px-4 py-3">{% pill inv.pay_label inv.pill_key %}</td>
+            <td class="app-mono"><a class="app-link--plain" href="{% url 'invoicing:invoice_detail' inv.pk %}">{{ inv }}</a></td>
+            <td class="app-muted">{{ inv.issue_date|date:"d M Y"|default:"—" }}</td>
+            <td class="app-muted">{{ inv.due_date|date:"d M Y"|default:"—" }}</td>
+            <td class="num"><b>{{ inv.total_idr|rupiah }}</b></td>
+            <td>{% pill inv.pay_label inv.pill_key %}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="px-4 py-12 text-center"><p class="font-medium">Belum ada invoice untuk pembeli ini.</p></td></tr>
+          <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada invoice untuk pembeli ini.</span></div></div></td></tr>
         {% endfor %}
         </tbody>
       </table>
     {% endif %}
     </div>
-  </div>
+  </section>
 
-  <div class="mt-4">
-    <form method="post" data-confirm-title="Ubah status pembeli?" data-confirm="Pembeli nonaktif tidak muncul saat membuat invoice baru; invoice lamanya tetap ada." data-confirm-action="Ubah status">{% csrf_token %}<input type="hidden" name="action" value="toggle">
-      <button class="text-sm {% if buyer.is_active %}text-red-600{% else %}text-emerald-700{% endif %} underline">{% if buyer.is_active %}Nonaktifkan pembeli{% else %}Aktifkan kembali{% endif %}</button></form>
-  </div>
-
-  {% include "invoicing/_buyer_sheet.html" with sheet_title="Ubah Pembeli" submit="Simpan" %}
+  {% include "invoicing/_buyer_sheet.html" with sheet_title="Ubah pembeli" submit="Simpan" %}
 </div>
 {% endblock %}

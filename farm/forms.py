@@ -32,6 +32,8 @@ class StyledForm(forms.Form):
         self.roles = roles
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
+            if isinstance(field, forms.ModelChoiceField) and field.empty_label in ("---------", "- Select an option -"):
+                field.empty_label = "— pilih —"  # Indonesian placeholder, same everywhere
             if isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect, forms.CheckboxSelectMultiple)):
                 continue
             field.widget.attrs.setdefault("class", INPUT_CSS)

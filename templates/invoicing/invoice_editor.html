@@ -2,73 +2,81 @@
 {% load ui gotani %}
 {% block title %}{% if invoice %}Ubah {{ invoice }}{% else %}Invoice Baru{% endif %}{% endblock %}
 {% block content %}
+{# Invoice editor (Phase 4d, CheckoutPage pattern): buyer card, lines table, adjustments, sticky summary with Batal · Simpan draf. invoiceEditor() and posted names unchanged. #}
 {{ products|json_script:"products-data" }}
 {{ lines|json_script:"lines-data" }}
-<a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{% url 'invoicing:invoices' %}{% endif %}" class="text-sm text-stone-500 hover:underline">← Kembali</a>
-<div class="mb-5 mt-1">
-  <h1 class="text-2xl font-bold tracking-tight">{% if invoice %}Ubah {{ invoice }}{% else %}Invoice Baru{% endif %}</h1>
-  <p class="mt-1 text-sm text-stone-500">{% if farm_is_pkp %}Harga belum termasuk PPN. {% endif %}Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di bawah pratinjau — perhitungan final dilakukan server.</p>
+{% url 'invoicing:invoices' as list_url %}
+<div class="gt-pagehead app-pagehead--sm">
+  <div class="app-pagehead__text">
+    <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{{ list_url }}{% endif %}" class="app-back">{% icon "chevron-left" 16 %} Kembali</a>
+    <h1 class="app-pagehead__title">{% if invoice %}Ubah {{ invoice }}{% else %}Invoice baru{% endif %} {% if farm_is_pkp %}{% info_tip "Harga belum termasuk PPN. Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server." %}{% else %}{% info_tip "Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server." %}{% endif %}</h1>
+  </div>
 </div>
 
-<form method="post" x-data="invoiceEditor()" class="grid gap-5 lg:grid-cols-3">{% csrf_token %}
-  <div class="space-y-5 lg:col-span-2">
-    {% if form.non_field_errors %}<div class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
-    <div class="rounded-xl border border-stone-200 bg-white p-4">
-      <label class="block text-sm"><span class="text-stone-600">Pembeli <span class="text-red-500">*</span></span>
-        <div class="mt-1">{{ form.buyer }}</div>{% for e in form.buyer.errors %}<span class="text-xs text-red-600">{{ e }}</span>{% endfor %}</label>
-      <p class="mt-1 text-xs text-stone-400">Pembeli belum ada? <a class="underline" href="{% url 'invoicing:buyers' %}">Tambah di halaman Pembeli</a>.</p>
-    </div>
+<form method="post" x-data="invoiceEditor()" class="app-split">{% csrf_token %}
+  <div class="app-side">
+    {% if form.non_field_errors %}<div class="gt-callout gt-callout--danger" role="alert">{% icon "alert" 18 %}<div>{% for e in form.non_field_errors %}<span class="gt-callout__title">{{ e }}</span>{% endfor %}</div></div>{% endif %}
+    <section class="gt-card" aria-labelledby="h-buyer">
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-buyer">Pembeli</h2><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'invoicing:buyers' %}?new=1">{% icon "plus" 16 %} Pembeli</a></div>
+      <label for="{{ form.buyer.id_for_label }}" class="sr-only">Pembeli</label>{{ form.buyer }}
+      {% for e in form.buyer.errors %}<p class="app-error">{{ e }}</p>{% endfor %}
+    </section>
 
-    <div class="rounded-xl border border-stone-200 bg-white">
-      <div class="flex items-center justify-between border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Baris produk</h2>
-        <button type="button" @click="add()" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 14 %} Tambah baris</button></div>
-      <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr><th class="px-3 py-2">Produk</th><th class="w-28 px-3 py-2">Kg</th><th class="w-36 px-3 py-2">Harga/kg</th><th class="px-3 py-2 text-right">Subtotal</th><th></th></tr></thead>
+    <section class="gt-card" aria-labelledby="h-lines">
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-lines">Baris produk</h2>
+        <button type="button" @click="add()" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} Baris</button></div>
+      <div class="app-table-wrap">
+      <table class="gt-table app-lines">
+        <thead><tr><th>Produk</th><th class="app-lines__qty">Kg</th><th class="app-lines__price">Harga/kg</th><th class="num">Subtotal</th><th><span class="sr-only">Hapus</span></th></tr></thead>
         <tbody>
           <template x-for="(ln, i) in lines" :key="ln.key">
-            <tr class="border-t border-stone-100 align-top">
-              <td class="px-3 py-2">
-                <select name="product_id" x-model.number="ln.product" @change="defaultPrice(ln)">
+            <tr>
+              <td>
+                <select name="product_id" x-model.number="ln.product" @change="defaultPrice(ln)" class="app-field app-field--sm" aria-label="Produk">
                   <option value="">— pilih —</option>
                   <template x-for="p in products" :key="p.id"><option :value="p.id" x-text="p.name" :selected="p.id === ln.product"></option></template>
                 </select>
-                <p class="mt-1 text-xs text-stone-400" x-show="prod(ln)" x-text="prod(ln) ? 'Stok ' + fmtKg(prod(ln).available) + ' kg' + (Number(prod(ln).tax) ? ' · PPN ' + prod(ln).tax + '%' : '') : ''"></p>
-                <p class="text-xs text-red-600" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">Melebihi stok saat ini.</p>
+                <span class="app-sub" x-show="prod(ln)" x-text="prod(ln) ? 'Stok ' + fmtKg(prod(ln).available) + ' kg' + (Number(prod(ln).tax) ? ' · PPN ' + prod(ln).tax + '%' : '') : ''"></span>
+                <span class="app-error" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">Melebihi stok saat ini.</span>
               </td>
-              <td class="px-3 py-2"><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required></td>
-              <td class="px-3 py-2"><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : 'wajib'"></td>
-              <td class="px-3 py-2 text-right" x-text="rp(sub(ln))"></td>
-              <td class="px-2 py-2"><button type="button" @click="lines.splice(i,1)" class="gt-iconbtn gt-iconbtn--sm" aria-label="Hapus baris">{% icon "x" 16 %}</button></td>
+              <td><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required class="app-field app-field--sm app-num" aria-label="Kg"></td>
+              <td><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : 'wajib'" class="app-field app-field--sm app-num" aria-label="Harga per kg"></td>
+              <td class="num"><b x-text="rp(sub(ln))"></b></td>
+              <td class="num"><button type="button" @click="lines.splice(i,1)" class="gt-iconbtn gt-iconbtn--sm app-line__remove" aria-label="Hapus baris">{% icon "trash" 16 %}</button></td>
             </tr>
           </template>
-          <tr x-show="!lines.length"><td colspan="5" class="px-4 py-8 text-center text-stone-500">Belum ada baris. Klik “Tambah baris”.</td></tr>
+          <tr x-show="!lines.length"><td colspan="5" class="app-empty-cell app-muted">Belum ada baris. Ketuk “+ Baris”.</td></tr>
         </tbody>
       </table>
       </div>
-    </div>
+    </section>
 
-    <div class="rounded-xl border border-stone-200 bg-white p-4">
-      <div class="grid gap-3 sm:grid-cols-3">
-        <label class="block text-sm"><span class="text-stone-600">Diskon</span><div class="mt-1">{{ form.discount_type }}</div></label>
-        <label class="block text-sm"><span class="text-stone-600">Nilai diskon <span class="text-xs" x-text="dtype === 'PERCENT' ? '(%)' : '(Rp)'"></span></span><div class="mt-1">{{ form.discount_value }}</div>{% for e in form.discount_value.errors %}<span class="text-xs text-red-600">{{ e }}</span>{% endfor %}</label>
-        <label class="block text-sm"><span class="text-stone-600">Ongkos kirim{% if farm_is_pkp %} (tanpa PPN){% endif %}</span><div class="mt-1">{{ form.shipping_idr }}</div></label>
-        <label class="block text-sm sm:col-span-3"><span class="text-stone-600">Catatan</span><div class="mt-1">{{ form.notes }}</div></label>
+    <section class="gt-card" aria-labelledby="h-adj">
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-adj">Diskon &amp; ongkir</h2></div>
+      <div class="app-adj">
+        <label><span class="app-label">Diskon</span>{{ form.discount_type }}</label>
+        <label><span class="app-label">Nilai diskon <span x-text="dtype === 'PERCENT' ? '(%)' : '(Rp)'"></span></span>{{ form.discount_value }}{% for e in form.discount_value.errors %}<span class="app-error">{{ e }}</span>{% endfor %}</label>
+        <label><span class="app-labelrow"><span class="app-label">Ongkos kirim</span>{% if farm_is_pkp %}{% info_tip "Ongkos kirim tanpa PPN." %}{% endif %}</span>{{ form.shipping_idr }}</label>
+        <label class="app-adj__full"><span class="app-label">Catatan</span>{{ form.notes }}</label>
       </div>
-    </div>
+    </section>
   </div>
 
-  <aside class="self-start rounded-xl border border-stone-200 bg-white p-4 text-sm lg:sticky lg:top-20">
-    <h2 class="mb-3 font-semibold">Ringkasan</h2>
-    <dl class="space-y-1.5">
-      <div class="flex justify-between"><dt class="text-stone-500">Subtotal</dt><dd x-text="rp(totals().subtotal)"></dd></div>
-      <div class="flex justify-between"><dt class="text-stone-500">Diskon</dt><dd x-text="'− ' + rp(totals().discount)"></dd></div>
-      {% if farm_is_pkp %}<div class="flex justify-between"><dt class="text-stone-500">PPN</dt><dd x-text="rp(totals().tax)"></dd></div>{% endif %}
-      <div class="flex justify-between"><dt class="text-stone-500">Ongkos kirim</dt><dd x-text="rp(totals().shipping)"></dd></div>
-      <div class="flex justify-between border-t border-stone-200 pt-2 text-base font-semibold"><dt>Total</dt><dd x-text="rp(totals().total)"></dd></div>
+  <aside class="gt-card app-split__sticky" aria-labelledby="h-summary">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-summary">Ringkasan</h2></div>
+    <dl class="gt-kv app-kv-total">
+      <div><dt>Subtotal</dt><dd x-text="rp(totals().subtotal)"></dd></div>
+      <div><dt>Diskon</dt><dd x-text="'− ' + rp(totals().discount)"></dd></div>
+      {% if farm_is_pkp %}<div><dt>PPN</dt><dd x-text="rp(totals().tax)"></dd></div>{% endif %}
+      <div><dt>Ongkos kirim</dt><dd x-text="rp(totals().shipping)"></dd></div>
+      <div><dt>Total</dt><dd x-text="rp(totals().total)"></dd></div>
     </dl>
-    <button class="mt-4 gt-btn gt-btn--solid gt-btn--md gt-btn--block">Simpan Draf</button>
-    <p class="mt-2 text-xs text-stone-400">Setelah disimpan, terbitkan dari halaman invoice.</p>
+    <div class="gt-callout gt-callout--warning" x-show="totals().total > 5000000" x-cloak>{% icon "alert" 18 %}<div><span class="gt-callout__title">Bea meterai Rp10.000</span><span class="gt-callout__body">Total di atas Rp5.000.000.</span></div></div>
+    <div class="app-formfoot">
+      <span class="app-formfoot__note">Stok belum bergerak {% info_tip "Setelah disimpan, terbitkan dari halaman invoice. Stok baru dipotong saat terbit." %}</span>
+      <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{{ list_url }}{% endif %}" class="gt-btn gt-btn--outline gt-btn--md">Batal</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan draf</button>
+    </div>
   </aside>
 </form>
 {% endblock %}

@@ -9,7 +9,7 @@
       <h1 class="flex items-center gap-3 text-2xl font-bold tracking-tight">{{ element.name }} {% if not element.is_active %}{% pill "Nonaktif" "INACTIVE" %}{% endif %}</h1>
       <p class="mt-1 text-sm text-stone-500">{{ element.get_element_type_display }} · {{ element.area_m2|kg }} m² tercatat</p>
     </div>
-    {% if element.is_active and not active_cycle %}<button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Mulai Siklus</button>{% endif %}
+    {% if element.is_active and not active_cycle %}<button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Mulai siklus</button>{% endif %}
   </div>
 
   <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

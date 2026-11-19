@@ -3,7 +3,7 @@
 <{% if href %}a href="{{ href }}"{% else %}div{% endif %} class="gt-stat{% if featured %} gt-stat--featured{% endif %} app-stat">
   <span class="gt-stat__title">{{ label }}{% if tip %}{% info_tip tip %}{% endif %}</span>
   {% if href %}<span class="gt-stat__arrow" aria-hidden="true">{% icon "arrow" 16 %}</span>{% endif %}
-  <span class="gt-stat__value {{ cls|value_tone }}">{{ value }}</span>
+  <span class="gt-stat__value {{ cls|value_tone }}{% if compact or "Rp" in value|stringformat:"s" %} app-stat__money{% endif %}">{{ value }}</span>
   {% if hint %}<span class="gt-stat__trend">{{ hint }}</span>{% endif %}
 </{% if href %}a{% else %}div{% endif %}>
 {% else %}

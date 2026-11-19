@@ -6,10 +6,10 @@
   <h1 class="text-2xl font-bold tracking-tight">Elemen &amp; Siklus</h1>
   <p class="mt-1 text-sm text-stone-500">Greenhouse, lahan dan shadenet beserta siklus tanam aktifnya. Klik elemen atau varietas untuk detail dan linimasa.</p>
 </div>
-<div class="mb-4 flex flex-wrap gap-2 text-sm">
-  {% for item in low_stock %}<a href="{% url 'farm:inputs' %}" class="rounded-full bg-amber-100 px-3 py-1 text-amber-800">Stok menipis: {{ item.name }} ({{ item.stock_qty|kg }} {{ item.unit }})</a>{% endfor %}
-  {% if roles.finance and pending_expenses %}<a href="{% url 'farm:expenses' %}" class="rounded-full bg-sky-100 px-3 py-1 text-sky-800">{{ pending_expenses }} biaya menunggu persetujuan</a>{% endif %}
-  {% if roles.finance and unpriced %}<a href="{% url 'farm:prices' %}" class="rounded-full bg-rose-100 px-3 py-1 text-rose-800">{{ unpriced }} produk belum berharga</a>{% endif %}
+<div class="mb-4 app-chips">
+  {% for item in low_stock %}<a href="{% url 'farm:inputs' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--warning"></i>Stok menipis: {{ item.name }} ({{ item.stock_qty|kg }} {{ item.unit }})</a>{% endfor %}
+  {% if roles.finance and pending_expenses %}<a href="{% url 'farm:expenses' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--warning"></i>{{ pending_expenses }} biaya menunggu</a>{% endif %}
+  {% if roles.finance and unpriced %}<a href="{% url 'farm:prices' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--danger"></i>{{ unpriced }} produk tanpa harga</a>{% endif %}
 </div>
 
 <div class="grid gap-6 lg:grid-cols-3">
@@ -23,20 +23,20 @@
       <div class="rounded-lg border bg-white p-4 {% if not el.is_active %}opacity-60{% endif %}">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="font-medium"><a class="hover:underline" href="{% url 'farm:element_detail' el.pk %}">{{ el.name }}</a></h2>
-          <span class="rounded bg-stone-100 px-2 py-0.5 text-xs">{{ el.get_element_type_display }} · {{ el.area_m2|kg }} m²</span>
-          {% if not el.is_active %}<span class="rounded bg-stone-200 px-2 py-0.5 text-xs">Nonaktif</span>{% endif %}
+          <span class="gt-chip gt-chip--sm">{{ el.get_element_type_display }} · {{ el.area_m2|kg }} m²</span>
+          {% if not el.is_active %}{% pill "Nonaktif" tone="gray" %}{% endif %}
           {% if roles.finance %}
           <form method="post" action="{% url 'farm:element_toggle' el.pk %}" class="ml-auto">{% csrf_token %}
-            <button class="text-xs text-stone-500 underline">{% if el.is_active %}Nonaktifkan{% else %}Aktifkan{% endif %}</button>
+            {% if el.is_active %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Nonaktifkan</button>{% else %}<button class="gt-btn gt-btn--outline gt-btn--sm">Aktifkan</button>{% endif %}
           </form>
           {% endif %}
         </div>
         {% if el.active_cycle %}{% with c=el.active_cycle %}
         <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
           <a class="font-medium hover:underline" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a><span class="text-stone-500">mulai {{ c.planting_start_date|date:"d-m-Y" }} · hari ke-{{ c.days }}</span>
-          <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800">Tahap: {{ c.get_stage_display }}</span>
-          {% if c.expected_harvest_date %}<span class="text-xs {% if c.overdue %}rounded-full bg-red-100 px-2 py-0.5 text-red-800{% else %}text-stone-500{% endif %}">Perkiraan panen {{ c.expected_harvest_date|date:"d-m-Y" }}{% if c.overdue %} · terlewat{% endif %}</span>{% endif %}
-          {% if roles.finance %}<a class="text-emerald-700 underline" href="{% url 'reports:trace_cycle' c.pk %}">Telusuri</a>{% endif %}
+          {% pill c.get_stage_display tone="green" %}
+          {% if c.expected_harvest_date %}{% if c.overdue %}{% pill "Panen terlewat" tone="red" %}{% endif %}<span class="app-row__meta">Perkiraan panen {{ c.expected_harvest_date|date:"d-m-Y" }}</span>{% endif %}
+          {% if roles.finance %}<a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">Telusuri</a>{% endif %}
         </div>
         {% if c.panel.stages or c.panel.undo %}{% include "farm/_stage_form.html" with cycle=c panel=c.panel wrap_class="mt-2" %}{% endif %}
         {% endwith %}{% else %}
