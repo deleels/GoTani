@@ -317,7 +317,15 @@ class FarmViewTests(SiteFixtures):
 
     def test_harvest_entry_and_protected_delete(self):
         self.login(ROLE_WORKER)
-        response = self.client.post(reverse("farm:harvests"), {"cycle": self.cycle.pk, "high_quality_kg": "20", "low_quality_kg": "4"})
+        data = {"cycle": self.cycle.pk, "high_quality_kg": "20", "low_quality_kg": "4"}
+        review = self.client.post(reverse("farm:harvests"), data)  # D85: first submit only reviews
+        self.assertContains(review, "Tinjau sebelum menyimpan")
+        self.assertFalse(HarvestBatch.objects.filter(high_quality_kg=20).exists())
+        self.assertNotContains(review, "HPP/kg HIGH")  # workers see no money
+        tampered = self.client.post(reverse("farm:harvests"), {**data, "high_quality_kg": "200",
+                                                                "review_sig": review.context["review_sig"]})
+        self.assertContains(tampered, "Tinjau sebelum menyimpan")  # changed values need a new review
+        response = self.client.post(reverse("farm:harvests"), {**data, "review_sig": review.context["review_sig"]})
         self.assertRedirects(response, reverse("farm:harvests"))
         new_batch = HarvestBatch.objects.latest("id")
         self.assertEqual(new_batch.lots.count(), 2)

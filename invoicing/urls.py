@@ -15,4 +15,5 @@ urlpatterns = [
     path("pembeli/<int:pk>/", views.BuyerDetailView.as_view(), name="buyer_detail"),
     path("pembeli/<int:pk>/bayar/", views.PaymentCreateView.as_view(), name="buyer_payment_new"),
     path("pembayaran/<int:pk>/hapus/", views.PaymentDeleteView.as_view(), name="buyer_payment_delete"),
+    path("alokasi/<int:pk>/lepas/", views.AllocationRemoveView.as_view(), name="allocation_remove"),
 ]

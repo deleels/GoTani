@@ -66,7 +66,8 @@ class InvoicingViewTests(InvoiceFixtures):
         self.assertContains(self.client.get(reverse("invoicing:invoice_edit", args=[invoice.pk])), "Simpan Draf")
 
         today = timezone.localdate()
-        self.client.post(reverse("invoicing:invoice_action", args=[invoice.pk, "issue"]), {"issue_date": today.isoformat()})
+        self.client.post(reverse("invoicing:invoice_action", args=[invoice.pk, "issue"]),
+                         {"issue_date": today.isoformat(), "confirmed_checked": "1"})
         invoice.refresh_from_db()
         self.assertEqual(invoice.status, "ISSUED")
         self.assertEqual(invoice.due_date, today + timedelta(days=14))
@@ -111,7 +112,7 @@ class InvoicingViewTests(InvoiceFixtures):
         d = self.draft([(self.high, 999, None)])
         self.login(self.manager)
         r = self.client.post(reverse("invoicing:invoice_action", args=[d.pk, "issue"]),
-                             {"issue_date": timezone.localdate().isoformat()}, follow=True)
+                             {"issue_date": timezone.localdate().isoformat(), "confirmed_checked": "1"}, follow=True)
         self.assertContains(r, "tidak cukup")
         d.refresh_from_db()
         self.assertEqual(d.status, "DRAFT")
@@ -136,3 +137,37 @@ class InvoicingViewTests(InvoiceFixtures):
         })
         self.assertEqual(r.status_code, 400)
         self.assertFalse(InvoicePayment.objects.exists())
+
+
+class ConfirmationTests(InvoiceFixtures):
+    """D88: issuing needs the level-2 tick; allocations can be taken off with a reason."""
+
+    def login(self, user):
+        self.client.force_login(user)
+
+    def test_issue_requires_level_two_tick(self):
+        d = self.draft([(self.high, 1, None)])
+        self.login(self.manager)
+        r = self.client.post(reverse("invoicing:invoice_action", args=[d.pk, "issue"]),
+                             {"issue_date": timezone.localdate().isoformat()}, follow=True)
+        self.assertContains(r, "Saya sudah memeriksa data ini")
+        d.refresh_from_db()
+        self.assertEqual(d.status, "DRAFT")
+
+    def test_remove_allocation_returns_money_to_credit(self):
+        from core.models import AuditLog
+        from invoicing import services
+        from invoicing.models import PaymentAllocation
+
+        invoice = self.issue(self.draft([(self.high, 1, None)]))
+        payment = services.record_payment(self.manager, invoice.buyer, amount_idr=invoice.total_idr, method="CASH",
+                                          paid_on=timezone.localdate(), allocations=[(invoice, invoice.total_idr)])
+        alloc = PaymentAllocation.objects.get(payment=payment)
+        self.login(self.manager)
+        url = reverse("invoicing:allocation_remove", args=[alloc.pk])
+        self.client.post(url, {"reason": ""})
+        self.assertTrue(PaymentAllocation.objects.filter(pk=alloc.pk).exists())  # reason required
+        self.client.post(url, {"reason": "salah invoice"})
+        self.assertFalse(PaymentAllocation.objects.filter(pk=alloc.pk).exists())
+        self.assertEqual(services.buyer_credit(invoice.buyer), invoice.total_idr)
+        self.assertEqual(AuditLog.objects.get(action="ALLOCATION_REMOVED").reason, "salah invoice")

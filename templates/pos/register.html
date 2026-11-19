@@ -27,7 +27,7 @@
 
   <aside class="self-start rounded-lg border bg-white p-4 lg:sticky lg:top-4">
     <h2 class="mb-3 font-semibold">Keranjang</h2>
-    <form method="post" action="{% url 'pos:checkout' %}" @submit="submitting = true">
+    <form method="post" action="{% url 'pos:checkout' %}" @submit="submitting = true" data-confirm="" data-confirm-if="posWarn(form)">
       {% csrf_token %}
       <template x-if="cart.length === 0"><p class="text-sm text-stone-400">Keranjang kosong. Klik produk untuk menambah.</p></template>
       <ul class="divide-y">
@@ -88,6 +88,17 @@
         this.cart = this.cart.filter(l => this.product(l.id))
           .map(l => ({ id: l.id, qty: typeof l.qty === 'number' ? idNum.format(l.qty, 'kg') : String(l.qty) }));
         setInterval(() => this.refresh(), 15000);
+        // D87: unusually large lines (> 3x the 30-day average line, min 20 kg) get one confirmation.
+        window.posWarn = (form) => {
+          const big = this.cart.filter(l => { const p = this.product(l.id); return p && this.qty(l) > Number(p.warn_kg || 20); });
+          if (!big.length) return false;
+          form.dataset.confirmTitle = 'Jumlah tidak biasa';
+          form.dataset.confirm = big.map(l => { const p = this.product(l.id);
+            return p.name + ' ' + p.grade_label + ': ' + idNum.format(this.qty(l), 'kg') + ' kg (biasanya di bawah ' + idNum.format(Number(p.warn_kg), 'kg') + ' kg).'; })
+            .join('\n') + '\nPeriksa koma desimal sebelum membayar.';
+          form.dataset.confirmAction = 'Tetap bayar';
+          return true;
+        };
       },
       async refresh() {
         try {

@@ -7,7 +7,7 @@ by `farm.services.record_harvest()`, which feeds them through this function.
 
 from decimal import ROUND_HALF_UP, Decimal
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import DecimalField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
@@ -25,7 +25,8 @@ def move_lot_stock(
 ) -> StockLot:
     """Apply a signed kg movement to one lot and log it. Returns the locked, updated lot.
 
-    Sign convention: HARVEST_IN / POS_VOID / INVOICE_VOID positive; POS_SALE / SPOILAGE / INVOICE_SALE negative.
+    Sign convention: HARVEST_IN / POS_VOID / INVOICE_VOID / SPOILAGE_REVERSAL positive;
+    POS_SALE / SPOILAGE / INVOICE_SALE negative.
     """
     qty_kg = Decimal(qty_kg).quantize(QTY_STEP)
     if qty_kg == 0:
@@ -101,6 +102,36 @@ def record_spoilage(
         reference=f"SPL-{record.pk}",
         timestamp=recorded_at,
     )
+    return record
+
+
+SPOILAGE_WARN_SHARE = Decimal("0.5")
+
+
+@transaction.atomic
+def reverse_spoilage(record: SpoilageRecord, actor, reason: str) -> SpoilageRecord:
+    """Same-day reversal of a spoilage entry by OWNER/MANAGER, with a reason (D86).
+
+    The kg go back to the same lot as a new SPOILAGE_REVERSAL movement; the record is kept and marked."""
+    from core.audit import log_event
+    from farm.bootstrap import ROLE_MANAGER, ROLE_OWNER, user_has_role
+
+    if not user_has_role(actor, ROLE_OWNER, ROLE_MANAGER):
+        raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat membatalkan catatan susut.")
+    if not (reason or "").strip():
+        raise ValidationError("Alasan pembatalan wajib diisi.")
+    record = SpoilageRecord.objects.select_for_update().get(pk=record.pk)
+    if record.reversed_at:
+        raise ValidationError("Catatan susut ini sudah dibatalkan.")
+    if timezone.localtime(record.recorded_at).date() != timezone.localdate():
+        raise ValidationError("Catatan susut hanya bisa dibatalkan di hari yang sama.")
+    now = timezone.now()
+    move_lot_stock(record.lot_id, record.qty_kg, StockLedger.MovementType.SPOILAGE_REVERSAL,
+                   reference=f"SPL-{record.pk}-BATAL", timestamp=now)
+    record.reversed_at, record.reversed_by, record.reversal_reason = now, actor, reason.strip()
+    record.save(update_fields=["reversed_at", "reversed_by", "reversal_reason"])
+    log_event(actor, "SPOILAGE_REVERSAL", record, f"Batal susut {record.qty_kg.normalize():f} kg — lot #{record.lot_id}",
+              before={"qty_kg": record.qty_kg}, after={"qty_kg": Decimal("0")}, reason=record.reversal_reason)
     return record
 
 

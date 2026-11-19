@@ -16,7 +16,7 @@
     <tbody>
     {% for p in unpriced %}
       <tr class="border-t"><td class="p-2">{{ p }}</td><td class="p-2 text-right">{{ p.stock_kg|kg }} kg</td>
-        <td class="p-2"><form method="post" class="flex gap-2">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
+        <td class="p-2"><form method="post" class="flex gap-2" data-confirm="" data-confirm-if="priceWarn(form)" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
           <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required placeholder="mis. 25.000" class="w-40 rounded border border-stone-300 px-2 py-1">
           <button class="rounded bg-emerald-600 px-3 py-1 text-white">Simpan</button></form></td></tr>
     {% empty %}<tr><td colspan="3" class="p-3 text-stone-400">Semua produk sudah berharga.</td></tr>{% endfor %}
@@ -31,7 +31,7 @@
     <tbody>
     {% for p in priced %}
       <tr class="border-t"><td class="p-2">{{ p }}</td><td class="p-2 text-right">{{ p.stock_kg|kg }} kg</td><td class="p-2 text-right">{{ p.selling_price_idr|rupiah }}</td>
-        <td class="p-2"><form method="post" class="flex flex-wrap gap-2">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
+        <td class="p-2"><form method="post" class="flex flex-wrap gap-2" data-confirm="" data-confirm-if="priceWarn(form)" data-old-price="{{ p.selling_price_idr }}" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
           <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" value="{{ p.selling_price_idr|idnum:0 }}" class="w-36 rounded border border-stone-300 px-2 py-1" aria-label="Harga per kg">
           <input name="pos_step_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.pos_step_kg|idnum:3 }}" class="w-20 rounded border border-stone-300 px-2 py-1" aria-label="Langkah kasir (kg)" title="Tombol − / + di kasir mengubah jumlah sebesar ini">
           <button class="rounded bg-stone-800 px-3 py-1 text-white">Simpan</button>

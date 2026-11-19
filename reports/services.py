@@ -119,10 +119,10 @@ def forward_trace(cycle: CropCycle) -> ForwardTrace:
                     totals["cogs"] += a.qty_kg * a.unit_cogs_idr
                 else:
                     lt.voided_kg += a.qty_kg
-            lt.spoiled_kg = sum((s.qty_kg for s in spoilages), ZERO)
+            lt.spoiled_kg = sum((s.qty_kg for s in spoilages if not s.reversed_at), ZERO)
             totals["sold_kg"] += lt.sold_kg
             totals["spoiled_kg"] += lt.spoiled_kg
-            totals["spoilage_loss"] += sum((s.loss_idr for s in spoilages), ZERO)
+            totals["spoilage_loss"] += sum((s.loss_idr for s in spoilages if not s.reversed_at), ZERO)
             totals["remaining_kg"] += lot.qty_remaining_kg
             lot_traces.append(lt)
         totals["harvested_kg"] += batch.high_quality_kg + batch.low_quality_kg
@@ -172,6 +172,9 @@ def forward_csv_rows(trace: ForwardTrace):
             for s in lt.spoilages:
                 yield ["SUSUT", _local(s.recorded_at).isoformat(timespec="minutes"), f"LOT-{lot.pk}",
                        f"{s.get_reason_display()} {s.notes}".strip(), -s.qty_kg, s.loss_idr]
+                if s.reversed_at:
+                    yield ["BATAL SUSUT", _local(s.reversed_at).isoformat(timespec="minutes"), f"LOT-{lot.pk}",
+                           s.reversal_reason, s.qty_kg, -s.loss_idr]
             for a in lt.invoice_allocations:
                 invoice = a.line.invoice
                 yield ["INVOICE", invoice.issue_date.isoformat() if invoice.issue_date else "", invoice.number or "",
@@ -266,7 +269,8 @@ def dashboard_metrics(start, end) -> dict:
     gross = revenue - cogs
     other_income = _sum(invoices, "shipping_idr")  # D54: shipping is outside gross margin
     ppn = _sum(orders, "total_tax_idr") + _sum(invoices, "tax_idr")
-    spoilage = _sum(SpoilageRecord.objects.filter(recorded_at__gte=lo, recorded_at__lt=hi), "loss_idr")
+    spoilage = _sum(SpoilageRecord.objects.filter(recorded_at__gte=lo, recorded_at__lt=hi, reversed_at__isnull=True),
+                    "loss_idr")
     approved = Expense.objects.filter(status=Expense.Status.APPROVED)
     # Rule 8: leftovers of cycles closed in the period are written off.
     unabsorbed = _sum(

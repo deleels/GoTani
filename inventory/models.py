@@ -151,6 +151,11 @@ class SpoilageRecord(models.Model):
         verbose_name="dicatat oleh",
     )
     recorded_at = models.DateTimeField("dicatat pada", default=timezone.now)
+    # D86: same-day reversal by OWNER/MANAGER (a SPOILAGE_REVERSAL ledger movement; the record stays).
+    reversed_at = models.DateTimeField("dibatalkan pada", null=True, blank=True)
+    reversed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name="+", verbose_name="dibatalkan oleh")
+    reversal_reason = models.TextField("alasan pembatalan", blank=True)
 
     class Meta:
         ordering = ["-recorded_at", "-id"]
@@ -173,6 +178,7 @@ class StockLedger(AppendOnlyModel):
         POS_VOID = "POS_VOID", "Pembatalan POS"
         INVOICE_SALE = "INVOICE_SALE", "Penjualan Invoice"
         INVOICE_VOID = "INVOICE_VOID", "Pembatalan Invoice"
+        SPOILAGE_REVERSAL = "SPOILAGE_REVERSAL", "Pembatalan Susut"
 
     # Sign convention per movement type (D20).
     SIGN = {
@@ -182,6 +188,7 @@ class StockLedger(AppendOnlyModel):
         MovementType.POS_VOID: 1,
         MovementType.INVOICE_SALE: -1,
         MovementType.INVOICE_VOID: 1,
+        MovementType.SPOILAGE_REVERSAL: 1,
     }
 
     lot = models.ForeignKey(
@@ -199,7 +206,7 @@ class StockLedger(AppendOnlyModel):
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    Q(movement_type__in=["HARVEST_IN", "POS_VOID", "INVOICE_VOID"], qty_kg__gt=0)
+                    Q(movement_type__in=["HARVEST_IN", "POS_VOID", "INVOICE_VOID", "SPOILAGE_REVERSAL"], qty_kg__gt=0)
                     | Q(movement_type__in=["POS_SALE", "SPOILAGE", "INVOICE_SALE"], qty_kg__lt=0)
                 ),
                 name="stockledger_sign_matches_type",

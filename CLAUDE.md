@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D84); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D88); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -48,7 +48,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 - `StockLot`: `product` (FK), `harvest_batch` (FK), `qty_initial_kg`, `qty_remaining_kg` (Decimal), `unit_cogs_idr` (Decimal), `harvested_at`
   - Constraint: `CheckConstraint(qty_remaining_kg >= 0)` — DB-level oversell backstop.
 - `SpoilageRecord`: `lot` (FK), `qty_kg` (> 0), `reason` (ROT / PHYSICAL_DAMAGE / PEST / SHRINKAGE / OTHER), `notes`, `loss_idr` (= qty × lot.unit_cogs_idr), `recorded_by`, `recorded_at`
-- `StockLedger`: `lot` (FK), `movement_type` (HARVEST_IN + / POS_SALE − / SPOILAGE − / POS_VOID + / INVOICE_SALE − / INVOICE_VOID +), `qty_kg` (signed Decimal), `reference`, `timestamp` — append-only (no update/delete except cascade from an allowed HarvestBatch delete).
+- `StockLedger`: `lot` (FK), `movement_type` (HARVEST_IN + / POS_SALE − / SPOILAGE − / POS_VOID + / INVOICE_SALE − / INVOICE_VOID + / SPOILAGE_REVERSAL +), `qty_kg` (signed Decimal), `reference`, `timestamp` — append-only (no update/delete except cascade from an allowed HarvestBatch delete).
 
 ### 3. `pos` (Downstream Retail Checkout)
 - `SaleOrder`: `order_number` (unique, `GT-YYYYMMDD-####`, daily counter in Asia/Jakarta date), `payment_method` (CASH / QRIS / TRANSFER), `total_gross_idr` (what the customer pays), `total_tax_idr`, `total_revenue_idr` (net of tax), `total_cogs_idr` (Decimal), `status` (COMPLETED / VOIDED), `cashier`, `created_at`, `voided_by`, `voided_at`
@@ -72,7 +72,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ### Farm & cost pool
 1. `CropCycle.stage` only advances forward in the listed order — one stage at a time unless "Lewati tahap" is ticked; backward transitions are rejected, except the same-day undo of the last advance by OWNER/MANAGER with a reason while nothing was recorded since (D84).
-2. A `HarvestBatch` may be recorded only when `cycle.stage == HARVESTING`. Validate `high_quality_kg > 0`; `low_quality_kg, harvest_loss_kg >= 0`.
+2. A `HarvestBatch` may be recorded only when `cycle.stage == HARVESTING`. Validate `high_quality_kg > 0`; `low_quality_kg, harvest_loss_kg >= 0`. Entry goes through a review step (cost/kg, expected vs actual, warnings > 150% expected or > 3× batch average — D85).
 3. **Incremental cost pool:** on save, a batch absorbs every APPROVED expense of its cycle with `absorbed_by IS NULL` (set `absorbed_by = batch`). Absorbed cost is never re-spread; earlier lots' COGS never change. First-harvest cost skew is an accepted, documented limitation.
 4. **Grade split — relative sales value:** cost share per grade ∝ `kg × selling_price` (catalog price; invoice price overrides never affect it). If either grade's product lacks a price, fall back to equal per-kg COGS. `unit_cogs_<grade> = share / kg_of_grade`.
 5. **Zero-yield:** if `high + low == 0`, absorb nothing (costs stay in pool), create no lots, unit COGS = 0. No division by zero.
@@ -89,7 +89,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ### Inventory & tax
 16. **All stock mutations go through** `inventory.services.move_lot_stock()` and `farm.services.move_input_stock()`: `select_for_update` the row, validate, mutate, append ledger. Nothing else touches quantities.
-17. **Spoilage** targets a specific lot (UI preselects the oldest); cost is `qty × lot.unit_cogs_idr`, reported as spoilage loss. Lot unit COGS is unchanged.
+17. **Spoilage** targets a specific lot (UI preselects the oldest); cost is `qty × lot.unit_cogs_idr`, reported as spoilage loss. Lot unit COGS is unchanged. Level-2 confirmation (warns > 50% of the lot); OWNER/MANAGER may reverse it the same day with a reason as a `SPOILAGE_REVERSAL` movement (D86).
 18. **Invariants** (tests + `python manage.py check_mass_balance`): `lot.qty_remaining_kg == Σ StockLedger.qty_kg` per lot; `lot.qty_initial_kg` matches its batch grade kg; no negative stock; input `stock_qty == Σ InputLedger.qty`.
 19. **Tax snapshot:** each POS/invoice line copies `tax_rate_pct` from `product.tax` at sale time (0 if none, inactive, or the farm is not PKP — D80). Later rate changes never rewrite history. Tax per line is rounded to 2 dp `ROUND_HALF_UP`.
 
@@ -100,10 +100,10 @@ An engineering programming class project modeling end-to-end agricultural produc
 23. **Void:** whole order only, OWNER/MANAGER, same Asia/Jakarta calendar day; restores exact kg to the exact lots via allocations, logs `POS_VOID`, sets status VOIDED. No partial refunds.
 
 ### Invoicing
-24. **Lifecycle:** DRAFT (editable, deletable, no stock moved) → ISSUED → VOID. Only OWNER/MANAGER create, issue, void, and record payments.
+24. **Lifecycle:** DRAFT (editable, deletable, no stock moved) → ISSUED (level-2 confirmation, D88) → VOID. Only OWNER/MANAGER create, issue, void, and record payments.
 25. **Issue** runs inside `@transaction.atomic` with the same locked FIFO allocation as checkout (rule 22) into `InvoiceLineLotAllocation`, logs `INVOICE_SALE`, assigns `number` (`INV-YYYYMM-####`, monthly Asia/Jakarta counter) inside the transaction, sets `issue_date` and `due_date` (default issue + `buyer.payment_terms_days`, editable). Every line needs `unit_price_idr > 0` and `qty_kg > 0`.
 26. **Totals (tax-exclusive):** `subtotal = Σ qty × price`; discount PERCENT (0–100) → `round(subtotal × pct / 100, 2)`, AMOUNT → value (0 ≤ value ≤ subtotal). Discount is allocated to lines **proportionally to line subtotal**, the last line taking the rounding remainder so Σ shares == discount exactly. `line tax = (line subtotal − share) × rate / 100`. `total = subtotal − discount + Σ tax + shipping`. Shipping is untaxed.
-27. **Payments & credit:** an `InvoicePayment` belongs to a buyer and may be split by `PaymentAllocation` across that buyer's ISSUED invoices. Σ allocations per payment ≤ payment amount; each allocation ≤ that invoice's outstanding (`total − Σ allocations`). Unallocated payment amount is the buyer's **credit**: `credit = Σ payments − Σ allocations` (derived, never stored, always ≥ 0). Applying credit = allocating an older payment's unallocated remainder to an invoice.
+27. **Payments & credit:** (an allocation can be removed by OWNER/MANAGER with a reason; the money returns to credit — D88.) an `InvoicePayment` belongs to a buyer and may be split by `PaymentAllocation` across that buyer's ISSUED invoices. Σ allocations per payment ≤ payment amount; each allocation ≤ that invoice's outstanding (`total − Σ allocations`). Unallocated payment amount is the buyer's **credit**: `credit = Σ payments − Σ allocations` (derived, never stored, always ≥ 0). Applying credit = allocating an older payment's unallocated remainder to an invoice.
 28. **Derived payment status:** PAID when outstanding == 0; PARTIALLY_PAID when 0 < allocated < total; OVERDUE when outstanding > 0 and `due_date <` today (Asia/Jakarta); otherwise UNPAID.
 29. **Void:** OWNER/MANAGER, any date; in one transaction restores exact kg to exact lots (`INVOICE_VOID`), deletes its allocations (money returns to buyer credit), sets VOID. No refunds: credit is only usable on future invoices; a payment may be deleted (OWNER) only while fully unallocated.
 

@@ -8,12 +8,13 @@ Indonesia messages suitable for display.
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from zoneinfo import ZoneInfo
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
-from django.db.models import DecimalField, Q, Sum, Value
+from django.db.models import Avg, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
@@ -72,6 +73,20 @@ def pos_catalog():
         )
         .order_by("variety__name", "grade")
     )
+
+
+POS_BIG_LINE_FACTOR = Decimal("3")
+POS_BIG_LINE_MIN_KG = Decimal("20")
+
+
+def pos_big_line_thresholds(days: int = 30) -> dict:
+    """Per product: kg above which a cart line triggers the "jumlah tidak biasa" warning (D87) —
+    3x the average completed line of the last `days` days, never below 20 kg."""
+    since = timezone.now() - timedelta(days=days)
+    rows = (OrderLineItem.objects.filter(order__status=SaleOrder.Status.COMPLETED, order__created_at__gte=since)
+            .values("product_id").annotate(avg=Avg("qty_kg")))
+    out = {r["product_id"]: max(r["avg"] * POS_BIG_LINE_FACTOR, POS_BIG_LINE_MIN_KG) for r in rows}
+    return out
 
 
 # ---------------------------------------------------------------------------

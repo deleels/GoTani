@@ -182,9 +182,10 @@ class AuditLogView(RoleRequiredMixin, View):
     ACTIONS = {
         "PRICE_CHANGE": "Harga", "POS_STEP_CHANGE": "Langkah kasir", "PKP_CHANGE": "Status PKP",
         "PRODUCT_ADMIN_EDIT": "Produk (admin)", "STAGE_ADVANCE": "Tahap maju", "STAGE_UNDO": "Tahap dibatalkan",
+        "SPOILAGE_REVERSAL": "Susut dibatalkan", "ALLOCATION_REMOVED": "Alokasi dilepas",
     }
 
-    FIELDS = {"selling_price_idr": "harga/kg", "pos_step_kg": "langkah (kg)", "is_pkp": "PKP", "tax_id": "pajak", "stage": "tahap",
+    FIELDS = {"selling_price_idr": "harga/kg", "pos_step_kg": "langkah (kg)", "is_pkp": "PKP", "tax_id": "pajak", "stage": "tahap", "qty_kg": "kg", "amount_idr": "jumlah (Rp)", "payment_id": "pembayaran #",
               "is_active": "aktif"}
 
     def get(self, request):

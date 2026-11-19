@@ -21,7 +21,28 @@
     <form method="post">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
       <p class="mt-2 text-xs text-stone-400">Batch tidak bisa diubah setelah disimpan; hapus dan catat ulang selama belum ada penjualan/susut.</p>
-      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Simpan panen</button>
+      {% if review %}
+      <input type="hidden" name="review_sig" value="{{ review_sig }}">
+      <div class="mt-3 rounded-lg border border-emerald-300 p-3 text-sm" data-harvest-review>
+        <p class="font-semibold">Tinjau sebelum menyimpan</p>
+        <dl class="mt-2 space-y-1">
+          <div class="flex justify-between"><dt class="text-stone-500">Siap jual (HIGH + LOW)</dt><dd>{{ review.sellable_kg|kg }} kg</dd></div>
+          {% if review.expected_kg %}<div class="flex justify-between"><dt class="text-stone-500">Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} / {{ review.expected_kg|kg }} kg ({{ review.pct_after|pct }})</dd></div>
+          {% else %}<div class="flex justify-between"><dt class="text-stone-500">Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} kg <span class="text-xs text-stone-400">(tanpa perkiraan)</span></dd></div>{% endif %}
+          {% if review.batch_avg_kg %}<div class="flex justify-between"><dt class="text-stone-500">Rata-rata batch sebelumnya</dt><dd>{{ review.batch_avg_kg|kg }} kg</dd></div>{% endif %}
+          {% if roles.finance %}
+          <div class="flex justify-between"><dt class="text-stone-500">Biaya yang diserap</dt><dd>{{ review.pool_idr|rupiah }} <span class="text-xs text-stone-400">({{ review.expenses }} biaya)</span></dd></div>
+          <div class="flex justify-between"><dt class="text-stone-500">HPP/kg HIGH · LOW</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}—{% endif %}</dd></div>
+          {% endif %}
+        </dl>
+        {% for w in review.warnings %}<p class="mt-2 rounded border border-amber-400 p-2 text-amber-700">⚠ {{ w }}</p>{% endfor %}
+        <p class="mt-2 text-xs text-stone-500">Mengubah angka di atas memerlukan tinjauan ulang.</p>
+      </div>
+      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700"
+              {% if review.warnings %}data-confirm-title="Simpan panen dengan peringatan?" data-confirm="{{ review.warnings|join:' ' }}" data-confirm-action="Simpan panen" data-confirm-level="2"{% endif %}>Simpan panen</button>
+      {% else %}
+      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Tinjau panen</button>
+      {% endif %}
     </form>
     {% else %}
     <p class="text-sm text-stone-500">Tidak ada siklus di tahap Panen. Majukan tahap siklus terlebih dahulu.</p>

@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, F, Q, Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -308,6 +308,7 @@ class InputsView(FarmPage):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["items"] = InputItem.objects.all()
+        ctx["input_costs"] = input_costs()
         ctx["low_count"] = sum(1 for i in ctx["items"] if i.is_low_stock)
         if self.roles.finance:
             ctx["purchases"] = InputPurchase.objects.select_related("item")[:30]
@@ -393,6 +394,24 @@ class HarvestsView(FarmPage):
     success_url_name = "farm:harvests"
     success_message = "Panen dicatat; lot stok dibuat."
 
+    REVIEW_FIELDS = ("cycle", "high_quality_kg", "low_quality_kg", "harvest_loss_kg", "number_of_bags",
+                     "weight_per_bag_kg", "harvested_at")
+
+    def review_signature(self, data) -> str:
+        import hashlib
+
+        raw = "|".join(str(data.get(f) or "") for f in self.REVIEW_FIELDS)
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+    def form_valid(self, form):
+        """Review step (D85): the first submit shows the review; saving needs a submit of the same values."""
+        sig = self.review_signature(form.cleaned_data)
+        if self.request.POST.get("review_sig") != sig:
+            d = form.cleaned_data
+            review = services.preview_harvest(d["cycle"], d["high_quality_kg"], d["low_quality_kg"] or 0)
+            return self.render_to_response(self.get_context_data(form=form, review=review, review_sig=sig))
+        return super().form_valid(form)
+
     def perform(self, form):
         d = form.cleaned_data
         return services.record_harvest(
@@ -463,12 +482,35 @@ class SpoilageView(FarmPage):
         ctx["initial_product"] = next(
             (p["id"] for p in products.values() if initial_lot and int(initial_lot) in p["lots"]), None
         )
+        ctx["lot_remaining"] = {str(lot.pk): str(lot.qty_remaining_kg) for lot in lots}
         ctx["page"] = paginate(self.request, SpoilageRecord.objects.select_related("lot__product__variety", "recorded_by"))
         ctx["records"] = ctx["page"].object_list
+        today = timezone.localdate()
+        for r in ctx["records"]:
+            r.can_reverse = (self.roles.finance and not r.reversed_at
+                             and timezone.localtime(r.recorded_at).date() == today)
         return ctx
 
 
+class SpoilageReverseView(ActionView):
+    """Same-day reversal of a spoilage record with a reason (D86)."""
+
+    allowed_roles = FINANCE_ROLES
+    model = SpoilageRecord
+    success_url_name = "farm:spoilage"
+    success_message = "Catatan susut dibatalkan; stok dikembalikan ke lot."
+
+    def perform(self, record):
+        return inventory_services.reverse_spoilage(record, self.request.user, self.request.POST.get("reason", ""))
+
+
 # --- Prices (D24) ----------------------------------------------------------------------------
+
+
+def input_costs():
+    """Average cost per input for the purchase-cost warning (D87)."""
+    return {str(i.pk): {"avg": str(i.avg_cost_per_unit_idr), "name": i.name, "unit": i.unit}
+            for i in InputItem.objects.all()}
 
 
 class PricesView(FarmPage):
@@ -480,9 +522,14 @@ class PricesView(FarmPage):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        open_lot = Q(lots__qty_remaining_kg__gt=0)
         products = Product.objects.select_related("variety").annotate(
-            open_lots=Count("lots", filter=Q(lots__qty_remaining_kg__gt=0))
+            open_lots=Count("lots", filter=open_lot),
+            open_kg=Sum("lots__qty_remaining_kg", filter=open_lot),
+            open_cost=Sum(F("lots__qty_remaining_kg") * F("lots__unit_cogs_idr"), filter=open_lot),
         )
+        for p in products:  # D87: average unit COGS of what is still in stock, for the below-cost warning
+            p.open_cogs = (p.open_cost / p.open_kg) if p.open_kg else None
         ctx["unpriced"] = [p for p in products if p.selling_price_idr is None]
         ctx["priced"] = [p for p in products if p.selling_price_idr is not None]
         return ctx
@@ -666,6 +713,7 @@ class InputDetailView(FarmPage):
             if r.activity:
                 key = r.activity.cycle
                 by_cycle[key] = by_cycle.get(key, Decimal("0")) - r.qty
+        ctx["input_costs"] = input_costs()
         ctx.update(item=self.item, page=paginate(self.request, rows), by_cycle=sorted(by_cycle.items(), key=lambda kv: -kv[1]),
                    used_total=-sum((r.qty for r in usage), Decimal("0")), sheet_open=self.request.method == "POST")
         if self.roles.finance:

@@ -337,6 +337,27 @@ def allocate_payment(actor, payment, invoice, amount) -> PaymentAllocation:
 
 
 @transaction.atomic
+def remove_allocation(actor, allocation, reason: str):
+    """OWNER/MANAGER take a payment allocation off an invoice, with a reason (D88).
+
+    The money returns to the buyer's credit (it is still the same payment); the invoice's derived
+    payment status follows. Logged in the audit log."""
+    from core.audit import log_event
+
+    require_finance(actor)
+    if not (reason or "").strip():
+        raise ValidationError("Alasan wajib diisi.")
+    allocation = PaymentAllocation.objects.select_for_update().select_related("invoice", "payment").get(pk=allocation.pk)
+    invoice = allocation.invoice
+    summary = f"Lepas pembayaran {allocation.amount_idr} dari {invoice}"
+    log_event(actor, "ALLOCATION_REMOVED", invoice, summary,
+              before={"amount_idr": allocation.amount_idr, "payment_id": allocation.payment_id},
+              after={"amount_idr": Decimal("0")}, reason=reason.strip())
+    allocation.delete()
+    return invoice
+
+
+@transaction.atomic
 def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", proof=None,
                    allocations=()) -> InvoicePayment:
     """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit."""

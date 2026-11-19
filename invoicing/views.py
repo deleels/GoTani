@@ -18,7 +18,7 @@ from inventory.models import Product
 
 from . import services
 from .forms import BuyerForm, CreditForm, InvoiceHeaderForm, IssueForm, PaymentForm, parse_invoice_lines
-from .models import Buyer, Invoice, InvoiceLine, InvoiceLineLotAllocation, InvoicePayment
+from .models import Buyer, Invoice, InvoiceLine, InvoiceLineLotAllocation, InvoicePayment, PaymentAllocation
 
 
 def _id_text(raw, places):
@@ -279,6 +279,8 @@ class InvoiceActionView(FinanceView):
         target = reverse("invoicing:invoice_detail", args=[pk])
         try:
             if action == "issue":
+                if request.POST.get("confirmed_checked") != "1":  # D88: level-2 confirmation
+                    raise ValidationError("Centang \"Saya sudah memeriksa data ini\" untuk menerbitkan invoice.")
                 form = IssueForm(request.POST)
                 if not form.is_valid():
                     raise ValidationError("Tanggal tidak valid.")
@@ -299,6 +301,23 @@ class InvoiceActionView(FinanceView):
         else:
             messages.success(request, msg)
         return redirect(target)
+
+
+class AllocationRemoveView(FinanceView):
+    """Take a payment allocation off an invoice; the money returns to buyer credit (D88)."""
+
+    http_method_names = ["post"]
+
+    def post(self, request, pk):
+        allocation = get_object_or_404(PaymentAllocation, pk=pk)
+        try:
+            invoice = services.remove_allocation(request.user, allocation, request.POST.get("reason", ""))
+        except ValidationError as exc:
+            messages.error(request, error_text(exc))
+            invoice = allocation.invoice
+        else:
+            messages.success(request, "Alokasi dilepas; dananya kembali menjadi kredit pembeli.")
+        return redirect("invoicing:invoice_detail", invoice.pk)
 
 
 # --- Payments ---------------------------------------------------------------------------

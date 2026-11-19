@@ -350,3 +350,32 @@ class StageAdvanceUndoTests(TestCase):
         self.client.post(reverse("farm:cycle_stage_undo", args=[self.cycle.pk]), {"reason": "salah"})
         self.cycle.refresh_from_db()
         self.assertEqual(self.cycle.stage, "PLANTING")
+
+
+class HarvestPreviewTests(TestCase):
+    """D85: harvest review numbers and soft warnings."""
+
+    def setUp(self):
+        self.cycle = CropCycle.objects.create(
+            element=FarmElement.objects.create(name="L", element_type="OPEN_FIELD", area_m2=100),
+            variety=Variety.objects.create(name="Cabai", crop="Cabai"), planting_start_date=date(2026, 8, 1),
+            stage=CropCycle.Stage.HARVESTING, expected_yield_kg=Decimal("100"))
+
+    def test_warnings_over_expected_and_batch_average(self):
+        self.assertEqual(services.preview_harvest(self.cycle, 50, 10)["warnings"], [])
+        services.record_harvest(self.cycle, 10, 0)
+        p = services.preview_harvest(self.cycle, 150, 10)
+        self.assertEqual(p["actual_after_kg"], Decimal("170"))
+        self.assertEqual(len(p["warnings"]), 2)  # > 150% of expected, > 3x batch average
+
+    def test_cost_per_kg_preview_matches_saved_batch(self):
+        from farm.models import ExpenseCategory
+
+        manager = make_user("m", ROLE_MANAGER)
+        e = services.create_expense(ExpenseCategory.objects.get(code="TENAGA_KERJA"), "ELEMENT", 90000,
+                                    element=self.cycle.element, cycle=self.cycle)
+        services.approve_expense(e, manager)
+        p = services.preview_harvest(self.cycle, 20, 10)
+        batch = services.record_harvest(self.cycle, 20, 10)
+        self.assertEqual((p["pool_idr"], p["unit_cogs_high"], p["unit_cogs_low"]),
+                         (batch.absorbed_cost_idr, batch.unit_cogs_high_idr, batch.unit_cogs_low_idr))

@@ -728,6 +728,43 @@ def record_harvest(
     return batch
 
 
+HARVEST_OVER_EXPECTED_PCT = Decimal("150")
+HARVEST_OVER_BATCH_AVG = Decimal("3")
+
+
+def preview_harvest(cycle: CropCycle, high_quality_kg, low_quality_kg=ZERO) -> dict:
+    """Read-only review before saving a harvest (D85): what the batch would absorb and cost per kg,
+    expected vs actual yield after it, and soft warnings (> 150% of expected, > 3× the batch average)."""
+    from core.numbers import format_id_decimal as fmt_kg
+
+    high, low = q_qty(high_quality_kg or 0), q_qty(low_quality_kg or 0)
+    pool = Expense.objects.filter(cycle=cycle, status=Expense.Status.APPROVED, absorbed_by__isnull=True)
+    total = pool.aggregate(s=Sum("amount_idr"))["s"] or ZERO
+    split = (split_cost_by_grade(total, high, low, _price_of(cycle.variety, Grade.HIGH),
+                                 _price_of(cycle.variety, Grade.LOW)) if high + low > 0 else None)
+    summary = cycle_yield_summary(cycle)
+    batches = cycle.harvests.count()
+    sellable = high + low
+    after = summary["actual_kg"] + sellable
+    expected = cycle.expected_yield_kg
+    warnings = []
+    if expected and after > expected * HARVEST_OVER_EXPECTED_PCT / 100:
+        warnings.append(f"Total panen siklus menjadi {fmt_kg(after)} kg, lebih dari 150% perkiraan "
+                        f"({fmt_kg(expected)} kg). Periksa angka atau satuan.")
+    avg = (summary["actual_kg"] / batches) if batches else None
+    if avg and sellable > avg * HARVEST_OVER_BATCH_AVG:
+        warnings.append(f"Batch ini {fmt_kg(sellable)} kg, lebih dari 3× rata-rata batch sebelumnya "
+                        f"({fmt_kg(avg)} kg).")
+    return {
+        "sellable_kg": sellable, "high_kg": high, "low_kg": low, "pool_idr": q_money(total), "expenses": pool.count(),
+        "unit_cogs_high": split.unit_cogs_high if split else ZERO,
+        "unit_cogs_low": split.unit_cogs_low if split else ZERO,
+        "expected_kg": expected, "actual_after_kg": after,
+        "pct_after": (after / expected * 100).quantize(Decimal("0.1")) if expected else None,
+        "batch_avg_kg": avg.quantize(QTY_STEP) if avg else None, "warnings": warnings,
+    }
+
+
 def _absorb_and_stock(batch: HarvestBatch, cycle: CropCycle) -> None:
     high, low = batch.high_quality_kg, batch.low_quality_kg
     if high + low == 0:

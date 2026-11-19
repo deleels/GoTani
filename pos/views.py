@@ -1,6 +1,7 @@
 """POS register, checkout, receipt and void (thin views over `pos.services`)."""
 
 from datetime import date
+from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -20,6 +21,7 @@ from .models import SaleOrder
 
 
 def catalog_payload():
+    big = services.pos_big_line_thresholds()
     return [
         {
             "id": p.pk,
@@ -29,6 +31,7 @@ def catalog_payload():
             "price": str(p.selling_price_idr),
             "available": str(p.available_kg),
             "step": str(p.pos_step_kg),
+            "warn_kg": str(big.get(p.pk, services.POS_BIG_LINE_MIN_KG).quantize(Decimal("0.001"))),
         }
         for p in services.pos_catalog()
     ]

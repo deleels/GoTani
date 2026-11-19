@@ -286,3 +286,72 @@ class MassBalanceTests(InventoryFixtures):
     def test_seed_demo_passes_mass_balance(self):
         call_command("seed_demo", stdout=StringIO())
         call_command("check_mass_balance", stdout=StringIO())
+
+
+class SpoilageReversalTests(TestCase):
+    """D86: same-day spoilage reversal by OWNER/MANAGER as a new ledger movement."""
+
+    def setUp(self):
+        from datetime import date
+
+        from farm import services as farm_services
+        from farm.models import CropCycle, FarmElement, Variety
+        from pos.tests import make_user
+        from farm.bootstrap import ROLE_MANAGER, ROLE_WORKER
+
+        self.manager, self.worker = make_user("m", ROLE_MANAGER), make_user("w", ROLE_WORKER)
+        cycle = CropCycle.objects.create(element=FarmElement.objects.create(name="E", element_type="OPEN_FIELD", area_m2=1),
+                                         variety=Variety.objects.create(name="V", crop="C"),
+                                         planting_start_date=date(2026, 8, 1), stage=CropCycle.Stage.HARVESTING)
+        self.lot = farm_services.record_harvest(cycle, 10, 0).lots.get()
+
+    def test_reverse_restores_lot_and_keeps_balance(self):
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        from core.models import AuditLog
+        from inventory.services import check_mass_balance, record_spoilage, reverse_spoilage
+
+        rec = record_spoilage(self.lot, 4, "ROT")
+        with self.assertRaises(PermissionDenied):
+            reverse_spoilage(rec, self.worker, "salah")
+        with self.assertRaises(ValidationError):
+            reverse_spoilage(rec, self.manager, "")
+        reverse_spoilage(rec, self.manager, "salah lot")
+        self.lot.refresh_from_db()
+        self.assertEqual(self.lot.qty_remaining_kg, Decimal("10"))
+        self.assertEqual(self.lot.ledger.filter(movement_type="SPOILAGE_REVERSAL").count(), 1)
+        self.assertEqual(check_mass_balance(), [])
+        self.assertTrue(AuditLog.objects.filter(action="SPOILAGE_REVERSAL").exists())
+        with self.assertRaises(ValidationError):
+            reverse_spoilage(rec, self.manager, "lagi")
+
+    def test_only_same_day(self):
+        from datetime import timedelta
+
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+
+        from inventory.services import record_spoilage, reverse_spoilage
+
+        rec = record_spoilage(self.lot, 1, "ROT", recorded_at=timezone.now() - timedelta(days=1))
+        with self.assertRaises(ValidationError):
+            reverse_spoilage(rec, self.manager, "telat")
+
+    def test_view_and_analytics_exclude_reversed(self):
+        from django.urls import reverse
+
+        from inventory.services import record_spoilage
+
+        rec = record_spoilage(self.lot, 2, "ROT")
+        self.client.force_login(self.manager)
+        page = self.client.get(reverse("farm:spoilage")).content.decode()
+        self.assertIn(reverse("farm:spoilage_reverse", args=[rec.pk]), page)
+        self.client.post(reverse("farm:spoilage_reverse", args=[rec.pk]), {"reason": "salah"})
+        rec.refresh_from_db()
+        self.assertIsNotNone(rec.reversed_at)
+        from django.utils import timezone
+
+        from reports.services import dashboard_metrics
+
+        today = timezone.localdate()
+        self.assertEqual(dashboard_metrics(today, today)["kpis"]["spoilage_loss"], Decimal("0"))

@@ -56,7 +56,8 @@
     <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
       <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4"><h2 class="text-lg font-semibold">Tambah stok {{ item.name }}</h2>
         <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button></div>
-      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+      {{ input_costs|json_script:"input-costs" }}
+      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <p class="mt-2 text-xs text-stone-400">Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah.</p>
         <div class="mt-auto flex justify-end gap-2 pt-6"><button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm">Batal</button>

@@ -565,3 +565,24 @@ class NumberFormatAndStepTests(PosFixtures):
         self.assertEqual({p["id"]: p["step"] for p in products}[self.high.pk], "0.250")
         page = self.client.get(reverse("pos:register")).content.decode()
         self.assertIn('data-num="kg"', page)
+
+
+class BigLineWarningTests(PosFixtures):
+    """D87: the POS warns when a line is > 3x the 30-day average line, never below 20 kg."""
+
+    def test_thresholds(self):
+        from django.utils import timezone
+
+        now = timezone.now()
+        self.sell({self.high.pk: 10}, at=now)
+        self.sell({self.high.pk: 2}, at=now)
+        self.sell({self.low.pk: 1}, at=now)
+        t = services.pos_big_line_thresholds()
+        self.assertEqual(t[self.high.pk], D("20"))  # avg 6 x 3 = 18 → floor 20
+        self.sell({self.high.pk: 30}, at=now)
+        self.assertEqual(services.pos_big_line_thresholds()[self.high.pk], D("42"))  # avg 14 x 3
+        self.client.force_login(self.cashier)
+        from django.urls import reverse
+
+        products = self.client.get(reverse("pos:stock"), HTTP_ACCEPT="application/json").json()["products"]
+        self.assertEqual({p["id"]: p["warn_kg"] for p in products}[self.low.pk], "20.000")
