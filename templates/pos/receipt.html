@@ -22,7 +22,7 @@
   <button onclick="window.print()" class="rounded bg-emerald-600 px-3 py-1.5 text-white">Cetak</button>
   <a href="{% url 'pos:register' %}" class="rounded bg-stone-100 px-3 py-1.5">Transaksi baru</a>
   {% if can_void %}
-  <form method="post" action="{% url 'pos:void' order.pk %}" class="ml-auto" onsubmit="return confirm('Batalkan seluruh order {{ order.order_number }}? Stok akan dikembalikan.')">{% csrf_token %}
+  <form method="post" action="{% url 'pos:void' order.pk %}" class="ml-auto" data-confirm-title="Batalkan order {{ order.order_number }}?" data-confirm="Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya." data-confirm-action="Batalkan order" data-confirm-danger>{% csrf_token %}
     <button class="rounded border border-red-300 px-3 py-1.5 text-red-700">Batalkan order</button>
   </form>
   {% endif %}

@@ -32,9 +32,13 @@ PRECACHE = [
 
 @lru_cache(maxsize=1)
 def asset_version() -> str:
-    """Changes whenever a pre-cached file or the worker itself changes → triggers the update banner."""
+    """Changes whenever any app static file or the worker itself changes → new cache + update banner.
+
+    Every same-origin /static/ file is served cache-first, so all of them must feed the version,
+    not only the pre-cached ones; otherwise an edited script would never reach installed clients."""
     digest = hashlib.sha256()
-    for path in [*(STATIC_DIR.parent / p for p in PRECACHE), SW_TEMPLATE]:
+    files = sorted(p for p in STATIC_DIR.rglob("*") if p.is_file())
+    for path in [*files, SW_TEMPLATE]:
         try:
             digest.update(path.read_bytes())
         except OSError:

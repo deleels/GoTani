@@ -13,6 +13,7 @@ urlpatterns = [
     path("preharvest/new/", views.PreHarvestCheckView.as_view(), name="preharvest_new"),
     path("elements/<int:pk>/toggle/", views.ElementToggleView.as_view(), name="element_toggle"),
     path("cycles/<int:pk>/stage/", views.AdvanceStageView.as_view(), name="cycle_stage"),
+    path("cycles/<int:pk>/stage/undo/", views.UndoStageView.as_view(), name="cycle_stage_undo"),
     path("activities/", views.ActivitiesView.as_view(), name="activities"),
     path("activities/<int:pk>/delete/", views.ActivityDeleteView.as_view(), name="activity_delete"),
     path("inputs/", views.InputsView.as_view(), name="inputs"),

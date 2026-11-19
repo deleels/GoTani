@@ -87,7 +87,7 @@
             {% else %}<td class="px-4 py-3">{% if a.input_item %}<a class="hover:underline" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}—{% endif %}</td><td class="px-4 py-3 text-right">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td>{% endif %}
             <td class="px-4 py-3 text-stone-600">{{ a.application_method }}{% if a.application_method and a.notes %} · {% endif %}{{ a.notes|truncatechars:80 }}</td>
             <td class="px-4 py-3">{{ a.recorded_by|default:"—" }}</td>
-            {% if roles.finance %}<td class="px-4 py-3 text-right"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" onsubmit="return confirm('Hapus kegiatan ini? Stok input dikembalikan.')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="text-xs text-red-600 underline">Hapus</button></form></td>{% endif %}
+            {% if roles.finance %}<td class="px-4 py-3 text-right"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" data-confirm-title="Hapus kegiatan?" data-confirm="Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen)." data-confirm-action="Hapus kegiatan" data-confirm-danger>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="text-xs text-red-600 underline">Hapus</button></form></td>{% endif %}
           </tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=8 msg="Belum ada laporan jenis ini. Klik “Laporan Baru” untuk mencatat pekerjaan lapangan." %}{% endfor %}
         </tbody>

@@ -38,16 +38,7 @@
           {% if c.expected_harvest_date %}<span class="text-xs {% if c.overdue %}rounded-full bg-red-100 px-2 py-0.5 text-red-800{% else %}text-stone-500{% endif %}">Perkiraan panen {{ c.expected_harvest_date|date:"d-m-Y" }}{% if c.overdue %} · terlewat{% endif %}</span>{% endif %}
           {% if roles.finance %}<a class="text-emerald-700 underline" href="{% url 'reports:trace_cycle' c.pk %}">Telusuri</a>{% endif %}
         </div>
-        {% if c.next_stages %}
-        <form method="post" action="{% url 'farm:cycle_stage' c.pk %}" class="mt-2 flex flex-wrap items-center gap-2 text-sm">{% csrf_token %}
-          <select name="stage" class="rounded border border-stone-300 px-2 py-1">
-            {% for value, label in c.next_stages %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
-          </select>
-          <button class="rounded bg-emerald-600 px-3 py-1 text-white hover:bg-emerald-700"
-                  onclick="return this.form.stage.value !== 'CLEARING' || confirm('Tahap Pembersihan menutup siklus. Lanjutkan?')">Majukan tahap</button>
-          <span class="text-xs text-stone-400">Tahap hanya bisa maju.</span>
-        </form>
-        {% endif %}
+        {% if c.panel.stages or c.panel.undo %}{% include "farm/_stage_form.html" with cycle=c panel=c.panel wrap_class="mt-2" %}{% endif %}
         {% endwith %}{% else %}
         <p class="mt-2 text-sm text-stone-500">Tidak ada siklus aktif.</p>
         {% endif %}

@@ -322,7 +322,7 @@ class Command(BaseCommand):
         step = (start_days_ago - end_days_ago) / max(len(stages) - 1, 1)
         for i, stage in enumerate(stages):
             days = round(start_days_ago - i * step)
-            self.on(days, 6, lambda ts, stage=stage: farm.advance_cycle_stage(self.cycles[key], stage), 30)
+            self.on(days, 6, lambda ts, stage=stage: farm.advance_cycle_stage(self.cycles[key], stage, allow_skip=True), 30)
 
     def _activity(self, key, days_ago, activity_type, item=None, qty="0", method="", notes=""):
         def run(ts):

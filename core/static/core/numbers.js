@@ -69,7 +69,7 @@
       var n = parse(el.value);
       if (!isNaN(n)) el.value = String(n);
     });
-  }, true);
+  }); // bubble phase: runs only for a submit the confirm dialog (capture phase) lets through
 
   // Server-rendered values are already Indonesian; normalise anything else (e.g. "25000.00").
   function init(root) {

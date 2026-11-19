@@ -191,11 +191,11 @@ function geoPage() {
     },
     async save(p, body) { const r = await this.post(`${base}${p.id}/`, body); if (r) { Object.assign(p, r); this.refreshLayer(p); } },
     async useArea(p) {
-      if (!confirm(`Ganti luas tercatat ${p.element} menjadi ${this.fmtM2(p.area_m2)} m²?`)) return;
+      if (!(await gtConfirm({ title: "Pakai luas dari peta?", body: `Luas tercatat ${p.element} diganti menjadi ${this.fmtM2(p.area_m2)} m². Angka ini dipakai untuk analitik kg/m².`, action: "Pakai luas peta" }))) return;
       const r = await this.post(`${base}${p.id}/?action=use_area`, {}); if (r) Object.assign(p, r);
     },
     async remove(p, fromMap = false) {
-      if (!p || (!fromMap && !confirm(`Hapus poligon ${p.name}?`))) return;
+      if (!p || (!fromMap && !(await gtConfirm({ title: `Hapus poligon ${p.name}?`, body: "Batas di peta dan riwayat data satelitnya dihapus. Elemen kebun tidak terpengaruh.", action: "Hapus poligon", danger: true })))) return;
       const r = await this.post(`${base}${p.id}/?action=delete`, {});
       if (r) {
         this.polygons = this.polygons.filter((x) => x.id !== p.id);

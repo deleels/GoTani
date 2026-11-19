@@ -181,10 +181,11 @@ class AuditLogView(RoleRequiredMixin, View):
     allowed_roles = (ROLE_OWNER, ROLE_MANAGER)
     ACTIONS = {
         "PRICE_CHANGE": "Harga", "POS_STEP_CHANGE": "Langkah kasir", "PKP_CHANGE": "Status PKP",
-        "PRODUCT_ADMIN_EDIT": "Produk (admin)",
+        "PRODUCT_ADMIN_EDIT": "Produk (admin)", "STAGE_ADVANCE": "Tahap maju", "STAGE_UNDO": "Tahap dibatalkan",
     }
 
-    FIELDS = {"selling_price_idr": "harga/kg", "pos_step_kg": "langkah (kg)", "is_pkp": "PKP", "tax_id": "pajak"}
+    FIELDS = {"selling_price_idr": "harga/kg", "pos_step_kg": "langkah (kg)", "is_pkp": "PKP", "tax_id": "pajak", "stage": "tahap",
+              "is_active": "aktif"}
 
     def get(self, request):
         entries = AuditLog.objects.select_related("actor")

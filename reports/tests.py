@@ -76,7 +76,7 @@ class SiteFixtures(TestCase):
         )
         labour = farm.create_expense(cat["TENAGA_KERJA"], "ELEMENT", 1150000, element=cls.element, cycle=cls.cycle)
         farm.approve_expense(labour, cls.owner)
-        farm.advance_cycle_stage(cls.cycle, CropCycle.Stage.HARVESTING)
+        farm.advance_cycle_stage(cls.cycle, CropCycle.Stage.HARVESTING, allow_skip=True)
         cls.batch = farm.record_harvest(cls.cycle, 100, 50, harvested_at=timezone.now() - timedelta(days=1))
         cls.lot_high = cls.batch.lots.get(product=cls.high)
         cls.lot_low = cls.batch.lots.get(product=cls.low)

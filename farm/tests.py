@@ -306,7 +306,7 @@ class ServiceFixtures(Fixtures):
         )
 
     def to_harvesting(self, cycle=None):
-        return services.advance_cycle_stage(cycle or self.cycle, St.HARVESTING)
+        return services.advance_cycle_stage(cycle or self.cycle, St.HARVESTING, allow_skip=True)
 
     def approved_expense(self, amount, cycle=None, category="TENAGA_KERJA"):
         cycle = cycle or self.cycle
@@ -330,32 +330,32 @@ class ServiceFixtures(Fixtures):
 
 class CycleStageTests(ServiceFixtures):
     def test_advances_forward_one_step(self):
-        self.assertEqual(services.advance_cycle_stage(self.cycle, St.SPROUTING).stage, St.SPROUTING)
+        self.assertEqual(services.advance_cycle_stage(self.cycle, St.SPROUTING, allow_skip=True).stage, St.SPROUTING)
 
     def test_forward_skip_allowed(self):
         self.assertEqual(self.to_harvesting().stage, St.HARVESTING)
 
     def test_backward_rejected(self):
-        services.advance_cycle_stage(self.cycle, St.FLOWERING)
+        services.advance_cycle_stage(self.cycle, St.FLOWERING, allow_skip=True)
         with self.assertRaises(ValidationError):
-            services.advance_cycle_stage(self.cycle, St.VEGETATIVE)
+            services.advance_cycle_stage(self.cycle, St.VEGETATIVE, allow_skip=True)
         self.cycle.refresh_from_db()
         self.assertEqual(self.cycle.stage, St.FLOWERING)
 
     def test_same_stage_rejected(self):
         with self.assertRaises(ValidationError):
-            services.advance_cycle_stage(self.cycle, St.PLANTING)
+            services.advance_cycle_stage(self.cycle, St.PLANTING, allow_skip=True)
 
     def test_unknown_stage_rejected(self):
         with self.assertRaises(ValidationError):
-            services.advance_cycle_stage(self.cycle, "ROTTING")
+            services.advance_cycle_stage(self.cycle, "ROTTING", allow_skip=True)
 
     def test_clearing_closes_cycle_and_freezes_it(self):
         cycle = services.close_cycle(self.cycle)
         self.assertFalse(cycle.is_active)
         self.assertIsNotNone(cycle.closed_at)
         with self.assertRaises(ValidationError):
-            services.advance_cycle_stage(cycle, St.CLEARING)
+            services.advance_cycle_stage(cycle, St.CLEARING, allow_skip=True)
 
     def test_start_cycle_requires_free_active_element(self):
         with self.assertRaises(ValidationError):
@@ -547,9 +547,9 @@ class ActivityUsageTests(ServiceFixtures):
         self.assertEqual(Expense.objects.get(source_activity=a2).category.code, "BIBIT")
 
     def test_stage_snapshot_recorded(self):
-        services.advance_cycle_stage(self.cycle, St.VEGETATIVE)
+        services.advance_cycle_stage(self.cycle, St.VEGETATIVE, allow_skip=True)
         act = services.log_activity(self.cycle, Act.SCOUTING)
-        services.advance_cycle_stage(self.cycle, St.FLOWERING)
+        services.advance_cycle_stage(self.cycle, St.FLOWERING, allow_skip=True)
         act.refresh_from_db()
         self.assertEqual(act.stage_at_activity, St.VEGETATIVE)
 
@@ -802,7 +802,7 @@ class HarvestTests(ServiceFixtures):
         return {lot.product.grade: lot for lot in batch.lots.select_related("product")}
 
     def test_harvest_only_in_harvesting_stage(self):
-        services.advance_cycle_stage(self.cycle, St.FRUITING)
+        services.advance_cycle_stage(self.cycle, St.FRUITING, allow_skip=True)
         with self.assertRaises(ValidationError):
             services.record_harvest(self.cycle, 10)
         self.to_harvesting()

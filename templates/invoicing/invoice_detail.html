@@ -12,11 +12,11 @@
   <div class="flex flex-wrap gap-2">
     {% if invoice.status == 'DRAFT' %}
       <a href="{% url 'invoicing:invoice_edit' invoice.pk %}" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Ubah</a>
-      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'delete' %}" onsubmit="return confirm('Hapus draf ini?')">{% csrf_token %}<button class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Hapus</button></form>
+      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'delete' %}" data-confirm-title="Hapus draf?" data-confirm="Draf ini belum memotong stok dan akan dihapus permanen." data-confirm-action="Hapus draf" data-confirm-danger>{% csrf_token %}<button class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Hapus</button></form>
     {% elif invoice.status == 'ISSUED' %}
       <a href="{% url 'invoicing:invoice_print' invoice.pk %}" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Cetak A4</a>
       {% if outstanding %}<a href="{% url 'invoicing:buyer_payment_new' invoice.buyer_id %}?invoice={{ invoice.pk }}" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">Catat Pembayaran</a>{% endif %}
-      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'void' %}" onsubmit="return confirm('Batalkan {{ invoice }}? Stok dikembalikan ke lot asal dan pembayaran menjadi kredit pembeli.')">{% csrf_token %}<button class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Batalkan</button></form>
+      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'void' %}" data-confirm-title="Batalkan {{ invoice }}?" data-confirm="Stok dikembalikan ke lot asal dan pembayaran yang sudah dialokasikan menjadi kredit pembeli. Tidak bisa dibatalkan." data-confirm-action="Batalkan invoice" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="rounded-lg border border-red-200 px-4 py-2 text-sm text-red-700 hover:bg-red-50">Batalkan</button></form>
     {% endif %}
   </div>
 </div>

@@ -11,7 +11,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Max, Sum
 from django.utils import timezone
 
 from inventory.models import Grade, Product, StockLedger, StockLot
@@ -155,23 +155,40 @@ def harvest_readiness_warning(cycle: CropCycle, new_stage: str) -> str | None:
     return None
 
 
+def _cycle_marks(cycle: CropCycle) -> dict:
+    """Highest ids of everything recorded on a cycle; an undo is allowed only while they are unchanged."""
+    def top(qs):
+        return qs.aggregate(m=Max("id"))["m"] or 0
+
+    return {
+        "activity": top(ActivityLog.objects.filter(cycle=cycle)),
+        "harvest": top(HarvestBatch.objects.filter(cycle=cycle)),
+        "check": top(PreHarvestCheck.objects.filter(cycle=cycle)),
+        "expense": top(Expense.objects.filter(cycle=cycle)),
+    }
+
+
 @transaction.atomic
-def advance_cycle_stage(cycle: CropCycle, new_stage: str) -> CropCycle:
+def advance_cycle_stage(cycle: CropCycle, new_stage: str, actor=None, allow_skip: bool = False) -> CropCycle:
     """Move a cycle strictly forward in `CropCycle.STAGE_ORDER` (rule 1).
 
-    Skipping intermediate stages is allowed; staying put or going back is not.
-    Reaching CLEARING closes the cycle (rule 8).
+    Only the next stage unless `allow_skip` ("Lewati tahap", D84); staying put or going back is not
+    allowed. Reaching CLEARING closes the cycle (rule 8). Logged for the same-day undo (D84).
     """
     cycle = CropCycle.objects.select_for_update().get(pk=cycle.pk)
     if new_stage not in CropCycle.STAGE_ORDER:
         raise ValidationError(f"Tahap tidak dikenal: {new_stage}.")
     if not cycle.is_active:
         raise ValidationError("Siklus sudah ditutup; tahap tidak dapat diubah.")
-    if CropCycle.STAGE_ORDER.index(new_stage) <= cycle.stage_index:
+    target = CropCycle.STAGE_ORDER.index(new_stage)
+    if target <= cycle.stage_index:
         raise ValidationError(
             f"Tahap hanya boleh maju: {cycle.get_stage_display()} → "
             f"{CropCycle.Stage(new_stage).label} ditolak."
         )
+    if target > cycle.stage_index + 1 and not allow_skip:
+        raise ValidationError("Melewati tahap harus dikonfirmasi dengan mencentang \"Lewati tahap\".")
+    before = {"stage": cycle.stage, "is_active": cycle.is_active}
     cycle.stage = new_stage
     fields = ["stage"]
     if new_stage == CropCycle.Stage.CLEARING:
@@ -179,11 +196,64 @@ def advance_cycle_stage(cycle: CropCycle, new_stage: str) -> CropCycle:
         cycle.closed_at = timezone.now()
         fields += ["is_active", "closed_at"]
     cycle.save(update_fields=fields)
+    from core.audit import log_event
+
+    log_event(actor, "STAGE_ADVANCE", cycle,
+              f"{cycle}: {CropCycle.Stage(before['stage']).label} → {cycle.get_stage_display()}",
+              before=before, after={"stage": cycle.stage, "is_active": cycle.is_active, "marks": _cycle_marks(cycle)})
     return cycle
 
 
-def close_cycle(cycle: CropCycle) -> CropCycle:
-    return advance_cycle_stage(cycle, CropCycle.Stage.CLEARING)
+def last_stage_event(cycle: CropCycle):
+    from core.models import AuditLog
+
+    return (AuditLog.objects.filter(target_type="farm.cropcycle", target_id=cycle.pk,
+                                    action__in=["STAGE_ADVANCE", "STAGE_UNDO"]).order_by("-id").first())
+
+
+def stage_undo_block(cycle: CropCycle, today=None):
+    """(advance entry, None) when the last advance can be undone now, else (entry|None, reason) — D84."""
+    entry = last_stage_event(cycle)
+    if entry is None or entry.action != "STAGE_ADVANCE":
+        return None, "Tidak ada perpindahan tahap yang bisa dibatalkan."
+    today = today or timezone.localdate()
+    if timezone.localtime(entry.created_at).date() != today:
+        return entry, "Pembatalan hanya bisa di hari yang sama dengan perpindahan tahap."
+    if _cycle_marks(cycle) != entry.after.get("marks"):
+        return entry, "Sudah ada catatan baru (kegiatan, panen, cek pra-panen, atau biaya) sejak tahap dimajukan."
+    if not cycle.is_active:
+        other = CropCycle.objects.filter(element_id=cycle.element_id).exclude(pk=cycle.pk)
+        if other.filter(is_active=True).exists() or other.filter(pk__gt=cycle.pk).exists():
+            return entry, "Elemen ini sudah punya siklus baru, jadi siklus lama tidak bisa dibuka kembali."
+    return entry, None
+
+
+@transaction.atomic
+def undo_last_advance(cycle: CropCycle, actor, reason: str) -> CropCycle:
+    """Exception to rule 1 (D84): OWNER/MANAGER may undo the *last* advance the same day, with a reason,
+    while nothing was recorded since. Undoing CLEARING reopens the cycle (if the element has no new cycle)."""
+    if not user_has_role(actor, ROLE_OWNER, ROLE_MANAGER):
+        raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat membatalkan perpindahan tahap.")
+    if not (reason or "").strip():
+        raise ValidationError("Alasan pembatalan wajib diisi.")
+    cycle = CropCycle.objects.select_for_update().get(pk=cycle.pk)
+    entry, blocked = stage_undo_block(cycle)
+    if blocked:
+        raise ValidationError(blocked)
+    current = cycle.get_stage_display()
+    cycle.stage = entry.before["stage"]
+    cycle.is_active = True
+    cycle.closed_at = None
+    cycle.save(update_fields=["stage", "is_active", "closed_at"])
+    from core.audit import log_event
+
+    log_event(actor, "STAGE_UNDO", cycle, f"{cycle}: {current} → {cycle.get_stage_display()} (dibatalkan)",
+              before={"stage": entry.after["stage"]}, after={"stage": cycle.stage}, reason=reason.strip())
+    return cycle
+
+
+def close_cycle(cycle: CropCycle, actor=None) -> CropCycle:
+    return advance_cycle_stage(cycle, CropCycle.Stage.CLEARING, actor=actor, allow_skip=True)
 
 
 def unabsorbed_cycle_cost(cycle: CropCycle) -> Decimal:

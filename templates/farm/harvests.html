@@ -44,7 +44,7 @@
             {% if roles.finance %}
             <td class="p-2 text-right">{{ b.absorbed_cost_idr|rupiah }}</td>
             <td class="whitespace-nowrap p-2 text-right">{{ b.unit_cogs_high_idr|rupiah }} · {{ b.unit_cogs_low_idr|rupiah }}</td>
-            <td class="p-2"><form method="post" action="{% url 'farm:harvest_delete' b.pk %}" onsubmit="return confirm('Hapus batch panen #{{ b.pk }}?')">{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form></td>
+            <td class="p-2"><form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="Hapus batch panen #{{ b.pk }}?" data-confirm="Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut." data-confirm-action="Hapus batch" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form></td>
             {% endif %}
           </tr>
         {% empty %}<tr><td colspan="9" class="p-3 text-stone-400">Belum ada panen.</td></tr>{% endfor %}

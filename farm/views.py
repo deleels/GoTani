@@ -89,11 +89,7 @@ class CyclesView(FarmPage):
             if cycle:
                 cycle.days = cycle.days_growing(today)
                 cycle.overdue = cycle.is_harvest_overdue(today)
-                cycle.next_stages = [
-                    (value, label)
-                    for value, label in CropCycle.Stage.choices
-                    if CropCycle.STAGE_ORDER.index(value) > cycle.stage_index
-                ]
+                cycle.panel = stage_panel(cycle, self.roles.finance)
         ctx["elements"] = elements
         ctx["closed_cycles"] = (
             CropCycle.objects.filter(is_active=False)
@@ -132,6 +128,42 @@ class ElementToggleView(ActionView):
         return services.set_element_active(element, not element.is_active)
 
 
+class UndoStageView(ActionView):
+    """Same-day undo of the last stage advance, with a reason (D84)."""
+
+    allowed_roles = FINANCE_ROLES
+    model = CropCycle
+    success_url_name = "farm:cycles"
+    success_message = "Perpindahan tahap dibatalkan."
+
+    def get_success_url(self, cycle, result):
+        return reverse("farm:cycle_detail", args=[cycle.pk])
+
+    def perform(self, cycle):
+        return services.undo_last_advance(cycle, self.request.user, self.request.POST.get("reason", ""))
+
+
+def stage_panel(cycle, finance: bool):
+    """Data for the Majukan tahap form + dialog (D84): forward stages, check result, write-off, undo."""
+    stages = [{"value": v, "label": str(lbl)} for v, lbl in CropCycle.Stage.choices
+              if CropCycle.STAGE_ORDER.index(v) > cycle.stage_index] if cycle.is_active else []
+    check = services.latest_preharvest_check(cycle)
+    panel = {
+        "dom_id": f"stage-{cycle.pk}", "cycle": str(cycle), "current": cycle.get_stage_display(), "stages": stages,
+        "check_pct": None if check is None else float(check.completed_pct),
+        "harvesting_index": CropCycle.STAGE_ORDER.index(CropCycle.Stage.HARVESTING),
+        "orders": {v: CropCycle.STAGE_ORDER.index(v) for v in CropCycle.STAGE_ORDER},
+        "writeoff": float(services.unabsorbed_cycle_cost(cycle)) if finance else None,
+        "undo": None,
+    }
+    if finance:
+        entry, blocked = services.stage_undo_block(cycle)
+        if entry is not None and entry.action == "STAGE_ADVANCE" and not blocked:
+            panel["undo"] = {"from": CropCycle.Stage(entry.after["stage"]).label,
+                             "to": CropCycle.Stage(entry.before["stage"]).label}
+    return panel
+
+
 class AdvanceStageView(ActionView):
     allowed_roles = FARM_ROLES
     model = CropCycle
@@ -143,7 +175,8 @@ class AdvanceStageView(ActionView):
         if not form.is_valid():
             raise ValidationError("Tahap tidak valid.")
         warning = services.harvest_readiness_warning(cycle, form.cleaned_data["stage"])
-        result = services.advance_cycle_stage(cycle, form.cleaned_data["stage"])
+        result = services.advance_cycle_stage(cycle, form.cleaned_data["stage"], actor=self.request.user,
+                                              allow_skip=bool(self.request.POST.get("skip")))
         if warning:
             messages.warning(self.request, warning)  # rule 14: warn, never block
         return result
@@ -540,8 +573,7 @@ class CycleDetailView(FarmPage):
             days=c.days_growing(today), overdue=c.is_harvest_overdue(today),
             latest_check=services.latest_preharvest_check(c),
             checklist=PreHarvestChecklistItem.objects.filter(is_active=True),
-            next_stages=[(v, lbl) for v, lbl in CropCycle.Stage.choices
-                         if CropCycle.STAGE_ORDER.index(v) > c.stage_index] if c.is_active else [],
+            panel=stage_panel(c, self.roles.finance),
             stage_choices=CropCycle.Stage.choices, detail_tab=self.request.GET.get("tab", "timeline"),
             sheet_open=self.request.method == "POST",
         )

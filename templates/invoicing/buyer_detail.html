@@ -62,7 +62,7 @@
             <td class="px-4 py-3 text-right font-medium">{{ p.amount_idr|rupiah }}</td>
             <td class="px-4 py-3 text-right">{{ p.unallocated_idr|rupiah }}</td>
             <td class="px-4 py-3 text-right">{% if roles.label == 'OWNER' and not p.allocations.all %}
-              <form method="post" action="{% url 'invoicing:buyer_payment_delete' p.pk %}" onsubmit="return confirm('Hapus pembayaran ini?')">{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form>{% endif %}</td>
+              <form method="post" action="{% url 'invoicing:buyer_payment_delete' p.pk %}" data-confirm-title="Hapus pembayaran?" data-confirm="Pembayaran yang belum dialokasikan ini dihapus." data-confirm-action="Hapus pembayaran" data-confirm-danger>{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form>{% endif %}</td>
           </tr>
         {% empty %}
           <tr><td colspan="7" class="px-4 py-12 text-center"><p class="font-medium">Belum ada pembayaran.</p><p class="mt-1 text-sm text-stone-500">Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit.</p></td></tr>
@@ -92,7 +92,7 @@
   </div>
 
   <div class="mt-4">
-    <form method="post" onsubmit="return confirm('Ubah status pembeli?')">{% csrf_token %}<input type="hidden" name="action" value="toggle">
+    <form method="post" data-confirm-title="Ubah status pembeli?" data-confirm="Pembeli nonaktif tidak muncul saat membuat invoice baru; invoice lamanya tetap ada." data-confirm-action="Ubah status">{% csrf_token %}<input type="hidden" name="action" value="toggle">
       <button class="text-sm {% if buyer.is_active %}text-red-600{% else %}text-emerald-700{% endif %} underline">{% if buyer.is_active %}Nonaktifkan pembeli{% else %}Aktifkan kembali{% endif %}</button></form>
   </div>
 

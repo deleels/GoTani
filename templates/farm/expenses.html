@@ -30,7 +30,7 @@
             <td class="whitespace-nowrap p-2">
               <form method="post" action="{% url 'farm:expense_approve' e.pk %}" class="inline">{% csrf_token %}<button class="rounded bg-emerald-600 px-2 py-1 text-xs text-white">Setujui</button></form>
               <form method="post" action="{% url 'farm:expense_reject' e.pk %}" class="inline">{% csrf_token %}<button class="rounded bg-stone-200 px-2 py-1 text-xs">Tolak</button></form>
-              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" class="inline" onsubmit="return confirm('Hapus biaya ini?')">{% csrf_token %}<button class="px-1 text-xs text-red-600 underline">Hapus</button></form>
+              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" class="inline" data-confirm-title="Hapus biaya?" data-confirm="Biaya ini dihapus permanen." data-confirm-action="Hapus biaya" data-confirm-danger>{% csrf_token %}<button class="px-1 text-xs text-red-600 underline">Hapus</button></form>
             </td>
           </tr>
         {% empty %}<tr><td colspan="6" class="p-3 text-stone-400">Tidak ada biaya yang menunggu.</td></tr>{% endfor %}
@@ -61,7 +61,7 @@
               {% if e.status == 'APPROVED' and not e.absorbed_by and e.source == 'MANUAL' %}
               <form method="post" action="{% url 'farm:expense_revert' e.pk %}">{% csrf_token %}<button class="text-xs text-stone-600 underline">Kembalikan ke Menunggu</button></form>
               {% elif e.status == 'REJECTED' %}
-              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" onsubmit="return confirm('Hapus biaya ini?')">{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form>
+              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" data-confirm-title="Hapus biaya?" data-confirm="Biaya ini dihapus permanen." data-confirm-action="Hapus biaya" data-confirm-danger>{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form>
               {% endif %}
             </td>
           </tr>
