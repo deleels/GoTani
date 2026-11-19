@@ -15,16 +15,72 @@
   <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
     <div>
       <h1 class="text-2xl font-bold tracking-tight">Cuaca &amp; Satelit</h1>
-      <p class="mt-1 text-sm text-stone-500">{% subtitle "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kelembapan tanah, dan prakiraan cuaca 7 hari." worker="Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja." %}</p>
+      <p class="mt-1 text-sm text-stone-500">{% subtitle "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kondisi tanah, waktu semprot, kebutuhan air, dan prakiraan cuaca." worker="Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja." %}</p>
     </div>
-    <template x-if="canEdit"><p class="max-w-xs text-xs text-stone-500">Gambar poligon dengan ikon ⬠ di peta. Luas dihitung di server (0,02–1.000 ha); data satelit &amp; tanah butuh poligon ≥ 1 ha.</p></template>
+    <template x-if="canEdit"><p class="max-w-xs text-xs text-stone-500">Gambar poligon dengan ikon ⬠ di peta. Luas dihitung di server (0,02–1.000 ha); NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.</p></template>
   </div>
 
   {% if not has_location %}<p class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">Lokasi kebun belum diatur — {% if roles.label == 'OWNER' %}<a class="underline" href="{% url 'core:settings' %}">isi lintang/bujur di Pengaturan</a>{% else %}minta OWNER mengisinya di Pengaturan{% endif %} agar prakiraan cuaca tepat.</p>{% endif %}
 
   <div class="grid gap-5 lg:grid-cols-3">
     <div class="space-y-5 lg:col-span-2">
-      <div class="overflow-hidden rounded-xl border border-stone-200 bg-white"><div id="map" class="h-[60vh] min-h-[360px] w-full"></div></div>
+      <div class="overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <form class="relative flex gap-2 border-b border-stone-200 p-2" @submit.prevent="search()" role="search">
+          <input x-model="query" type="search" placeholder="Cari desa, kecamatan, atau kabupaten…" aria-label="Cari lokasi" class="text-sm">
+          <button class="rounded-lg bg-stone-800 px-3 text-sm text-white" :disabled="searching" x-text="searching ? 'Mencari…' : 'Cari'"></button>
+          <ul x-show="places.length || searchMsg" x-cloak @click.outside="places = []; searchMsg = ''" class="absolute left-2 right-2 top-full z-[1000] mt-1 max-h-64 overflow-y-auto rounded-lg border border-stone-200 bg-white text-sm shadow-lg">
+            <template x-for="pl in places" :key="pl.lat + ',' + pl.lon"><li><button type="button" class="w-full px-3 py-2 text-left hover:bg-stone-100" @click="goTo(pl)" x-text="pl.name"></button></li></template>
+            <li x-show="searchMsg" class="px-3 py-2 text-stone-500" x-text="searchMsg"></li>
+          </ul>
+        </form>
+        <div id="map" class="h-[60vh] min-h-[360px] w-full"></div>
+      </div>
+
+      <div class="rounded-xl border border-stone-200 bg-white" x-data="forecastPanel()" @weather-loaded.window="set($event.detail)" x-show="w" x-cloak>
+        <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">48 jam ke depan</h2>
+          <p class="text-xs text-stone-500">Warna batang = waktu semprot (hijau baik · kuning cukup · merah buruk).</p></div>
+        <div class="overflow-x-auto p-4">
+          <div class="flex gap-1 text-center text-[11px]">
+            <template x-for="h in (w ? w.hours : [])" :key="h.time">
+              <div class="w-11 shrink-0 rounded-lg bg-stone-50 py-1.5" :title="'Hujan ' + (h.rain_pct ?? 0) + '% · angin ' + Math.round(h.wind || 0) + ' km/j'">
+                <p class="text-stone-500" x-text="hourLabel(h.time)"></p>
+                <p class="font-semibold" x-text="Math.round(h.temp) + '°'"></p>
+                <p :class="(h.rain_pct || 0) >= 50 ? 'text-sky-700 font-medium' : 'text-stone-400'" x-text="(h.rain_pct ?? 0) + '%'"></p>
+                <p class="text-stone-400" x-text="Math.round(h.wind || 0)"></p>
+                <div class="mx-auto mt-1 h-1.5 w-7 rounded-full" :class="h.spray === 'GOOD' ? 'bg-emerald-500' : h.spray === 'FAIR' ? 'bg-amber-400' : 'bg-red-500'"></div>
+              </div>
+            </template>
+          </div>
+          <p class="mt-1 text-[11px] text-stone-400">Baris: jam · suhu · peluang hujan · angin km/j · waktu semprot</p>
+        </div>
+        <div class="grid gap-4 border-t border-stone-200 p-4 xl:grid-cols-2">
+          <div>
+            <h3 class="text-sm font-semibold">Hujan 30 hari terakhir</h3>
+            <p class="text-xs text-stone-500" x-text="w ? 'Total ' + fmtNum(w.rain_30d_mm, 1) + ' mm' : ''"></p>
+            <div class="mt-2 h-36"><canvas id="rain-chart" role="img" aria-label="Curah hujan harian 30 hari terakhir"></canvas></div>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold">Kebutuhan air hari ini</h3>
+            <p class="text-xs text-stone-500" x-text="water && water.et0_mm != null ? 'ET₀ ' + fmtNum(water.et0_mm, 1) + ' mm · hujan ' + fmtNum(water.rain_mm, 1) + ' mm' : 'ET₀ tidak tersedia'"></p>
+            <table class="mt-2 w-full text-xs">
+              <thead class="text-left text-stone-500"><tr><th class="py-1">Elemen</th><th class="text-right">Kc</th><th class="text-right">Butuh</th><th class="text-right">Kurang</th><th class="text-right">Liter</th></tr></thead>
+              <tbody>
+                <template x-for="r in (water ? water.rows : [])" :key="r.element">
+                  <tr class="border-t border-stone-100">
+                    <td class="py-1"><span x-text="r.element"></span> <span class="text-stone-400" x-text="r.variety"></span><span x-show="r.covered" class="text-stone-400"> · beratap</span></td>
+                    <td class="text-right" x-text="r.kc ? fmtNum(r.kc, 2) : '—'"></td>
+                    <td class="text-right" x-text="r.need_mm ? fmtNum(r.need_mm, 1) + ' mm' : '—'"></td>
+                    <td class="text-right" x-text="r.deficit_mm ? fmtNum(r.deficit_mm, 1) + ' mm' : '—'"></td>
+                    <td class="text-right font-medium" x-text="r.litres ? fmtNum(r.litres, 0) + ' L' : '—'"></td>
+                  </tr>
+                </template>
+                <tr x-show="water && !water.rows.length"><td colspan="5" class="py-2 text-stone-500">Tidak ada siklus aktif.</td></tr>
+              </tbody>
+            </table>
+            <p class="mt-2 text-[11px] text-stone-400">Butuh = ET₀ × Kc; hujan tidak dihitung untuk elemen beratap. Isi Kc varietas di admin bila kosong.</p>
+          </div>
+        </div>
+      </div>
 
       <div class="rounded-xl border border-stone-200 bg-white" x-show="selected" x-cloak>
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3">
@@ -50,11 +106,16 @@
             </div>
             <div class="h-48"><canvas id="ndvi-chart" role="img" aria-label="Riwayat NDVI rata-rata"></canvas></div>
           </div>
-          <div x-show="!loading && soil" class="mt-4 grid grid-cols-3 gap-3">
-            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah 0 cm</p><p class="text-lg font-semibold" x-text="soil && soil.t0_c != null ? soil.t0_c + ' °C' : '—'"></p></div>
-            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah 10 cm</p><p class="text-lg font-semibold" x-text="soil ? soil.t10_c + ' °C' : '—'"></p></div>
-            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Kelembapan tanah</p><p class="text-lg font-semibold" x-text="soil && soil.moisture != null ? (soil.moisture * 100).toFixed(1) + '%' : '—'"></p></div>
+          <div x-show="!loading && soil" class="mt-4">
+            <h3 class="text-sm font-semibold">Tanah <span class="text-xs font-normal text-stone-500">· perkiraan model Open-Meteo, bukan sensor</span></h3>
+            <div class="mt-2 grid gap-3 sm:grid-cols-2">
+              <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah</p>
+                <template x-for="t in (soil ? soil.temperature : [])" :key="t.depth"><p class="flex justify-between"><span class="text-stone-500" x-text="t.depth"></span><b x-text="t.value != null ? fmtNum(t.value, 1) + ' °C' : '—'"></b></p></template></div>
+              <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Kelembapan tanah (volume air)</p>
+                <template x-for="m in (soil ? soil.moisture : [])" :key="m.depth"><p class="flex justify-between"><span class="text-stone-500" x-text="m.depth"></span><b x-text="m.value != null ? fmtNum(m.value * 100, 1) + '%' : '—'"></b></p></template></div>
+            </div>
           </div>
+          <p x-show="!loading && !dataError && !soil" class="mt-4 text-xs text-stone-500">Data tanah tidak tersedia saat ini.</p>
         </div>
       </div>
     </div>
@@ -70,8 +131,9 @@
             <li class="px-4 py-3" :class="selected && selected.id === p.id && 'bg-emerald-50/60'">
               <button type="button" class="w-full text-left" @click="select(p.id)">
                 <p class="font-medium" x-text="p.name"></p>
-                <p class="flex flex-wrap items-center gap-x-2 text-xs text-stone-500"><span x-text="fmtHa(p.area_ha) + ' ha terpetakan' + (p.element ? ' · ' + p.element : '')"></span>
-                  <span x-show="!p.satellite_ok" class="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800" title="Agromonitoring memerlukan poligon 1–3.000 ha">tanpa satelit · &lt; 1 ha</span></p>
+                <p class="flex flex-wrap items-center gap-x-2 text-xs text-stone-500"><span x-text="fmtArea(p) + (p.element ? ' · ' + p.element : '')"></span>
+                  <span x-show="p.covered" class="rounded-full border border-stone-300 px-1.5 py-0.5 text-[10px] font-medium text-stone-600" title="Satelit melihat atap, bukan tanaman">beratap · tanpa NDVI</span>
+                  <span x-show="!p.covered && p.too_small" class="rounded-full border border-amber-300 px-1.5 py-0.5 text-[10px] font-medium text-amber-700" title="Agromonitoring memerlukan poligon 1–3.000 ha">tanpa NDVI · &lt; 1 ha</span></p>
               </button>
               <div x-show="selected && selected.id === p.id" class="mt-2 space-y-2">
                 <template x-if="p.element"><p class="rounded-lg bg-stone-50 px-2 py-1.5 text-xs">Terpetakan <b x-text="fmtM2(p.area_m2)"></b> m² · tercatat <b x-text="fmtM2(p.element_area_m2)"></b> m²</p></template>
@@ -98,6 +160,30 @@
 {% endblock %}
 {% block scripts %}
 <script>
+function forecastPanel() {
+  let chart;
+  return {
+    w: null, water: null,
+    set(d) {
+      this.w = d && d.weather ? d.weather : null; this.water = d ? d.water : null;
+      this.$nextTick(() => this.draw());
+    },
+    draw() {
+      if (!window.Chart || !this.w) return;
+      if (chart) chart.destroy();
+      const h = this.w.history;
+      chart = new Chart(document.getElementById("rain-chart"), {
+        type: "bar",
+        data: { labels: h.map((d) => new Date(d.date).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })),
+                datasets: [{ label: "Hujan (mm)", data: h.map((d) => d.rain_mm), backgroundColor: "#0ea5e9" }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6 } } } },
+      });
+    },
+    hourLabel(t) { const d = new Date(t); return d.getHours() === 0 ? d.toLocaleDateString("id-ID", { weekday: "short" }) : String(d.getHours()).padStart(2, "0"); },
+    fmtNum(v, d) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: d }); },
+  };
+}
+
 function geoPage() {
   const data = JSON.parse(document.getElementById("map-data").textContent);
   const csrf = "{{ csrf_token }}";
@@ -107,17 +193,35 @@ function geoPage() {
   return {
     polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
     selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false, error: "",
+    query: "", places: [], searchMsg: "", searching: false,
+    async search() {
+      if (this.query.trim().length < 3) { this.searchMsg = "Ketik minimal 3 huruf."; return; }
+      this.searching = true; this.places = []; this.searchMsg = "";
+      try {
+        const r = await fetch("{% url 'geo:search' %}?q=" + encodeURIComponent(this.query));
+        const d = await r.json();
+        this.places = d.places; this.searchMsg = d.message || "";
+      } catch (e) { this.searchMsg = "Pencarian lokasi tidak tersedia."; }
+      this.searching = false;
+    },
+    goTo(pl) {
+      this.places = []; this.searchMsg = "";
+      if (pl.bbox && pl.bbox.length === 4) map.fitBounds([[pl.bbox[0], pl.bbox[2]], [pl.bbox[1], pl.bbox[3]]], { maxZoom: 17 });
+      else map.setView([pl.lat, pl.lon], 16);
+    },
     init() {
       if (!window.L) { document.getElementById("map").innerHTML = '<p class="p-6 text-sm text-stone-500">Tidak dapat memuat peta · muat ulang halaman.</p>'; return; }
       map = L.map("map").setView(data.center, 16);
       const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/";
-      const imagery = L.tileLayer(esri + "World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 19, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" }).addTo(map);
+      // D92: three base maps. OSM shows local (Indonesian) place and road names.
+      const sat = () => L.tileLayer(esri + "World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" });
       const labels = L.tileLayer(esri + "Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 19, attribution: "Label © Esri" }).addTo(map);
+        { maxZoom: 19, attribution: "Label © Esri" });
+      const satLabel = L.layerGroup([sat(), labels]).addTo(map);
       const streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { maxZoom: 19, attribution: "© OpenStreetMap contributors" });
-      L.control.layers({ "Satelit": imagery, "Peta jalan": streets }, { "Nama tempat": labels }, { position: "topright" }).addTo(map);
+        { maxZoom: 19, attribution: "© kontributor OpenStreetMap" });
+      L.control.layers({ "Satelit + label": satLabel, "Satelit": sat(), "Peta (OpenStreetMap)": streets }, null, { position: "topright" }).addTo(map);
       L.control.scale({ imperial: false }).addTo(map);
       this.addLocateControl();
       group = new L.FeatureGroup().addTo(map);
@@ -168,7 +272,7 @@ function geoPage() {
       return { color, weight: active ? 4 : 2, fillOpacity: active ? 0.3 : 0.15, dashArray: p.satellite_ok ? null : "6 4" };
     },
     restyle() { this.polygons.forEach((p) => layers[p.id] && layers[p.id].setStyle(this.styleFor(p))); },
-    tooltipFor(p) { return `${p.name} · ${this.fmtHa(p.area_ha)} ha${p.satellite_ok ? "" : " · tanpa satelit"}`; },
+    tooltipFor(p) { return `${p.name} · ${this.fmtArea(p)}${p.satellite_ok ? "" : " · tanpa NDVI"}`; },
     addLayer(p) {
       const layer = L.geoJSON({ type: "Feature", geometry: p.geojson }, { style: this.styleFor(p) }).getLayers()[0];
       layer.polygonId = p.id;
@@ -240,6 +344,9 @@ function geoPage() {
     fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) : "—"; },
     n3(v) { return v == null ? "—" : Number(v).toFixed(3); },
     fmtHa(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 4 }); },
+    fmtNum(v, d) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: d }); },
+    // D92: "0,06 ha (614 m²)"
+    fmtArea(p) { return Number(p.area_ha).toLocaleString("id-ID", { maximumFractionDigits: 2 }) + " ha (" + this.fmtM2(p.area_m2) + " m²)"; },
     fmtM2(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 0 }); },
   };
 }

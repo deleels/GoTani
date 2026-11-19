@@ -24,6 +24,8 @@
       {% else %}<p class="mt-1 text-xl font-semibold text-stone-400">—</p><p class="text-xs text-stone-400">Gambar poligon di Cuaca &amp; Satelit</p>{% endif %}</div>
   </div>
 
+  {% with poly=polygons.0 %}{% if poly %}{% include "geo/_element_satellite.html" %}{% endif %}{% endwith %}
+
   <div class="mb-5 rounded-xl border border-stone-200 bg-white">
     <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Riwayat siklus</h2></div>
     <div class="overflow-x-auto">

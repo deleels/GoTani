@@ -75,10 +75,10 @@ DEMO_USERS = [
 ]
 
 VARIETIES = [
-    # name, crop, days to harvest
-    ("Melon Golden", "Melon", 75),
-    ("Cabai Rawit", "Cabai", 90),
-    ("Kakao Forastero", "Kakao", 110),
+    # name, crop, days to harvest, FAO-56 mid-season Kc (D91)
+    ("Melon Golden", "Melon", 75, "1.00"),
+    ("Cabai Rawit", "Cabai", 90, "1.05"),
+    ("Kakao Forastero", "Kakao", 110, "1.00"),
 ]
 
 # Cycle estimates (D60): plant count and expected sellable kg.
@@ -157,8 +157,9 @@ class Command(BaseCommand):
         ensure_role_groups(Group)
         self.users = self._seed_users()
         self.varieties = {
-            name: Variety.objects.get_or_create(name=name, defaults={"crop": crop, "days_to_harvest": days})[0]
-            for name, crop, days in VARIETIES
+            name: Variety.objects.get_or_create(name=name, defaults={"crop": crop, "days_to_harvest": days,
+                                                                     "kc": Decimal(kc)})[0]
+            for name, crop, days, kc in VARIETIES
         }
         ensure_preharvest_checklist(PreHarvestChecklistItem)
         self.elements = {

@@ -107,6 +107,7 @@
       </div>
       <form method="post" enctype="multipart/form-data" action="?tab={{ report_tab }}" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
         <input type="hidden" name="tab" value="{{ report_tab }}">
+        {% if report_tab == 'pestisida' %}{% include "geo/_spray_hint.html" %}{% endif %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         {% if report_tab == 'pemupukan' or report_tab == 'pestisida' or report_tab == 'penanaman' %}<p class="mt-2 text-xs text-stone-400">Memilih input akan memotong stok input dengan satuannya sendiri.</p>{% endif %}
         <div class="mt-auto flex justify-end gap-2 pt-6">

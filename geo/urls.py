@@ -7,6 +7,7 @@ app_name = "geo"
 urlpatterns = [
     path("", views.MapView.as_view(), name="map"),
     path("cuaca/", views.WeatherView.as_view(), name="weather"),
+    path("cari/", views.PlaceSearchView.as_view(), name="search"),
     path("poligon/", views.PolygonCreateView.as_view(), name="polygon_create"),
     path("poligon/<int:pk>/", views.PolygonDetailView.as_view(), name="polygon_detail"),
     path("poligon/<int:pk>/data/", views.PolygonDataView.as_view(), name="polygon_data"),

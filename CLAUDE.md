@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D88); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D93); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -27,7 +27,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 - `AuditLog` (append-only, D82): `actor`, `action`, `target_type`, `target_id`, `summary`, `before`/`after` (JSON), `reason`, `created_at` — written only via `core.audit.log_event()`; price, kasir step and PKP changes are logged.
 
 ### 1. `farm` (Upstream Production)
-- `Variety`: `name` (unique, e.g., Melon Golden, Cabai Rawit, Kakao Forastero), `crop`, `days_to_harvest` (nullable positive int)
+- `Variety`: `name` (unique, e.g., Melon Golden, Cabai Rawit, Kakao Forastero), `crop`, `days_to_harvest` (nullable positive int), `kc` (nullable Decimal 0.1–2, FAO crop coefficient for water need — D91)
 - `FarmElement`: `name`, `element_type` (GREENHOUSE / OPEN_FIELD / HYDROPONIC / SCREEN_HOUSE / SHADENET), `area_m2`, `is_active`
 - `CropCycle`: `element` (FK), `variety` (FK Variety), `stage` (PLANTING / SPROUTING / TRANSPLANTING / VEGETATIVE / FLOWERING / FRUITING / HARVESTING / CLEARING), `planting_start_date`, `planted_qty` (nullable positive int, plant count), `expected_harvest_date` (nullable; defaults to start + `variety.days_to_harvest`), `expected_yield_kg` (nullable Decimal), `is_active`, `closed_at` (nullable)
   - Constraint: `UniqueConstraint(fields=["element"], condition=Q(is_active=True))` — at most one active cycle per element.
@@ -114,7 +114,8 @@ An engineering programming class project modeling end-to-end agricultural produc
 31. **Staff:** OWNER creates users (username, full name, role, temporary password → `must_change_password=True`; middleware forces a password change on next request). Users are deactivated, never deleted. Cannot deactivate yourself or the last active OWNER. No email anywhere.
 32. **Notifications** are computed live (no notification rows), polled every 60 s: low stock (farm roles), pending expense approvals, overdue invoices, unpriced products (OWNER/MANAGER), cycles past `expected_harvest_date` without reaching HARVESTING (farm roles). Unread = created/observed after `notifications_seen_at`.
 33. **Polygons:** valid (shapely), no self-intersection, 0.02 ≤ area ≤ 1000 ha, total of all polygons ≤ 1000 ha (free-tier cap). Area is computed server-side. Linking to an element never overwrites `area_m2` silently — UI shows plotted vs recorded area with a "use plotted area" action.
-34. **External APIs** (Open-Meteo weather — no key; Agromonitoring NDVI/EVI/NDWI/soil — `AGRO_API_KEY` in `.env`) are called only from `geo/services.py`, cached, mocked in all tests (CI never hits the network). Missing key or API failure → UI shows "data tidak tersedia" with the reason; polygons under 1 ha never call Agromonitoring (its 1–3000 ha limit, D79); the rest of the app is unaffected.
+34. **External APIs** (Open-Meteo weather + model soil data — no key; Agromonitoring NDVI/EVI/NDWI — `AGRO_API_KEY` in `.env`; Nominatim place search — no key, ≤ 1 req/s) are called only from `geo/services.py`, cached, mocked in all tests (CI never hits the network). Missing key or API failure → UI shows "data tidak tersedia" with the reason; polygons under 1 ha or linked to a GREENHOUSE / SCREEN_HOUSE / HYDROPONIC element never call Agromonitoring (D79, D90); soil data comes from Open-Meteo for every polygon (D90); the rest of the app is unaffected.
+35. **Weather advice (D89, D91, D93):** spray window BAD when wind > 15 km/h, rain chance ≥ 50% in the next 4 h, or raining; FAIR when > 32 °C or wind 10–15 km/h; else GOOD — advice only, shown on Cuaca and the pesticide report. Water need = ET₀ × Kc − rain (rain ignored under a roof), litres = mm × element m². Bell alerts for farm roles from the *cached* forecast only: rain ≥ 50 mm tomorrow, gusts ≥ 40 km/h tomorrow, 7 dry days while an open-field cycle is active.
 
 ## Roles (Django Groups + `RoleRequiredMixin`, 403 tested)
 | Role | Access |

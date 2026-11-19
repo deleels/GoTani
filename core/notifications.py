@@ -18,6 +18,18 @@ def _aware(day):
     return timezone.make_aware(datetime.combine(day, time.min))
 
 
+def _weather_notifications():
+    """D93: from the cached forecast only — the 60 s poll must never call Open-Meteo itself."""
+    from datetime import date
+
+    from geo import services as geo
+
+    weather = geo.cached_weather(*geo.farm_location())
+    open_field = CropCycle.objects.filter(is_active=True, element__element_type="OPEN_FIELD").exists()
+    return [{"kind": a["kind"], "title": a["title"], "body": a["body"], "url": reverse("geo:map"),
+             "at": _aware(date.fromisoformat(a["date"]))} for a in geo.weather_alerts(weather, open_field)]
+
+
 def build_notifications(roles, today=None):
     today = today or timezone.localdate()
     out = []
@@ -32,6 +44,7 @@ def build_notifications(roles, today=None):
                 "url": reverse("farm:input_detail", args=[item.pk]),
                 "at": last_move.get(item.pk) or _aware(today),
             })
+        out.extend(_weather_notifications())
         for cycle in CropCycle.objects.filter(is_active=True, expected_harvest_date__lt=today).select_related("variety", "element"):
             if cycle.is_harvest_overdue(today):
                 out.append({

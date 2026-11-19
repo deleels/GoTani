@@ -4,7 +4,10 @@ Business rules live in `farm/services.py`; models only carry structure and
 DB-level invariants (constraints) that must hold regardless of code path.
 """
 
+from decimal import Decimal
+
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -30,6 +33,10 @@ class PaymentMethod(models.TextChoices):
 class Variety(models.Model):
     name = models.CharField("nama", max_length=100, unique=True)
     crop = models.CharField("tanaman", max_length=100)
+    # D91: optional FAO crop coefficient; water need = ET₀ × Kc. Empty → only ET₀ is shown.
+    kc = models.DecimalField("koefisien tanaman (Kc)", max_digits=4, decimal_places=2, null=True, blank=True,
+                             validators=[MinValueValidator(Decimal("0.1")), MaxValueValidator(Decimal("2"))],
+                             help_text="Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah).")
     days_to_harvest = models.PositiveIntegerField("umur panen (hari)", null=True, blank=True)
 
     class Meta:

@@ -29,7 +29,8 @@ class ReadOnlyLedgerAdmin(admin.ModelAdmin):
 
 @admin.register(Variety)
 class VarietyAdmin(admin.ModelAdmin):
-    list_display = ["name", "crop"]
+    list_display = ["name", "crop", "days_to_harvest", "kc"]
+    list_editable = ["kc"]
     search_fields = ["name", "crop"]
 
 
