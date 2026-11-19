@@ -2,13 +2,16 @@
 {% load gotani %}
 {% block title %}Ketertelusuran{% endblock %}
 {% block content %}
-<h1 class="mb-4 text-lg font-semibold">Ketertelusuran</h1>
+<div class="mb-5">
+  <h1 class="text-2xl font-bold tracking-tight">Telusuri</h1>
+  <p class="mt-1 text-sm text-stone-500">Maju: siklus → kegiatan → biaya → panen → lot → susut → penjualan & invoice. Mundur: nomor struk (GT-…) atau invoice (INV-…) → lot → panen → siklus → elemen.</p>
+</div>
 <div class="grid gap-6 lg:grid-cols-2">
   <section class="rounded-lg border bg-white p-4">
     <h2 class="font-semibold">Mundur: dari struk</h2>
     <p class="mb-3 text-sm text-stone-500">Nomor order → baris → lot → batch panen → siklus → elemen.</p>
     <form method="get" class="flex gap-2">
-      <input name="order" placeholder="GT-20261119-0001" value="{{ not_found|default:'' }}" class="flex-1 rounded border border-stone-300 px-2 py-1.5 font-mono text-sm" required>
+      <input name="order" placeholder="GT-20261119-0001 atau INV-202611-0001" value="{{ not_found|default:'' }}" class="flex-1 rounded border border-stone-300 px-2 py-1.5 font-mono text-sm" required>
       <button class="rounded bg-emerald-600 px-3 py-1.5 text-sm text-white">Telusuri</button>
     </form>
     {% if not_found %}<p class="mt-2 text-sm text-red-700">Order {{ not_found }} tidak ditemukan.</p>{% endif %}

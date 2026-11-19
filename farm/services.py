@@ -6,6 +6,7 @@ Bahasa Indonesia message suitable for display.
 """
 
 from dataclasses import dataclass
+from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -27,6 +28,8 @@ from .models import (
     InputItem,
     InputLedger,
     InputPurchase,
+    PreHarvestCheck,
+    PreHarvestChecklistItem,
     Variety,
 )
 
@@ -67,15 +70,89 @@ def set_element_active(element: FarmElement, is_active: bool) -> FarmElement:
 
 
 @transaction.atomic
-def start_cycle(element: FarmElement, variety: Variety, planting_start_date) -> CropCycle:
+def start_cycle(element: FarmElement, variety: Variety, planting_start_date, *, planted_qty=None,
+                expected_harvest_date=None, expected_yield_kg=None) -> CropCycle:
     element = FarmElement.objects.select_for_update().get(pk=element.pk)
     if not element.is_active:
         raise ValidationError(f"Elemen {element.name} tidak aktif.")
     if element.cycles.filter(is_active=True).exists():
         raise ValidationError(f"Elemen {element.name} sudah memiliki siklus tanam aktif.")
-    return CropCycle.objects.create(
-        element=element, variety=variety, planting_start_date=planting_start_date
-    )
+    if expected_harvest_date is None and variety.days_to_harvest:
+        expected_harvest_date = planting_start_date + timedelta(days=variety.days_to_harvest)  # rule 13
+    cycle = CropCycle(element=element, variety=variety, planting_start_date=planting_start_date)
+    _set_estimates(cycle, planted_qty, expected_harvest_date, expected_yield_kg)
+    cycle.save()
+    return cycle
+
+
+def _set_estimates(cycle, planted_qty, expected_harvest_date, expected_yield_kg):
+    if planted_qty is not None and int(planted_qty) <= 0:
+        raise ValidationError("Jumlah tanaman harus lebih dari 0.")
+    if expected_yield_kg is not None and Decimal(expected_yield_kg) < 0:
+        raise ValidationError("Perkiraan hasil tidak boleh negatif.")
+    if expected_harvest_date and expected_harvest_date < cycle.planting_start_date:
+        raise ValidationError("Perkiraan panen tidak boleh sebelum tanggal mulai tanam.")
+    cycle.planted_qty = planted_qty
+    cycle.expected_harvest_date = expected_harvest_date
+    cycle.expected_yield_kg = q_qty(expected_yield_kg) if expected_yield_kg is not None else None
+
+
+def update_cycle_estimates(cycle: CropCycle, *, planted_qty=None, expected_harvest_date=None,
+                           expected_yield_kg=None) -> CropCycle:
+    _set_estimates(cycle, planted_qty, expected_harvest_date, expected_yield_kg)
+    cycle.save(update_fields=["planted_qty", "expected_harvest_date", "expected_yield_kg"])
+    return cycle
+
+
+def cycle_yield_summary(cycle: CropCycle) -> dict:
+    """Rule 13: sellable kg over all batches vs `expected_yield_kg`."""
+    agg = cycle.harvests.aggregate(h=Sum("high_quality_kg"), lo=Sum("low_quality_kg"), x=Sum("harvest_loss_kg"))
+    high, low = agg["h"] or ZERO, agg["lo"] or ZERO
+    actual = high + low
+    expected = cycle.expected_yield_kg
+    return {
+        "actual_kg": actual, "high_kg": high, "low_kg": low, "loss_kg": agg["x"] or ZERO,
+        "expected_kg": expected,
+        "pct": (actual / expected * 100).quantize(Decimal("0.1")) if expected else None,
+        "per_plant_kg": (actual / cycle.planted_qty).quantize(QTY_STEP) if cycle.planted_qty else None,
+    }
+
+
+# --- Pre-harvest checklist (rule 14, D61) -------------------------------------
+
+
+@transaction.atomic
+def record_preharvest_check(cycle: CropCycle, checked_items, user=None, notes="", recorded_at=None) -> PreHarvestCheck:
+    if not cycle.is_active:
+        raise ValidationError("Siklus sudah ditutup.")
+    active = list(PreHarvestChecklistItem.objects.filter(is_active=True))
+    if not active:
+        raise ValidationError("Belum ada butir cek pra-panen yang aktif.")
+    active_ids = {i.pk for i in active}
+    chosen = {int(getattr(i, "pk", i)) for i in checked_items}
+    if chosen - active_ids:
+        raise ValidationError("Butir cek tidak dikenal atau tidak aktif.")
+    pct = (Decimal(len(chosen)) / Decimal(len(active)) * 100).quantize(MONEY_STEP, rounding=ROUND_HALF_UP)
+    check = PreHarvestCheck.objects.create(cycle=cycle, completed_pct=pct, notes=notes, recorded_by=user,
+                                           recorded_at=recorded_at or timezone.now())
+    check.checked_items.set(chosen)
+    return check
+
+
+def latest_preharvest_check(cycle: CropCycle):
+    return cycle.preharvest_checks.order_by("-recorded_at", "-id").first()
+
+
+def harvest_readiness_warning(cycle: CropCycle, new_stage: str) -> str | None:
+    """Soft warning (never a block) before HARVESTING without a complete checklist (rule 14)."""
+    if new_stage != CropCycle.Stage.HARVESTING:
+        return None
+    check = latest_preharvest_check(cycle)
+    if check is None:
+        return "Peringatan: belum ada cek pra-panen untuk siklus ini."
+    if check.completed_pct < 100:
+        return f"Peringatan: cek pra-panen terakhir baru {check.completed_pct.normalize():f}% lengkap."
+    return None
 
 
 @transaction.atomic
@@ -263,6 +340,8 @@ def log_activity(
     notes: str = "",
     logged_at=None,
     user=None,
+    duration_minutes=None,
+    photo=None,
 ) -> ActivityLog:
     """Log a field activity; consuming an input deducts stock and books an
     APPROVED INPUT_USAGE cycle expense of qty × avg cost (rule 11, D22, D34)."""
@@ -290,6 +369,14 @@ def log_activity(
             raise ValidationError("Jumlah pemakaian input harus lebih dari 0.")
     elif activity_type == ActivityLog.ActivityType.SEEDING:
         raise ValidationError("Penanaman benih harus memilih input benih.")
+    # Rule 15: duration only for irrigation, photo only for scouting.
+    if duration_minutes is not None:
+        if activity_type != ActivityLog.ActivityType.IRRIGATION:
+            raise ValidationError("Durasi hanya untuk kegiatan irigasi.")
+        if int(duration_minutes) <= 0:
+            raise ValidationError("Durasi irigasi harus lebih dari 0 menit.")
+    if photo and activity_type != ActivityLog.ActivityType.SCOUTING:
+        raise ValidationError("Foto hanya untuk kegiatan pengamatan (scouting).")
 
     activity = ActivityLog.objects.create(
         cycle=cycle,
@@ -302,6 +389,8 @@ def log_activity(
         notes=notes,
         logged_at=logged_at,
         recorded_by=user,
+        duration_minutes=duration_minutes,
+        photo=photo or "",
     )
 
     if input_item is not None:
@@ -632,3 +721,25 @@ def delete_harvest_batch(batch: HarvestBatch) -> None:
         )
     Expense.objects.filter(absorbed_by=batch).update(absorbed_by=None)
     batch.delete()  # cascades lots and their HARVEST_IN ledger rows
+
+
+# --- Input usage history (D63) ------------------------------------------------
+
+
+def _activity_id(reference: str):
+    if reference.startswith("ACT-") and reference[4:].isdigit():
+        return int(reference[4:])
+    return None
+
+
+def input_usage_history(item: InputItem):
+    """Ledger rows (oldest first) with the activity -> cycle behind each usage and a running balance."""
+    rows = list(item.ledger.order_by("timestamp", "id"))
+    ids = [i for i in (_activity_id(r.reference) for r in rows) if i]
+    activities = ActivityLog.objects.select_related("cycle__element", "cycle__variety").in_bulk(ids)
+    balance = ZERO
+    for row in rows:
+        balance += row.qty
+        row.balance = balance
+        row.activity = activities.get(_activity_id(row.reference))
+    return rows

@@ -180,15 +180,17 @@ class RoleMatrixTests(SiteFixtures):
         self.assertTrue(HarvestBatch.objects.filter(pk=self.batch.pk).exists())
 
     def test_home_routes_by_role(self):
-        self.login(ROLE_WORKER)
-        self.assertRedirects(self.client.get("/"), reverse("farm:cycles"))
         self.login(ROLE_CASHIER)
         self.assertRedirects(self.client.get("/"), reverse("pos:register"))
-        for role in (ROLE_OWNER, ROLE_MANAGER):
+        for role in (ROLE_OWNER, ROLE_MANAGER, ROLE_WORKER):
             self.login(role)
             response = self.client.get("/")
             self.assertEqual(response.status_code, 200)
-            self.assertTemplateUsed(response, "reports/dashboard.html")
+            self.assertTemplateUsed(response, "core/home.html")  # Ringkasan (D70)
+            if role == ROLE_WORKER:
+                self.assertNotContains(response, "Rp ")
+            else:
+                self.assertContains(response, "Total penjualan")
 
     def test_superuser_is_owner(self):
         root = get_user_model().objects.create_superuser("root", password="x")
@@ -232,7 +234,7 @@ class FarmViewTests(SiteFixtures):
     def test_login_page_and_login(self):
         self.assertEqual(self.client.get(reverse("login")).status_code, 200)
         response = self.client.post(reverse("login"), {"username": "worker", "password": "x"})
-        self.assertRedirects(response, "/", target_status_code=302)
+        self.assertRedirects(response, "/")
 
     def test_cycles_page_shows_alerts_and_stage_form(self):
         self.login(ROLE_MANAGER)
@@ -272,7 +274,7 @@ class FarmViewTests(SiteFixtures):
         self.login(ROLE_WORKER)
         url = reverse("farm:activities")
         response = self.client.post(url, {"cycle": self.cycle.pk, "activity_type": "FERTILIZER", "input_item": self.npk.pk, "quantity": "2"})
-        self.assertRedirects(response, url)
+        self.assertRedirects(response, url + "?tab=pemupukan")
         self.npk.refresh_from_db()
         self.assertEqual(self.npk.stock_qty, D("93"))
         response = self.client.post(url, {"cycle": self.cycle.pk, "activity_type": "FERTILIZER", "input_item": self.npk.pk, "quantity": "1000"})
@@ -543,6 +545,36 @@ class AnalyticsTests(SiteFixtures):
         self.assertEqual(len(m["daily"]), 30)
         self.assertEqual(sum(d["revenue"] for d in m["daily"]), D("200000"))
 
+    def test_invoice_channel_tax_discount_shipping(self):
+        from inventory.models import Tax
+        from invoicing import services as inv
+
+        self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
+        self.high.save()
+        manager = self.users[ROLE_MANAGER]
+        buyer = inv.create_buyer(manager, name="Resto")
+        draft = inv.save_draft(manager, buyer, [(self.high, 10, D("25000"))], discount_type="PERCENT",
+                               discount_value=10, shipping_idr=15000)
+        invoice = inv.issue_invoice(draft, manager)
+        k = self.metrics()["kpis"]
+        self.assertEqual((k["revenue_pos"], k["revenue_invoice"]), (D("200000"), D("225000.00")))
+        self.assertEqual(k["revenue"], D("425000"))
+        self.assertEqual(k["cogs"], D("200000"))
+        self.assertEqual(k["other_income"], D("15000"))
+        self.assertEqual(k["ppn_collected"], D("24750.00"))
+        self.assertEqual(k["net_profit"], D("-155000"))
+        self.assertEqual(k["receivables_outstanding"], D("264750.00"))
+        rows = {(r["variety"], r["grade"]): r for r in self.metrics()["margin_by_product"]}
+        self.assertEqual(rows[("Melon Golden", "HIGH")]["kg"], D("20"))
+        trace = services.forward_trace(self.cycle)
+        self.assertEqual(trace.totals["sold_kg"], D("20"))
+        self.assertEqual(trace.totals["revenue"], D("425000.00"))
+        csv_text = "|".join(",".join(map(str, r)) for r in services.forward_csv_rows(trace))
+        self.assertIn(invoice.number, csv_text)
+        inv.void_invoice(invoice, manager)
+        self.assertEqual(self.metrics()["kpis"]["revenue_invoice"], D("0"))
+        self.assertEqual(services.forward_trace(self.cycle).totals["sold_kg"], D("10"))
+
     def test_out_of_range_is_empty(self):
         m = services.dashboard_metrics(date(2020, 1, 1), date(2020, 1, 31))
         self.assertEqual(m["kpis"]["revenue"], D("0"))
@@ -551,15 +583,15 @@ class AnalyticsTests(SiteFixtures):
 
     def test_dashboard_page(self):
         self.login(ROLE_MANAGER)
-        response = self.client.get("/")
+        response = self.client.get(reverse("dashboard"))
         self.assertContains(response, "Rp 200.000")
         self.assertContains(response, "-Rp 295.000")
         self.assertContains(response, "chart.umd.min.js")
         self.assertIn("margin", response.context["charts"])
         today = timezone.localdate()
-        response = self.client.get("/", {"start": "2020-01-01", "end": "2020-01-31"})
+        response = self.client.get(reverse("dashboard"), {"start": "2020-01-01", "end": "2020-01-31"})
         self.assertEqual(response.context["m"]["start"], date(2020, 1, 1))
-        response = self.client.get("/", {"start": today.isoformat(), "end": "2020-01-01"})
+        response = self.client.get(reverse("dashboard"), {"start": today.isoformat(), "end": "2020-01-01"})
         self.assertContains(response, "Tanggal awal harus sebelum tanggal akhir")
         self.assertEqual(response.context["m"]["end"], today)
 

@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "pos",
     "reports",
     "invoicing",
+    "geo",
 ]
 
 MIDDLEWARE = [
@@ -124,6 +125,17 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# External data cache (D73): weather 30 min, NDVI/soil 24 h. Table made by `createcachetable`.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "gotani_cache",
+    }
+}
+
+# Agromonitoring free-tier key (server-side only, never sent to the browser). Optional.
+AGRO_API_KEY = os.environ.get("AGRO_API_KEY", "")
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"

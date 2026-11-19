@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Cuaca & Satelit{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>.leaflet-container { font: inherit; } #map { z-index: 0; }</style>
+{% endblock %}
+{% block content %}
+{{ map_data|json_script:"map-data" }}
+<div x-data="geoPage()">
+  <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">Cuaca &amp; Satelit</h1>
+      <p class="mt-1 text-sm text-stone-500">{% subtitle "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kelembapan tanah, dan prakiraan cuaca 7 hari." worker="Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja." %}</p>
+    </div>
+    <template x-if="canEdit"><p class="text-xs text-stone-500">Gambar poligon dengan ikon ⬠ di peta. Luas dihitung di server (0,02–1.000 ha).</p></template>
+  </div>
+
+  {% if not has_location %}<p class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">Lokasi kebun belum diatur — {% if roles.label == 'OWNER' %}<a class="underline" href="{% url 'core:settings' %}">isi lintang/bujur di Pengaturan</a>{% else %}minta OWNER mengisinya di Pengaturan{% endif %} agar prakiraan cuaca tepat.</p>{% endif %}
+
+  <div class="grid gap-5 lg:grid-cols-3">
+    <div class="space-y-5 lg:col-span-2">
+      <div class="overflow-hidden rounded-xl border border-stone-200 bg-white"><div id="map" class="h-[60vh] min-h-[360px] w-full"></div></div>
+
+      <div class="rounded-xl border border-stone-200 bg-white" x-show="selected" x-cloak>
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3">
+          <h2 class="font-semibold" x-text="selected && selected.name"></h2>
+          <label class="flex items-center gap-2 text-sm" x-show="sat && sat.has_image"><input type="checkbox" x-model="showNdvi" @change="toggleOverlay()" style="width:auto"> Tampilkan citra NDVI</label>
+        </div>
+        <div class="p-4 text-sm">
+          <template x-if="loading"><p class="text-stone-500">Memuat data satelit…</p></template>
+          <template x-if="!loading && dataError"><p class="text-stone-500">Tidak dapat memuat data satelit · <button type="button" class="underline" @click="loadData()">Coba lagi</button></p></template>
+          <template x-if="!loading && !dataError && message"><p class="text-stone-500"><span x-text="message"></span><span x-show="!agroEnabled"> — kunci Agromonitoring belum dipasang di server.</span></p></template>
+          <div x-show="!loading && sat" class="space-y-4">
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead class="text-left text-stone-500"><tr><th class="py-1">Lintasan</th><th>Awan</th><th class="text-right">NDVI min / rata / maks</th><th class="text-right">EVI rata</th><th class="text-right">NDWI rata</th></tr></thead>
+                <tbody>
+                  <template x-for="p in (sat ? sat.passes : [])" :key="p.dt + p.type">
+                    <tr class="border-t border-stone-100"><td class="py-1" x-text="fmtDate(p.dt) + ' · ' + (p.type || '')"></td><td x-text="p.cloud != null ? Math.round(p.cloud) + '%' : '—'"></td>
+                      <td class="text-right" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '—'"></td>
+                      <td class="text-right" x-text="p.evi ? n3(p.evi.mean) : '—'"></td><td class="text-right" x-text="p.ndwi ? n3(p.ndwi.mean) : '—'"></td></tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <div class="h-48"><canvas id="ndvi-chart" role="img" aria-label="Riwayat NDVI rata-rata"></canvas></div>
+          </div>
+          <div x-show="!loading && soil" class="mt-4 grid grid-cols-3 gap-3">
+            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah 0 cm</p><p class="text-lg font-semibold" x-text="soil && soil.t0_c != null ? soil.t0_c + ' °C' : '—'"></p></div>
+            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah 10 cm</p><p class="text-lg font-semibold" x-text="soil ? soil.t10_c + ' °C' : '—'"></p></div>
+            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Kelembapan tanah</p><p class="text-lg font-semibold" x-text="soil && soil.moisture != null ? (soil.moisture * 100).toFixed(1) + '%' : '—'"></p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="space-y-5">
+      {% include "geo/_weather_widget.html" %}
+
+      <div class="rounded-xl border border-stone-200 bg-white">
+        <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Poligon lahan</h2></div>
+        <template x-if="!polygons.length"><p class="px-4 py-6 text-center text-sm text-stone-500">Belum ada poligon. <span x-show="canEdit">Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI.</span></p></template>
+        <ul class="divide-y divide-stone-100 text-sm">
+          <template x-for="p in polygons" :key="p.id">
+            <li class="px-4 py-3" :class="selected && selected.id === p.id && 'bg-emerald-50/60'">
+              <button type="button" class="w-full text-left" @click="select(p.id)">
+                <p class="font-medium" x-text="p.name"></p>
+                <p class="text-xs text-stone-500" x-text="fmtHa(p.area_ha) + ' ha terpetakan' + (p.element ? ' · ' + p.element : '')"></p>
+              </button>
+              <div x-show="selected && selected.id === p.id" class="mt-2 space-y-2">
+                <template x-if="p.element"><p class="rounded-lg bg-stone-50 px-2 py-1.5 text-xs">Terpetakan <b x-text="fmtM2(p.area_m2)"></b> m² · tercatat <b x-text="fmtM2(p.element_area_m2)"></b> m²</p></template>
+                <template x-if="canEdit">
+                  <div class="space-y-2">
+                    <div class="flex gap-1"><input x-model="p.name" class="text-xs"><button type="button" class="rounded bg-stone-100 px-2 text-xs" @click="save(p, { name: p.name })">Ganti nama</button></div>
+                    <div class="flex gap-1"><select class="text-xs" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">— tautkan ke elemen —</option>
+                      <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
+                    <div class="flex flex-wrap gap-2">
+                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="rounded bg-emerald-600 px-2 py-1 text-xs text-white" @click="useArea(p)">Pakai luas terpetakan</button>
+                      <button type="button" class="rounded px-2 py-1 text-xs text-red-700 underline" @click="remove(p)">Hapus</button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </li>
+          </template>
+        </ul>
+        <p x-show="error" x-text="error" class="border-t border-red-100 bg-red-50 px-4 py-2 text-xs text-red-800"></p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function geoPage() {
+  const data = JSON.parse(document.getElementById("map-data").textContent);
+  const csrf = "{{ csrf_token }}";
+  const base = "{% url 'geo:polygon_create' %}";
+  let map, group, overlay, chart;
+  const layers = {};
+  return {
+    polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
+    selected: null, sat: null, soil: null, message: null, loading: false, dataError: false, showNdvi: false, error: "",
+    init() {
+      if (!window.L) { document.getElementById("map").innerHTML = '<p class="p-6 text-sm text-stone-500">Tidak dapat memuat peta · muat ulang halaman.</p>'; return; }
+      map = L.map("map").setView(data.center, 16);
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" }).addTo(map);
+      group = new L.FeatureGroup().addTo(map);
+      this.polygons.forEach((p) => this.addLayer(p));
+      if (this.polygons.length) map.fitBounds(group.getBounds(), { padding: [30, 30] });
+      if (this.canEdit && L.Control.Draw) {
+        map.addControl(new L.Control.Draw({
+          edit: { featureGroup: group },
+          draw: { polygon: { allowIntersection: false, showArea: true }, polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false },
+        }));
+        map.on(L.Draw.Event.CREATED, async (e) => {
+          const name = prompt("Nama poligon:", "Lahan " + (this.polygons.length + 1));
+          if (!name) return;
+          const r = await this.post(base, { name, geojson: e.layer.toGeoJSON().geometry });
+          if (r) { this.polygons.push(r); this.addLayer(r); this.select(r.id); }
+        });
+        map.on(L.Draw.Event.EDITED, (e) => e.layers.eachLayer(async (layer) => {
+          const p = this.polygons.find((x) => x.id === layer.polygonId);
+          const r = await this.post(`${base}${p.id}/`, { geojson: layer.toGeoJSON().geometry });
+          if (r) Object.assign(p, r); else layer.setLatLngs(L.GeoJSON.coordsToLatLngs(p.geojson.coordinates, 1));
+        }));
+        map.on(L.Draw.Event.DELETED, (e) => e.layers.eachLayer((layer) => this.remove(this.polygons.find((x) => x.id === layer.polygonId), true)));
+      }
+    },
+    addLayer(p) {
+      const layer = L.geoJSON({ type: "Feature", geometry: p.geojson }, { style: { color: "#10b981", weight: 2, fillOpacity: 0.15 } }).getLayers()[0];
+      layer.polygonId = p.id;
+      layer.bindTooltip(p.name);
+      layer.on("click", () => this.select(p.id));
+      group.addLayer(layer); layers[p.id] = layer;
+    },
+    async post(url, body) {
+      this.error = "";
+      try {
+        const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrf }, body: JSON.stringify(body) });
+        const json = await r.json();
+        if (!r.ok) { this.error = json.error || "Gagal menyimpan."; return null; }
+        return json;
+      } catch (e) { this.error = "Tidak dapat terhubung ke server."; return null; }
+    },
+    async save(p, body) { const r = await this.post(`${base}${p.id}/`, body); if (r) Object.assign(p, r); },
+    async useArea(p) {
+      if (!confirm(`Ganti luas tercatat ${p.element} menjadi ${this.fmtM2(p.area_m2)} m²?`)) return;
+      const r = await this.post(`${base}${p.id}/?action=use_area`, {}); if (r) Object.assign(p, r);
+    },
+    async remove(p, fromMap = false) {
+      if (!p || (!fromMap && !confirm(`Hapus poligon ${p.name}?`))) return;
+      const r = await this.post(`${base}${p.id}/?action=delete`, {});
+      if (r) {
+        this.polygons = this.polygons.filter((x) => x.id !== p.id);
+        if (layers[p.id]) group.removeLayer(layers[p.id]);
+        if (this.selected && this.selected.id === p.id) this.selected = null;
+      }
+    },
+    select(id) {
+      this.selected = this.polygons.find((p) => p.id === id);
+      if (layers[id]) map.fitBounds(layers[id].getBounds(), { padding: [40, 40], maxZoom: 18 });
+      this.showNdvi = false; this.toggleOverlay(); this.loadData();
+    },
+    async loadData() {
+      const p = this.selected; if (!p) return;
+      this.loading = true; this.dataError = false; this.sat = null; this.soil = null; this.message = null;
+      try {
+        const r = await fetch(`${base}${p.id}/data/`);
+        if (!r.ok) throw new Error(r.status);
+        const d = await r.json();
+        this.sat = d.satellite; this.soil = d.soil; this.message = d.message; this.agroEnabled = d.agro_enabled;
+        this.$nextTick(() => this.drawChart());
+      } catch (e) { this.dataError = true; }
+      this.loading = false;
+    },
+    toggleOverlay() {
+      if (overlay) { map.removeLayer(overlay); overlay = null; }
+      if (this.showNdvi && this.selected && layers[this.selected.id]) {
+        overlay = L.imageOverlay(`${base}${this.selected.id}/ndvi.png`, layers[this.selected.id].getBounds(), { opacity: 0.85 }).addTo(map);
+      }
+    },
+    drawChart() {
+      if (!window.Chart || !this.sat) return;
+      if (chart) chart.destroy();
+      const h = this.sat.history;
+      chart = new Chart(document.getElementById("ndvi-chart"), {
+        type: "line",
+        data: { labels: h.map((x) => this.fmtDate(x.dt)), datasets: [{ label: "NDVI rata-rata", data: h.map((x) => x.mean), borderColor: "#10b981", backgroundColor: "#10b981", pointRadius: 2, tension: 0.3 }] },
+        options: { maintainAspectRatio: false, scales: { y: { min: 0, max: 1 } }, plugins: { legend: { display: false } } },
+      });
+    },
+    fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) : "—"; },
+    n3(v) { return v == null ? "—" : Number(v).toFixed(3); },
+    fmtHa(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 4 }); },
+    fmtM2(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 0 }); },
+  };
+}
+</script>
+{% endblock %}

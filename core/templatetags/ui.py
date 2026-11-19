@@ -58,7 +58,7 @@ PILL_TONES = {
     "gray": "bg-stone-100 text-stone-700 ring-stone-200",
 }
 STATUS_TONES = {
-    "PENDING": "yellow", "DRAFT": "gray", "UNPAID": "yellow",
+    "PENDING": "yellow", "DRAFT": "gray", "UNPAID": "blue",
     "APPROVED": "blue", "ISSUED": "blue", "PARTIALLY_PAID": "teal",
     "OVERDUE": "red", "VOID": "red", "VOIDED": "red", "REJECTED": "red", "INACTIVE": "red",
     "PAID": "green", "COMPLETED": "green", "ACTIVE": "green",

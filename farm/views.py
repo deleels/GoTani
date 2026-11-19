@@ -4,11 +4,15 @@ WORKER may run field operations but never sees money (D27): cost columns are
 hidden in templates via `roles.finance`, and money pages are FINANCE_ROLES only.
 """
 
+from datetime import datetime, timedelta
+from decimal import Decimal
+
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 
 from core.pagination import paginate
 from inventory import services as inventory_services
@@ -20,6 +24,8 @@ from .access import FARM_ROLES, FINANCE_ROLES
 from .forms import (
     ActivityForm,
     ElementForm,
+    EstimatesForm,
+    PreHarvestForm,
     ExpenseForm,
     HarvestForm,
     PriceForm,
@@ -28,7 +34,17 @@ from .forms import (
     StageForm,
     StartCycleForm,
 )
-from .models import ActivityLog, CropCycle, Expense, FarmElement, HarvestBatch, InputItem, InputPurchase
+from .models import (
+    ActivityLog,
+    CropCycle,
+    Expense,
+    FarmElement,
+    HarvestBatch,
+    InputItem,
+    InputPurchase,
+    PreHarvestCheck,
+    PreHarvestChecklistItem,
+)
 from .views_common import ActionView, ServiceFormView, error_text
 
 
@@ -54,7 +70,10 @@ class CyclesView(FarmPage):
 
     def perform(self, form):
         d = form.cleaned_data
-        return services.start_cycle(d["element"], d["variety"], d["planting_start_date"])
+        return services.start_cycle(
+            d["element"], d["variety"], d["planting_start_date"], planted_qty=d["planted_qty"],
+            expected_harvest_date=d["expected_harvest_date"], expected_yield_kg=d["expected_yield_kg"],
+        )
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -63,10 +82,13 @@ class CyclesView(FarmPage):
             for c in CropCycle.objects.filter(is_active=True).select_related("variety")
         }
         elements = list(FarmElement.objects.order_by("-is_active", "name"))
+        today = timezone.localdate()
         for element in elements:
             cycle = active.get(element.pk)
             element.active_cycle = cycle
             if cycle:
+                cycle.days = cycle.days_growing(today)
+                cycle.overdue = cycle.is_harvest_overdue(today)
                 cycle.next_stages = [
                     (value, label)
                     for value, label in CropCycle.Stage.choices
@@ -120,34 +142,105 @@ class AdvanceStageView(ActionView):
         form = StageForm(self.request.POST)
         if not form.is_valid():
             raise ValidationError("Tahap tidak valid.")
-        return services.advance_cycle_stage(cycle, form.cleaned_data["stage"])
+        warning = services.harvest_readiness_warning(cycle, form.cleaned_data["stage"])
+        result = services.advance_cycle_stage(cycle, form.cleaned_data["stage"])
+        if warning:
+            messages.warning(self.request, warning)  # rule 14: warn, never block
+        return result
 
 
 # --- Activities (rule 11) ------------------------------------------------------
 
 
+REPORT_TABS = [
+    # key, label, ActivityType or None
+    ("pemupukan", "Pemupukan", ActivityLog.ActivityType.FERTILIZER),
+    ("pestisida", "Pestisida", ActivityLog.ActivityType.PESTICIDE),
+    ("irigasi", "Irigasi", ActivityLog.ActivityType.IRRIGATION),
+    ("scouting", "Scouting", ActivityLog.ActivityType.SCOUTING),
+    ("penanaman", "Penanaman", ActivityLog.ActivityType.SEEDING),
+    ("prapanen", "Pra-panen", None),
+    ("panen", "Panen", None),
+    ("susut", "Susut", None),
+]
+TAB_TYPES = {key: t for key, _, t in REPORT_TABS if t}
+
+
 class ActivitiesView(FarmPage):
+    """Laporan Kerja (D62): one tab per report type; "Laporan Baru" opens the per-type form in a sheet."""
+
     template_name = "farm/activities.html"
     form_class = ActivityForm
     tab = "activities"
-    success_url_name = "farm:activities"
-    success_message = "Kegiatan dicatat."
+    success_message = "Laporan kerja dicatat."
+
+    def current_tab(self):
+        tab = self.request.GET.get("tab") or self.request.POST.get("tab") or "pemupukan"
+        return tab if tab in dict((k, l) for k, l, _ in REPORT_TABS) else "pemupukan"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["activity_type"] = TAB_TYPES.get(self.current_tab())
+        return kwargs
+
+    def get_success_url(self):
+        return f"{reverse('farm:activities')}?tab={self.current_tab()}"
 
     def perform(self, form):
         d = form.cleaned_data
         return services.log_activity(
-            d["cycle"], d["activity_type"], quantity=d["quantity"], unit=d["unit"],
-            input_item=d["input_item"], application_method=d["application_method"],
-            notes=d["notes"], user=self.request.user,
+            d["cycle"], d["activity_type"], quantity=d.get("quantity") or 0, unit=d.get("unit") or "",
+            input_item=d.get("input_item"), application_method=d.get("application_method") or "",
+            notes=d.get("notes") or "", user=self.request.user,
+            duration_minutes=d.get("duration_minutes"), photo=d.get("photo"),
         )
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["page"] = paginate(self.request, ActivityLog.objects.select_related(
-            "cycle__element", "cycle__variety", "input_item", "recorded_by"
-        ))
+        tab = self.current_tab()
+        ctx.update(report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
+                   sheet_open=self.request.method == "POST" or self.request.GET.get("new") == "1")
+        week_ago = timezone.now() - timedelta(days=7)
+        counts = dict(ActivityLog.objects.filter(logged_at__gte=week_ago).values_list("activity_type")
+                      .annotate(n=Count("id")).values_list("activity_type", "n"))
+        ctx["week_counts"] = {
+            "prapanen": PreHarvestCheck.objects.filter(recorded_at__gte=week_ago).count(),
+            "panen": HarvestBatch.objects.filter(harvested_at__gte=week_ago).count(),
+            "susut": SpoilageRecord.objects.filter(recorded_at__gte=week_ago).count(),
+            **{k: counts.get(t, 0) for k, t in TAB_TYPES.items()},
+        }
+        if tab in TAB_TYPES:
+            qs = ActivityLog.objects.filter(activity_type=TAB_TYPES[tab]).select_related(
+                "cycle__element", "cycle__variety", "input_item", "recorded_by")
+        elif tab == "prapanen":
+            qs = PreHarvestCheck.objects.select_related("cycle__element", "cycle__variety", "recorded_by").prefetch_related("checked_items")
+            ctx["preharvest_form"] = PreHarvestForm()
+        elif tab == "panen":
+            qs = HarvestBatch.objects.select_related("cycle__element", "cycle__variety", "recorded_by").order_by("-harvested_at", "-id")
+        else:
+            qs = SpoilageRecord.objects.select_related("lot__product__variety", "recorded_by")
+        ctx["page"] = paginate(self.request, qs)
         ctx["activities"] = ctx["page"].object_list
         return ctx
+
+
+class PreHarvestCheckView(FarmPage):
+    template_name = "farm/form_page.html"
+    form_class = PreHarvestForm
+    success_message = "Cek pra-panen dicatat."
+    extra_context = {"page_title": "Cek pra-panen"}
+
+    def get_initial(self):
+        return {"cycle": self.request.GET.get("cycle")}
+
+    def get_success_url(self):
+        return f"{reverse('farm:activities')}?tab=prapanen"
+
+    def perform(self, form):
+        d = form.cleaned_data
+        check = services.record_preharvest_check(d["cycle"], d["items"], user=self.request.user, notes=d["notes"])
+        self.success_message = f"Cek pra-panen dicatat ({check.completed_pct.normalize():f}% lengkap)."
+        return check
 
 
 class ActivityDeleteView(ActionView):
@@ -182,6 +275,7 @@ class InputsView(FarmPage):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["items"] = InputItem.objects.all()
+        ctx["low_count"] = sum(1 for i in ctx["items"] if i.is_low_stock)
         if self.roles.finance:
             ctx["purchases"] = InputPurchase.objects.select_related("item")[:30]
         return ctx
@@ -212,8 +306,23 @@ class ExpensesView(FarmPage):
         ctx = super().get_context_data(**kwargs)
         base = Expense.objects.select_related("category", "element", "cycle__variety", "absorbed_by")
         ctx["pending"] = base.filter(status=Expense.Status.PENDING).order_by("date_incurred", "id")
-        ctx["page"] = paginate(self.request, base.exclude(status=Expense.Status.PENDING))
+        status = self.request.GET.get("status", "all")
+        history = base.exclude(status=Expense.Status.PENDING)
+        if status in (Expense.Status.APPROVED, Expense.Status.REJECTED):
+            history = history.filter(status=status)
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            history = history.filter(Q(narration__icontains=q) | Q(vendor__icontains=q) | Q(category__name__icontains=q))
+        ctx["page"] = paginate(self.request, history)
         ctx["recent"] = ctx["page"].object_list
+        month_start = timezone.localdate().replace(day=1)
+        approved_month = Expense.objects.filter(status=Expense.Status.APPROVED, date_incurred__gte=month_start)
+        ctx.update(
+            status=status, q=q, tabs=[("all", "Semua"), ("APPROVED", "Disetujui"), ("REJECTED", "Ditolak")],
+            kpi_pending=ctx["pending"].aggregate(s=Sum("amount_idr"))["s"] or 0,
+            kpi_month=approved_month.aggregate(s=Sum("amount_idr"))["s"] or 0,
+            kpi_overhead=approved_month.filter(cycle__isnull=True).aggregate(s=Sum("amount_idr"))["s"] or 0,
+        )
         return ctx
 
 
@@ -265,6 +374,11 @@ class HarvestsView(FarmPage):
             "cycle__element", "cycle__variety"
         ).order_by("-harvested_at", "-id"))
         ctx["batches"] = ctx["page"].object_list
+        month_start = timezone.make_aware(datetime.combine(timezone.localdate().replace(day=1), datetime.min.time()))
+        month = HarvestBatch.objects.filter(harvested_at__gte=month_start).aggregate(
+            h=Sum("high_quality_kg"), lo=Sum("low_quality_kg"), x=Sum("harvest_loss_kg"), n=Count("id"))
+        ctx["kpi"] = {"n": month["n"], "high": month["h"] or 0, "low": month["lo"] or 0, "loss": month["x"] or 0,
+                      "harvesting": CropCycle.objects.filter(is_active=True, stage=CropCycle.Stage.HARVESTING).count()}
         return ctx
 
 
@@ -356,3 +470,169 @@ class PricesView(FarmPage):
         else:
             messages.error(request, "Harga tidak valid.")
         return redirect(reverse("farm:prices"))
+
+
+# --- Detail pages (D63, D71) ---------------------------------------------------------------
+
+
+def cycle_timeline(cycle, finance=False):
+    """Chronological events for a cycle, reusing `forward_trace` (D71)."""
+    from reports.services import forward_trace
+
+    trace = forward_trace(cycle)
+    events = [{"at": timezone.make_aware(datetime.combine(cycle.planting_start_date, datetime.min.time())),
+               "kind": "start", "title": f"Mulai tanam {cycle.variety}", "body": f"di {cycle.element}"}]
+    for a in trace.activities:
+        body = a.input_item.name + f" {a.quantity.normalize():f} {a.unit}" if a.input_item else (a.notes or a.application_method)
+        if a.duration_minutes:
+            body = f"{body} · {a.duration_minutes} menit".strip(" ·")
+        events.append({"at": a.logged_at, "kind": a.activity_type.lower(), "title": a.get_activity_type_display(),
+                       "body": body, "who": a.recorded_by, "photo": a.photo})
+    for check in cycle.preharvest_checks.all():
+        events.append({"at": check.recorded_at, "kind": "check", "title": "Cek pra-panen",
+                       "body": f"{check.completed_pct.normalize():f}% lengkap", "who": check.recorded_by})
+    for bt in trace.batches:
+        b = bt.batch
+        body = f"HIGH {b.high_quality_kg.normalize():f} kg · LOW {b.low_quality_kg.normalize():f} kg · susut {b.harvest_loss_kg.normalize():f} kg"
+        events.append({"at": b.harvested_at, "kind": "harvest", "title": f"Panen #{b.pk}", "body": body,
+                       "money": b.absorbed_cost_idr if finance else None, "who": b.recorded_by})
+        for lt in bt.lots:
+            for sp in lt.spoilages:
+                events.append({"at": sp.recorded_at, "kind": "spoilage", "title": f"Susut {lt.lot.product}",
+                               "body": f"{sp.qty_kg.normalize():f} kg · {sp.get_reason_display()}",
+                               "money": sp.loss_idr if finance else None})
+    if cycle.closed_at:
+        events.append({"at": cycle.closed_at, "kind": "close", "title": "Siklus ditutup", "body": ""})
+    events.sort(key=lambda e: e["at"], reverse=True)
+    return trace, events
+
+
+class CycleDetailView(FarmPage):
+    template_name = "farm/cycle_detail.html"
+    form_class = EstimatesForm
+    success_message = "Perkiraan siklus disimpan."
+
+    def dispatch(self, request, *args, **kwargs):
+        self.cycle = get_object_or_404(CropCycle.objects.select_related("element", "variety"), pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        c = self.cycle
+        return {"planted_qty": c.planted_qty, "expected_harvest_date": c.expected_harvest_date,
+                "expected_yield_kg": c.expected_yield_kg}
+
+    def get_success_url(self):
+        return reverse("farm:cycle_detail", args=[self.cycle.pk])
+
+    def perform(self, form):
+        return services.update_cycle_estimates(self.cycle, **form.cleaned_data)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        c = self.cycle
+        trace, events = cycle_timeline(c, finance=self.roles.finance)
+        today = timezone.localdate()
+        ctx.update(
+            cycle=c, trace=trace, events=events, yield_summary=services.cycle_yield_summary(c),
+            days=c.days_growing(today), overdue=c.is_harvest_overdue(today),
+            latest_check=services.latest_preharvest_check(c),
+            checklist=PreHarvestChecklistItem.objects.filter(is_active=True),
+            next_stages=[(v, lbl) for v, lbl in CropCycle.Stage.choices
+                         if CropCycle.STAGE_ORDER.index(v) > c.stage_index] if c.is_active else [],
+            stage_choices=CropCycle.Stage.choices, detail_tab=self.request.GET.get("tab", "timeline"),
+            sheet_open=self.request.method == "POST",
+        )
+        if self.roles.finance:
+            ctx["unabsorbed"] = services.unabsorbed_cycle_cost(c)
+        return ctx
+
+
+class ElementDetailView(FarmPage):
+    template_name = "farm/element_detail.html"
+    form_class = StartCycleForm
+    success_message = "Siklus tanam dimulai."
+
+    def dispatch(self, request, *args, **kwargs):
+        self.element = get_object_or_404(FarmElement, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        return {"element": self.element.pk}
+
+    def get_success_url(self):
+        return reverse("farm:element_detail", args=[self.element.pk])
+
+    def perform(self, form):
+        d = form.cleaned_data
+        return services.start_cycle(
+            self.element, d["variety"], d["planting_start_date"], planted_qty=d["planted_qty"],
+            expected_harvest_date=d["expected_harvest_date"], expected_yield_kg=d["expected_yield_kg"],
+        )
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields["element"].queryset = FarmElement.objects.filter(pk=self.element.pk)
+        return form
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        el = self.element
+        cycles = list(el.cycles.select_related("variety").order_by("-planting_start_date", "-id"))
+        today = timezone.localdate()
+        total_kg = Decimal("0")
+        for c in cycles:
+            c.summary = services.cycle_yield_summary(c)
+            c.days = c.days_growing(today)
+            c.kg_per_m2 = (c.summary["actual_kg"] / el.area_m2).quantize(Decimal("0.001"))
+            total_kg += c.summary["actual_kg"]
+        ctx.update(element=el, cycles=cycles, active_cycle=next((c for c in cycles if c.is_active), None),
+                   total_kg=total_kg, sheet_open=self.request.method == "POST",
+                   recent_activities=ActivityLog.objects.filter(cycle__element=el)
+                   .select_related("cycle__variety", "input_item")[:10])
+        try:
+            from geo.models import FieldPolygon
+
+            ctx["polygons"] = list(FieldPolygon.objects.filter(element=el))
+        except (ImportError, LookupError):  # pragma: no cover - geo app not installed
+            ctx["polygons"] = []
+        return ctx
+
+
+class InputDetailView(FarmPage):
+    """Usage history ("where did this fertilizer go") + restock shortcut (D63)."""
+
+    template_name = "farm/input_detail.html"
+    form_class = PurchaseForm
+    post_roles = FINANCE_ROLES
+    success_message = "Stok input ditambah."
+
+    def dispatch(self, request, *args, **kwargs):
+        self.item = get_object_or_404(InputItem, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        return {"item": self.item.pk, "cost_per_unit_idr": self.item.avg_cost_per_unit_idr or None}
+
+    def get_success_url(self):
+        return reverse("farm:input_detail", args=[self.item.pk])
+
+    def perform(self, form):
+        d = form.cleaned_data
+        return services.record_input_purchase(self.item, d["qty"], d["cost_per_unit_idr"], supplier=d["supplier"],
+                                              user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        rows = services.input_usage_history(self.item)
+        rows.reverse()
+        usage = [r for r in rows if r.movement_type == "USAGE"]
+        by_cycle = {}
+        for r in usage:
+            if r.activity:
+                key = r.activity.cycle
+                by_cycle[key] = by_cycle.get(key, Decimal("0")) - r.qty
+        ctx.update(item=self.item, page=paginate(self.request, rows), by_cycle=sorted(by_cycle.items(), key=lambda kv: -kv[1]),
+                   used_total=-sum((r.qty for r in usage), Decimal("0")), sheet_open=self.request.method == "POST")
+        if self.roles.finance:
+            ctx["purchases"] = self.item.purchases.all()[:20]
+        return ctx

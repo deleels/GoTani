@@ -215,3 +215,22 @@ class PaginationTests(TestCase):
         self.assertNotIn("page=", page.querystring)
         page = paginate(rf.get("/x", {"per": "999", "page": "abc"}), list(range(5)))
         self.assertEqual((page.per, page.number), (10, 1))
+
+
+class ProfilePageTests(TestCase):
+    def test_edit_own_name_any_role(self):
+        from django.contrib.auth.models import Group
+
+        from farm.bootstrap import ROLE_CASHIER
+
+        user = get_user_model().objects.create_user("kasir1", password="x")
+        user.groups.add(Group.objects.get_or_create(name=ROLE_CASHIER)[0])
+        self.client.force_login(user)
+        url = reverse("core:profile")
+        self.assertContains(self.client.get(url), "CASHIER")
+        self.assertRedirects(self.client.post(url, {"first_name": "Siti", "last_name": "Aminah"}), url)
+        user.refresh_from_db()
+        self.assertEqual(user.get_full_name(), "Siti Aminah")
+        self.assertEqual(self.client.post(url, {"first_name": "  "}).status_code, 400)
+        self.client.logout()
+        self.assertEqual(self.client.get(url).status_code, 302)

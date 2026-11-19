@@ -9,10 +9,10 @@ from farm.bootstrap import ROLE_OWNER
 GROUPS = [
     ("DASBOR", [
         ("Ringkasan", "home", "home", "any", ("home", "dashboard")),
-        ("Laporan Kerja", "farm:activities", "clipboard", "farm", ("farm:activities",)),
+        ("Laporan Kerja", "farm:activities", "clipboard", "farm", ("farm:activities", "farm:preharvest")),
         ("Aset Kebun", None, "sprout", "farm", (), [
             ("Elemen & Siklus", "farm:cycles", ("farm:cycles", "farm:element", "farm:cycle")),
-            ("Inventaris Input", "farm:inputs", ("farm:inputs",)),
+            ("Inventaris Input", "farm:inputs", ("farm:input",)),
             ("Panen", "farm:harvests", ("farm:harvests",)),
             ("Susut / Rusak", "farm:spoilage", ("farm:spoilage",)),
         ]),

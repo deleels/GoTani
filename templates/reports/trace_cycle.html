@@ -72,6 +72,14 @@
         {% endfor %}
       </table>
       {% endif %}
+      {% if lt.invoice_allocations %}
+      <table class="mt-2 w-full text-xs">
+        <thead class="text-left text-stone-500"><tr><th>Invoice</th><th>Pembeli</th><th class="text-right">Kg</th><th class="text-right">Harga/kg</th><th>Status</th></tr></thead>
+        {% for a in lt.invoice_allocations %}
+        <tr class="border-t {% if a.line.invoice.status == 'VOID' %}text-stone-400 line-through{% endif %}"><td><a class="font-mono text-emerald-700 underline" href="{% url 'invoicing:invoice_detail' a.line.invoice_id %}">{{ a.line.invoice }}</a></td><td>{{ a.line.invoice.buyer }}</td><td class="text-right">{{ a.qty_kg|kg }}</td><td class="text-right">{{ a.line.unit_price_idr|rupiah }}</td><td>{{ a.line.invoice.get_status_display }}</td></tr>
+        {% endfor %}
+      </table>
+      {% endif %}
     </div>
     {% endwith %}{% endfor %}
   </div>

@@ -16,6 +16,7 @@ from .models import (
     FarmElement,
     InputItem,
     PaymentMethod,
+    PreHarvestChecklistItem,
     Unit,
     Variety,
 )
@@ -75,12 +76,38 @@ class StartCycleForm(StyledForm):
         label="Tanggal mulai tanam", initial=timezone.localdate,
         widget=forms.DateInput(attrs={"type": "date"}),
     )
+    planted_qty = forms.IntegerField(label="Jumlah tanaman", min_value=1, required=False)
+    expected_harvest_date = forms.DateField(
+        label="Perkiraan panen", required=False, widget=forms.DateInput(attrs={"type": "date"}),
+        help_text="Kosongkan untuk memakai umur panen varietas.",
+    )
+    expected_yield_kg = qty_field("Perkiraan hasil (kg)", required=False, min_value=Decimal("0"))
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["element"].queryset = FarmElement.objects.filter(is_active=True).exclude(
             cycles__is_active=True
         )
+
+
+class EstimatesForm(StyledForm):
+    planted_qty = forms.IntegerField(label="Jumlah tanaman", min_value=1, required=False)
+    expected_harvest_date = forms.DateField(label="Perkiraan panen", required=False,
+                                            widget=forms.DateInput(attrs={"type": "date"}))
+    expected_yield_kg = qty_field("Perkiraan hasil (kg)", required=False, min_value=Decimal("0"))
+
+
+class PreHarvestForm(StyledForm):
+    cycle = forms.ModelChoiceField(label="Siklus", queryset=CropCycle.objects.none())
+    items = forms.ModelMultipleChoiceField(label="Butir yang sudah dipenuhi", required=False,
+                                           queryset=PreHarvestChecklistItem.objects.filter(is_active=True),
+                                           widget=forms.CheckboxSelectMultiple)
+    notes = forms.CharField(label="Catatan", required=False, widget=forms.Textarea(attrs={"rows": 2}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["cycle"].queryset = CropCycle.objects.filter(is_active=True).select_related("element", "variety")
+        self.fields["items"].queryset = PreHarvestChecklistItem.objects.filter(is_active=True)
 
 
 class ActivityForm(StyledForm):
@@ -94,10 +121,49 @@ class ActivityForm(StyledForm):
     quantity = qty_field("Jumlah", required=False, min_value=Decimal("0"))
     unit = forms.ChoiceField(label="Satuan", choices=[("", "-")] + list(Unit.choices), required=False)
     application_method = forms.CharField(label="Metode aplikasi", max_length=100, required=False)
+    duration_minutes = forms.IntegerField(label="Durasi (menit)", min_value=1, required=False)
+    photo = forms.ImageField(label="Foto", required=False)
     notes = forms.CharField(label="Catatan", required=False, widget=forms.Textarea(attrs={"rows": 2}))
+
+    # Fields shown per activity type (D62); everything else is dropped for that type.
+    TYPE_FIELDS = {
+        ActivityLog.ActivityType.FERTILIZER: ["cycle", "input_item", "quantity", "application_method", "notes"],
+        ActivityLog.ActivityType.PESTICIDE: ["cycle", "input_item", "quantity", "application_method", "notes"],
+        ActivityLog.ActivityType.SEEDING: ["cycle", "input_item", "quantity", "application_method", "notes"],
+        ActivityLog.ActivityType.IRRIGATION: ["cycle", "quantity", "unit", "duration_minutes", "application_method", "notes"],
+        ActivityLog.ActivityType.SCOUTING: ["cycle", "photo", "notes"],
+    }
+    INPUT_TYPE = {
+        ActivityLog.ActivityType.FERTILIZER: InputItem.ItemType.FERTILIZER,
+        ActivityLog.ActivityType.PESTICIDE: InputItem.ItemType.PESTICIDE,
+        ActivityLog.ActivityType.SEEDING: InputItem.ItemType.SEED,
+    }
+
+    def __init__(self, *args, activity_type=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fixed_type = activity_type
+        if activity_type in self.TYPE_FIELDS:
+            self.fields["activity_type"].initial = activity_type
+            self.fields["activity_type"].widget = forms.HiddenInput()
+            self.fields["activity_type"].required = False  # fixed by the tab, not by the client
+            keep = set(self.TYPE_FIELDS[activity_type]) | {"activity_type"}
+            for name in list(self.fields):
+                if name not in keep:
+                    del self.fields[name]
+            if "input_item" in self.fields:
+                self.fields["input_item"].queryset = InputItem.objects.filter(item_type=self.INPUT_TYPE[activity_type])
+                self.fields["input_item"].label = "Input"
+                self.fields["input_item"].required = activity_type == ActivityLog.ActivityType.SEEDING
+            if activity_type == ActivityLog.ActivityType.IRRIGATION:
+                self.fields["quantity"].label = "Volume air"
+                self.fields["unit"].initial = Unit.L
 
     def clean(self):
         data = super().clean()
+        if self.fixed_type:
+            data["activity_type"] = self.fixed_type
+        for name in ("input_item", "unit", "application_method", "notes", "duration_minutes", "photo"):
+            data.setdefault(name, None if name in ("input_item", "duration_minutes", "photo") else "")
         item = data.get("input_item")
         if item and not data.get("unit"):
             data["unit"] = item.unit  # an input activity always uses the item's own unit

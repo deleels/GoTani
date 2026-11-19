@@ -3,16 +3,18 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth import views as auth_views
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 
-from farm.access import RoleRequiredMixin
+from farm.access import RoleRequiredMixin, get_roles
 from farm.bootstrap import ROLE_OWNER, ROLES
 from farm.views_common import error_text
 
 from . import services
-from .forms import FarmProfileForm, StaffCreateForm, StaffPasswordForm
+from .forms import FarmProfileForm, OwnProfileForm, StaffCreateForm, StaffPasswordForm
+from .notifications import mark_seen, notifications_payload
 from .pagination import paginate
 
 
@@ -123,3 +125,50 @@ class PasswordChangeView(auth_views.PasswordChangeView):
         profile = getattr(self.request.user, "profile", None) if hasattr(self.request.user, "profile") else None
         ctx["forced"] = bool(profile and profile.must_change_password)
         return ctx
+
+
+class NotificationsView(View):
+    """GET: live notifications as JSON (polled every 60 s); POST: mark all as seen (D64)."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({"items": [], "unread": 0}, status=401)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        return JsonResponse(notifications_payload(request.user, get_roles(request)))
+
+    def post(self, request):
+        mark_seen(request.user)
+        return JsonResponse({"ok": True, "unread": 0})
+
+
+class ProfileView(View):
+    """Profil: any signed-in user sees their account and edits their own name."""
+
+    template_name = "core/profile.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('login')}?next={request.path}")
+        return super().dispatch(request, *args, **kwargs)
+
+    def context(self, request, form=None):
+        user = request.user
+        return {"form": form or OwnProfileForm(initial={"first_name": user.first_name, "last_name": user.last_name}),
+                "role": services.user_role(user) or ("OWNER" if user.is_superuser else "—")}
+
+    def get(self, request):
+        return render(request, self.template_name, self.context(request))
+
+    def post(self, request):
+        form = OwnProfileForm(request.POST)
+        if form.is_valid():
+            try:
+                services.update_own_profile(request.user, **form.cleaned_data)
+            except ValidationError as exc:
+                form.add_error(None, error_text(exc))
+            else:
+                messages.success(request, "Profil disimpan.")
+                return redirect("core:profile")
+        return render(request, self.template_name, self.context(request, form), status=400)

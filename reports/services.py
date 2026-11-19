@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from farm.models import ActivityLog, CropCycle, Expense, HarvestBatch, InputPurchase
 from inventory.models import SpoilageRecord, StockLot
+from invoicing.models import InvoiceLineLotAllocation
 from pos.models import LineLotAllocation, OrderLineItem, SaleOrder
 from pos.services import JAKARTA, jakarta_date
 
@@ -39,6 +40,7 @@ class LotTrace:
     lot: StockLot
     spoilages: list
     allocations: list  # LineLotAllocation with line.order
+    invoice_allocations: list = field(default_factory=list)  # InvoiceLineLotAllocation with line.invoice
     sold_kg: Decimal = ZERO
     voided_kg: Decimal = ZERO
     spoiled_kg: Decimal = ZERO
@@ -83,6 +85,12 @@ def forward_trace(cycle: CropCycle) -> ForwardTrace:
                             "line__order__created_at", "id"
                         ),
                     ),
+                    Prefetch(
+                        "invoice_allocations",
+                        queryset=InvoiceLineLotAllocation.objects.select_related("line__invoice__buyer").order_by(
+                            "line__invoice__issued_at", "id"
+                        ),
+                    ),
                 ).order_by("product__grade"),
             ),
         )
@@ -95,7 +103,15 @@ def forward_trace(cycle: CropCycle) -> ForwardTrace:
         for lot in batch.lots.all():
             allocations = list(lot.allocations.all())
             spoilages = list(lot.spoilages.all())
-            lt = LotTrace(lot=lot, spoilages=spoilages, allocations=allocations)
+            inv_allocs = list(lot.invoice_allocations.all())
+            lt = LotTrace(lot=lot, spoilages=spoilages, allocations=allocations, invoice_allocations=inv_allocs)
+            for a in inv_allocs:
+                if a.line.invoice.status == "ISSUED":
+                    lt.sold_kg += a.qty_kg
+                    totals["revenue"] += a.line.net_revenue_idr * a.qty_kg / a.line.qty_kg
+                    totals["cogs"] += a.qty_kg * a.unit_cogs_idr
+                else:
+                    lt.voided_kg += a.qty_kg
             for a in allocations:
                 if a.line.order.status == SaleOrder.Status.COMPLETED:
                     lt.sold_kg += a.qty_kg
@@ -156,6 +172,11 @@ def forward_csv_rows(trace: ForwardTrace):
             for s in lt.spoilages:
                 yield ["SUSUT", _local(s.recorded_at).isoformat(timespec="minutes"), f"LOT-{lot.pk}",
                        f"{s.get_reason_display()} {s.notes}".strip(), -s.qty_kg, s.loss_idr]
+            for a in lt.invoice_allocations:
+                invoice = a.line.invoice
+                yield ["INVOICE", invoice.issue_date.isoformat() if invoice.issue_date else "", invoice.number or "",
+                       f"{invoice.buyer} @ {a.line.unit_price_idr}/kg — {invoice.get_status_display()}",
+                       -a.qty_kg, _money(a.qty_kg * a.line.unit_price_idr)]
             for a in lt.allocations:
                 order = a.line.order
                 yield ["PENJUALAN", _local(order.created_at).isoformat(timespec="minutes"), order.order_number,
@@ -229,12 +250,22 @@ def _sum(qs, field_name) -> Decimal:
 
 
 def dashboard_metrics(start, end) -> dict:
+    """Rule 30: revenue/margin net of tax and invoice discount; invoices accrue on `issue_date`."""
+    from invoicing.models import Invoice, InvoiceLine
+    from invoicing.services import receivables_summary
+
     lo, hi = day_bounds(start, end)
     orders = SaleOrder.objects.filter(status=SaleOrder.Status.COMPLETED, created_at__gte=lo, created_at__lt=hi)
+    invoices = Invoice.objects.filter(status=Invoice.Status.ISSUED, issue_date__gte=start, issue_date__lte=end)
+    inv_lines = InvoiceLine.objects.filter(invoice__in=invoices)
 
-    revenue = _sum(orders, "total_revenue_idr")
-    cogs = _sum(orders, "total_cogs_idr")
+    pos_revenue = _sum(orders, "total_revenue_idr")
+    inv_revenue = _sum(inv_lines, "net_revenue_idr")
+    revenue = pos_revenue + inv_revenue
+    cogs = _sum(orders, "total_cogs_idr") + _sum(invoices, "total_cogs_idr")
     gross = revenue - cogs
+    other_income = _sum(invoices, "shipping_idr")  # D54: shipping is outside gross margin
+    ppn = _sum(orders, "total_tax_idr") + _sum(invoices, "tax_idr")
     spoilage = _sum(SpoilageRecord.objects.filter(recorded_at__gte=lo, recorded_at__lt=hi), "loss_idr")
     approved = Expense.objects.filter(status=Expense.Status.APPROVED)
     # Rule 8: leftovers of cycles closed in the period are written off.
@@ -245,11 +276,12 @@ def dashboard_metrics(start, end) -> dict:
     # Rule 7: GENERAL expenses and ELEMENT expenses with no cycle are operating overhead.
     overhead_qs = approved.filter(cycle__isnull=True, date_incurred__gte=start, date_incurred__lte=end)
     overhead = _sum(overhead_qs, "amount_idr")
-    net = gross - spoilage - unabsorbed - overhead
+    net = gross + other_income - spoilage - unabsorbed - overhead
     purchases = sum(
         (p.qty * p.cost_per_unit_idr for p in InputPurchase.objects.filter(purchased_at__gte=lo, purchased_at__lt=hi)),
         ZERO,
     )
+    receivables = receivables_summary()
 
     kpis = {
         "revenue": revenue,
@@ -260,22 +292,34 @@ def dashboard_metrics(start, end) -> dict:
         "unabsorbed_cost": unabsorbed,
         "overhead": overhead,
         "overhead_general": _sum(overhead_qs.filter(scope=Expense.Scope.GENERAL), "amount_idr"),
+        "other_income": other_income,
         "net_profit": net,
         "orders": orders.count(),
+        "invoices": invoices.count(),
         "input_purchases": _money(purchases),
+        "ppn_collected": ppn,
+        "revenue_pos": pos_revenue,
+        "revenue_invoice": inv_revenue,
+        "receivables_outstanding": receivables["outstanding"],
+        "receivables_overdue": receivables["overdue"],
     }
 
-    # Daily revenue / COGS series.
+    # Daily revenue / COGS series (POS by sale time, invoices by issue date).
     daily = {start + timedelta(days=i): [ZERO, ZERO] for i in range((end - start).days + 1)}
     for created_at, rev, cost in orders.values_list("created_at", "total_revenue_idr", "total_cogs_idr"):
         bucket = daily.setdefault(jakarta_date(created_at), [ZERO, ZERO])
         bucket[0] += rev
         bucket[1] += cost
+    for inv in invoices.prefetch_related("lines"):
+        bucket = daily.setdefault(inv.issue_date, [ZERO, ZERO])
+        bucket[0] += sum((ln.net_revenue_idr for ln in inv.lines.all()), ZERO)
+        bucket[1] += inv.total_cogs_idr
 
-    # Margin by variety × grade, from the exact lot allocations.
+    # Margin by variety × grade, from the exact lot allocations of both channels.
     by_product: dict[tuple, dict] = {}
-    lines = OrderLineItem.objects.filter(order__in=orders).select_related("product__variety").prefetch_related("allocations")
-    for line in lines:
+    pos_lines = OrderLineItem.objects.filter(order__in=orders).select_related("product__variety").prefetch_related("allocations")
+    b2b_lines = inv_lines.select_related("product__variety").prefetch_related("allocations")
+    for line in list(pos_lines) + list(b2b_lines):
         key = (line.product.variety.name, line.product.grade)
         row = by_product.setdefault(key, {"variety": key[0], "grade": key[1], "kg": ZERO, "revenue": ZERO, "cogs": ZERO})
         row["kg"] += line.qty_kg

@@ -375,3 +375,45 @@ def receivables_summary(today=None):
             if inv.due_date and inv.due_date < today:
                 overdue += due
     return {"outstanding": outstanding, "overdue": overdue}
+
+
+@transaction.atomic
+def apply_credit(actor, buyer, invoice, amount) -> list:
+    """Spend the buyer's credit on `invoice`: allocate older payments' unallocated remainders, oldest first."""
+    require_finance(actor)
+    amount = q_money(amount)
+    if amount <= 0:
+        raise ValidationError("Jumlah kredit harus lebih dari 0.")
+    if amount > buyer_credit(buyer):
+        raise ValidationError(f"Kredit pembeli hanya {buyer_credit(buyer)}.")
+    created = []
+    remaining = amount
+    for payment in InvoicePayment.objects.filter(buyer=buyer).order_by("paid_on", "id"):
+        if remaining <= 0:
+            break
+        take = min(remaining, payment.unallocated_idr)
+        if take > 0:
+            created.append(allocate_payment(actor, payment, invoice, take))
+            remaining -= take
+    return created
+
+
+def update_buyer(actor, buyer, **fields) -> Buyer:
+    require_finance(actor)
+    for key, value in fields.items():
+        setattr(buyer, key, value)
+    buyer.full_clean()
+    buyer.save()
+    return buyer
+
+
+def open_invoices(buyer):
+    """ISSUED invoices of `buyer` with an outstanding balance, oldest due first."""
+    out = []
+    for inv in (Invoice.objects.filter(buyer=buyer, status=Invoice.Status.ISSUED)
+                .prefetch_related("allocations").order_by("due_date", "id")):
+        paid = sum((a.amount_idr for a in inv.allocations.all()), ZERO)
+        if paid < inv.total_idr:
+            inv.outstanding = inv.total_idr - paid
+            out.append(inv)
+    return out

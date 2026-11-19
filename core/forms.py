@@ -32,3 +32,8 @@ class FarmProfileForm(StyledMixin, forms.ModelForm):
     class Meta:
         model = FarmProfile
         fields = ["name", "address", "phone", "latitude", "longitude", "logo"]
+
+
+class OwnProfileForm(StyledMixin, forms.Form):
+    first_name = forms.CharField(label="Nama depan", max_length=150)
+    last_name = forms.CharField(label="Nama belakang", max_length=150, required=False)

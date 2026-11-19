@@ -105,3 +105,9 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
 - **D72 Singleton `FarmProfile` (name, address, lat/lon, logo)** — weather, map centre and invoice header need it; single farm (D2) so no tenant model.
 - **D73 Open-Meteo (weather, no key) + Agromonitoring free tier (polygons/NDVI/soil, key server-side); Leaflet + Esri tiles; GeoJSON in JSONField + shapely; DB cache; mocked in tests; graceful "data tidak tersedia"; linking a polygon never silently overwrites `area_m2`** — $0, avoids FarmCloud's leaked client-side key, CI stays offline, `area_m2` feeds kg/m² analytics.
 - **D74 PWA: installable + static cache + offline fallback page only** — offline writes would bypass row locks and validation.
+
+## Build-time refinements (P8–P11)
+- **D75 NDVI image is proxied through the server** — Agromonitoring image URLs embed the API key; `geo:polygon_ndvi` streams the cached PNG so the key never reaches the browser (completes D73).
+- **D76 Geodesic polygon area on a sphere (no pyproj)** — spherical-excess ring area is within ~0.5% of WGS84 at farm scale and adds no dependency; shapely only validates.
+- **D77 Notification "observed at" times** — low stock = last ledger movement, overdue invoice/harvest = the day after the due date, pending expense = newest `created_at`, unpriced = first lot; unread = later than `notifications_seen_at`.
+- **D78 `/` is Ringkasan for every farm role (OWNER/MANAGER included); Analitik stays at `/dashboard/`; CASHIER still lands on the POS** — one home for everyone who works the farm (D70).

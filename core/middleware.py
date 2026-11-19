@@ -14,6 +14,7 @@ class ForcePasswordChangeMiddleware:
             profile = getattr(user, "profile", None) if hasattr(user, "profile") else None
             if profile is not None and profile.must_change_password:
                 allowed = {reverse("core:password_change"), reverse("logout")}
+                allowed |= {reverse("service_worker"), reverse("manifest"), reverse("offline")}
                 if request.path not in allowed and not request.path.startswith(("/static/", "/media/")):
                     return redirect("core:password_change")
         return self.get_response(request)

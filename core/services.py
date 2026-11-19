@@ -140,3 +140,13 @@ def reset_staff_password(actor, user, temp_password):
 
 def mark_password_changed(user):
     UserProfile.objects.filter(user=user).update(must_change_password=False)
+
+
+def update_own_profile(user, *, first_name, last_name=""):
+    """Users edit only their own display name; role and status stay with the OWNER (D65)."""
+    first_name, last_name = (first_name or "").strip(), (last_name or "").strip()
+    if not first_name:
+        raise ValidationError("Nama depan wajib diisi.")
+    user.first_name, user.last_name = first_name[:150], last_name[:150]
+    user.save(update_fields=["first_name", "last_name"])
+    return user

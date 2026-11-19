@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D74); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D78); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -158,11 +158,11 @@ An engineering programming class project modeling end-to-end agricultural produc
 4. POS: locked FIFO checkout, order numbers, receipt, void, Postgres concurrency test ✅
 5. Traceability (forward/backward), analytics dashboard, role access ✅
 6. Full `seed_demo`, CI, deployment ✅
-7. Shell + component kit (sidebar, top bar, dark mode, page anatomy, sheets, pills, login), `FarmProfile`, Staf page + forced password change, pagination/search; migrate existing screens
-8. Tax (POS + invoices), buyers, invoices (discount, shipping, issue/void), payments + allocation + credit, analytics channel split/PPN/receivables
-9. Cycle estimates, pre-harvest checklist, activity extras + Laporan Kerja tabs, input usage history + restock, element/cycle detail pages + timelines, Ringkasan home, notifications bell
-10. Weather (Open-Meteo), polygons (Leaflet + shapely), Agromonitoring NDVI/soil
-11. PWA (manifest, service worker, offline page, update banner)
+7. Shell + component kit (sidebar, top bar, dark mode, page anatomy, sheets, pills, login), `FarmProfile`, Staf page + forced password change, pagination/search; migrate existing screens ✅
+8. Tax (POS + invoices), buyers, invoices (discount, shipping, issue/void), payments + allocation + credit, analytics channel split/PPN/receivables ✅
+9. Cycle estimates, pre-harvest checklist, activity extras + Laporan Kerja tabs, input usage history + restock, element/cycle detail pages + timelines, Ringkasan home, notifications bell ✅
+10. Weather (Open-Meteo), polygons (Leaflet + shapely), Agromonitoring NDVI/soil ✅
+11. PWA (manifest, service worker, offline page, update banner) ✅
 
 ## Azure Ubuntu VM Deployment (`deploy/`)
 - Read `DATABASE_URL`, `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, and optional `AGRO_API_KEY` from `.env` via `python-dotenv` and `dj-database-url`.

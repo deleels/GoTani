@@ -224,3 +224,31 @@ class PaymentTests(InvoiceFixtures):
             inv.record_payment(self.manager, self.buyer, amount_idr=0, method="CASH", paid_on=TODAY)
         with self.assertRaises(ValidationError):
             inv.record_payment(self.manager, self.buyer, amount_idr=10, method="BITCOIN", paid_on=TODAY)
+
+
+class CreditTests(InvoiceFixtures):
+    def test_apply_credit_spans_payments_oldest_first(self):
+        a = self.issue(self.draft([(self.high, 10, None)]), issue_date=TODAY)  # 200,000
+        p1 = inv.record_payment(self.manager, self.buyer, amount_idr=50000, method="CASH", paid_on=TODAY - timedelta(days=2))
+        p2 = inv.record_payment(self.manager, self.buyer, amount_idr=100000, method="CASH", paid_on=TODAY)
+        allocs = inv.apply_credit(self.manager, self.buyer, a, 120000)
+        self.assertEqual([(x.payment_id, x.amount_idr) for x in allocs], [(p1.pk, D("50000.00")), (p2.pk, D("70000.00"))])
+        self.assertEqual(inv.buyer_credit(self.buyer), D("30000.00"))
+        self.assertEqual([i.pk for i in inv.open_invoices(self.buyer)], [a.pk])
+        self.assertEqual(inv.open_invoices(self.buyer)[0].outstanding, D("80000.00"))
+
+    def test_apply_credit_validation(self):
+        a = self.issue(self.draft([(self.high, 1, None)]), issue_date=TODAY)
+        with self.assertRaises(ValidationError):
+            inv.apply_credit(self.manager, self.buyer, a, 10)  # no credit
+        with self.assertRaises(ValidationError):
+            inv.apply_credit(self.manager, self.buyer, a, 0)
+        with self.assertRaises(PermissionDenied):
+            inv.apply_credit(self.worker, self.buyer, a, 10)
+
+    def test_update_buyer(self):
+        inv.update_buyer(self.manager, self.buyer, phone="0812", payment_terms_days=30)
+        self.buyer.refresh_from_db()
+        self.assertEqual((self.buyer.phone, self.buyer.payment_terms_days), ("0812", 30))
+        with self.assertRaises(PermissionDenied):
+            inv.update_buyer(self.cashier, self.buyer, phone="x")

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load ui gotani %}
+{% block title %}{{ cycle.variety }} @ {{ cycle.element }}{% endblock %}
+{% block content %}
+<div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
+  <a href="{% url 'farm:element_detail' cycle.element_id %}" class="text-sm text-stone-500 hover:underline">← {{ cycle.element }}</a>
+  <div class="mb-5 mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="flex flex-wrap items-center gap-3 text-2xl font-bold tracking-tight">{{ cycle.variety }}
+        {% if cycle.is_active %}{% pill cycle.get_stage_display tone="green" %}{% else %}{% pill "Ditutup" tone="gray" %}{% endif %}
+        {% if overdue %}{% pill "Panen terlewat" tone="red" %}{% endif %}</h1>
+      <p class="mt-1 text-sm text-stone-500">{{ cycle.element }} · mulai {{ cycle.planting_start_date|date:"d M Y" }} · {{ days }} hari{% if not cycle.is_active %} · ditutup {{ cycle.closed_at|date:"d M Y" }}{% endif %}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {% if cycle.is_active %}
+      <button type="button" @click="sheet=true" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Ubah perkiraan</button>
+      <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Cek pra-panen</a>
+      {% endif %}
+      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Telusuri &amp; CSV</a>{% endif %}
+    </div>
+  </div>
+
+  <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {% with ys=yield_summary %}
+    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Perkiraan panen</p>
+      <p class="mt-1 text-xl font-semibold {% if overdue %}text-red-700{% endif %}">{{ cycle.expected_harvest_date|date:"d M Y"|default:"—" }}</p>
+      {% if cycle.variety.days_to_harvest %}<p class="text-xs text-stone-400">Umur panen varietas {{ cycle.variety.days_to_harvest }} hari</p>{% endif %}</div>
+    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Hasil layak jual vs perkiraan</p>
+      <p class="mt-1 text-xl font-semibold">{{ ys.actual_kg|kg }} kg{% if ys.expected_kg %} <span class="text-sm font-normal text-stone-500">/ {{ ys.expected_kg|kg }} kg</span>{% endif %}</p>
+      {% if ys.pct is not None %}<div class="mt-2 h-1.5 rounded-full bg-stone-100"><div class="h-1.5 rounded-full bg-emerald-500" style="width: {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></div></div><p class="mt-1 text-xs text-stone-400">{{ ys.pct|pct }} dari perkiraan</p>{% endif %}</div>
+    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Jumlah tanaman</p>
+      <p class="mt-1 text-xl font-semibold">{{ cycle.planted_qty|default:"—" }}</p>
+      {% if ys.per_plant_kg is not None %}<p class="text-xs text-stone-400">{{ ys.per_plant_kg|kg }} kg per tanaman</p>{% endif %}</div>
+    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Cek pra-panen terakhir</p>
+      {% if latest_check %}<p class="mt-1 text-xl font-semibold {% if latest_check.completed_pct < 100 %}text-amber-700{% else %}text-emerald-700{% endif %}">{{ latest_check.completed_pct|pct:0 }}</p><p class="text-xs text-stone-400">{{ latest_check.recorded_at|date:"d M Y H:i" }}</p>
+      {% else %}<p class="mt-1 text-xl font-semibold text-stone-400">Belum ada</p>{% endif %}</div>
+    {% endwith %}
+  </div>
+
+  {% if next_stages %}
+  <form method="post" action="{% url 'farm:cycle_stage' cycle.pk %}" class="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-stone-200 bg-white p-4 text-sm">{% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <span class="font-medium">Tahap berikutnya</span>
+    <select name="stage" class="w-auto">{% for value, label in next_stages %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+    <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white" onclick="return this.form.stage.value !== 'CLEARING' || confirm('Tahap Pembersihan menutup siklus. Lanjutkan?')">Majukan tahap</button>
+    <span class="text-xs text-stone-400">Tahap hanya bisa maju. Sebelum Panen, lengkapi cek pra-panen agar tidak muncul peringatan.</span>
+    <ol class="mt-2 flex w-full flex-wrap gap-1 text-xs">{% for value, label in stage_choices %}<li class="rounded-full px-2 py-0.5 {% if value == cycle.stage %}bg-emerald-600 text-white{% elif forloop.counter0 < cycle.stage_index %}bg-emerald-100 text-emerald-800{% else %}bg-stone-100 text-stone-500{% endif %}">{{ label }}</li>{% endfor %}</ol>
+  </form>
+  {% endif %}
+
+  {% if roles.finance %}
+  <div class="mb-5 grid gap-3 sm:grid-cols-3">
+    {% include "components/kpi.html" with label="Biaya terserap ke panen" value=trace.totals.absorbed_cost|rupiah %}
+    {% include "components/kpi.html" with label="Biaya belum terserap" value=unabsorbed|rupiah hint="Dihapusbukukan bila siklus ditutup" %}
+    {% include "components/kpi.html" with label="Pendapatan (POS + invoice)" value=trace.totals.revenue|rupiah %}
+  </div>
+  {% endif %}
+
+  <div class="rounded-xl border border-stone-200 bg-white">
+    <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Linimasa</h2></div>
+    <ol class="divide-y divide-stone-100">
+      {% for e in events %}
+      <li class="flex gap-3 px-4 py-3 text-sm">
+        <span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {% if e.kind == 'harvest' %}bg-emerald-500{% elif e.kind == 'spoilage' %}bg-red-500{% elif e.kind == 'check' %}bg-sky-500{% elif e.kind == 'start' or e.kind == 'close' %}bg-stone-800{% else %}bg-amber-400{% endif %}"></span>
+        <div class="min-w-0 flex-1">
+          <p><span class="font-medium">{{ e.title }}</span> <span class="text-stone-500">{{ e.body }}</span></p>
+          <p class="text-xs text-stone-400">{{ e.at|date:"d M Y H:i" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</p>
+          {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="Foto pengamatan" class="mt-2 h-24 rounded-lg object-cover"></a>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+
+  {% if cycle.is_active %}
+  <div x-show="sheet" x-cloak class="fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
+    <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
+      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4"><h2 class="text-lg font-semibold">Perkiraan siklus</h2>
+        <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button></div>
+      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+        {% include "_form_fields.html" with cols="grid-cols-1" %}
+        <div class="mt-auto flex justify-end gap-2 pt-6"><button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm">Batal</button>
+          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

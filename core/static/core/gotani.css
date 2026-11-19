@@ -28,3 +28,11 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #10b98155; border
 .dark .bg-emerald-100 { background-color: #0d3324 !important; }
 .dark .text-amber-800 { color: #fcd34d !important; } .dark .text-sky-800 { color: #7dd3fc !important; }
 .dark .text-teal-800 { color: #5eead4 !important; }
+
+.dark .viz-root { --grid: #2a322d !important; --ink-2: #c3ccc6 !important; }
+#sw-update[hidden] { display: none !important; }
+.dark .bg-emerald-50\/60 { background-color: #10291d !important; }
+.dark .hover\:bg-stone-50:hover, .dark .hover\:bg-red-50:hover { background-color: #1f2622 !important; }
+.dark .border-emerald-200, .dark .border-sky-200, .dark .border-amber-200, .dark .border-red-200 { border-color: #2a322d !important; }
+.dark .text-sky-800 { color: #7dd3fc !important; } .dark .text-red-700 { color: #f87171 !important; } .dark .text-amber-700 { color: #fbbf24 !important; }
+.dark .bg-stone-800 { background-color: #e7ece9 !important; color: #0c0f0d !important; }

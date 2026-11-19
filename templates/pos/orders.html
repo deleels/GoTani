@@ -1,8 +1,20 @@
 {% extends "pos/_layout.html" %}
-{% load gotani %}
-{% block title %}Order hari ini{% endblock %}
+{% load gotani ui %}
+{% block title %}Pesanan{% endblock %}
 {% block content %}
-<h1 class="mb-3 text-lg font-semibold">Order {{ today|date:"d-m-Y" }}</h1>
+<div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Pesanan {{ today|date:"d M Y" }}</h1>
+    <p class="mt-1 text-sm text-stone-500">Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER.</p>
+  </div>
+  <form method="get" class="flex items-end gap-2 text-sm"><label class="w-44">Tanggal<input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" onchange="this.form.submit()"></label>
+    {% if not is_today %}<a href="?" class="rounded-lg border border-stone-200 px-3 py-2">Hari ini</a>{% endif %}</form>
+</div>
+<div class="mb-5 grid gap-3 sm:grid-cols-3">
+  {% include "components/kpi.html" with label="Order selesai" value=kpi.count %}
+  {% include "components/kpi.html" with label="Total dibayar (termasuk PPN)" value=kpi.gross|rupiah %}
+  {% include "components/kpi.html" with label="Dibatalkan" value=kpi.voided %}
+</div>
 <div class="overflow-x-auto rounded-lg border bg-white">
   <table class="w-full text-sm">
     <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Nomor</th><th class="p-2">Waktu</th><th class="p-2">Kasir</th><th class="p-2">Bayar</th><th class="p-2 text-right">Total</th><th class="p-2">Status</th><th class="p-2"></th></tr></thead>
@@ -14,7 +26,7 @@
         <td class="p-2">{{ o.cashier }}</td>
         <td class="p-2">{{ o.get_payment_method_display }}</td>
         <td class="p-2 text-right {% if o.status == 'VOIDED' %}line-through{% endif %}">{{ o.total_gross_idr|rupiah }}</td>
-        <td class="p-2">{{ o.get_status_display }}</td>
+        <td class="p-2">{% pill o.get_status_display o.status %}</td>
         <td class="whitespace-nowrap p-2">
           <a class="text-emerald-700 underline" href="{% url 'pos:receipt' o.pk %}">Struk</a>
           {% if o.voidable %}
@@ -25,7 +37,7 @@
           {% endif %}
         </td>
       </tr>
-    {% empty %}<tr><td colspan="7" class="p-3 text-stone-400">Belum ada order hari ini.</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="7" class="px-4 py-10 text-center"><p class="font-medium">Belum ada order pada tanggal ini.</p><p class="mt-1 text-sm text-stone-500">Penjualan dari Kasir (POS) muncul di sini lengkap dengan struknya.</p></td></tr>{% endfor %}
     </tbody>
   </table>
 </div>

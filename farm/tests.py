@@ -251,6 +251,24 @@ class SeedDemoTests(TestCase):
         self.assertGreater(unabsorbed_cycle_cost(closed), 0)
         self.assertEqual(CropCycle.objects.filter(is_active=True).count(), 3)
 
+        from invoicing.models import Buyer, Invoice
+        from invoicing.services import buyer_credit
+
+        statuses = {i.payment_status() or i.status for i in Invoice.objects.all()}
+        self.assertTrue({"PAID", "PARTIALLY_PAID", "OVERDUE", "VOID", "DRAFT"} <= statuses, statuses)
+        self.assertTrue(any(buyer_credit(b) > 0 for b in Buyer.objects.all()))
+
+        from core.services import get_farm_profile
+        from farm.models import ActivityLog, PreHarvestCheck
+        from geo.models import FieldPolygon
+
+        self.assertTrue(get_farm_profile().has_location)
+        self.assertEqual(FieldPolygon.objects.count(), 1)
+        self.assertTrue(PreHarvestCheck.objects.filter(completed_pct=100).exists())
+        self.assertTrue(PreHarvestCheck.objects.filter(completed_pct__lt=100).exists())
+        self.assertFalse(CropCycle.objects.filter(expected_harvest_date__isnull=True).exists())
+        self.assertTrue(ActivityLog.objects.filter(duration_minutes__gt=0).exists())
+
     def test_seed_demo_refuses_cycles_without_history(self):
         from django.core.management.base import CommandError
 
