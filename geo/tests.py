@@ -200,6 +200,9 @@ class AgroTests(TestCase):
         post.side_effect = requests.Timeout("slow")
         self.assertIsNone(services.fetch_satellite(self.polygon))
         self.assertIsNone(services.fetch_soil(self.polygon))
+        self.assertEqual(services.satellite_block_reason(self.polygon), services.SAT_API_ERROR)
+        self.assertEqual(post.call_count, 1)  # failure remembered → soil did not re-register
+        cache.clear()
         post.side_effect = None
         post.return_value = FakeResponse({"id": "p1"})
         get.return_value = FakeResponse(status=401)
@@ -213,6 +216,47 @@ class AgroTests(TestCase):
         self.assertIsNone(services.fetch_satellite(self.polygon))
         self.assertIsNone(services.fetch_soil(self.polygon))
         post.assert_not_called()
+        self.assertEqual(services.satellite_block_reason(self.polygon), services.SAT_NO_KEY)
+
+    @mock.patch("geo.services.requests.post")
+    def test_polygon_under_1_ha_never_calls_agromonitoring(self, post):
+        small = services.create_polygon(self.owner, "Greenhouse", square(lon=106.82, side=0.0005))  # ~0.31 ha
+        self.assertFalse(services.satellite_eligible(small))
+        self.assertTrue(services.satellite_eligible(self.polygon))
+        self.assertEqual(services.satellite_block_reason(small), services.SAT_TOO_SMALL)
+        self.assertIsNone(services.fetch_satellite(small))
+        self.assertIsNone(services.fetch_soil(small))
+        post.assert_not_called()
+        self.assertIn("1–3.000 ha", services.satellite_message(services.SAT_TOO_SMALL, small))
+
+    @mock.patch("geo.services.requests.post")
+    def test_rejected_registration_is_explained_and_backed_off(self, post):
+        post.return_value = FakeResponse(status=401)
+        self.assertIsNone(services.ensure_agro_polygon(self.polygon))
+        self.assertEqual(services.satellite_block_reason(self.polygon), services.SAT_KEY_REJECTED)
+        self.assertIsNone(services.ensure_agro_polygon(self.polygon))
+        self.assertEqual(post.call_count, 1)  # backed off
+        with override_settings(AGRO_API_KEY="fixed-key"):
+            post.return_value = FakeResponse({"id": "agro-9"})
+            self.assertEqual(services.ensure_agro_polygon(self.polygon), "agro-9")  # new key retries at once
+        self.assertEqual(post.call_count, 2)
+
+        other = services.create_polygon(self.owner, "Blok B", square(lon=106.83))
+        post.return_value = FakeResponse(status=422)
+        self.assertIsNone(services.ensure_agro_polygon(other))
+        self.assertEqual(services.satellite_block_reason(other), services.SAT_POLYGON_REJECTED)
+        services.update_polygon(self.owner, other, geojson=square(lon=106.83, side=0.0012))  # reshaped → retry
+        self.assertIsNone(services.satellite_block_reason(other))
+
+    @mock.patch("geo.services.requests.post")
+    @mock.patch("geo.services.requests.get")
+    def test_no_imagery_yet_is_cached_briefly(self, get, post):
+        post.return_value = FakeResponse({"id": "agro-1"})
+        get.side_effect = lambda url, params=None, timeout=None: FakeResponse([] if url.endswith("/image/search") else [])
+        with mock.patch.object(services.cache, "set", wraps=services.cache.set) as cache_set:
+            sat = services.fetch_satellite(self.polygon)
+        self.assertEqual(sat["passes"], [])
+        self.assertIn(services.SAT_EMPTY_TTL, [c.args[2] for c in cache_set.call_args_list])
 
 
 class GeoViewTests(TestCase):
@@ -273,9 +317,44 @@ class GeoViewTests(TestCase):
         p = services.create_polygon(self.owner, "Blok A", square())
         self.client.force_login(self.worker)
         data = self.client.get(reverse("geo:polygon_data", args=[p.pk])).json()
-        self.assertEqual(data["message"], "data tidak tersedia")
+        self.assertEqual(data["reason"], services.SAT_NO_KEY)
+        self.assertIn("data tidak tersedia", data["message"].lower())
+        self.assertIn("AGRO_API_KEY", data["message"])
         self.assertFalse(data["agro_enabled"])
         self.assertEqual(self.client.get(reverse("geo:polygon_ndvi", args=[p.pk])).status_code, 404)
+
+    @override_settings(AGRO_API_KEY="test-key")
+    @mock.patch("geo.services.requests.post")
+    @mock.patch("geo.services.requests.get")
+    def test_polygon_data_reasons(self, get, post):
+        self.client.force_login(self.worker)
+        small = services.create_polygon(self.owner, "GH", square(side=0.0005))
+        data = self.client.get(reverse("geo:polygon_data", args=[small.pk])).json()
+        self.assertEqual(data["reason"], services.SAT_TOO_SMALL)
+        self.assertFalse(self.client.get(reverse("geo:polygon_detail", args=[small.pk])).json()["satellite_ok"])
+        post.assert_not_called()
+
+        big = services.create_polygon(self.owner, "Kebun", square(lon=106.81))
+        self.assertTrue(self.client.get(reverse("geo:polygon_detail", args=[big.pk])).json()["satellite_ok"])
+        post.return_value = FakeResponse({"id": "agro-1"})
+        get.side_effect = lambda url, params=None, timeout=None: (
+            FakeResponse({"dt": 1, "t0": 300.15, "t10": 298.15, "moisture": 0.3}) if url.endswith("/soil") else FakeResponse([]))
+        data = self.client.get(reverse("geo:polygon_data", args=[big.pk])).json()
+        self.assertEqual(data["reason"], services.SAT_NO_IMAGERY)  # soil yes, imagery not yet
+        self.assertIsNone(data["satellite"])
+        self.assertEqual(data["soil"]["t10_c"], 25.0)
+
+        cache.clear()
+        FieldPolygon.objects.filter(pk=big.pk).update(agro_polygon_id=None)
+        post.return_value = FakeResponse(status=401)
+        data = self.client.get(reverse("geo:polygon_data", args=[big.pk])).json()
+        self.assertEqual(data["reason"], services.SAT_KEY_REJECTED)
+
+        cache.clear()
+        post.return_value = FakeResponse({"id": "agro-2"})
+        get.side_effect = requests.ConnectionError("offline")
+        data = self.client.get(reverse("geo:polygon_data", args=[big.pk])).json()
+        self.assertEqual(data["reason"], services.SAT_API_ERROR)
 
     def test_home_still_works_when_everything_external_fails(self):
         self.client.force_login(self.worker)

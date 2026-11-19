@@ -5,6 +5,7 @@ database cache (weather 30 min, NDVI/soil 24 h); a missing key or any failure
 returns None so the UI can show "data tidak tersedia" — never an exception.
 """
 
+import hashlib
 import logging
 import math
 from datetime import timedelta
@@ -36,6 +37,21 @@ MIN_HA = Decimal("0.02")
 MAX_HA = Decimal("1000")
 TOTAL_MAX_HA = Decimal("1000")  # Agromonitoring free-tier cap
 EARTH_R = 6371008.8  # mean Earth radius (m)
+
+# Agromonitoring only accepts polygons of 1–3000 ha (D79). Smaller polygons are still
+# mapped (greenhouses), they just get no satellite/soil data — with an explicit reason.
+AGRO_MIN_HA = Decimal("1")
+AGRO_MAX_HA = Decimal("3000")
+AGRO_FAIL_TTL = 10 * 60  # back off re-registering a rejected polygon
+SAT_EMPTY_TTL = 3 * 60 * 60  # no imagery yet → re-check sooner than 24 h
+
+# Why satellite/soil data is unavailable (D79). None = available.
+SAT_NO_KEY = "NO_KEY"
+SAT_TOO_SMALL = "TOO_SMALL"
+SAT_KEY_REJECTED = "KEY_REJECTED"
+SAT_POLYGON_REJECTED = "POLYGON_REJECTED"
+SAT_API_ERROR = "API_ERROR"
+SAT_NO_IMAGERY = "NO_IMAGERY"
 
 WEATHER_CODES = {
     0: "Cerah", 1: "Cerah berawan", 2: "Berawan sebagian", 3: "Berawan", 45: "Berkabut", 48: "Berkabut",
@@ -130,6 +146,7 @@ def update_polygon(actor, polygon, *, name=None, geojson=None, element=False) ->
         if geometry != polygon.geojson:
             _agro_delete(polygon.agro_polygon_id)  # remote geometry is immutable → re-register lazily
             polygon.agro_polygon_id = None
+            cache.delete(_fail_key(polygon))  # new shape gets a fresh registration attempt
         polygon.geojson, polygon.area_ha = geometry, area
     if element is not False:
         polygon.element = element
@@ -175,12 +192,13 @@ def _get_json(url, params):
 
 
 def _cached(key, ttl, fetch):
+    """`ttl` may be a callable of the fetched value (e.g. shorter for empty results)."""
     hit = cache.get(key)
     if hit is not None:
         return hit
     value = fetch()
     if value is not None:
-        cache.set(key, value, ttl)
+        cache.set(key, value, ttl(value) if callable(ttl) else ttl)
     return value
 
 
@@ -262,21 +280,70 @@ def _agro_delete(polygon_id):
         log.warning("Hapus poligon Agromonitoring gagal: %s", exc)
 
 
+def satellite_eligible(polygon: FieldPolygon) -> bool:
+    return AGRO_MIN_HA <= polygon.area_ha <= AGRO_MAX_HA
+
+
+def _fail_key(polygon):
+    # Keyed by the API key too, so fixing AGRO_API_KEY retries immediately.
+    digest = hashlib.sha256(agro_key().encode()).hexdigest()[:10]
+    return f"agro-fail:{polygon.pk}:{digest}"
+
+
+def satellite_block_reason(polygon: FieldPolygon):
+    """Why satellite/soil data cannot be fetched right now, or None (D79). Never calls the network."""
+    if not agro_key():
+        return SAT_NO_KEY
+    if not satellite_eligible(polygon):
+        return SAT_TOO_SMALL
+    if polygon.agro_polygon_id:
+        return None
+    return cache.get(_fail_key(polygon))
+
+
+def satellite_message(reason, polygon: FieldPolygon):
+    ha = f"{polygon.area_ha.normalize():f}".replace(".", ",")
+    return {
+        SAT_NO_KEY: "Data tidak tersedia: kunci Agromonitoring (AGRO_API_KEY) belum dipasang di server.",
+        SAT_TOO_SMALL: (f"Data satelit tidak tersedia: poligon ini {ha} ha, sedangkan Agromonitoring memerlukan "
+                        "1–3.000 ha. Gambar poligon yang lebih luas (mis. seluruh kebun) untuk NDVI dan data tanah."),
+        SAT_KEY_REJECTED: ("Data tidak tersedia: kunci Agromonitoring ditolak. Periksa AGRO_API_KEY; "
+                           "kunci baru bisa butuh beberapa jam sampai aktif."),
+        SAT_POLYGON_REJECTED: "Data tidak tersedia: Agromonitoring menolak poligon ini (periksa luas dan bentuknya).",
+        SAT_API_ERROR: "Data tidak tersedia: layanan Agromonitoring tidak merespons. Coba lagi nanti.",
+        SAT_NO_IMAGERY: ("Belum ada citra satelit untuk poligon ini. Citra pertama bisa butuh beberapa hari "
+                         "setelah poligon didaftarkan."),
+    }.get(reason, "Data tidak tersedia.")
+
+
 def ensure_agro_polygon(polygon: FieldPolygon):
-    """Register the polygon with Agromonitoring once; returns its id or None."""
+    """Register the polygon with Agromonitoring once; returns its id or None.
+
+    A rejected registration is remembered for AGRO_FAIL_TTL (see `satellite_block_reason`).
+    """
     if polygon.agro_polygon_id:
         return polygon.agro_polygon_id
-    if not agro_key():
+    if satellite_block_reason(polygon):
         return None
+    fail_key = _fail_key(polygon)
     try:
         r = requests.post(
             f"{AGRO_BASE}/polygons", params={"appid": agro_key(), "duplicated": "true"}, timeout=TIMEOUT,
             json={"name": polygon.name[:60], "geo_json": {"type": "Feature", "properties": {}, "geometry": polygon.geojson}},
         )
+        if r.status_code in (401, 403):
+            log.warning("Kunci Agromonitoring ditolak (%s)", r.status_code)
+            cache.set(fail_key, SAT_KEY_REJECTED, AGRO_FAIL_TTL)
+            return None
+        if 400 <= r.status_code < 500:
+            log.warning("Agromonitoring menolak poligon %s (%s)", polygon.pk, r.status_code)
+            cache.set(fail_key, SAT_POLYGON_REJECTED, AGRO_FAIL_TTL)
+            return None
         r.raise_for_status()
         pid = str(r.json()["id"])
-    except (requests.RequestException, ValueError, KeyError) as exc:
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
         log.warning("Daftar poligon Agromonitoring gagal: %s", exc)
+        cache.set(fail_key, SAT_API_ERROR, AGRO_FAIL_TTL)
         return None
     FieldPolygon.objects.filter(pk=polygon.pk).update(agro_polygon_id=pid)
     polygon.agro_polygon_id = pid
@@ -319,7 +386,7 @@ def fetch_satellite(polygon: FieldPolygon, days=60, now=None):
         latest_image = next((r["ndvi_image"] for r in rows if r["ndvi_image"]), None)
         return {"passes": rows, "history": hist, "latest_image": latest_image}
 
-    return _cached(f"sat:{pid}:{start // 86400}", SAT_TTL, fetch)
+    return _cached(f"sat:{pid}:{start // 86400}", lambda v: SAT_TTL if v["passes"] else SAT_EMPTY_TTL, fetch)
 
 
 def fetch_soil(polygon: FieldPolygon):

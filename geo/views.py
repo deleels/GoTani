@@ -24,7 +24,7 @@ def polygon_payload(p: FieldPolygon):
         "id": p.pk, "name": p.name, "geojson": p.geojson, "area_ha": str(p.area_ha), "area_m2": str(p.area_m2.quantize(1)),
         "element_id": p.element_id, "element": p.element.name if p.element else None,
         "element_area_m2": str(p.element.area_m2) if p.element else None, "center": [lat, lon],
-        "registered": bool(p.agro_polygon_id),
+        "registered": bool(p.agro_polygon_id), "satellite_ok": services.satellite_eligible(p),
     }
 
 
@@ -111,10 +111,19 @@ class PolygonDataView(RoleRequiredMixin, View):
 
     def get(self, request, pk):
         polygon = get_object_or_404(FieldPolygon, pk=pk)
-        sat = services.public_satellite(services.fetch_satellite(polygon))
-        soil = services.fetch_soil(polygon)
-        return JsonResponse({"satellite": sat, "soil": soil, "message": None if (sat or soil) else UNAVAILABLE,
-                             "agro_enabled": bool(services.agro_key())})
+        sat = soil = None
+        reason = services.satellite_block_reason(polygon)  # no key / < 1 ha → no network call at all
+        if reason is None:
+            sat = services.public_satellite(services.fetch_satellite(polygon))
+            soil = services.fetch_soil(polygon)
+            reason = services.satellite_block_reason(polygon)  # registration may have just been rejected
+            if reason is None and not (sat and sat["passes"]):
+                reason = services.SAT_NO_IMAGERY if (sat is not None or soil) else services.SAT_API_ERROR
+        return JsonResponse({
+            "satellite": sat if sat and sat["passes"] else None, "soil": soil, "reason": reason,
+            "message": services.satellite_message(reason, polygon) if reason else None,
+            "agro_enabled": bool(services.agro_key()),
+        })
 
 
 class NdviImageView(RoleRequiredMixin, View):

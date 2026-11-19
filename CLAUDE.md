@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D78); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D79); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -112,7 +112,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 31. **Staff:** OWNER creates users (username, full name, role, temporary password → `must_change_password=True`; middleware forces a password change on next request). Users are deactivated, never deleted. Cannot deactivate yourself or the last active OWNER. No email anywhere.
 32. **Notifications** are computed live (no notification rows), polled every 60 s: low stock (farm roles), pending expense approvals, overdue invoices, unpriced products (OWNER/MANAGER), cycles past `expected_harvest_date` without reaching HARVESTING (farm roles). Unread = created/observed after `notifications_seen_at`.
 33. **Polygons:** valid (shapely), no self-intersection, 0.02 ≤ area ≤ 1000 ha, total of all polygons ≤ 1000 ha (free-tier cap). Area is computed server-side. Linking to an element never overwrites `area_m2` silently — UI shows plotted vs recorded area with a "use plotted area" action.
-34. **External APIs** (Open-Meteo weather — no key; Agromonitoring NDVI/EVI/NDWI/soil — `AGRO_API_KEY` in `.env`) are called only from `geo/services.py`, cached, mocked in all tests (CI never hits the network). Missing key or API failure → UI shows "data tidak tersedia"; the rest of the app is unaffected.
+34. **External APIs** (Open-Meteo weather — no key; Agromonitoring NDVI/EVI/NDWI/soil — `AGRO_API_KEY` in `.env`) are called only from `geo/services.py`, cached, mocked in all tests (CI never hits the network). Missing key or API failure → UI shows "data tidak tersedia" with the reason; polygons under 1 ha never call Agromonitoring (its 1–3000 ha limit, D79); the rest of the app is unaffected.
 
 ## Roles (Django Groups + `RoleRequiredMixin`, 403 tested)
 | Role | Access |
