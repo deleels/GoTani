@@ -31,7 +31,7 @@ class StaffPasswordForm(StyledMixin, forms.Form):
 class FarmProfileForm(StyledMixin, forms.ModelForm):
     class Meta:
         model = FarmProfile
-        fields = ["name", "address", "phone", "latitude", "longitude", "logo"]
+        fields = ["name", "address", "phone", "latitude", "longitude", "logo", "is_pkp"]
 
 
 class OwnProfileForm(StyledMixin, forms.Form):

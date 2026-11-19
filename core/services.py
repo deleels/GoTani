@@ -11,12 +11,17 @@ from farm.bootstrap import ROLE_OWNER, ROLES, user_has_role
 
 from .models import FarmProfile, UserProfile
 
-PROFILE_FIELDS = ("name", "address", "phone", "latitude", "longitude", "logo")
+PROFILE_FIELDS = ("name", "address", "phone", "latitude", "longitude", "logo", "is_pkp")
 
 
 def get_farm_profile() -> FarmProfile:
     profile, _ = FarmProfile.objects.get_or_create(pk=1)
     return profile
+
+
+def farm_is_pkp() -> bool:
+    """D80: PPN applies only when the farm is a PKP."""
+    return FarmProfile.objects.filter(pk=1, is_pkp=True).exists()
 
 
 def get_user_profile(user) -> UserProfile:

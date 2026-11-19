@@ -549,6 +549,8 @@ class AnalyticsTests(SiteFixtures):
         from inventory.models import Tax
         from invoicing import services as inv
 
+        from core.models import FarmProfile
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
         self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
         self.high.save()
         manager = self.users[ROLE_MANAGER]

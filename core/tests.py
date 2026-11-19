@@ -184,6 +184,13 @@ class StaffViewTests(Base):
                                                            "latitude": "-6.6", "longitude": "106.8"})
         self.assertRedirects(resp, reverse("core:settings"))
         self.assertEqual(services.get_farm_profile().name, "Kebun Ciawi")
+        self.assertFalse(services.farm_is_pkp())  # D80: off by default, unchecked box stays off
+
+    def test_settings_toggles_pkp(self):
+        self.client.force_login(self.owner)
+        self.client.post(reverse("core:settings"), {"name": "Kebun", "address": "", "phone": "",
+                                                    "latitude": "", "longitude": "", "is_pkp": "on"})
+        self.assertTrue(services.farm_is_pkp())
 
 
 class ShellTests(Base):

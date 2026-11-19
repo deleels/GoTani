@@ -12,7 +12,7 @@
 <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
   <div>
     <h1 class="text-2xl font-bold tracking-tight">Analitik</h1>
-    <p class="mt-1 text-sm text-stone-500">Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual).</p>
+    <p class="mt-1 text-sm text-stone-500">Semua angka bersih dari {% if farm_is_pkp %}PPN dan {% endif %}diskon invoice. Invoice dihitung pada tanggal terbit (akrual).</p>
   </div>
   <form method="get" class="flex flex-wrap items-end gap-2 text-sm">
     <label class="w-40">Dari<input type="date" name="start" value="{{ m.start|date:'Y-m-d' }}"></label>
@@ -38,7 +38,7 @@
 </div>
 
 <div class="mb-6 grid gap-3 md:grid-cols-4">
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">PPN terkumpul</div><div class="text-xl font-semibold">{{ k.ppn_collected|rupiah }}</div><div class="text-xs text-stone-400">Kewajiban pajak, bukan pendapatan</div></div>
+  {% if farm_is_pkp or k.ppn_collected %}<div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">PPN terkumpul</div><div class="text-xl font-semibold">{{ k.ppn_collected|rupiah }}</div><div class="text-xs text-stone-400">Kewajiban pajak, bukan pendapatan</div></div>{% endif %}
   <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Piutang berjalan</div><div class="text-xl font-semibold">{{ k.receivables_outstanding|rupiah }}</div><div class="text-xs text-stone-400">Per hari ini</div></div>
   <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Piutang jatuh tempo</div><div class="text-xl font-semibold text-red-700">{{ k.receivables_overdue|rupiah }}</div></div>
   <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pembelian input (kas keluar)</div><div class="text-xl font-semibold">{{ k.input_purchases|rupiah }}</div><div class="text-xs text-stone-400">Aset persediaan, bukan beban</div></div>

@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D79); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D80); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -21,7 +21,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 ## Django Apps & Data Models
 
 ### 0. `core` (Farm profile, staff, shell)
-- `FarmProfile` (singleton, pk=1): `name`, `address`, `phone`, `latitude`, `longitude` (nullable Decimal), `logo` (optional ImageField) — used by weather, map centre, invoice/receipt header. OWNER edits in Pengaturan.
+- `FarmProfile` (singleton, pk=1): `name`, `address`, `phone`, `latitude`, `longitude` (nullable Decimal), `logo` (optional ImageField), `is_pkp` (bool, default False, D80) — used by weather, map centre, invoice/receipt header. OWNER edits in Pengaturan.
 - `UserProfile` (one-to-one User): `must_change_password` (bool), `notifications_seen_at` (nullable datetime)
 
 ### 1. `farm` (Upstream Production)
@@ -89,7 +89,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 16. **All stock mutations go through** `inventory.services.move_lot_stock()` and `farm.services.move_input_stock()`: `select_for_update` the row, validate, mutate, append ledger. Nothing else touches quantities.
 17. **Spoilage** targets a specific lot (UI preselects the oldest); cost is `qty × lot.unit_cogs_idr`, reported as spoilage loss. Lot unit COGS is unchanged.
 18. **Invariants** (tests + `python manage.py check_mass_balance`): `lot.qty_remaining_kg == Σ StockLedger.qty_kg` per lot; `lot.qty_initial_kg` matches its batch grade kg; no negative stock; input `stock_qty == Σ InputLedger.qty`.
-19. **Tax snapshot:** each POS/invoice line copies `tax_rate_pct` from `product.tax` at sale time (0 if none). Later rate changes never rewrite history. Tax per line is rounded to 2 dp `ROUND_HALF_UP`.
+19. **Tax snapshot:** each POS/invoice line copies `tax_rate_pct` from `product.tax` at sale time (0 if none, inactive, or the farm is not PKP — D80). Later rate changes never rewrite history. Tax per line is rounded to 2 dp `ROUND_HALF_UP`.
 
 ### POS
 20. Cart lives in the browser (Alpine.js) — no reservation. Checkout posts product IDs + kg only; prices are read server-side from `Product.selling_price_idr` (client prices ignored). Products with no price are hidden from the POS. No discounts.

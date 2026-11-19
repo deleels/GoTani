@@ -496,6 +496,8 @@ class TaxTests(PosFixtures):
     def test_taxed_line_snapshot_and_totals(self):
         from inventory.models import Tax
 
+        from core.models import FarmProfile
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
         ppn = Tax.objects.create(name="PPN", rate_pct=D("11"))
         self.high.tax = ppn
         self.high.save()
@@ -511,6 +513,22 @@ class TaxTests(PosFixtures):
         ppn.save()
         line.refresh_from_db()
         self.assertEqual(line.tax_rate_pct, D("11"))  # history unchanged
+
+    def test_non_pkp_farm_ignores_product_tax(self):
+        """D80: a non-PKP farm snapshots 0% even when the product has an active tax; history is kept."""
+        from core.models import FarmProfile
+        from inventory.models import Tax
+
+        self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
+        self.high.save()
+        untaxed = self.sell({self.high.pk: 1})
+        self.assertEqual((untaxed.total_tax_idr, untaxed.lines.get().tax_rate_pct), (D("0.00"), D("0")))
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
+        self.assertEqual(self.sell({self.high.pk: 1}).lines.get().tax_rate_pct, D("11"))
+        FarmProfile.objects.filter(pk=1).update(is_pkp=False)
+        self.assertEqual(self.sell({self.high.pk: 1}).total_tax_idr, D("0.00"))
+        untaxed.refresh_from_db()
+        self.assertEqual(untaxed.total_tax_idr, D("0.00"))
 
     def test_inactive_tax_is_not_applied(self):
         from inventory.models import Tax

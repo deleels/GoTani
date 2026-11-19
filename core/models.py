@@ -13,6 +13,9 @@ class FarmProfile(models.Model):
     latitude = models.DecimalField("lintang", max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField("bujur", max_digits=9, decimal_places=6, null=True, blank=True)
     logo = models.ImageField("logo", upload_to="farm/", blank=True)
+    # D80: off = not a PKP; product taxes are kept but ignored, new sales snapshot 0%.
+    is_pkp = models.BooleanField("Pengusaha Kena Pajak (PKP)", default=False,
+                                 help_text="Aktifkan hanya bila kebun terdaftar sebagai PKP dan wajib memungut PPN.")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

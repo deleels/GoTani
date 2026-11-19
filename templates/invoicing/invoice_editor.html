@@ -7,7 +7,7 @@
 <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{% url 'invoicing:invoices' %}{% endif %}" class="text-sm text-stone-500 hover:underline">← Kembali</a>
 <div class="mb-5 mt-1">
   <h1 class="text-2xl font-bold tracking-tight">{% if invoice %}Ubah {{ invoice }}{% else %}Invoice Baru{% endif %}</h1>
-  <p class="mt-1 text-sm text-stone-500">Harga belum termasuk PPN. Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di bawah pratinjau — perhitungan final dilakukan server.</p>
+  <p class="mt-1 text-sm text-stone-500">{% if farm_is_pkp %}Harga belum termasuk PPN. {% endif %}Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di bawah pratinjau — perhitungan final dilakukan server.</p>
 </div>
 
 <form method="post" x-data="invoiceEditor()" class="grid gap-5 lg:grid-cols-3">{% csrf_token %}
@@ -52,7 +52,7 @@
       <div class="grid gap-3 sm:grid-cols-3">
         <label class="block text-sm"><span class="text-stone-600">Diskon</span><div class="mt-1">{{ form.discount_type }}</div></label>
         <label class="block text-sm"><span class="text-stone-600">Nilai diskon <span class="text-xs" x-text="dtype === 'PERCENT' ? '(%)' : '(Rp)'"></span></span><div class="mt-1">{{ form.discount_value }}</div>{% for e in form.discount_value.errors %}<span class="text-xs text-red-600">{{ e }}</span>{% endfor %}</label>
-        <label class="block text-sm"><span class="text-stone-600">Ongkos kirim (tanpa PPN)</span><div class="mt-1">{{ form.shipping_idr }}</div></label>
+        <label class="block text-sm"><span class="text-stone-600">Ongkos kirim{% if farm_is_pkp %} (tanpa PPN){% endif %}</span><div class="mt-1">{{ form.shipping_idr }}</div></label>
         <label class="block text-sm sm:col-span-3"><span class="text-stone-600">Catatan</span><div class="mt-1">{{ form.notes }}</div></label>
       </div>
     </div>
@@ -63,7 +63,7 @@
     <dl class="space-y-1.5">
       <div class="flex justify-between"><dt class="text-stone-500">Subtotal</dt><dd x-text="rp(totals().subtotal)"></dd></div>
       <div class="flex justify-between"><dt class="text-stone-500">Diskon</dt><dd x-text="'− ' + rp(totals().discount)"></dd></div>
-      <div class="flex justify-between"><dt class="text-stone-500">PPN</dt><dd x-text="rp(totals().tax)"></dd></div>
+      {% if farm_is_pkp %}<div class="flex justify-between"><dt class="text-stone-500">PPN</dt><dd x-text="rp(totals().tax)"></dd></div>{% endif %}
       <div class="flex justify-between"><dt class="text-stone-500">Ongkos kirim</dt><dd x-text="rp(totals().shipping)"></dd></div>
       <div class="flex justify-between border-t border-stone-200 pt-2 text-base font-semibold"><dt>Total</dt><dd x-text="rp(totals().total)"></dd></div>
     </dl>

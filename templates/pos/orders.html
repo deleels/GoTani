@@ -12,7 +12,7 @@
 </div>
 <div class="mb-5 grid gap-3 sm:grid-cols-3">
   {% include "components/kpi.html" with label="Order selesai" value=kpi.count %}
-  {% include "components/kpi.html" with label="Total dibayar (termasuk PPN)" value=kpi.gross|rupiah %}
+  {% include "components/kpi.html" with label="Total dibayar" value=kpi.gross|rupiah %}
   {% include "components/kpi.html" with label="Dibatalkan" value=kpi.voided %}
 </div>
 <div class="overflow-x-auto rounded-lg border bg-white">

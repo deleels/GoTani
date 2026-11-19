@@ -65,7 +65,7 @@
       <dl class="space-y-1.5">
         <div class="flex justify-between"><dt class="text-stone-500">Subtotal</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>
         {% if invoice.discount_idr %}<div class="flex justify-between"><dt class="text-stone-500">Diskon{% if invoice.discount_type == 'PERCENT' %} ({{ invoice.discount_value|pct:0 }}){% endif %}</dt><dd>− {{ invoice.discount_idr|rupiah }}</dd></div>{% endif %}
-        <div class="flex justify-between"><dt class="text-stone-500">PPN</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>
+        {% if invoice.tax_idr or farm_is_pkp %}<div class="flex justify-between"><dt class="text-stone-500">PPN</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>{% endif %}
         {% if invoice.shipping_idr %}<div class="flex justify-between"><dt class="text-stone-500">Ongkos kirim</dt><dd>{{ invoice.shipping_idr|rupiah }}</dd></div>{% endif %}
         <div class="flex justify-between border-t border-stone-200 pt-2 text-base font-semibold"><dt>Total</dt><dd>{{ invoice.total_idr|rupiah }}</dd></div>
         {% if invoice.status == 'ISSUED' %}

@@ -14,7 +14,7 @@ sales over the last 30 days:
   equal split where one is not), spoilage, priced and unpriced products;
 * completed and voided POS orders;
 * wholesale buyers with paid, partly-paid, overdue, voided and draft invoices,
-  PPN on one product, and a payment that leaves buyer credit.
+  a PPN rate defined but not charged (non-PKP farm, D80), and a payment that leaves buyer credit.
 
 Every quantity is routed through the domain services in chronological order,
 so the result always passes `check_mass_balance`. Reference data (users,
@@ -587,10 +587,9 @@ class Command(BaseCommand):
                     name=name, defaults={"company": company, "phone": phone, "payment_terms_days": terms})[0]
                 for key, name, company, phone, terms in self.BUYERS
             }
-            ppn = Tax.objects.get_or_create(name="PPN", defaults={"rate_pct": D("11")})[0]
-            product = self._product("Kakao Forastero", Grade.HIGH)
-            product.tax = ppn  # processed cocoa: taxable for the demo; fresh produce stays exempt
-            product.save(update_fields=["tax"])
+            # D80: the demo farm is an individual, non-PKP farm, so it charges no PPN. The PPN rate
+            # stays defined (inactive use) so switching PKP on in Pengaturan is a one-step demo.
+            Tax.objects.get_or_create(name="PPN", defaults={"rate_pct": D("11")})
 
         self.on(25, 7, setup)
         self._invoice(24, "resto_paid", "resto", [("Melon Golden", Grade.HIGH, "20", None),

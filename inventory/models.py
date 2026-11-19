@@ -55,7 +55,12 @@ class Product(models.Model):
 
     @property
     def tax_rate_pct(self) -> Decimal:
-        return self.tax.rate_pct if self.tax is not None and self.tax.is_active else Decimal("0")
+        """Rate to snapshot on a new sale: 0 unless the farm is a PKP (D80) and the tax is active."""
+        if self.tax is None or not self.tax.is_active:
+            return Decimal("0")
+        from core.services import farm_is_pkp
+
+        return self.tax.rate_pct if farm_is_pkp() else Decimal("0")
 
     class Meta:
         ordering = ["variety__name", "grade"]

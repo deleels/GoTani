@@ -5,7 +5,7 @@
 <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
   <div>
     <h1 class="text-2xl font-bold tracking-tight">Harga Produk</h1>
-    <p class="mt-1 text-sm text-stone-500">Harga jual per kg (sudah termasuk PPN bila produk dikenai pajak). Harga katalog juga dipakai untuk membagi HPP antar grade.</p>
+    <p class="mt-1 text-sm text-stone-500">Harga jual per kg{% if farm_is_pkp %} (sudah termasuk PPN bila produk dikenai pajak){% else %} (kebun bukan PKP: PPN tidak dipungut){% endif %}. Harga katalog juga dipakai untuk membagi HPP antar grade.</p>
   </div>
 </div>
 <h2 class="mb-1 font-semibold">Produk belum berharga</h2>

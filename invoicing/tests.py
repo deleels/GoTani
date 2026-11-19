@@ -127,6 +127,8 @@ class IssueTests(InvoiceFixtures):
             self.issue(a)
 
     def test_tax_snapshot_at_issue(self):
+        from core.models import FarmProfile
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
         self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
         self.high.save()
         invoice = self.issue(self.draft([(self.high, 10, None)], discount_type="PERCENT", discount_value=10,
