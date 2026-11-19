@@ -30,7 +30,7 @@
         <td class="whitespace-nowrap p-2">
           <a class="text-emerald-700 underline" href="{% url 'pos:receipt' o.pk %}">Struk</a>
           {% if o.voidable %}
-          <form method="post" action="{% url 'pos:void' o.pk %}" class="inline" data-confirm-title="Batalkan order {{ o.order_number }}?" data-confirm="Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya." data-confirm-action="Batalkan order" data-confirm-danger>{% csrf_token %}
+          <form method="post" action="{% url 'pos:void' o.pk %}" class="inline" {% void_confirm "Batalkan order "|add:o.order_number|add:"?" "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka." "Batalkan order" %}>{% csrf_token %}
             <input type="hidden" name="next" value="{% url 'pos:orders' %}">
             <button class="ml-2 text-red-600 underline">Batalkan</button>
           </form>

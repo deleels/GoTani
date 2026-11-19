@@ -30,6 +30,16 @@ class PaymentMethod(models.TextChoices):
     TRANSFER = "TRANSFER", "Transfer"
 
 
+class VoidReason(models.TextChoices):
+    """Why a POS order or an invoice was voided (D94). OTHER needs a note."""
+
+    WRONG_ENTRY = "WRONG_ENTRY", "Salah input"
+    WRONG_PRICE = "WRONG_PRICE", "Salah harga / produk"
+    CUSTOMER_CANCELLED = "CUSTOMER_CANCELLED", "Pembeli batal"
+    PAYMENT_FAILED = "PAYMENT_FAILED", "Pembayaran gagal"
+    OTHER = "OTHER", "Lainnya"
+
+
 class Variety(models.Model):
     name = models.CharField("nama", max_length=100, unique=True)
     crop = models.CharField("tanaman", max_length=100)

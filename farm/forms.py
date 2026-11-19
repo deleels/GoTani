@@ -242,6 +242,7 @@ class SpoilageForm(StyledForm):
 class PriceForm(StyledForm):
     selling_price_idr = money_field("Harga jual per kg (Rp)")
     pos_step_kg = qty_field("Langkah kasir (kg)", required=False)
+    min_alert_kg = qty_field("Batas stok menipis (kg)", required=False, min_value=Decimal("0"))
 
 
 class StageForm(forms.Form):

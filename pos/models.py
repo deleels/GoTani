@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
-from farm.models import MONEY, QTY, PaymentMethod
+from farm.models import MONEY, QTY, PaymentMethod, VoidReason
 from inventory.models import Product, StockLot
 
 
@@ -42,6 +42,14 @@ class SaleOrder(models.Model):
         verbose_name="dibatalkan oleh",
     )
     voided_at = models.DateTimeField("dibatalkan pada", null=True, blank=True)
+    void_reason = models.CharField("alasan batal", max_length=20, choices=VoidReason.choices, blank=True)
+    void_note = models.TextField("catatan batal", blank=True)
+    # D95: CASH only — what the customer handed over and the change given (printed on the receipt).
+    cash_received_idr = models.DecimalField("uang diterima", null=True, blank=True, **MONEY)
+    change_idr = models.DecimalField("kembalian", null=True, blank=True, **MONEY)
+    # D96: every sale belongs to the open shift (nullable only for sales made before shifts existed).
+    shift = models.ForeignKey("Shift", on_delete=models.PROTECT, null=True, blank=True, related_name="orders",
+                              verbose_name="shift")
 
     class Meta:
         ordering = ["-created_at", "-id"]
@@ -64,6 +72,82 @@ class SaleOrder(models.Model):
 
     def __str__(self):
         return self.order_number
+
+
+class Shift(models.Model):
+    """One cash drawer, at most one open shift (D96). Blind count by denomination at close."""
+
+    opened_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+",
+                                  verbose_name="dibuka oleh")
+    opened_at = models.DateTimeField("dibuka pada", default=timezone.now)
+    opening_float_idr = models.DecimalField("modal awal", **MONEY)
+    is_open = models.BooleanField("terbuka", default=True)
+    closed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+                                  related_name="+", verbose_name="ditutup oleh")
+    closed_at = models.DateTimeField("ditutup pada", null=True, blank=True)
+    force_closed = models.BooleanField("ditutup paksa", default=False)
+    denominations = models.JSONField("hitungan pecahan", default=dict, blank=True)
+    counted_idr = models.DecimalField("uang dihitung", null=True, blank=True, **MONEY)
+    expected_idr = models.DecimalField("uang seharusnya", null=True, blank=True, **MONEY)
+    difference_idr = models.DecimalField("selisih", null=True, blank=True, **MONEY)
+    close_note = models.TextField("catatan tutup", blank=True)
+    review_note = models.TextField("catatan tinjauan", blank=True)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+                                    related_name="+", verbose_name="ditinjau oleh")
+    reviewed_at = models.DateTimeField("ditinjau pada", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-opened_at", "-id"]
+        verbose_name = "shift kasir"
+        verbose_name_plural = "shift kasir"
+        constraints = [
+            # One drawer → at most one open shift. A partial index on a boolean holds on SQLite and PostgreSQL
+            # alike (a unique index over NULL closed_at would not: NULLs are distinct).
+            models.UniqueConstraint(fields=["is_open"], condition=Q(is_open=True), name="one_open_shift"),
+            models.CheckConstraint(condition=Q(opening_float_idr__gte=0), name="shift_float_nonnegative"),
+        ]
+
+    def __str__(self):
+        return f"Shift #{self.pk} ({timezone.localtime(self.opened_at):%d-%m-%Y %H:%M})"
+
+    @property
+    def needs_review(self):
+        """Closed with a difference and no manager note yet → "Perlu ditinjau"."""
+        return (not self.is_open and self.difference_idr not in (None, 0) and not self.review_note)
+
+
+class CashMovement(models.Model):
+    """Money in/out of the drawer during a shift other than POS sales (D96)."""
+
+    class Kind(models.TextChoices):
+        TOP_UP = "TOP_UP", "Tambah modal"
+        DEPOSIT = "DEPOSIT", "Setor ke pemilik"
+        EXPENSE = "EXPENSE", "Bayar biaya"
+        SALE_REFUND = "SALE_REFUND", "Pengembalian order batal"
+        INVOICE_PAYMENT = "INVOICE_PAYMENT", "Pembayaran invoice"
+
+    SIGN = {Kind.TOP_UP: 1, Kind.INVOICE_PAYMENT: 1, Kind.DEPOSIT: -1, Kind.EXPENSE: -1, Kind.SALE_REFUND: -1}
+
+    shift = models.ForeignKey(Shift, on_delete=models.PROTECT, related_name="movements", verbose_name="shift")
+    kind = models.CharField("jenis", max_length=20, choices=Kind.choices)
+    amount_idr = models.DecimalField("jumlah", **MONEY)
+    note = models.CharField("catatan", max_length=255, blank=True)
+    order = models.ForeignKey(SaleOrder, on_delete=models.PROTECT, null=True, blank=True, related_name="+")
+    expense = models.ForeignKey("farm.Expense", on_delete=models.PROTECT, null=True, blank=True, related_name="+")
+    payment = models.ForeignKey("invoicing.InvoicePayment", on_delete=models.PROTECT, null=True, blank=True,
+                                related_name="cash_movements")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    created_at = models.DateTimeField("waktu", default=timezone.now)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+        verbose_name = "mutasi kas"
+        verbose_name_plural = "mutasi kas"
+        constraints = [models.CheckConstraint(condition=Q(amount_idr__gt=0), name="cash_movement_positive")]
+
+    @property
+    def signed_idr(self):
+        return self.amount_idr * self.SIGN[self.kind]
 
 
 class OrderLineItem(models.Model):

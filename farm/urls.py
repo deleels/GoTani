@@ -26,5 +26,6 @@ urlpatterns = [
     path("harvests/<int:pk>/delete/", views.HarvestDeleteView.as_view(), name="harvest_delete"),
     path("spoilage/", views.SpoilageView.as_view(), name="spoilage"),
     path("spoilage/<int:pk>/reverse/", views.SpoilageReverseView.as_view(), name="spoilage_reverse"),
+    path("opname/", views.OpnameView.as_view(), name="opname"),
     path("prices/", views.PricesView.as_view(), name="prices"),
 ]

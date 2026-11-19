@@ -9,6 +9,8 @@
      data-confirm-template="#id"         extra HTML from a <template> (summaries, from → to, warnings)
      data-confirm-reason="Alasan"        required reason textarea; its text is posted as `reason`
      data-confirm-reason-optional        makes the reason optional
+     data-confirm-choices='[["V","Label"],…]'  a required picker (D94), posted as data-confirm-choice-name;
+     data-confirm-other="OTHER"          picking this value makes the reason note required
    Script: gtConfirm({title, body, html, action, level, danger, reason}) → Promise<false | {reason}>. */
 (function () {
   var dlg, resolver;
@@ -28,6 +30,8 @@
       '<h2 id="gt-confirm-title" class="text-lg font-semibold"></h2>' +
       '<div data-body class="mt-2 space-y-2 text-sm text-stone-600"></div>' +
       '<div data-extra class="mt-3 text-sm"></div>' +
+      '<label data-choice-wrap class="mt-3 block text-sm"><span class="text-stone-600">Alasan</span>' +
+      '<select data-choice class="mt-1 w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm"></select></label>' +
       '<label data-reason-wrap class="mt-3 block text-sm"><span data-reason-label class="text-stone-600"></span>' +
       '<textarea data-reason rows="2" class="mt-1 w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm"></textarea></label>' +
       '<label data-check-wrap class="mt-3 flex items-start gap-2 rounded-lg border border-amber-400 p-2 text-sm font-medium text-stone-700">' +
@@ -38,16 +42,21 @@
       '</div></form>';
     document.body.appendChild(dlg);
     var ok = dlg.querySelector('[data-ok]'), check = dlg.querySelector('[data-check]'), reason = dlg.querySelector('[data-reason]');
+    var choice = dlg.querySelector('[data-choice]');
     function sync() {
       var needCheck = dlg.querySelector('[data-check-wrap]').style.display !== 'none';
-      var needReason = dlg.querySelector('[data-reason-wrap]').style.display !== 'none' && dlg.dataset.reasonRequired === '1';
-      ok.disabled = (needCheck && !check.checked) || (needReason && !reason.value.trim());
+      var hasChoice = dlg.querySelector('[data-choice-wrap]').style.display !== 'none';
+      var needReason = dlg.querySelector('[data-reason-wrap]').style.display !== 'none' &&
+        (dlg.dataset.reasonRequired === '1' || (hasChoice && dlg.dataset.other && choice.value === dlg.dataset.other));
+      dlg.querySelector('[data-reason-label]').textContent = dlg.dataset.reasonLabel + (needReason ? '' : ' (opsional)');
+      ok.disabled = (needCheck && !check.checked) || (needReason && !reason.value.trim()) || (hasChoice && !choice.value);
     }
+    choice.addEventListener('change', sync);
     check.addEventListener('change', sync);
     reason.addEventListener('input', sync);
     dlg.addEventListener('close', function () {
       var r = resolver; resolver = null;
-      if (r) r(dlg.returnValue === 'ok' ? { reason: reason.value.trim() } : false);
+      if (r) r(dlg.returnValue === 'ok' ? { reason: reason.value.trim(), choice: choice.value } : false);
     });
     dlg._sync = sync;
   }
@@ -65,7 +74,15 @@
     var wrap = dlg.querySelector('[data-reason-wrap]');
     wrap.style.display = opts.reason ? '' : 'none';  // not `hidden`: Tailwind's display classes override it
     dlg.dataset.reasonRequired = opts.reason && !opts.reasonOptional ? '1' : '';
-    dlg.querySelector('[data-reason-label]').textContent = (opts.reason || '') + (opts.reasonOptional ? ' (opsional)' : '');
+    dlg.dataset.reasonLabel = opts.reason || '';
+    var cw = dlg.querySelector('[data-choice-wrap]'), sel = dlg.querySelector('[data-choice]');
+    sel.innerHTML = '';
+    cw.style.display = opts.choices ? '' : 'none';
+    dlg.dataset.other = opts.other || '';
+    if (opts.choices) {
+      sel.appendChild(el('option', '', '— pilih alasan —')).value = '';
+      opts.choices.forEach(function (c) { var o = el('option', '', c[1]); o.value = c[0]; sel.appendChild(o); });
+    }
     dlg.querySelector('[data-reason]').value = '';
     dlg.querySelector('[data-check-wrap]').style.display = Number(opts.level || 1) < 2 ? 'none' : '';
     dlg.querySelector('[data-check]').checked = false;
@@ -76,7 +93,7 @@
     dlg.returnValue = '';
     dlg._sync();
     dlg.showModal();
-    (opts.reason ? dlg.querySelector('[data-reason]') : dlg.querySelector('[data-cancel]')).focus();
+    (opts.choices ? sel : opts.reason ? dlg.querySelector('[data-reason]') : dlg.querySelector('[data-cancel]')).focus();
     return new Promise(function (res) { resolver = res; });
   }
 
@@ -89,6 +106,7 @@
     return {
       title: d.confirmTitle, body: d.confirm, html: html, action: d.confirmAction, level: d.confirmLevel,
       danger: 'confirmDanger' in d, reason: d.confirmReason, reasonOptional: 'confirmReasonOptional' in d,
+      choices: d.confirmChoices ? JSON.parse(d.confirmChoices) : null, other: d.confirmOther,
     };
   }
 
@@ -107,6 +125,12 @@
       if (src.dataset.confirmReason != null) {
         if (!field) { field = el('input'); field.type = 'hidden'; field.name = 'reason'; field.dataset.confirmReasonField = '1'; form.appendChild(field); }
         field.value = res.reason;
+      }
+      if (src.dataset.confirmChoices) {
+        var cname = src.dataset.confirmChoiceName || 'choice';
+        var cf = form.querySelector('input[name="' + cname + '"][data-confirm-choice-field]');
+        if (!cf) { cf = el('input'); cf.type = 'hidden'; cf.name = cname; cf.dataset.confirmChoiceField = '1'; form.appendChild(cf); }
+        cf.value = res.choice;
       }
       // The level-2 tick travels with the form so the server can require it.
       if (Number(src.dataset.confirmLevel || 1) >= 2 && !form.querySelector('input[name=confirmed_checked]')) {

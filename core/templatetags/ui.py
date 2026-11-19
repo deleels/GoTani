@@ -1,5 +1,7 @@
 """UI helpers: inline SVG icons (lucide-style strokes) and status pills (D71)."""
 
+import json
+
 from django import template
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -81,3 +83,15 @@ def subtitle(context, owner, manager=None, worker=None, cashier=None):
     label = roles.label if roles else ""
     return {"OWNER": owner, "MANAGER": manager or owner, "WORKER": worker or manager or owner,
             "CASHIER": cashier or owner}.get(label, owner)
+
+
+@register.simple_tag
+def void_confirm(title, body, action, level=1):
+    """Shared-dialog attributes for a void (D94): fixed reason list, note required for "Lainnya"."""
+    from farm.models import VoidReason
+
+    return format_html(
+        'data-confirm-title="{}" data-confirm="{}" data-confirm-action="{}" data-confirm-level="{}" data-confirm-danger '
+        'data-confirm-choices="{}" data-confirm-choice-name="void_reason" data-confirm-other="{}" data-confirm-reason="Catatan"',
+        title, body, action, level, json.dumps([[v, str(lbl)] for v, lbl in VoidReason.choices]), VoidReason.OTHER,
+    )

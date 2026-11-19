@@ -19,12 +19,12 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 
 from farm.bootstrap import ROLE_CASHIER, ROLE_MANAGER, ROLE_OWNER, user_has_role
-from farm.models import PaymentMethod
+from farm.models import PaymentMethod, VoidReason
 from core.numbers import parse_id_decimal
 from inventory.models import Product, StockLedger, StockLot
 from inventory.services import move_lot_stock, split_inclusive_tax
 
-from .models import LineLotAllocation, OrderLineItem, SaleOrder
+from .models import CashMovement, LineLotAllocation, OrderLineItem, SaleOrder, Shift
 
 JAKARTA = ZoneInfo("Asia/Jakarta")
 ZERO = Decimal("0")
@@ -176,14 +176,18 @@ def require_cashier(user) -> None:
 
 
 @transaction.atomic
-def checkout(items, payment_method: str, cashier, created_at=None) -> SaleOrder:
+def checkout(items, payment_method: str, cashier, created_at=None, cash_received=None) -> SaleOrder:
     """Sell the cart atomically: lock lots, validate stock, allocate FIFO, log POS_SALE.
 
-    All-or-nothing: if any product is short, nothing is written.
+    All-or-nothing: if any product is short, nothing is written. Needs an open shift (D96); a CASH sale
+    stores the cash received and the change (blank = exact amount, D95).
     """
     require_cashier(cashier)
     if payment_method not in PaymentMethod.values:
         raise ValidationError(f"Metode pembayaran tidak dikenal: {payment_method}.")
+    shift = Shift.objects.select_for_update().filter(is_open=True).first()
+    if shift is None:
+        raise ValidationError("Buka shift kasir terlebih dahulu sebelum berjualan.")
     cart = normalize_cart(items)
     created_at = created_at or timezone.now()
 
@@ -269,8 +273,181 @@ def checkout(items, payment_method: str, cashier, created_at=None) -> SaleOrder:
     order.total_tax_idr = total_tax
     order.total_revenue_idr = total_revenue
     order.total_cogs_idr = _q_money(total_cogs)
-    order.save(update_fields=["total_gross_idr", "total_tax_idr", "total_revenue_idr", "total_cogs_idr"])
+    order.shift = shift
+    fields = ["total_gross_idr", "total_tax_idr", "total_revenue_idr", "total_cogs_idr", "shift"]
+    if payment_method == PaymentMethod.CASH:
+        due = whole_rupiah(order.total_gross_idr)
+        received = due if cash_received in (None, "") else whole_rupiah(parse_id_decimal(cash_received, "money"))
+        if received < due:
+            raise ValidationError(f"Uang diterima {format_rp(received)} kurang dari total {format_rp(due)}.")
+        order.cash_received_idr, order.change_idr = received, received - due
+        fields += ["cash_received_idr", "change_idr"]
+    order.save(update_fields=fields)
     return order
+
+
+def whole_rupiah(value) -> Decimal:
+    """Receipt/drawer amount: whole Rupiah, ROUND_HALF_UP (units rule)."""
+    return Decimal(value).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+
+def format_rp(value) -> str:
+    return "Rp " + f"{int(whole_rupiah(value)):,}".replace(",", ".")
+
+
+def validate_void_reason(reason: str, note: str) -> tuple[str, str]:
+    """D94: a fixed reason; "Lainnya" needs a note."""
+    note = (note or "").strip()
+    if reason not in VoidReason.values:
+        raise ValidationError("Pilih alasan pembatalan.")
+    if reason == VoidReason.OTHER and not note:
+        raise ValidationError("Alasan \"Lainnya\" wajib diberi catatan.")
+    return reason, note
+
+
+# ---------------------------------------------------------------------------
+# Shift & cash drawer (D96)
+# ---------------------------------------------------------------------------
+
+DENOMINATIONS = [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 200, 100]
+MANUAL_MOVES = (CashMovement.Kind.TOP_UP, CashMovement.Kind.DEPOSIT, CashMovement.Kind.EXPENSE)
+
+
+def current_shift():
+    return Shift.objects.filter(is_open=True).select_related("opened_by").first()
+
+
+def suggested_float() -> Decimal:
+    """Opening float prefilled from the last count."""
+    last = Shift.objects.filter(is_open=False, counted_idr__isnull=False).order_by("-closed_at", "-id").first()
+    return last.counted_idr if last else ZERO
+
+
+@transaction.atomic
+def open_shift(user, opening_float, now=None) -> Shift:
+    require_cashier(user)
+    amount = _q_money(parse_id_decimal(opening_float, "money"))
+    if amount < 0:
+        raise ValidationError("Modal awal tidak boleh negatif.")
+    if Shift.objects.select_for_update().filter(is_open=True).exists():
+        raise ValidationError("Masih ada shift yang terbuka; tutup dulu sebelum membuka shift baru.")
+    try:
+        with transaction.atomic():
+            return Shift.objects.create(opened_by=user, opened_at=now or timezone.now(), opening_float_idr=amount)
+    except IntegrityError:
+        raise ValidationError("Masih ada shift yang terbuka.") from None
+
+
+def shift_summary(shift: Shift) -> dict:
+    """Expected drawer cash = opening float + cash sales + top-ups/invoice cash − deposits/expenses/refunds.
+
+    Cash sales count every CASH order of the shift (a later void is a separate refund movement)."""
+    orders = list(shift.orders.all())
+    cash_sales = sum((whole_rupiah(o.total_gross_idr) for o in orders if o.payment_method == PaymentMethod.CASH), ZERO)
+    by_method = {}
+    for o in orders:
+        if o.status == SaleOrder.Status.COMPLETED:
+            by_method[o.payment_method] = by_method.get(o.payment_method, ZERO) + whole_rupiah(o.total_gross_idr)
+    moves = list(shift.movements.all())
+    by_kind = {}
+    for m in moves:
+        by_kind[m.kind] = by_kind.get(m.kind, ZERO) + m.amount_idr
+    expected = shift.opening_float_idr + cash_sales + sum((m.signed_idr for m in moves), ZERO)
+    return {
+        "opening": shift.opening_float_idr, "cash_sales": cash_sales, "by_kind": by_kind, "expected": expected,
+        "orders": len(orders), "voided": sum(1 for o in orders if o.status == SaleOrder.Status.VOIDED),
+        "sales_by_method": [(PaymentMethod(k).label, v) for k, v in sorted(by_method.items())],
+        "movements": moves,
+    }
+
+
+def _locked_open(shift) -> Shift:
+    shift = Shift.objects.select_for_update().get(pk=shift.pk)
+    if not shift.is_open:
+        raise ValidationError("Shift ini sudah ditutup.")
+    return shift
+
+
+@transaction.atomic
+def add_cash_movement(shift, user, kind, amount, note="", category=None, now=None) -> CashMovement:
+    """Manual drawer moves: Tambah modal / Setor ke pemilik / Bayar biaya (creates a PENDING CASH expense)."""
+    from farm import services as farm
+
+    require_cashier(user)
+    if kind not in MANUAL_MOVES:
+        raise ValidationError("Jenis mutasi kas tidak dikenal.")
+    shift = _locked_open(shift)
+    amount = whole_rupiah(parse_id_decimal(amount, "money"))
+    if amount <= 0:
+        raise ValidationError("Jumlah harus lebih dari 0.")
+    if CashMovement.SIGN[kind] < 0 and amount > shift_summary(shift)["expected"]:
+        raise ValidationError("Jumlah melebihi uang yang seharusnya ada di laci.")
+    expense = None
+    now = now or timezone.now()
+    if kind == CashMovement.Kind.EXPENSE:
+        if category is None:
+            raise ValidationError("Pilih kategori biaya.")
+        if not (note or "").strip():
+            raise ValidationError("Tulis keperluan biaya.")
+        expense = farm.create_expense(category, "GENERAL", amount, narration=note.strip(), payment_method="CASH",
+                                      date_incurred=timezone.localdate(now))
+    return CashMovement.objects.create(shift=shift, kind=kind, amount_idr=amount, note=(note or "").strip()[:255],
+                                       expense=expense, created_by=user, created_at=now)
+
+
+@transaction.atomic
+def close_shift(shift, user, denominations: dict, note: str = "", now=None) -> Shift:
+    """Blind count by denomination (D96). Closing is always allowed; a difference stays "Perlu ditinjau"
+    until a manager adds a note. The opener closes; OWNER/MANAGER may force-close anyone's shift."""
+    from core.audit import log_event
+
+    require_cashier(user)
+    shift = _locked_open(shift)
+    manager = user_has_role(user, ROLE_OWNER, ROLE_MANAGER)
+    if user.pk != shift.opened_by_id and not manager:
+        raise PermissionDenied("Hanya pembuka shift, MANAGER, atau OWNER yang dapat menutup shift ini.")
+    counts = {}
+    for denom in DENOMINATIONS:
+        raw = (denominations or {}).get(denom, (denominations or {}).get(str(denom), 0)) or 0
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            raise ValidationError(f"Jumlah lembar/keping Rp {denom} tidak valid.") from None
+        if n < 0:
+            raise ValidationError("Jumlah lembar/keping tidak boleh negatif.")
+        if n:
+            counts[str(denom)] = n
+    counted = Decimal(sum(int(d) * n for d, n in counts.items()))
+    expected = shift_summary(shift)["expected"]
+    shift.is_open = False
+    shift.closed_by, shift.closed_at = user, now or timezone.now()
+    shift.force_closed = user.pk != shift.opened_by_id
+    shift.denominations, shift.counted_idr, shift.expected_idr = counts, counted, expected
+    shift.difference_idr = counted - expected
+    shift.close_note = (note or "").strip()
+    shift.save()
+    log_event(user, "SHIFT_CLOSE", shift, f"Tutup {shift}" + (" (paksa)" if shift.force_closed else ""),
+              before={"expected_idr": expected}, after={"counted_idr": counted, "difference_idr": shift.difference_idr},
+              reason=shift.close_note)
+    return shift
+
+
+@transaction.atomic
+def review_shift(shift, user, note: str) -> Shift:
+    from core.audit import log_event
+
+    if not user_has_role(user, ROLE_OWNER, ROLE_MANAGER):
+        raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat meninjau selisih kas.")
+    if not (note or "").strip():
+        raise ValidationError("Tulis catatan tinjauan.")
+    shift = Shift.objects.select_for_update().get(pk=shift.pk)
+    if shift.is_open:
+        raise ValidationError("Shift masih terbuka.")
+    shift.review_note, shift.reviewed_by, shift.reviewed_at = note.strip(), user, timezone.now()
+    shift.save(update_fields=["review_note", "reviewed_by", "reviewed_at"])
+    log_event(user, "SHIFT_REVIEW", shift, f"Tinjau selisih {shift}", after={"difference_idr": shift.difference_idr},
+              reason=shift.review_note)
+    return shift
 
 
 # ---------------------------------------------------------------------------
@@ -289,13 +466,15 @@ def can_void(order: SaleOrder, user, now=None) -> bool:
 
 
 @transaction.atomic
-def void_order(order: SaleOrder, user, now=None) -> SaleOrder:
-    """Cancel a whole order on its own Asia/Jakarta calendar day (OWNER/MANAGER).
+def void_order(order: SaleOrder, user, reason: str = "", note: str = "", now=None) -> SaleOrder:
+    """Cancel a whole order on its own Asia/Jakarta calendar day (OWNER/MANAGER), with a reason (D94).
 
-    Restores the exact kg to the exact lots recorded in `LineLotAllocation`.
+    Restores the exact kg to the exact lots recorded in `LineLotAllocation`. A CASH order needs an open
+    shift: the refund is a cash-out of the current shift (D96).
     """
     if not user_has_role(user, ROLE_OWNER, ROLE_MANAGER):
         raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat membatalkan order.")
+    reason, note = validate_void_reason(reason, note)
     now = now or timezone.now()
 
     order = SaleOrder.objects.select_for_update().get(pk=order.pk)
@@ -327,8 +506,16 @@ def void_order(order: SaleOrder, user, now=None) -> SaleOrder:
             timestamp=now,
         )
 
+    if order.payment_method == PaymentMethod.CASH:
+        shift = Shift.objects.select_for_update().filter(is_open=True).first()
+        if shift is None:
+            raise ValidationError("Buka shift kasir dulu: uang tunai order ini dikembalikan dari laci.")
+        CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.SALE_REFUND, order=order,
+                                    amount_idr=whole_rupiah(order.total_gross_idr), note=order.order_number,
+                                    created_by=user, created_at=now)
     order.status = SaleOrder.Status.VOIDED
+    order.void_reason, order.void_note = reason, note
     order.voided_by = user
     order.voided_at = now
-    order.save(update_fields=["status", "voided_by", "voided_at"])
+    order.save(update_fields=["status", "void_reason", "void_note", "voided_by", "voided_at"])
     return order

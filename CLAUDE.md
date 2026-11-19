@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D93); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D99); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -44,14 +44,17 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ### 2. `inventory` (Lot-Level Mass-Balance Ledger)
 - `Tax`: `name` (e.g. PPN), `rate_pct` (Decimal(5,2), 0–100), `is_active` — admin-editable.
-- `Product`: `variety` (FK), `grade` (HIGH / LOW), `selling_price_idr` (nullable Decimal), `tax` (nullable FK Tax; default none — fresh produce is generally PPN-exempt), `pos_step_kg` (Decimal, default 0.5 — kasir −/+ step and chips, D81) — sellable catalog entry. `UniqueConstraint(variety, grade)`. `stock_kg` is derived (Σ open lots), never stored.
+- `StockCount` (opname, D99): `product`, `system_kg` (snapshot), `counted_kg`, `note`, `status` (PENDING / APPROVED / REJECTED), `counted_by/at`, `decided_by/at`, `written_off_kg`, `loss_idr`
+- `Product`: `min_alert_kg` (nullable, D98), `variety` (FK), `grade` (HIGH / LOW), `selling_price_idr` (nullable Decimal), `tax` (nullable FK Tax; default none — fresh produce is generally PPN-exempt), `pos_step_kg` (Decimal, default 0.5 — kasir −/+ step and chips, D81) — sellable catalog entry. `UniqueConstraint(variety, grade)`. `stock_kg` is derived (Σ open lots), never stored.
 - `StockLot`: `product` (FK), `harvest_batch` (FK), `qty_initial_kg`, `qty_remaining_kg` (Decimal), `unit_cogs_idr` (Decimal), `harvested_at`
   - Constraint: `CheckConstraint(qty_remaining_kg >= 0)` — DB-level oversell backstop.
 - `SpoilageRecord`: `lot` (FK), `qty_kg` (> 0), `reason` (ROT / PHYSICAL_DAMAGE / PEST / SHRINKAGE / OTHER), `notes`, `loss_idr` (= qty × lot.unit_cogs_idr), `recorded_by`, `recorded_at`
 - `StockLedger`: `lot` (FK), `movement_type` (HARVEST_IN + / POS_SALE − / SPOILAGE − / POS_VOID + / INVOICE_SALE − / INVOICE_VOID + / SPOILAGE_REVERSAL +), `qty_kg` (signed Decimal), `reference`, `timestamp` — append-only (no update/delete except cascade from an allowed HarvestBatch delete).
 
 ### 3. `pos` (Downstream Retail Checkout)
-- `SaleOrder`: `order_number` (unique, `GT-YYYYMMDD-####`, daily counter in Asia/Jakarta date), `payment_method` (CASH / QRIS / TRANSFER), `total_gross_idr` (what the customer pays), `total_tax_idr`, `total_revenue_idr` (net of tax), `total_cogs_idr` (Decimal), `status` (COMPLETED / VOIDED), `cashier`, `created_at`, `voided_by`, `voided_at`
+- `SaleOrder`: `order_number` (unique, `GT-YYYYMMDD-####`, daily counter in Asia/Jakarta date), `payment_method` (CASH / QRIS / TRANSFER), `total_gross_idr` (what the customer pays), `total_tax_idr`, `total_revenue_idr` (net of tax), `total_cogs_idr` (Decimal), `status` (COMPLETED / VOIDED), `cashier`, `created_at`, `voided_by`, `voided_at`, `void_reason` + `void_note` (D94), `cash_received_idr` + `change_idr` (CASH only, D95), `shift` (FK, D96)
+- `Shift` (D96): `opened_by/at`, `opening_float_idr`, `is_open` (partial unique → one open shift), `closed_by/at`, `force_closed`, `denominations` (JSON count), `counted_idr`, `expected_idr`, `difference_idr`, `close_note`, `review_note/by/at`
+- `CashMovement` (D96): `shift`, `kind` (TOP_UP + / INVOICE_PAYMENT + / DEPOSIT − / EXPENSE − / SALE_REFUND −), `amount_idr` (> 0), `note`, optional `order` / `expense` / `payment`, `created_by/at`
 - `OrderLineItem`: `order` (FK), `product` (FK), `qty_kg`, `unit_price_idr` (server snapshot, tax-inclusive), `tax_rate_pct` (snapshot), `tax_idr`, `net_revenue_idr`, `unit_cogs_idr` (weighted avg of allocations)
 - `LineLotAllocation`: `line` (FK), `lot` (FK), `qty_kg`, `unit_cogs_idr`
 
@@ -97,7 +100,8 @@ An engineering programming class project modeling end-to-end agricultural produc
 20. Cart lives in the browser (Alpine.js) — no reservation. Checkout posts product IDs + kg only; prices are read server-side from `Product.selling_price_idr` (client prices ignored). Products with no price are hidden from the POS. No discounts.
 21. **POS prices are tax-inclusive:** line gross = qty × price; `tax = gross × rate / (100 + rate)`; `net_revenue = gross − tax`. Receipt shows "termasuk PPN Rp X".
 22. Checkout runs inside `@transaction.atomic`: lock all open lots of the cart's products with `select_for_update()` ordered by `(product_id, harvested_at, id)`; validate total available ≥ requested per product (else fail the whole order with a message naming product and available kg); allocate FIFO into `LineLotAllocation`; log `POS_SALE`; assign `order_number` inside the transaction; render a printable receipt (HTML + print CSS, 58 mm thermal and A4).
-23. **Void:** whole order only, OWNER/MANAGER, same Asia/Jakarta calendar day; restores exact kg to the exact lots via allocations, logs `POS_VOID`, sets status VOIDED. No partial refunds.
+23. **Void:** whole order only, OWNER/MANAGER, same Asia/Jakarta calendar day, with a reason from a fixed list ("Lainnya" needs a note — D94, also for invoice voids); restores exact kg to the exact lots via allocations, logs `POS_VOID`, sets status VOIDED. A CASH void needs an open shift and records a SALE_REFUND cash-out there. No partial refunds.
+23a. **Shift & drawer (D96):** one drawer, at most one open shift; no sale without it. Expected cash = float + Σ whole-Rupiah CASH sales of the shift + top-ups + invoice cash "Masuk laci" − deposits − cash expenses (PENDING CASH GENERAL expense) − refunds. Close is a blind count by denomination, always allowed; a difference is "Perlu ditinjau" until OWNER/MANAGER adds a note. The opener closes; OWNER/MANAGER can force-close. CASH sales store cash received and change (blank = exact, D95).
 
 ### Invoicing
 24. **Lifecycle:** DRAFT (editable, deletable, no stock moved) → ISSUED (level-2 confirmation, D88) → VOID. Only OWNER/MANAGER create, issue, void, and record payments.
@@ -108,6 +112,8 @@ An engineering programming class project modeling end-to-end agricultural produc
 29. **Void:** OWNER/MANAGER, any date; in one transaction restores exact kg to exact lots (`INVOICE_VOID`), deletes its allocations (money returns to buyer credit), sets VOID. No refunds: credit is only usable on future invoices; a payment may be deleted (OWNER) only while fully unallocated.
 
 ### Analytics
+29a. **Ageing (D97):** outstanding per buyer in buckets 0 (not yet due) / 1–30 / 31–60 / 61–90 / > 90 days past due.
+29b. **Produce stock (D98, D99):** `Product.min_alert_kg` raises a bell alert when stock ≤ it. Opname: count per product (system stock snapshotted); OWNER/MANAGER approve; only a shortfall is written off, FIFO from the oldest lots, as SHRINKAGE spoilage, capped at current stock; a surplus is recorded, never booked.
 30. Revenue, gross margin, margin by variety × grade, and net are **net of tax and of invoice discount** (line `net_revenue_idr`). Invoice revenue and COGS count on `issue_date` (accrual). Shipping is "other income" (in net, not in gross margin). Show separately: PPN collected, channel split (POS vs Invoice), receivables outstanding and overdue.
 
 ### Staff, notifications, external data
@@ -129,7 +135,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 - **Brand:** own palette, logo, free Google Fonts, Bahasa Indonesia copy. Light/dark mode (system default, toggle saved in localStorage; Chart.js colours follow theme).
 - **Shell:** left sidebar 16rem, collapses to a 3rem icon rail (Ctrl/⌘+B, state in localStorage); mobile = slide-in sheet from a hamburger. Header slot shows FarmProfile name/logo + user's role. Groups (role-filtered):
   - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
-  - **PENJUALAN:** Kasir (POS) · Pesanan · Invoice · Pembeli
+  - **PENJUALAN:** Kasir (POS) · Pesanan · Shift & Kas · Invoice · Pembeli
   - **KEUANGAN:** Biaya · Harga Produk · Analitik
   - **ALAT:** Telusuri · Log aktivitas (OWNER/MANAGER, D82) · Staf · Pengaturan
 - **Top bar** (h-16, translucent blur): sidebar toggle left; right: 🔔 bell, ◐ theme toggle, divider, 👤 menu (Profil, Ganti Password, Keluar).

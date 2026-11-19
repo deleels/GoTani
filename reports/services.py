@@ -252,6 +252,25 @@ def _sum(qs, field_name) -> Decimal:
     return qs.aggregate(s=Sum(field_name))["s"] or ZERO
 
 
+def payment_split(start, end) -> list:
+    """Money received per method (D97): POS sales by sale date (completed orders, what the customer paid)
+    plus invoice payments by paid date. Cash basis — it answers "how much came in as QRIS this week"."""
+    from farm.models import PaymentMethod
+    from invoicing.models import InvoicePayment
+
+    lo, hi = day_bounds(start, end)
+    pos_rows = dict(SaleOrder.objects.filter(status=SaleOrder.Status.COMPLETED, created_at__gte=lo, created_at__lt=hi)
+                    .values_list("payment_method").annotate(s=Sum("total_gross_idr")))
+    inv_rows = dict(InvoicePayment.objects.filter(paid_on__gte=start, paid_on__lte=end)
+                    .values_list("method").annotate(s=Sum("amount_idr")))
+    rows = []
+    for value, label in PaymentMethod.choices:
+        p, i = pos_rows.get(value) or ZERO, inv_rows.get(value) or ZERO
+        if p or i:
+            rows.append({"method": label, "pos": p, "invoice": i, "total": p + i})
+    return rows
+
+
 def dashboard_metrics(start, end) -> dict:
     """Rule 30: revenue/margin net of tax and invoice discount; invoices accrue on `issue_date`."""
     from invoicing.models import Invoice, InvoiceLine
@@ -369,6 +388,7 @@ def dashboard_metrics(start, end) -> dict:
         "start": start,
         "end": end,
         "kpis": kpis,
+        "payment_split": payment_split(start, end),
         "daily": [{"date": d, "revenue": v[0], "cogs": v[1]} for d, v in sorted(daily.items())],
         "margin_by_product": margin_rows,
         "top_products": top_products,

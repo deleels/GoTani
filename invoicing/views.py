@@ -64,6 +64,7 @@ class BuyersView(FinanceView):
             "page": page, "tab": tab, "q": q, "form": form or BuyerForm(),
             "sheet_open": bool(form is not None and form.errors),
             "stats": {"buyers": Buyer.objects.filter(is_active=True).count(), **summary},
+            "ageing": services.receivables_ageing(),
         }
 
     def get(self, request):
@@ -288,7 +289,8 @@ class InvoiceActionView(FinanceView):
                                                  due_date=form.cleaned_data["due_date"])
                 msg = f"Invoice {invoice.number} diterbitkan; stok dipotong (FIFO)."
             elif action == "void":
-                services.void_invoice(invoice, request.user)
+                services.void_invoice(invoice, request.user, reason=request.POST.get("void_reason", ""),
+                                      note=request.POST.get("reason", ""))
                 msg = f"Invoice {invoice.number} dibatalkan; stok dikembalikan dan pembayaran menjadi kredit."
             elif action == "delete":
                 services.delete_draft(request.user, invoice)
@@ -357,6 +359,7 @@ class PaymentCreateView(FinanceView):
                 payment = services.record_payment(
                     request.user, buyer, amount_idr=d["amount_idr"], method=d["method"], paid_on=d["paid_on"],
                     reference=d["reference"], proof=d["proof"], allocations=allocations,
+                    into_drawer=d["into_drawer"],
                 )
             except (ValidationError, ArithmeticError, ValueError) as exc:
                 form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else "Jumlah alokasi tidak valid.")

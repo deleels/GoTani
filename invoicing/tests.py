@@ -150,7 +150,7 @@ class VoidTests(InvoiceFixtures):
         inv.record_payment(self.manager, self.buyer, amount_idr=1000000, method="TRANSFER", paid_on=TODAY,
                            allocations=[(invoice, 1000000)])
         self.assertEqual(inv.buyer_credit(self.buyer), D("0"))
-        inv.void_invoice(invoice, self.owner, now=NOON + timedelta(days=40))
+        inv.void_invoice(invoice, self.owner, now=NOON + timedelta(days=40), reason="WRONG_ENTRY")
         self.reload(self.lot_h1, self.lot_h2, self.lot_l1)
         self.assertEqual((self.lot_h1.qty_remaining_kg, self.lot_h2.qty_remaining_kg, self.lot_l1.qty_remaining_kg),
                          (D("100"), D("50"), D("50")))
@@ -161,12 +161,12 @@ class VoidTests(InvoiceFixtures):
         self.assertIsNone(invoice.payment_status())
         self.assertEqual(check_mass_balance(), [])
         with self.assertRaises(ValidationError):
-            inv.void_invoice(invoice, self.owner)
+            inv.void_invoice(invoice, self.owner, reason="WRONG_ENTRY")
 
     def test_void_requires_finance_role(self):
         invoice = self.issue()
         with self.assertRaises(PermissionDenied):
-            inv.void_invoice(invoice, self.cashier)
+            inv.void_invoice(invoice, self.cashier, reason="WRONG_ENTRY")
 
 
 class PaymentTests(InvoiceFixtures):
@@ -254,3 +254,27 @@ class CreditTests(InvoiceFixtures):
         self.assertEqual((self.buyer.phone, self.buyer.payment_terms_days), ("0812", 30))
         with self.assertRaises(PermissionDenied):
             inv.update_buyer(self.cashier, self.buyer, phone="x")
+
+
+class AgeingAndSplitTests(InvoiceFixtures):
+    """D97: receivables ageing buckets and money received per payment method."""
+
+    def test_ageing_buckets(self):
+        invoice = self.issue(self.draft([(self.high, 1, None)]))  # due = issue + 14 days
+        due = invoice.due_date
+        for days_late, key in ((-1, "current"), (0, "current"), (1, "d1_30"), (45, "d31_60"), (75, "d61_90"), (91, "d90p")):
+            ageing = inv.receivables_ageing(today=due + timedelta(days=days_late))
+            self.assertEqual(ageing["rows"][0][key], invoice.total_idr, (days_late, key))
+            self.assertEqual(ageing["totals"]["total"], invoice.total_idr)
+        inv.record_payment(self.manager, self.buyer, amount_idr=invoice.total_idr, method="QRIS", paid_on=due,
+                           allocations=[(invoice, invoice.total_idr)])
+        self.assertEqual(inv.receivables_ageing(today=due)["rows"], [])
+
+    def test_payment_split(self):
+        from reports.services import payment_split
+
+        invoice = self.issue(self.draft([(self.high, 1, None)]))
+        inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="TRANSFER", paid_on=invoice.issue_date)
+        rows = {r["method"]: r for r in payment_split(invoice.issue_date, invoice.issue_date)}
+        self.assertEqual(rows["Transfer"]["invoice"], D("1000"))
+        self.assertEqual(rows["Transfer"]["total"], D("1000"))

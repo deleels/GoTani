@@ -286,9 +286,12 @@ def issue_invoice(invoice, actor, *, issue_date=None, due_date=None, now=None) -
 
 
 @transaction.atomic
-def void_invoice(invoice, actor, *, now=None) -> Invoice:
-    """Restore exact kg to exact lots; released allocations become buyer credit (D56)."""
+def void_invoice(invoice, actor, *, reason: str = "", note: str = "", now=None) -> Invoice:
+    """Restore exact kg to exact lots; released allocations become buyer credit (D56). Needs a reason (D94)."""
+    from pos.services import validate_void_reason
+
     require_finance(actor)
+    reason, note = validate_void_reason(reason, note)
     invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != Invoice.Status.ISSUED:
         raise ValidationError("Hanya invoice terbit yang dapat dibatalkan.")
@@ -302,7 +305,8 @@ def void_invoice(invoice, actor, *, now=None) -> Invoice:
     invoice.allocations.all().delete()
     invoice.status = Invoice.Status.VOID
     invoice.voided_by, invoice.voided_at = actor, now
-    invoice.save(update_fields=["status", "voided_by", "voided_at"])
+    invoice.void_reason, invoice.void_note = reason, note
+    invoice.save(update_fields=["status", "voided_by", "voided_at", "void_reason", "void_note"])
     return invoice
 
 
@@ -359,8 +363,9 @@ def remove_allocation(actor, allocation, reason: str):
 
 @transaction.atomic
 def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", proof=None,
-                   allocations=()) -> InvoicePayment:
-    """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit."""
+                   allocations=(), into_drawer=False) -> InvoicePayment:
+    """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit.
+    `into_drawer` (CASH only, D96): the cash goes into the open shift's drawer."""
     require_finance(actor)
     amount = q_money(amount_idr)
     if amount <= 0:
@@ -369,6 +374,16 @@ def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", p
         raise ValidationError("Metode pembayaran tidak dikenal.")
     payment = InvoicePayment.objects.create(buyer=buyer, amount_idr=amount, method=method, paid_on=paid_on,
                                             reference=reference, proof=proof or "", recorded_by=actor)
+    if into_drawer:
+        from pos.models import CashMovement, Shift
+
+        if method != PaymentMethod.CASH:
+            raise ValidationError("Hanya pembayaran tunai yang bisa masuk laci kasir.")
+        shift = Shift.objects.select_for_update().filter(is_open=True).first()
+        if shift is None:
+            raise ValidationError("Tidak ada shift kasir yang terbuka; buka shift atau hilangkan centang \"Masuk laci\".")
+        CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.INVOICE_PAYMENT, amount_idr=amount,
+                                    payment=payment, note=f"{buyer}"[:255], created_by=actor)
     for invoice, alloc_amount in allocations:
         if alloc_amount and Decimal(alloc_amount) > 0:
             allocate_payment(actor, payment, invoice, alloc_amount)
@@ -396,6 +411,38 @@ def receivables_summary(today=None):
             if inv.due_date and inv.due_date < today:
                 overdue += due
     return {"outstanding": outstanding, "overdue": overdue}
+
+
+AGEING_BUCKETS = [("current", "Belum jatuh tempo"), ("d1_30", "1–30 hari"), ("d31_60", "31–60 hari"),
+                  ("d61_90", "61–90 hari"), ("d90p", "> 90 hari")]
+
+
+def _bucket(days_late: int) -> str:
+    if days_late <= 0:
+        return "current"
+    if days_late <= 30:
+        return "d1_30"
+    if days_late <= 60:
+        return "d31_60"
+    return "d61_90" if days_late <= 90 else "d90p"
+
+
+def receivables_ageing(today=None) -> dict:
+    """Outstanding per buyer by days past due (D97): 0 / 1–30 / 31–60 / 61–90 / > 90 (Asia/Jakarta)."""
+    today = today or timezone.localdate()
+    rows, totals = {}, {k: ZERO for k, _ in AGEING_BUCKETS}
+    invoices = Invoice.objects.filter(status=Invoice.Status.ISSUED).select_related("buyer").prefetch_related("allocations")
+    for inv in invoices:
+        due = inv.total_idr - sum((a.amount_idr for a in inv.allocations.all()), ZERO)
+        if due <= 0:
+            continue
+        key = _bucket((today - inv.due_date).days if inv.due_date else 0)
+        row = rows.setdefault(inv.buyer_id, {"buyer": inv.buyer, **{k: ZERO for k, _ in AGEING_BUCKETS}, "total": ZERO})
+        row[key] += due
+        row["total"] += due
+        totals[key] += due
+    ordered = sorted(rows.values(), key=lambda r: (-r["d90p"], -r["d61_90"], -r["total"]))
+    return {"buckets": AGEING_BUCKETS, "rows": ordered, "totals": {**totals, "total": sum(totals.values(), ZERO)}}
 
 
 @transaction.atomic

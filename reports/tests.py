@@ -81,6 +81,7 @@ class SiteFixtures(TestCase):
         cls.lot_high = cls.batch.lots.get(product=cls.high)
         cls.lot_low = cls.batch.lots.get(product=cls.low)
         inventory.record_spoilage(cls.lot_low, 5, "ROT")
+        pos.open_shift(cls.users[ROLE_CASHIER], 0)  # D96
         cls.order = pos.checkout({cls.high.pk: 10}, "CASH", cls.users[ROLE_CASHIER])
 
         general = farm.create_expense(cat["UTILITAS"], "GENERAL", 300000, narration="Listrik")
@@ -417,12 +418,18 @@ class PosViewTests(SiteFixtures):
 
     def test_void_via_view(self):
         self.login(ROLE_MANAGER)
-        response = self.client.post(reverse("pos:void", args=[self.order.pk]))
+        url = reverse("pos:void", args=[self.order.pk])
+        self.assertContains(self.client.post(url, follow=True), "Pilih alasan")  # D94: reason required
+        self.assertContains(self.client.post(url, {"void_reason": "OTHER"}, follow=True), "wajib diberi catatan")
+        response = self.client.post(url, {"void_reason": "OTHER", "reason": "Salah timbang"})
         self.assertRedirects(response, reverse("pos:receipt", args=[self.order.pk]))
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, SaleOrder.Status.VOIDED)
-        self.assertContains(self.client.get(reverse("pos:receipt", args=[self.order.pk])), "DIBATALKAN")
-        response = self.client.post(reverse("pos:void", args=[self.order.pk]), follow=True)
+        self.assertEqual((self.order.void_reason, self.order.void_note), ("OTHER", "Salah timbang"))
+        receipt = self.client.get(reverse("pos:receipt", args=[self.order.pk]))
+        self.assertContains(receipt, "DIBATALKAN")
+        self.assertContains(receipt, "Salah timbang")
+        response = self.client.post(url, {"void_reason": "WRONG_ENTRY"}, follow=True)
         self.assertContains(response, "sudah dibatalkan")
         self.assertEqual(inventory.check_mass_balance(), [])
 
@@ -456,7 +463,7 @@ class TraceabilityTests(SiteFixtures):
         self.assertEqual(t["unabsorbed_cost"], D("0"))
 
     def test_forward_trace_excludes_voided_sales(self):
-        pos.void_order(self.order, self.owner)
+        pos.void_order(self.order, self.owner, reason="WRONG_ENTRY")
         trace = services.forward_trace(self.cycle)
         self.assertEqual(trace.totals["sold_kg"], D("0"))
         lot = next(lt for lt in trace.batches[0].lots if lt.lot.pk == self.lot_high.pk)
@@ -535,7 +542,7 @@ class AnalyticsTests(SiteFixtures):
         self.assertEqual(k["orders"], 1)
 
     def test_voided_orders_excluded(self):
-        pos.void_order(self.order, self.owner)
+        pos.void_order(self.order, self.owner, reason="WRONG_ENTRY")
         k = self.metrics()["kpis"]
         self.assertEqual(k["revenue"], D("0"))
         self.assertIsNone(k["gross_margin_pct"])
@@ -581,7 +588,7 @@ class AnalyticsTests(SiteFixtures):
         self.assertEqual(trace.totals["revenue"], D("425000.00"))
         csv_text = "|".join(",".join(map(str, r)) for r in services.forward_csv_rows(trace))
         self.assertIn(invoice.number, csv_text)
-        inv.void_invoice(invoice, manager)
+        inv.void_invoice(invoice, manager, reason="WRONG_ENTRY")
         self.assertEqual(self.metrics()["kpis"]["revenue_invoice"], D("0"))
         self.assertEqual(services.forward_trace(self.cycle).totals["sold_kg"], D("10"))
 

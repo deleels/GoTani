@@ -8,11 +8,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, F, Q, Sum
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views import View
 
 from core.pagination import paginate
 from inventory import services as inventory_services
@@ -20,7 +21,7 @@ from inventory.models import Product, SpoilageRecord, StockLot
 
 from . import services
 
-from .access import FARM_ROLES, FINANCE_ROLES
+from .access import FARM_ROLES, FINANCE_ROLES, RoleRequiredMixin
 from .forms import (
     ActivityForm,
     ElementForm,
@@ -504,6 +505,57 @@ class SpoilageReverseView(ActionView):
         return inventory_services.reverse_spoilage(record, self.request.user, self.request.POST.get("reason", ""))
 
 
+# --- Stock opname & produce low stock (D98, D99) ---------------------------------------------
+
+
+class OpnameView(RoleRequiredMixin, View):
+    allowed_roles = FARM_ROLES
+
+    def get(self, request):
+        from core.pagination import paginate
+        from inventory.models import StockCount
+
+        products = list(Product.objects.select_related("variety").filter(lots__isnull=False).distinct())
+        for p in products:
+            p.stock = p.stock_kg
+            p.low = p.min_alert_kg is not None and p.stock <= p.min_alert_kg
+        page = paginate(request, StockCount.objects.select_related("product__variety", "counted_by", "decided_by"))
+        return render(request, "farm/opname.html", {
+            "nav": "farm", "tab": "opname", "products": products, "page": page,
+            "roles": self.roles,
+        })
+
+    def post(self, request):
+        from core.numbers import parse_id_decimal
+        from inventory.models import StockCount
+
+        action = request.POST.get("action", "count")
+        try:
+            if action == "count":
+                product = get_object_or_404(Product, pk=request.POST.get("product"))
+                try:
+                    counted = parse_id_decimal(request.POST.get("counted_kg", ""), "kg")
+                except Exception:
+                    raise ValidationError("Stok fisik tidak valid.")
+                inventory_services.record_count(product, counted, request.user, request.POST.get("note", ""))
+                messages.success(request, "Opname dicatat; menunggu persetujuan OWNER/MANAGER.")
+            elif action in ("approve", "reject"):
+                if not self.roles.finance:
+                    raise PermissionDenied
+                count = get_object_or_404(StockCount, pk=request.POST.get("count"))
+                if action == "approve":
+                    count = inventory_services.approve_count(count, request.user)
+                    messages.success(request, f"Opname disetujui; {count.written_off_kg.normalize():f} kg dihapusbukukan.")
+                else:
+                    inventory_services.reject_count(count, request.user, request.POST.get("reason", ""))
+                    messages.success(request, "Opname ditolak; stok tidak berubah.")
+            else:
+                raise ValidationError("Aksi tidak dikenal.")
+        except ValidationError as exc:
+            messages.error(request, error_text(exc))
+        return redirect("farm:opname")
+
+
 # --- Prices (D24) ----------------------------------------------------------------------------
 
 
@@ -546,6 +598,8 @@ class PricesView(FarmPage):
                                                      actor=request.user)
                 if form.cleaned_data.get("pos_step_kg"):
                     inventory_services.set_pos_step(product, form.cleaned_data["pos_step_kg"], actor=request.user)
+                if "min_alert_kg" in request.POST:  # D98: blank switches the alert off
+                    inventory_services.set_min_alert(product, form.cleaned_data.get("min_alert_kg"), actor=request.user)
             except ValidationError as exc:
                 messages.error(request, error_text(exc))
             else:

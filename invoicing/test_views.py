@@ -89,7 +89,7 @@ class InvoicingViewTests(InvoiceFixtures):
         self.assertEqual(inv.buyer_credit(self.buyer), D("0.00"))
         self.assertEqual(second.payment_status(), "PARTIALLY_PAID")
 
-        self.client.post(reverse("invoicing:invoice_action", args=[invoice.pk, "void"]))
+        self.client.post(reverse("invoicing:invoice_action", args=[invoice.pk, "void"]), {"void_reason": "WRONG_PRICE"})
         invoice.refresh_from_db()
         self.assertEqual(invoice.status, "VOID")
         self.assertEqual(inv.buyer_credit(self.buyer), D("185000.00"))

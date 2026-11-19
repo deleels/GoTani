@@ -66,6 +66,8 @@ class PaymentForm(StyledMixin, forms.Form):
                               widget=forms.DateInput(attrs={"type": "date"}))
     reference = forms.CharField(label="Referensi", max_length=120, required=False)
     proof = forms.FileField(label="Bukti", required=False)
+    into_drawer = forms.BooleanField(label="Masuk laci kasir", required=False,
+                                     help_text="Tunai yang disimpan di laci shift yang sedang buka (D96).")
 
 
 class CreditForm(StyledMixin, forms.Form):

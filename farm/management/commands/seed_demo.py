@@ -145,6 +145,7 @@ SALE_HOURS = [(9, 15), (15, 40)]
 VOID_DAYS = {26, 19, 12, 5}  # first order of these days is voided the same day
 CART_KG = [D("0.5"), D("1"), D("1.5"), D("2"), D("2.5"), D("3"), D("4"), D("5")]
 PAYMENTS = ["CASH", "CASH", "QRIS", "QRIS", "TRANSFER"]
+FLOAT_IDR = 200000  # drawer float kept between shifts (D96)
 
 
 class Command(BaseCommand):
@@ -517,9 +518,39 @@ class Command(BaseCommand):
 
     def _plan_sales(self):
         for days in range(SALES_DAYS - 1, -1, -1):
+            # D96: every sales day has a shift; today's stays open so the demo POS works right away.
+            self.on(days, 7, lambda ts: pos.open_shift(self.users[ROLE_CASHIER], FLOAT_IDR, now=ts))
             for n, (hour, minute) in enumerate(SALE_HOURS[:ORDERS_PER_DAY]):
                 void = n == 0 and days in VOID_DAYS
                 self.on(days, hour, lambda ts, void=void: self._sell(ts, void), minute)
+            if days == 3:
+                self.on(days, 12, lambda ts: pos.add_cash_movement(
+                    pos.current_shift(), self.users[ROLE_CASHIER], "EXPENSE", 35000, "Beli tali rafia",
+                    category=ExpenseCategory.objects.get(code="LAINNYA"), now=ts))
+            if days == 2:
+                self.on(days, 17, lambda ts: pos.add_cash_movement(
+                    pos.current_shift(), self.users[ROLE_MANAGER], "DEPOSIT", 300000, "Setor harian", now=ts))
+            if days:
+                short = {6: -5000, 13: 2000}.get(days, 0)  # two demo days with a counting difference
+                self.on(days, 18, lambda ts, short=short, days=days: self._close_shift(ts, short, reviewed=days == 13))
+
+    def _close_shift(self, ts, difference, reviewed):
+        shift = pos.current_shift()
+        if shift is None:
+            return
+        surplus = pos.shift_summary(shift)["expected"] - FLOAT_IDR
+        if surplus > 0:  # owner takes the day's takings, the float stays in the drawer
+            pos.add_cash_movement(shift, self.users[ROLE_MANAGER], "DEPOSIT", surplus, "Setor harian",
+                                  now=ts - timedelta(minutes=5))
+        amount = int(pos.shift_summary(shift)["expected"]) + difference
+        counts = {}
+        for denom in pos.DENOMINATIONS:  # greedy count of the drawer
+            n, amount = divmod(amount, denom)
+            if n:
+                counts[denom] = n
+        pos.close_shift(shift, self.users[ROLE_CASHIER], counts, now=ts)
+        if reviewed:
+            pos.review_shift(shift, self.users[ROLE_MANAGER], "Selisih karena uang receh, sudah dicek bersama kasir.")
 
     def _sell(self, ts, void):
         catalog = [p for p in pos.pos_catalog() if p.available_kg >= D("0.5")]
@@ -532,7 +563,7 @@ class Command(BaseCommand):
         order = pos.checkout(cart, self.rng.choice(PAYMENTS), self.users[ROLE_CASHIER], created_at=ts)
         self.order_count += 1
         if void:
-            pos.void_order(order, self.users[ROLE_MANAGER], now=ts + timedelta(minutes=20))
+            pos.void_order(order, self.users[ROLE_MANAGER], reason="CUSTOMER_CANCELLED", now=ts + timedelta(minutes=20))
 
     # ------------------------------------------------------------------
     # Plan: wholesale invoices & payments (P8)
@@ -601,7 +632,8 @@ class Command(BaseCommand):
         self._invoice(16, "pasar_overdue", "pasar", [("Cabai Rawit", Grade.LOW, "20", None)])
         self._invoice(10, "pasar_void", "pasar", [("Melon Golden", Grade.LOW, "8", None)])
         self.on(8, 10, lambda ts: "pasar_void" in self.invoices and invoicing.void_invoice(
-            self.invoices["pasar_void"], self.users[ROLE_MANAGER], now=ts))
+            self.invoices["pasar_void"], self.users[ROLE_MANAGER], reason="OTHER",
+            note="Pembeli mengganti pesanan dengan invoice baru.", now=ts))
         self._invoice(2, "resto_draft", "resto", [("Cabai Rawit", Grade.HIGH, "5", None)], issue=False,
                       discount_type="AMOUNT", discount_value=10000)
         # Overpays the first invoice → Rp 100.000 buyer credit.

@@ -13,7 +13,7 @@ from django.db.models import DecimalField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-from .models import Grade, Product, SpoilageRecord, StockLedger, StockLot
+from .models import Grade, Product, SpoilageRecord, StockCount, StockLedger, StockLot
 
 QTY_STEP = Decimal("0.001")
 MONEY_STEP = Decimal("0.01")
@@ -168,6 +168,95 @@ def set_pos_step(product: Product, step_kg, actor=None) -> Product:
         log_event(actor, "POS_STEP_CHANGE", product, f"Langkah kasir {product}",
                   before={"pos_step_kg": old}, after={"pos_step_kg": step_kg})
     return product
+
+
+def set_min_alert(product: Product, min_kg, actor=None) -> Product:
+    """Low-stock threshold for sellable produce (D98); None switches the alert off."""
+    if min_kg is not None:
+        min_kg = Decimal(min_kg).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
+        if min_kg < 0:
+            raise ValidationError("Batas stok tidak boleh negatif.")
+    if product.min_alert_kg != min_kg:
+        product.min_alert_kg = min_kg
+        product.save(update_fields=["min_alert_kg"])
+    return product
+
+
+def low_stock_products():
+    """Products at or below their `min_alert_kg` (D98) as (product, stock_kg)."""
+    out = []
+    for p in Product.objects.filter(min_alert_kg__isnull=False).select_related("variety"):
+        stock = p.stock_kg
+        if stock <= p.min_alert_kg:
+            out.append((p, stock))
+    return out
+
+
+# --- Stock opname (D99) ---------------------------------------------------------------------
+
+
+def _require_decider(actor):
+    from farm.bootstrap import ROLE_MANAGER, ROLE_OWNER, user_has_role
+
+    if not user_has_role(actor, ROLE_OWNER, ROLE_MANAGER):
+        raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat menyetujui opname.")
+
+
+@transaction.atomic
+def record_count(product: Product, counted_kg, user, note: str = "", counted_at=None) -> StockCount:
+    """A physical count; the system stock is snapshotted now. Nothing moves until approval."""
+    counted = Decimal(counted_kg).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
+    if counted < 0:
+        raise ValidationError("Stok fisik tidak boleh negatif.")
+    if StockCount.objects.filter(product=product, status=StockCount.Status.PENDING).exists():
+        raise ValidationError(f"Masih ada opname {product} yang menunggu persetujuan.")
+    return StockCount.objects.create(product=product, system_kg=product.stock_kg, counted_kg=counted,
+                                     note=(note or "").strip(), counted_by=user, counted_at=counted_at or timezone.now())
+
+
+@transaction.atomic
+def approve_count(count: StockCount, actor) -> StockCount:
+    """Write off only the shortfall, FIFO from the oldest lots, as SHRINKAGE spoilage (loss = qty × lot COGS).
+    Capped at today's stock (sales since the count already took their kg). A surplus is not booked."""
+    from core.audit import log_event
+
+    _require_decider(actor)
+    count = StockCount.objects.select_for_update().get(pk=count.pk)
+    if count.status != StockCount.Status.PENDING:
+        raise ValidationError("Opname ini sudah diputuskan.")
+    remaining = count.shortfall_kg
+    loss = Decimal("0")
+    written = Decimal("0")
+    lots = StockLot.objects.select_for_update().filter(product=count.product, qty_remaining_kg__gt=0) \
+        .order_by("harvested_at", "id")
+    for lot in lots:
+        if remaining <= 0:
+            break
+        take = min(remaining, lot.qty_remaining_kg)
+        record = record_spoilage(lot, take, SpoilageRecord.Reason.SHRINKAGE, notes=f"Opname #{count.pk}", user=actor)
+        loss += record.loss_idr
+        written += take
+        remaining -= take
+    count.status, count.decided_by, count.decided_at = StockCount.Status.APPROVED, actor, timezone.now()
+    count.written_off_kg, count.loss_idr = written, loss
+    count.save(update_fields=["status", "decided_by", "decided_at", "written_off_kg", "loss_idr"])
+    log_event(actor, "STOCK_COUNT_APPROVED", count, f"Opname {count.product}",
+              before={"system_kg": count.system_kg}, after={"counted_kg": count.counted_kg, "written_off_kg": written})
+    return count
+
+
+@transaction.atomic
+def reject_count(count: StockCount, actor, reason: str = "") -> StockCount:
+    from core.audit import log_event
+
+    _require_decider(actor)
+    count = StockCount.objects.select_for_update().get(pk=count.pk)
+    if count.status != StockCount.Status.PENDING:
+        raise ValidationError("Opname ini sudah diputuskan.")
+    count.status, count.decided_by, count.decided_at = StockCount.Status.REJECTED, actor, timezone.now()
+    count.save(update_fields=["status", "decided_by", "decided_at"])
+    log_event(actor, "STOCK_COUNT_REJECTED", count, f"Opname {count.product} ditolak", reason=(reason or "").strip())
+    return count
 
 
 # ---------------------------------------------------------------------------

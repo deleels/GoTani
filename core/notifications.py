@@ -45,6 +45,14 @@ def build_notifications(roles, today=None):
                 "at": last_move.get(item.pk) or _aware(today),
             })
         out.extend(_weather_notifications())
+        from inventory.services import low_stock_products
+
+        for product, stock in low_stock_products():  # D98
+            out.append({
+                "kind": "produce_low", "title": f"Stok produk menipis: {product}",
+                "body": f"Sisa {stock.normalize():f} kg (batas {product.min_alert_kg.normalize():f} kg)",
+                "url": reverse("farm:opname"), "at": _aware(today),
+            })
         for cycle in CropCycle.objects.filter(is_active=True, expected_harvest_date__lt=today).select_related("variety", "element"):
             if cycle.is_harvest_overdue(today):
                 out.append({

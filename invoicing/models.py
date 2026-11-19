@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models import Q, Sum
 from django.utils import timezone
 
-from farm.models import MONEY, QTY, PaymentMethod
+from farm.models import MONEY, QTY, PaymentMethod, VoidReason
 from inventory.models import Product, StockLot
 
 ZERO = Decimal("0.00")
@@ -72,6 +72,8 @@ class Invoice(models.Model):
     issued_at = models.DateTimeField(null=True, blank=True)
     voided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+")
     voided_at = models.DateTimeField(null=True, blank=True)
+    void_reason = models.CharField("alasan batal", max_length=20, choices=VoidReason.choices, blank=True)
+    void_note = models.TextField("catatan batal", blank=True)
 
     class Meta:
         ordering = ["-created_at", "-id"]

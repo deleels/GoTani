@@ -49,6 +49,9 @@ class Product(models.Model):
     selling_price_idr = models.DecimalField(
         "harga jual per kg", null=True, blank=True, **MONEY
     )
+    # D98: low-stock alert for sellable produce (NULL = no alert).
+    min_alert_kg = models.DecimalField("batas stok menipis (kg)", max_digits=10, decimal_places=3, null=True, blank=True,
+                                       validators=[MinValueValidator(Decimal("0"))])
     # D81: kasir − / + step and quick-pick chips (step × 1, 2, 4, 10).
     pos_step_kg = models.DecimalField("langkah kasir (kg)", max_digits=10, decimal_places=3, default=Decimal("0.5"),
                                       validators=[MinValueValidator(Decimal("0.001"))])
@@ -168,6 +171,49 @@ class SpoilageRecord(models.Model):
 
     def __str__(self):
         return f"Susut {self.qty_kg} kg — {self.lot}"
+
+
+class StockCount(models.Model):
+    """Stock opname (D99): a physical count of one product. Only a shortfall is written off — FIFO from the
+    oldest lots as SHRINKAGE spoilage — and only after OWNER/MANAGER approval. A surplus is recorded, not booked."""
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Menunggu persetujuan"
+        APPROVED = "APPROVED", "Disetujui"
+        REJECTED = "REJECTED", "Ditolak"
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="counts", verbose_name="produk")
+    system_kg = models.DecimalField("stok sistem saat dihitung", **QTY)
+    counted_kg = models.DecimalField("stok fisik", **QTY)
+    note = models.TextField("catatan", blank=True)
+    status = models.CharField("status", max_length=10, choices=Status.choices, default=Status.PENDING)
+    counted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+",
+                                   verbose_name="dihitung oleh")
+    counted_at = models.DateTimeField("dihitung pada", default=timezone.now)
+    decided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
+                                   related_name="+", verbose_name="diputuskan oleh")
+    decided_at = models.DateTimeField("diputuskan pada", null=True, blank=True)
+    written_off_kg = models.DecimalField("kg dihapusbukukan", default=0, **QTY)
+    loss_idr = models.DecimalField("kerugian (Rp)", default=0, **MONEY)
+
+    class Meta:
+        ordering = ["-counted_at", "-id"]
+        verbose_name = "opname stok"
+        verbose_name_plural = "opname stok"
+        constraints = [
+            models.CheckConstraint(condition=Q(counted_kg__gte=0, system_kg__gte=0), name="stockcount_nonnegative"),
+        ]
+
+    def __str__(self):
+        return f"Opname #{self.pk} {self.product}"
+
+    @property
+    def shortfall_kg(self):
+        return max(self.system_kg - self.counted_kg, Decimal("0"))
+
+    @property
+    def difference_kg(self):
+        return self.counted_kg - self.system_kg
 
 
 class StockLedger(AppendOnlyModel):
