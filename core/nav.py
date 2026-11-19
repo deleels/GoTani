@@ -31,6 +31,7 @@ GROUPS = [
     ]),
     ("ALAT", [
         ("Telusuri", "reports:trace_index", "search", "finance", ("reports:",)),
+        ("Log aktivitas", "core:audit_log", "clipboard", "finance", ("core:audit_log",)),
         ("Staf", "core:staff", "user-cog", "owner", ("core:staff",)),
         ("Pengaturan", "core:settings", "settings", "owner", ("core:settings",)),
     ]),

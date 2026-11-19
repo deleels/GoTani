@@ -56,3 +56,20 @@ class AuditLogTests(TestCase):
         entry = AuditLog.objects.get()
         self.assertEqual(entry.action, "PRODUCT_ADMIN_EDIT")
         self.assertEqual(entry.after, {"selling_price_idr": "15000.00"})
+
+    def test_log_page_roles_and_content(self):
+        from farm.bootstrap import ROLE_CASHIER, ROLE_MANAGER
+        from django.contrib.auth.models import Group
+
+        inventory.set_product_price(self.product, 20000, actor=self.owner)
+        url = reverse("core:audit_log")
+        self.client.force_login(self.owner)
+        resp = self.client.get(url, {"action": "PRICE_CHANGE"})
+        self.assertContains(resp, "Harga Melon")
+        self.assertContains(resp, "— → 20.000")
+        self.assertNotContains(self.client.get(url, {"q": "zzz"}), "Harga Melon")
+        for role, status in ((ROLE_MANAGER, 200), (ROLE_CASHIER, 403)):
+            user = get_user_model().objects.create_user(role.lower(), password="x")
+            user.groups.add(Group.objects.get(name=role))
+            self.client.force_login(user)
+            self.assertEqual(self.client.get(url).status_code, status, role)

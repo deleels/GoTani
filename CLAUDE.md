@@ -130,7 +130,7 @@ An engineering programming class project modeling end-to-end agricultural produc
   - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
   - **PENJUALAN:** Kasir (POS) · Pesanan · Invoice · Pembeli
   - **KEUANGAN:** Biaya · Harga Produk · Analitik
-  - **ALAT:** Telusuri · Staf · Pengaturan
+  - **ALAT:** Telusuri · Log aktivitas (OWNER/MANAGER, D82) · Staf · Pengaturan
 - **Top bar** (h-16, translucent blur): sidebar toggle left; right: 🔔 bell, ◐ theme toggle, divider, 👤 menu (Profil, Ganti Password, Keluar).
 - **Page anatomy** (reusable template includes + Alpine): title + role-specific subtitle; primary action top-right; KPI stat cards; status tabs synced to `?tab=`; toolbar (search, date range, "Atur kolom" column visibility in localStorage); table with ⋯ row menu; footer "Baris per halaman · Halaman x dari y · « ‹ › »", default 10.
 - **Forms:** short create/edit forms open in a right-side sheet (server validation errors reopen it); invoice editor, payment allocation, harvest entry and POS are full pages.

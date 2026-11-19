@@ -9,10 +9,11 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 
 from farm.access import RoleRequiredMixin, get_roles
-from farm.bootstrap import ROLE_OWNER, ROLES
+from farm.bootstrap import ROLE_MANAGER, ROLE_OWNER, ROLES
 from farm.views_common import error_text
 
 from . import services
+from .models import AuditLog
 from .forms import FarmProfileForm, OwnProfileForm, StaffCreateForm, StaffPasswordForm
 from .notifications import mark_seen, notifications_payload
 from .pagination import paginate
@@ -172,3 +173,49 @@ class ProfileView(View):
                 messages.success(request, "Profil disimpan.")
                 return redirect("core:profile")
         return render(request, self.template_name, self.context(request, form), status=400)
+
+
+class AuditLogView(RoleRequiredMixin, View):
+    """"Log aktivitas" (D82): read-only, newest first, filter by kind of change and search."""
+
+    allowed_roles = (ROLE_OWNER, ROLE_MANAGER)
+    ACTIONS = {
+        "PRICE_CHANGE": "Harga", "POS_STEP_CHANGE": "Langkah kasir", "PKP_CHANGE": "Status PKP",
+        "PRODUCT_ADMIN_EDIT": "Produk (admin)",
+    }
+
+    FIELDS = {"selling_price_idr": "harga/kg", "pos_step_kg": "langkah (kg)", "is_pkp": "PKP", "tax_id": "pajak"}
+
+    def get(self, request):
+        entries = AuditLog.objects.select_related("actor")
+        action = request.GET.get("action", "")
+        if action:
+            entries = entries.filter(action=action)
+        q = request.GET.get("q", "").strip()
+        if q:
+            entries = entries.filter(Q(summary__icontains=q) | Q(reason__icontains=q) | Q(actor__username__icontains=q))
+        page = paginate(request, entries)
+        for e in page.object_list:
+            e.action_label = self.ACTIONS.get(e.action, e.action)
+            keys = list((e.after or {}).keys() or (e.before or {}).keys())
+            e.changes = [(self.FIELDS.get(k, k), _show((e.before or {}).get(k)), _show((e.after or {}).get(k)))
+                         for k in keys]
+        return render(request, "core/audit_log.html", {
+            "page": page, "q": q, "action": action, "actions": sorted(self.ACTIONS.items(), key=lambda kv: kv[1]),
+        })
+
+
+def _show(value):
+    """Audit values for display: numbers in Indonesian format, booleans as Ya/Tidak."""
+    from decimal import Decimal, InvalidOperation
+
+    from .numbers import format_id_decimal
+
+    if isinstance(value, bool):
+        return "Ya" if value else "Tidak"
+    if isinstance(value, str):
+        try:
+            return format_id_decimal(Decimal(value), 3)
+        except InvalidOperation:
+            return value
+    return value

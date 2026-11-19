@@ -11,5 +11,6 @@ urlpatterns = [
     path("akun/profil/", views.ProfileView.as_view(), name="profile"),
     path("notifikasi/", views.NotificationsView.as_view(), name="notifications"),
     path("pengaturan/", views.SettingsView.as_view(), name="settings"),
+    path("log-aktivitas/", views.AuditLogView.as_view(), name="audit_log"),
     path("akun/kata-sandi/", login_required(views.PasswordChangeView.as_view()), name="password_change"),
 ]
