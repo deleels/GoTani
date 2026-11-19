@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load ui %}
+{% load static ui %}
 {% block title %}Cuaca & Satelit{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{% static 'core/charts.js' %}"></script>
 <style>.leaflet-container { font: inherit; } #map { z-index: 0; }</style>
 {% endblock %}
 {% block content %}
@@ -27,7 +28,7 @@
       <div class="overflow-hidden rounded-xl border border-stone-200 bg-white">
         <form class="relative flex gap-2 border-b border-stone-200 p-2" @submit.prevent="search()" role="search">
           <input x-model="query" type="search" placeholder="Cari desa, kecamatan, atau kabupaten…" aria-label="Cari lokasi" class="text-sm">
-          <button class="rounded-lg bg-stone-800 px-3 text-sm text-white" :disabled="searching" x-text="searching ? 'Mencari…' : 'Cari'"></button>
+          <button class="gt-btn gt-btn--outline gt-btn--md" :disabled="searching" x-text="searching ? 'Mencari…' : 'Cari'"></button>
           <ul x-show="places.length || searchMsg" x-cloak @click.outside="places = []; searchMsg = ''" class="absolute left-2 right-2 top-full z-[1000] mt-1 max-h-64 overflow-y-auto rounded-lg border border-stone-200 bg-white text-sm shadow-lg">
             <template x-for="pl in places" :key="pl.lat + ',' + pl.lon"><li><button type="button" class="w-full px-3 py-2 text-left hover:bg-stone-100" @click="goTo(pl)" x-text="pl.name"></button></li></template>
             <li x-show="searchMsg" class="px-3 py-2 text-stone-500" x-text="searchMsg"></li>
@@ -53,30 +54,35 @@
           </div>
           <p class="mt-1 text-[11px] text-stone-400">Baris: jam · suhu · peluang hujan · angin km/j · waktu semprot</p>
         </div>
-        <div class="grid gap-4 border-t border-stone-200 p-4 xl:grid-cols-2">
+        {# Rain history and water need stack: side by side they shared ~330px each and squashed the chart and the table (layout bug). #}
+        <div class="space-y-6 border-t border-stone-200 p-4">
           <div>
-            <h3 class="text-sm font-semibold">Hujan 30 hari terakhir</h3>
-            <p class="text-xs text-stone-500" x-text="w ? 'Total ' + fmtNum(w.rain_30d_mm, 1) + ' mm' : ''"></p>
-            <div class="mt-2 h-36"><canvas id="rain-chart" role="img" aria-label="Curah hujan harian 30 hari terakhir"></canvas></div>
+            <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+              <h3 class="text-sm font-semibold">Hujan 30 hari terakhir</h3>
+              <p class="text-sm text-stone-500" x-text="w ? 'Total ' + fmtNum(w.rain_30d_mm, 1) + ' mm' : ''"></p>
+            </div>
+            <div class="relative mt-3 h-48 w-full min-w-0"><canvas id="rain-chart" role="img" aria-label="Curah hujan harian 30 hari terakhir"></canvas></div>
           </div>
-          <div>
+          <div class="min-w-0">
             <h3 class="text-sm font-semibold">Kebutuhan air hari ini</h3>
             <p class="text-xs text-stone-500" x-text="water && water.et0_mm != null ? 'ET₀ ' + fmtNum(water.et0_mm, 1) + ' mm · hujan ' + fmtNum(water.rain_mm, 1) + ' mm' : 'ET₀ tidak tersedia'"></p>
-            <table class="mt-2 w-full text-xs">
-              <thead class="text-left text-stone-500"><tr><th class="py-1">Elemen</th><th class="text-right">Kc</th><th class="text-right">Butuh</th><th class="text-right">Kurang</th><th class="text-right">Liter</th></tr></thead>
+            <div class="mt-2 overflow-x-auto">
+            <table class="w-full text-sm tabular-nums">
+              <thead class="text-left text-xs text-stone-500"><tr><th class="py-1.5 pr-3">Elemen</th><th class="whitespace-nowrap px-2 text-right">Kc</th><th class="whitespace-nowrap px-2 text-right">Butuh</th><th class="whitespace-nowrap px-2 text-right">Kurang</th><th class="whitespace-nowrap pl-2 text-right">Liter</th></tr></thead>
               <tbody>
                 <template x-for="r in (water ? water.rows : [])" :key="r.element">
                   <tr class="border-t border-stone-100">
-                    <td class="py-1"><span x-text="r.element"></span> <span class="text-stone-400" x-text="r.variety"></span><span x-show="r.covered" class="text-stone-400"> · beratap</span></td>
-                    <td class="text-right" x-text="r.kc ? fmtNum(r.kc, 2) : '—'"></td>
-                    <td class="text-right" x-text="r.need_mm ? fmtNum(r.need_mm, 1) + ' mm' : '—'"></td>
-                    <td class="text-right" x-text="r.deficit_mm ? fmtNum(r.deficit_mm, 1) + ' mm' : '—'"></td>
-                    <td class="text-right font-medium" x-text="r.litres ? fmtNum(r.litres, 0) + ' L' : '—'"></td>
+                    <td class="py-1.5 pr-3"><span x-text="r.element"></span> <span class="text-stone-500" x-text="r.variety"></span><span x-show="r.covered" class="text-stone-500"> · beratap</span></td>
+                    <td class="whitespace-nowrap px-2 text-right" x-text="r.kc ? fmtNum(r.kc, 2) : '—'"></td>
+                    <td class="whitespace-nowrap px-2 text-right" x-text="r.need_mm ? fmtNum(r.need_mm, 1) + ' mm' : '—'"></td>
+                    <td class="whitespace-nowrap px-2 text-right" x-text="r.deficit_mm ? fmtNum(r.deficit_mm, 1) + ' mm' : '—'"></td>
+                    <td class="whitespace-nowrap pl-2 text-right font-medium" x-text="r.litres ? fmtNum(r.litres, 0) + ' L' : '—'"></td>
                   </tr>
                 </template>
                 <tr x-show="water && !water.rows.length"><td colspan="5" class="py-2 text-stone-500">Tidak ada siklus aktif.</td></tr>
               </tbody>
             </table>
+            </div>
             <p class="mt-2 text-[11px] text-stone-400">Butuh = ET₀ × Kc; hujan tidak dihitung untuk elemen beratap. Isi Kc varietas di admin bila kosong.</p>
           </div>
         </div>
@@ -143,7 +149,7 @@
                     <div class="flex gap-1"><select class="text-xs" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">— tautkan ke elemen —</option>
                       <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
                     <div class="flex flex-wrap gap-2">
-                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="rounded bg-emerald-600 px-2 py-1 text-xs text-white" @click="useArea(p)">Pakai luas terpetakan</button>
+                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--primary gt-btn--sm" @click="useArea(p)">Pakai luas terpetakan</button>
                       <button type="button" class="rounded px-2 py-1 text-xs text-red-700 underline" @click="remove(p)">Hapus</button>
                     </div>
                   </div>
@@ -171,12 +177,20 @@ function forecastPanel() {
     draw() {
       if (!window.Chart || !this.w) return;
       if (chart) chart.destroy();
-      const h = this.w.history;
+      const h = this.w.history, G = window.gtCharts;
+      // Measured rain, so solid bars (hatching is only for pending/target values); the wettest day in green-800.
+      const top = Math.max(...h.map((d) => d.rain_mm || 0));
+      const day = (d) => new Date(d.date + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short" });
       chart = new Chart(document.getElementById("rain-chart"), {
         type: "bar",
-        data: { labels: h.map((d) => new Date(d.date).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })),
-                datasets: [{ label: "Hujan (mm)", data: h.map((d) => d.rain_mm), backgroundColor: "#0ea5e9" }] },
-        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: 6 } } } },
+        data: { labels: h.map(day),
+                datasets: [{ label: "Hujan", data: h.map((d) => d.rain_mm || 0), ...(G ? G.BAR : {}), maxBarThickness: 14,
+                             backgroundColor: h.map((d) => (top > 0 && d.rain_mm === top) ? (G ? G.token("--green-800") : "#13452d") : (G ? G.token("--green-600") : "#227d53")) }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false },
+                     tooltip: { callbacks: { title: (it) => h[it[0].dataIndex] ? new Date(h[it[0].dataIndex].date + "T00:00:00").toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" }) : "",
+                                             label: (ctx) => this.fmtNum(ctx.parsed.y, 1) + " mm" } } },
+                   scales: { x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
+                             y: G ? G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 4, callback: (v) => this.fmtNum(v, 0) + " mm" } }) : { beginAtZero: true } } },
       });
     },
     hourLabel(t) { const d = new Date(t); return d.getHours() === 0 ? d.toLocaleDateString("id-ID", { weekday: "short" }) : String(d.getHours()).padStart(2, "0"); },
