@@ -53,7 +53,7 @@
     {{ input_costs|json_script:"input-costs" }}
     <form method="post" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Simpan pembelian</button>
+      <button class="mt-3 gt-btn gt-btn--primary gt-btn--md gt-btn--block">Simpan pembelian</button>
     </form>
   </aside>
   {% endif %}

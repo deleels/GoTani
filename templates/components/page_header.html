@@ -1,7 +1,8 @@
-{# Page header (D68): include with title= subtitle=; put actions in a following block. #}
-<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">{{ title }}</h1>
-    {% if subtitle %}<p class="mt-1 text-sm text-stone-500">{{ subtitle }}</p>{% endif %}
+{# Page head (D68): include with title= subtitle= and optionally actions= (rendered HTML, e.g. from {% with %} or a context var). #}
+<div class="gt-pagehead app-pagehead--sm">
+  <div class="app-pagehead__text">
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
   </div>
+  {% if actions %}<div class="gt-pagehead__actions">{{ actions }}</div>{% endif %}
 </div>

@@ -1,6 +1,6 @@
-{# Status tabs synced to ?tab= (D68). Needs `tabs` [(key, label)] and `tab`. Extra query: `extra` #}
-<div class="flex flex-wrap gap-1 rounded-lg bg-stone-100 p-1 text-sm">
+{# Status tabs synced to ?tab= (D68). Needs `tabs` [(key, label)] and `tab`. Extra query: `extra`. Links, so no role="tab". #}
+<nav class="gt-tabs" aria-label="{{ tabs_label|default:'Status' }}">
   {% for key, label in tabs %}
-  <a href="?tab={{ key }}{% if extra %}&{{ extra }}{% endif %}" class="rounded-md px-3 py-1 {% if tab == key %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">{{ label }}</a>
+  <a href="?tab={{ key }}{% if extra %}&{{ extra }}{% endif %}" class="gt-tab app-tab{% if tab == key %} gt-tab--active{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ label }}</a>
   {% endfor %}
-</div>
+</nav>

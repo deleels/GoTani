@@ -11,11 +11,6 @@
 body { font-family: var(--font-sans); }
 @media print { .no-print { display: none !important; } body { background: #fff !important; } .print-full { margin: 0 !important; padding: 0 !important; } }
 
-input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.app-field), select:not(.app-field), textarea:not(.app-field) {
-  border: 1px solid var(--line-strong); border-radius: .5rem; padding: .45rem .7rem; background: var(--surface-raised); font-size: .875rem; width: 100%;
-}
-input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 2px; border-color: var(--focus); }
-
 #sw-update[hidden] { display: none !important; }
 
 /* App extensions */
@@ -27,7 +22,6 @@ html body:has(> .app-frame) { background: var(--canvas); }
 .app-sidebar { overflow-y: auto; overscroll-behavior: contain; gap: var(--space-6); }
 .app-sidebar .gt-nav { gap: 2px; }
 .app-sidebar .gt-nav__item { min-height: 40px; font-size: 16px; line-height: 24px; }
-.app-sidebar .gt-nav__item .gt-ico { width: 20px; height: 20px; }
 .app-main { flex: 1; }
 .app-main__inner { width: 100%; max-width: 80rem; margin: 0 auto; }
 /* The shell's own entrance would replay on every navigation, so it never animates. */
@@ -99,12 +93,6 @@ html body:has(> .app-frame) { background: var(--canvas); }
 .app-menu__dot { width: 8px; padding-top: 7px; }
 .app-menu__body { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
 
-/* Form field (login now; Phase 3 rolls it out everywhere). */
-.app-field { display: block; width: 100%; height: 44px; padding: 0 var(--space-4); border: 1.5px solid var(--line-strong); border-radius: var(--radius-pill);
-  background: var(--surface-raised); color: var(--ink); font: 400 16px/24px var(--font-sans); }
-textarea.app-field { height: auto; min-height: 96px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); }
-.app-field:focus { outline: none; }
-.app-field:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .app-label { display: block; font: 500 14px/20px var(--font-sans); color: var(--ink); margin-bottom: var(--space-1); }
 .app-field-wrap { position: relative; }
 .app-field-wrap .app-field { padding-right: 52px; }
@@ -136,3 +124,119 @@ textarea.app-field { height: auto; min-height: 96px; padding: var(--space-3) var
 .app-login__form { background: var(--surface-raised); }
 .app-login__title { font: var(--text-heading-lg); letter-spacing: -.6px; }
 .app-login__sub { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+
+/* ---- Phase 3: shared components ---- */
+
+/* Icons: the `icon` tag's size wins over the design system's per-component 20/22px (gt-ico keeps the 1.6 stroke). */
+.gt-ico[style*="--ico"] { width: var(--ico); height: var(--ico); }
+
+/* Page head, compact for work pages (Ringkasan/Analitik keep the full 44px gt-pagehead). */
+.gt-pagehead { flex-wrap: wrap; margin-bottom: var(--space-4); }
+.app-pagehead--sm h1 { font: var(--text-heading-lg); letter-spacing: -.6px; }
+.gt-root .app-pagehead__text p { margin-top: var(--space-1); max-width: 48rem; }
+.gt-pagehead__actions { flex-wrap: wrap; align-items: center; }
+
+/* KPI */
+.gt-metric .app-metric__note, .gt-metric__note { color: var(--ink-muted); }
+.app-value--danger { color: var(--danger); }
+.app-value--warning { color: var(--warning-text); }
+.app-stat { width: auto; text-decoration: none; }
+
+/* Status pills: 12px / 22px (the design system's 10px is too small in dense tables); extra tones from app tokens. */
+.app-pill { height: 22px; font-size: 12px; padding: 0 8px; }
+.app-pill--info { color: var(--info-ink); background: var(--info-bg); }
+.app-pill--partial { color: var(--partial-ink); background: var(--partial-bg); }
+.app-pill--neutral { color: var(--ink); background: var(--neutral-bg); border-color: var(--line-strong); }
+
+/* Tabs are links here. */
+.app-tab { display: inline-flex; align-items: center; text-decoration: none; }
+.gt-tab--active:hover { background: var(--green-700); color: var(--ink-inverse); }
+
+/* Messages */
+.app-messages { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+/* Pagination row (inside a table card foot) */
+.app-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.app-pager__per, .app-pager__nav, .app-pager__btns { display: flex; align-items: center; gap: var(--space-2); }
+.app-pager__nav { gap: var(--space-3); }
+.app-pager .gt-iconbtn { font-size: 16px; color: var(--ink); text-decoration: none; }
+.app-disabled { opacity: .4; pointer-events: none; }
+
+/* Column menu */
+.app-menu--cols { width: 14rem; padding: var(--space-2) var(--space-4); }
+.app-menu__check .gt-check__title { font-weight: 400; font-size: 14px; }
+
+/* Fields: every input/select/textarea looks like .app-field (Phase 4/5 add the class explicitly). */
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=hidden]):not([type=range]):not([type=color]):not(.app-field),
+select:not(.app-field), textarea:not(.app-field), .app-field {
+  display: block; width: 100%; height: 44px; padding: 0 var(--space-4); border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-pill); background: var(--surface-raised); color: var(--ink); font: 400 16px/24px var(--font-sans); }
+textarea:not(.app-field), textarea.app-field, select[multiple] { height: auto; min-height: 96px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); }
+input[type=file].app-field { height: auto; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: 14px; }
+select:not([multiple]) { padding-right: var(--space-8); }
+.app-field--sm, input.app-field--sm, select.app-field--sm { height: 36px; padding: 0 var(--space-3); font-size: 14px; }
+select.app-field--sm { padding-right: var(--space-6); }
+.app-field--auto, select.app-field--auto { width: auto; display: inline-block; }
+input:focus, select:focus, textarea:focus { outline: none; }
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+input:disabled, select:disabled, textarea:disabled { background: var(--surface); color: var(--ink-muted); }
+
+.app-formrow { min-width: 0; }
+.app-formrow fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.app-formrow legend { padding: 0; }
+.gt-root .app-help { margin-top: var(--space-1); font-size: 14px; line-height: 20px; color: var(--ink-muted); }
+.gt-root .app-error { margin-top: var(--space-1); font-size: 14px; line-height: 20px; color: var(--danger); }
+.app-formrow--error .app-field, .app-formrow--error input:not([type=checkbox]):not([type=radio]), .app-formrow--error select { border-color: var(--danger); }
+.app-req { color: var(--danger); }
+.app-radios { display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+.gt-radio:has(input:checked) { background: var(--surface-raised); border-color: var(--green-600); }
+.gt-radio:has(input:focus-visible), .gt-check:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-md); }
+.gt-radio input:focus-visible, .gt-check input:focus-visible { outline: none; }
+.app-radio--compact { padding: var(--space-3) var(--space-4); align-items: center; }
+.app-radio--compact .gt-radio__title { font-size: 15px; font-weight: 400; }
+
+/* Buttons */
+.gt-btn { text-decoration: none; white-space: nowrap; }
+.gt-btn:disabled { background: var(--surface); color: var(--ink-subtle); border-color: transparent; box-shadow: none; cursor: not-allowed; }
+.gt-btn--danger:hover:not(:disabled) { filter: brightness(.92); }
+.gt-iconbtn { text-decoration: none; }
+
+/* Right-side sheet (components/sheet.html) */
+.app-sheet-root { position: fixed; inset: 0; z-index: 50; }
+.app-sheet__scrim { position: absolute; inset: 0; background: var(--scrim); }
+.app-sheet { position: absolute; inset: 0 0 0 auto; display: flex; flex-direction: column; width: 480px; max-width: 100%;
+  background: var(--surface-raised); border-radius: 28px 0 0 28px; box-shadow: var(--shadow-overlay); }
+.app-sheet__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-6) var(--space-6) var(--space-2); }
+.app-sheet .app-sheet__title { font-size: 24px; line-height: 30px; padding: 0; }
+.app-sheet__form { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: var(--space-4) var(--space-6) 0; }
+.app-sheet__foot { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: var(--space-3); margin: auto calc(-1 * var(--space-6)) 0;
+  padding: var(--space-4) var(--space-6); background: var(--surface-raised); border-top: 1px solid var(--divider); }
+@media (max-width: 767.98px) { .app-sheet { width: 100%; border-radius: 0; } }
+
+/* Confirm dialog (confirm.js) */
+.app-confirm { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: calc(100vh - 32px); border: 0; color: var(--ink);
+  width: min(400px, calc(100vw - 32px)); }
+.app-confirm:not([open]) { display: none; }
+.app-confirm::backdrop { background: var(--scrim); }
+.app-confirm__form { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); width: 100%; }
+.app-confirm__body { display: flex; flex-direction: column; gap: var(--space-2); }
+.app-confirm__extra, .app-confirm__field, .app-confirm__check { width: 100%; text-align: left; }
+.app-confirm__extra { font-size: 14px; line-height: 20px; }
+.app-confirm__field { border: 0; margin: 0; padding: 0; }
+.app-confirm__choices { display: flex; flex-direction: column; gap: var(--space-2); }
+.app-confirm__actions { display: flex; gap: var(--space-3); width: 100%; margin-top: var(--space-3); }
+.app-confirm__actions .gt-btn { flex: 1; }
+.app-dialog__icon--danger { background: var(--pending-bg); color: var(--danger); }
+
+/* Empty state in a table */
+.app-empty-cell { padding: var(--space-4) !important; }
+.app-empty { text-align: left; }
+.app-empty .gt-callout__body { display: block; margin-top: 2px; }
+.app-empty__cta { margin-top: var(--space-3); }
+
+/* Tables: base style for gt-table inside a gt-card (pages convert in Phases 4–5). */
+.gt-card > .gt-table, .gt-card .app-table-wrap { margin: 0; }
+.app-table-wrap { overflow-x: auto; }
+.gt-table th.num, .gt-table td.num { text-align: right; }

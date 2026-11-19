@@ -1,15 +1,30 @@
+{% load ui %}{# Form fields (D104 Phase 3): label above (14px ink 500), app-field, help tied with aria-describedby (Django adds it), errors under the field. #}
 {% if form.non_field_errors %}
-<div class="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>
+<div class="gt-callout gt-callout--danger mb-4" role="alert">{% icon "alert" 18 %}<div>{% for e in form.non_field_errors %}<span class="gt-callout__title">{{ e }}</span>{% endfor %}</div></div>
 {% endif %}
-<div class="grid gap-3 {{ cols|default:'sm:grid-cols-2' }}">
+<div class="grid gap-4 {{ cols|default:'sm:grid-cols-2' }}">
 {% for field in form %}
   {% if field.is_hidden %}{{ field }}{% else %}
-  <label class="block text-sm {% if field.field.widget.input_type == 'textarea' or field.name == 'notes' %}sm:col-span-full{% endif %}">
-    <span class="text-stone-600">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</span>
-    <div class="mt-1">{{ field }}</div>
-    {% if field.help_text %}<span class="text-xs text-stone-400">{{ field.help_text }}</span>{% endif %}
-    {% for e in field.errors %}<span class="block text-xs text-red-600">{{ e }}</span>{% endfor %}
-  </label>
+  <div class="app-formrow{% if field.widget_type == 'textarea' or field.name == 'notes' or field.widget_type == 'checkboxselectmultiple' or field.widget_type == 'radioselect' %} sm:col-span-full{% endif %}{% if field.errors %} app-formrow--error{% endif %}">
+    {% if field.widget_type == 'checkbox' %}
+      <label class="gt-check" for="{{ field.id_for_label }}">{{ field }}<span><span class="gt-check__title">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</span>{% if field.help_text %}<span class="gt-check__desc" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}</span></label>
+    {% elif field.widget_type == 'checkboxselectmultiple' %}
+      <fieldset><legend class="app-label">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</legend>
+        {% for opt in field %}<label class="gt-check" for="{{ opt.id_for_label }}">{{ opt.tag }}<span class="gt-check__title">{{ opt.choice_label }}</span></label>{% endfor %}
+      </fieldset>
+      {% if field.help_text %}<p class="app-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+    {% elif field.widget_type == 'radioselect' and field.field.choices|length <= 4 %}
+      <fieldset><legend class="app-label">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</legend>
+        <div class="app-radios">{% for opt in field %}<label class="gt-radio" for="{{ opt.id_for_label }}">{{ opt.tag }}<span class="gt-radio__body"><span class="gt-radio__title">{{ opt.choice_label }}</span></span></label>{% endfor %}</div>
+      </fieldset>
+      {% if field.help_text %}<p class="app-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+    {% else %}
+      <label class="app-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</label>
+      {{ field }}
+      {% if field.help_text %}<p class="app-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+    {% endif %}
+    {% for e in field.errors %}<p class="app-error">{{ e }}</p>{% endfor %}
+  </div>
   {% endif %}
 {% endfor %}
 </div>

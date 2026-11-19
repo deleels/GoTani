@@ -1,0 +1,13 @@
+{% load ui %}{% if not end %}{# Right-side sheet (D69, Phase 3). Open with {% include "components/sheet.html" with title=… %}, put the <form class="app-sheet__form"> (body, then a div.app-sheet__foot with the buttons) after it, and close with {% include "components/sheet.html" with end=True %}. The parent x-data owns `sheet`. Esc closes, Tab stays inside, the first field gets focus. #}
+<div x-show="sheet" x-cloak class="app-sheet-root" @keydown.escape.window="sheet=false"
+     x-effect="if (sheet) $nextTick(() => { const f = $el.querySelector('.app-sheet [autofocus], .app-sheet__form input:not([type=hidden]), .app-sheet__form select, .app-sheet__form textarea'); if (f) f.focus(); })">
+  <div class="app-sheet__scrim" @click="sheet=false"></div>
+  <div class="app-sheet" role="dialog" aria-modal="true" aria-label="{{ title }}" @keydown.tab="window.gtTrapFocus && gtTrapFocus($event, $el)">
+    <div class="app-sheet__head">
+      <h2 class="gt-dialog__title app-sheet__title">{{ title }}</h2>
+      <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="sheet=false" aria-label="Tutup">{% icon "x" 16 %}</button>
+    </div>
+{% else %}
+  </div>
+</div>
+{% endif %}

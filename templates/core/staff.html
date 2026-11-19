@@ -8,7 +8,7 @@
       <h1 class="text-2xl font-bold tracking-tight">Staf Kebun</h1>
       <p class="mt-1 text-sm text-stone-500">Buat akun, atur peran, dan nonaktifkan akses. Akun tidak pernah dihapus karena tercatat di penjualan dan log.</p>
     </div>
-    <button type="button" @click="sheet=true" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">{% icon "plus" 16 %} Tambah Staf</button>
+    <button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Tambah Staf</button>
   </div>
 
   <div class="mb-5 grid gap-3 sm:grid-cols-3">
@@ -75,21 +75,14 @@
   </div>
 
   {# Right-side sheet (D69) #}
-  <div x-show="sheet" x-cloak class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
-    <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
-      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-        <h2 class="text-lg font-semibold">Tambah Staf</h2>
-        <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button>
-      </div>
-      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+  {% include "components/sheet.html" with title="Tambah Staf" %}
+      <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <div class="mt-auto flex justify-end gap-2 pt-6">
-          <button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Batal</button>
-          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">Buat Akun</button>
+        <div class="app-sheet__foot">
+          <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
+          <button class="gt-btn gt-btn--primary gt-btn--md">Buat Akun</button>
         </div>
       </form>
-    </div>
-  </div>
+  {% include "components/sheet.html" with end=True %}
 </div>
 {% endblock %}

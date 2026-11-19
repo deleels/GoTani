@@ -13,10 +13,10 @@
     </div>
     <div class="flex flex-wrap gap-2">
       {% if cycle.is_active %}
-      <button type="button" @click="sheet=true" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Ubah perkiraan</button>
-      <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Cek pra-panen</a>
+      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md">Ubah perkiraan</button>
+      <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--outline gt-btn--md">Cek pra-panen</a>
       {% endif %}
-      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Telusuri &amp; CSV</a>{% endif %}
+      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Telusuri &amp; CSV</a>{% endif %}
     </div>
   </div>
 
@@ -69,18 +69,13 @@
   </div>
 
   {% if cycle.is_active %}
-  <div x-show="sheet" x-cloak class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
-    <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
-      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4"><h2 class="text-lg font-semibold">Perkiraan siklus</h2>
-        <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button></div>
-      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+  {% include "components/sheet.html" with title="Perkiraan siklus" %}
+      <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <div class="mt-auto flex justify-end gap-2 pt-6"><button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm">Batal</button>
-          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Simpan</button></div>
+        <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
+          <button class="gt-btn gt-btn--primary gt-btn--md">Simpan</button></div>
       </form>
-    </div>
-  </div>
+  {% include "components/sheet.html" with end=True %}
   {% endif %}
 </div>
 {% endblock %}

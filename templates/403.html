@@ -5,6 +5,6 @@
   <p class="text-5xl font-bold text-stone-300">403</p>
   <h1 class="mt-2 text-xl font-semibold">Akses ditolak</h1>
   <p class="mt-2 text-stone-600">{{ exception|default:"Peran Anda tidak memiliki akses ke halaman ini." }}</p>
-  <a href="{% url 'home' %}" class="mt-6 inline-block rounded bg-emerald-600 px-4 py-2 text-white">Kembali ke beranda</a>
+  <a href="{% url 'home' %}" class="mt-6 gt-btn gt-btn--primary gt-btn--md">Kembali ke beranda</a>
 </div>
 {% endblock %}

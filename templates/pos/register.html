@@ -9,7 +9,7 @@
   <form method="post" action="{% url 'pos:shift' %}" class="flex items-end gap-2">{% csrf_token %}
     <input type="hidden" name="action" value="open"><input type="hidden" name="next" value="{% url 'pos:register' %}">
     <label><span class="text-stone-600">Modal awal (Rp)</span><input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="mt-1 w-36 rounded-lg border border-stone-300 px-2 py-1.5"></label>
-    <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white">Buka shift</button>
+    <button class="gt-btn gt-btn--primary gt-btn--md">Buka shift</button>
   </form>
 </div>
 {% endif %}
@@ -87,7 +87,7 @@
         </div>
         <p class="mt-2 flex justify-between font-semibold" x-show="cash"><span>Kembalian</span><span :class="change() < 0 ? 'text-red-600' : ''" x-text="change() < 0 ? 'Kurang ' + rp(-change()) : rp(change())"></span></p>
       </div>
-      <button class="mt-4 w-full rounded bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+      <button class="mt-4 gt-btn gt-btn--primary gt-btn--md gt-btn--block"
               :disabled="!hasShift || cart.length === 0 || submitting || cart.some(l => over(l) || !(qty(l) > 0)) || (method === 'CASH' && cash && change() < 0)">Bayar</button>
       <p x-show="!hasShift" class="mt-1 text-center text-xs text-amber-700">Buka shift untuk mulai berjualan.</p>
       <button type="button" class="mt-2 w-full text-xs text-stone-500 underline" x-show="cart.length" @click="cart = []; save()">Kosongkan keranjang</button>

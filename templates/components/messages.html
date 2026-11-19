@@ -1,7 +1,10 @@
-{% if messages %}
-<div class="no-print mb-4 space-y-2">
+{% load ui %}{% if messages %}
+<div class="no-print app-messages" role="status">
   {% for message in messages %}
-  <div class="rounded-lg border px-4 py-2 text-sm {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-800{% elif message.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-800{% else %}border-emerald-200 bg-emerald-50 text-emerald-800{% endif %}">{{ message }}</div>
+  <div class="gt-callout{% if message.tags == 'success' %} gt-callout--success{% elif message.tags == 'warning' %} gt-callout--warning{% elif message.tags == 'error' %} gt-callout--danger{% endif %}">
+    {% if message.tags == 'error' or message.tags == 'warning' %}{% icon "alert" 18 %}{% elif message.tags == 'success' %}{% icon "check" 18 %}{% else %}{% icon "info" 18 %}{% endif %}
+    <span class="gt-callout__title">{{ message }}</span>
+  </div>
   {% endfor %}
 </div>
 {% endif %}

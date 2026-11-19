@@ -4,7 +4,7 @@ from farm.bootstrap import ROLES
 
 from .models import FarmProfile
 
-INPUT = "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+INPUT = "app-field"  # D104: design-system field (gotani.css)
 ROLE_CHOICES = [(r, r) for r in ROLES]
 
 
@@ -12,7 +12,7 @@ class StyledMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            if not isinstance(field.widget, (forms.CheckboxInput, forms.ClearableFileInput)):
+            if not isinstance(field.widget, (forms.CheckboxInput, forms.ClearableFileInput, forms.RadioSelect, forms.CheckboxSelectMultiple)):
                 field.widget.attrs.setdefault("class", INPUT)
 
 

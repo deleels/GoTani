@@ -8,7 +8,7 @@
     <p class="mt-1 text-sm text-stone-500">Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER.</p>
   </div>
   <form method="get" class="flex items-end gap-2 text-sm"><label class="w-44">Tanggal<input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" onchange="this.form.submit()"></label>
-    {% if not is_today %}<a href="?" class="rounded-lg border border-stone-200 px-3 py-2">Hari ini</a>{% endif %}</form>
+    {% if not is_today %}<a href="?" class="gt-btn gt-btn--outline gt-btn--sm">Hari ini</a>{% endif %}</form>
 </div>
 <div class="mb-5 grid gap-3 sm:grid-cols-3">
   {% include "components/kpi.html" with label="Order selesai" value=kpi.count %}

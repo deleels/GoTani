@@ -24,7 +24,7 @@
     <form method="post" x-ref="form" @input="summarize()" @change="summarize()"
           data-confirm-title="Catat susut/rusak?" data-confirm="" data-confirm-action="Catat susut" data-confirm-level="2" data-confirm-danger>{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Simpan</button>
+      <button class="mt-3 gt-btn gt-btn--primary gt-btn--md gt-btn--block">Simpan</button>
     </form>
     {% else %}
     <p class="text-sm text-stone-500">Tidak ada lot dengan stok.</p>

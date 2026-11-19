@@ -22,7 +22,7 @@ from .models import (
     Variety,
 )
 
-INPUT_CSS = "w-full rounded border border-stone-300 px-2 py-1.5 text-sm"
+INPUT_CSS = "app-field"  # D104: design-system field (gotani.css)
 
 
 class StyledForm(forms.Form):
@@ -32,7 +32,7 @@ class StyledForm(forms.Form):
         self.roles = roles
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
-            if isinstance(field.widget, forms.CheckboxInput):
+            if isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect, forms.CheckboxSelectMultiple)):
                 continue
             field.widget.attrs.setdefault("class", INPUT_CSS)
 

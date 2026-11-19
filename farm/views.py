@@ -233,6 +233,7 @@ class ActivitiesView(FarmPage):
         ctx = super().get_context_data(**kwargs)
         tab = self.current_tab()
         ctx.update(report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
+                   report_label=next((l for k, l, _ in REPORT_TABS if k == tab), ""),
                    sheet_open=self.request.method == "POST" or self.request.GET.get("new") == "1")
         week_ago = timezone.now() - timedelta(days=7)
         counts = dict(ActivityLog.objects.filter(logged_at__gte=week_ago).values_list("activity_type")

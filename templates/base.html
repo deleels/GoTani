@@ -22,7 +22,7 @@
         {% if item.children %}
         <li x-data="{ open: {{ item.active|yesno:'true,false' }} }" @nav-open.window="if ($event.detail === '{{ item.label|escapejs }}') open = true">
           <button type="button" class="gt-nav__item app-nav__parent{% if item.active %} app-nav__parent--active{% endif %}" @click="open = !open" :aria-expanded="open">
-            {% icon item.icon 22 "gt-ico" %}<span>{{ item.label }}</span>
+            {% icon item.icon 20 %}<span>{{ item.label }}</span>
             <span class="app-nav__chev" :class="open && 'app-nav__chev--open'">{% icon "chevron" 16 "gt-ico" %}</span>
           </button>
           <ul class="gt-nav app-nav__children" x-show="open" {% if not item.active %}x-cloak{% endif %}>
@@ -32,7 +32,7 @@
           </ul>
         </li>
         {% else %}
-        <li><a href="{{ item.url }}" class="gt-nav__item"{% if item.active %} aria-current="page"{% endif %}>{% icon item.icon 22 "gt-ico" %}{{ item.label }}</a></li>
+        <li><a href="{{ item.url }}" class="gt-nav__item"{% if item.active %} aria-current="page"{% endif %}>{% icon item.icon 20 %}{{ item.label }}</a></li>
         {% endif %}
       {% endfor %}
       </ul>

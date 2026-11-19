@@ -18,7 +18,7 @@
   <form method="get" class="flex flex-wrap items-end gap-2 text-sm">
     <label class="w-40">Dari<input type="date" name="start" value="{{ m.start|date:'Y-m-d' }}"></label>
     <label class="w-40">Sampai<input type="date" name="end" value="{{ m.end|date:'Y-m-d' }}"></label>
-    <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white">Terapkan</button>
+    <button class="gt-btn gt-btn--primary gt-btn--md">Terapkan</button>
   </form>
   {% if form.errors %}<p class="w-full text-right text-sm text-red-700">{{ form.non_field_errors|join:" " }} Menampilkan 30 hari terakhir.</p>{% endif %}
 </div>

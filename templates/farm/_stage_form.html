@@ -12,7 +12,7 @@
           <template x-for="s in p.stages" :key="s.value"><option :value="s.value" x-text="s.label" :selected="s.value === stage"></option></template>
         </select>
       </template>
-      <button class="rounded-lg bg-emerald-600 px-3 py-1.5 font-medium text-white hover:bg-emerald-700">Majukan tahap</button>
+      <button class="gt-btn gt-btn--primary gt-btn--sm">Majukan tahap</button>
       <label class="inline-flex items-center gap-1 text-xs text-stone-500" x-show="p.stages.length > 1">
         <input type="checkbox" name="skip" x-model="skip" @change="if (!skip) stage = p.stages[0].value"> Lewati tahap
       </label>

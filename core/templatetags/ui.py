@@ -30,6 +30,9 @@ ICONS = {
     "dots": '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
     "plus": '<path d="M12 5v14M5 12h14"/>',
     "x": '<path d="M18 6 6 18M6 6l12 12"/>',
+    "check": '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+    "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    "arrow": '<path d="M7 17 17 7M8 7h9v9"/>',
     "logout": '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
     "key": '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
     "leaf": '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.2-6.1C9.6 14.4 12 13 13 12"/>',
@@ -43,20 +46,23 @@ def icon(name, size=18, cls=""):
     body = ICONS.get(name, ICONS["dots"])
     return format_html(
         '<svg xmlns="http://www.w3.org/2000/svg" width="{0}" height="{0}" viewBox="0 0 24 24" fill="none" '
-        'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" '
-        'class="shrink-0 {1}" aria-hidden="true">{2}</svg>',
+        'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" '
+        'class="shrink-0 gt-ico {1}" style="--ico:{0}px" aria-hidden="true">{2}</svg>',
         size, cls, mark_safe(body),
     )
 
 
+# Design-system pill tones (D104): yellow/red/green are gt-pill modifiers, blue/teal/gray are app tokens.
 PILL_TONES = {
-    "yellow": "bg-amber-100 text-amber-800 ring-amber-200",
-    "blue": "bg-sky-100 text-sky-800 ring-sky-200",
-    "teal": "bg-teal-100 text-teal-800 ring-teal-200",
-    "red": "bg-red-100 text-red-800 ring-red-200",
-    "green": "bg-emerald-100 text-emerald-800 ring-emerald-200",
-    "gray": "bg-stone-100 text-stone-700 ring-stone-200",
+    "yellow": "gt-pill--progress",
+    "blue": "app-pill--info",
+    "teal": "app-pill--partial",
+    "red": "gt-pill--pending",
+    "green": "gt-pill--completed",
+    "gray": "app-pill--neutral",
 }
+# Live states get the leading dot.
+DOT_STATUSES = {"IN_PROGRESS", "OVERDUE"}
 STATUS_TONES = {
     "PENDING": "yellow", "DRAFT": "gray", "UNPAID": "blue",
     "APPROVED": "blue", "ISSUED": "blue", "PARTIALLY_PAID": "teal",
@@ -68,10 +74,22 @@ STATUS_TONES = {
 @register.simple_tag
 def pill(text, status=None, tone=None):
     tone = tone or STATUS_TONES.get(str(status or text).upper(), "gray")
+    dot = " gt-pill--dot" if str(status or text).upper() in DOT_STATUSES else ""
     return format_html(
-        '<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {}">{}</span>',
-        PILL_TONES.get(tone, PILL_TONES["gray"]), text,
+        '<span class="gt-pill {} app-pill{}">{}</span>',
+        PILL_TONES.get(tone, PILL_TONES["gray"]), dot, text,
     )
+
+
+# KPI value tone from the old colour utility passed as `cls` (Phase 3).
+@register.filter
+def value_tone(cls):
+    cls = str(cls or "")
+    if "red-" in cls:
+        return "app-value--danger"
+    if "amber-" in cls:
+        return "app-value--warning"
+    return ""
 
 
 @register.simple_tag(takes_context=True)

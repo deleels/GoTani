@@ -9,7 +9,7 @@
   </div>
   <form method="get" class="flex items-center gap-2 text-sm">
     <select name="year" onchange="this.form.submit()" class="w-auto rounded-lg border border-stone-300 px-2 py-1.5" aria-label="Tahun">{% for y in years %}<option value="{{ y }}" {% if y == d.year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
-    <a href="?year={{ d.year }}&format=csv" class="rounded-lg border border-stone-300 px-3 py-1.5 hover:bg-stone-100">Unduh CSV</a>
+    <a href="?year={{ d.year }}&format=csv" class="gt-btn gt-btn--outline gt-btn--sm">Unduh CSV</a>
   </form>
 </div>
 <p class="mb-4 rounded-lg border border-amber-300 px-3 py-2 text-sm text-amber-700">Perkiraan untuk membantu pencatatan. Waktu pengakuan omzet invoice (tanggal terbit vs. tanggal dibayar) dan status wajib pajak Anda sebaiknya <b>dikonfirmasi ke konsultan pajak</b>. PPh disetor paling lambat tanggal 15 bulan berikutnya.</p>

@@ -22,28 +22,38 @@
     return e;
   }
 
+  var ICON_ALERT = '<svg class="gt-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>';
+  var ICON_CHECK = '<svg class="gt-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg>';
+
+  // Design-system confirm dialog (Phase 3): gt-dialog--confirm, gt-radio choices, gt-check for level 2.
   function build() {
-    dlg = el('dialog', 'gt-confirm w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-stone-200 bg-white p-0 text-stone-800 shadow-xl backdrop:bg-stone-900/50');
+    dlg = el('dialog', 'gt-dialog gt-dialog--confirm app-confirm');
     dlg.setAttribute('aria-labelledby', 'gt-confirm-title');
     dlg.innerHTML =
-      '<form method="dialog" class="p-5">' +
-      '<h2 id="gt-confirm-title" class="text-lg font-semibold"></h2>' +
-      '<div data-body class="mt-2 space-y-2 text-sm text-stone-600"></div>' +
-      '<div data-extra class="mt-3 text-sm"></div>' +
-      '<label data-choice-wrap class="mt-3 block text-sm"><span class="text-stone-600">Alasan</span>' +
-      '<select data-choice class="mt-1 w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm"></select></label>' +
-      '<label data-reason-wrap class="mt-3 block text-sm"><span data-reason-label class="text-stone-600"></span>' +
-      '<textarea data-reason rows="2" class="mt-1 w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm"></textarea></label>' +
-      '<label data-check-wrap class="mt-3 flex items-start gap-2 rounded-lg border border-amber-400 p-2 text-sm font-medium text-stone-700">' +
-      '<input type="checkbox" data-check class="mt-0.5"> <span>Saya sudah memeriksa data ini</span></label>' +
-      '<div class="mt-5 flex justify-end gap-2">' +
-      '<button value="cancel" data-cancel class="rounded-lg border border-stone-300 px-4 py-2 text-sm hover:bg-stone-100">Batal</button>' +
-      '<button value="ok" data-ok class="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-40"></button>' +
+      '<form method="dialog" class="app-confirm__form">' +
+      '<span data-icon class="gt-dialog__icon"></span>' +
+      '<h2 id="gt-confirm-title" class="gt-dialog__title"></h2>' +
+      '<div data-body class="app-confirm__body"></div>' +
+      '<div data-extra class="app-confirm__extra"></div>' +
+      '<fieldset data-choice-wrap class="app-confirm__field"><legend class="app-label">Alasan</legend><div data-choice class="app-confirm__choices"></div></fieldset>' +
+      '<div data-reason-wrap class="app-confirm__field"><label class="app-label" for="gt-confirm-reason" data-reason-label></label>' +
+      '<textarea id="gt-confirm-reason" data-reason rows="2" class="app-field"></textarea></div>' +
+      '<label data-check-wrap class="gt-check app-confirm__check"><input type="checkbox" data-check>' +
+      '<span class="gt-check__title">Saya sudah memeriksa data ini</span></label>' +
+      '<div class="app-confirm__actions">' +
+      '<button value="cancel" data-cancel class="gt-btn gt-btn--outline gt-btn--md">Batal</button>' +
+      '<button value="ok" data-ok class="gt-btn gt-btn--md"></button>' +
       '</div></form>';
     document.body.appendChild(dlg);
     var ok = dlg.querySelector('[data-ok]'), check = dlg.querySelector('[data-check]'), reason = dlg.querySelector('[data-reason]');
     var choice = dlg.querySelector('[data-choice]');
+    choice.value = '';
     function sync() {
+      var picked = choice.querySelector('input:checked');
+      choice.value = picked ? picked.value : '';
+      Array.prototype.forEach.call(choice.querySelectorAll('.gt-radio'), function (r) {
+        r.classList.toggle('gt-radio--selected', !!r.querySelector('input:checked'));
+      });
       var needCheck = dlg.querySelector('[data-check-wrap]').style.display !== 'none';
       var hasChoice = dlg.querySelector('[data-choice-wrap]').style.display !== 'none';
       var needReason = dlg.querySelector('[data-reason-wrap]').style.display !== 'none' &&
@@ -54,6 +64,7 @@
     choice.addEventListener('change', sync);
     check.addEventListener('change', sync);
     reason.addEventListener('input', sync);
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close('cancel'); });  // backdrop click
     dlg.addEventListener('close', function () {
       var r = resolver; resolver = null;
       if (r) r(dlg.returnValue === 'ok' ? { reason: reason.value.trim(), choice: choice.value } : false);
@@ -65,35 +76,45 @@
     if (!dlg) build();
     if (resolver) resolver(false);
     dlg.querySelector('#gt-confirm-title').textContent = opts.title || 'Konfirmasi';
+    var icon = dlg.querySelector('[data-icon]');
+    icon.innerHTML = opts.danger ? ICON_ALERT : ICON_CHECK;
+    icon.className = 'gt-dialog__icon' + (opts.danger ? ' app-dialog__icon--danger' : '');
     var body = dlg.querySelector('[data-body]');
     body.innerHTML = '';
     String(opts.body || '').split('\n').filter(Boolean).forEach(function (p) { body.appendChild(el('p', '', p)); });
     var extra = dlg.querySelector('[data-extra]');
     extra.innerHTML = '';
+    extra.style.display = opts.html ? '' : 'none';
     if (opts.html) extra.appendChild(opts.html);
     var wrap = dlg.querySelector('[data-reason-wrap]');
-    wrap.style.display = opts.reason ? '' : 'none';  // not `hidden`: Tailwind's display classes override it
+    wrap.style.display = opts.reason ? '' : 'none';  // not `hidden`: display classes would override it
     dlg.dataset.reasonRequired = opts.reason && !opts.reasonOptional ? '1' : '';
     dlg.dataset.reasonLabel = opts.reason || '';
-    var cw = dlg.querySelector('[data-choice-wrap]'), sel = dlg.querySelector('[data-choice]');
-    sel.innerHTML = '';
+    var cw = dlg.querySelector('[data-choice-wrap]'), box = dlg.querySelector('[data-choice]');
+    box.innerHTML = '';
+    box.value = '';
     cw.style.display = opts.choices ? '' : 'none';
     dlg.dataset.other = opts.other || '';
     if (opts.choices) {
-      sel.appendChild(el('option', '', '— pilih alasan —')).value = '';
-      opts.choices.forEach(function (c) { var o = el('option', '', c[1]); o.value = c[0]; sel.appendChild(o); });
+      opts.choices.forEach(function (c) {
+        var lab = el('label', 'gt-radio app-radio--compact'), inp = el('input');
+        inp.type = 'radio'; inp.name = 'gt-confirm-choice'; inp.value = c[0];
+        var b = el('span', 'gt-radio__body');
+        b.appendChild(el('span', 'gt-radio__title', c[1]));
+        lab.appendChild(inp); lab.appendChild(b); box.appendChild(lab);
+      });
     }
     dlg.querySelector('[data-reason]').value = '';
     dlg.querySelector('[data-check-wrap]').style.display = Number(opts.level || 1) < 2 ? 'none' : '';
     dlg.querySelector('[data-check]').checked = false;
     var ok = dlg.querySelector('[data-ok]');
     ok.textContent = opts.action || 'Lanjutkan';
-    ok.className = 'rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-40 ' +
-      (opts.danger ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700');
+    ok.className = 'gt-btn gt-btn--md ' + (opts.danger ? 'gt-btn--danger' : 'gt-btn--primary');
     dlg.returnValue = '';
     dlg._sync();
     dlg.showModal();
-    (opts.choices ? sel : opts.reason ? dlg.querySelector('[data-reason]') : dlg.querySelector('[data-cancel]')).focus();
+    var first = box.querySelector('input');
+    (opts.choices && first ? first : opts.reason ? dlg.querySelector('[data-reason]') : dlg.querySelector('[data-cancel]')).focus();
     return new Promise(function (res) { resolver = res; });
   }
 
@@ -142,4 +163,15 @@
   }, true);
 
   window.gtConfirm = gtConfirm;
+
+  // Keeps Tab inside a sheet or dialog (used by components/sheet.html).
+  window.gtTrapFocus = function (e, root) {
+    var f = Array.prototype.filter.call(
+      root.querySelectorAll('a[href],button:not([disabled]),input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea:not([disabled])'),
+      function (n) { return n.offsetParent !== null; });
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
 })();

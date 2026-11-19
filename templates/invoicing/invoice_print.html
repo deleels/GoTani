@@ -14,7 +14,7 @@
 {% endblock %}
 {% block body %}
 <div class="no-print flex justify-center gap-2 p-4 text-sm">
-  <button onclick="window.print()" class="rounded bg-emerald-600 px-4 py-2 text-white">Cetak / Simpan PDF</button>
+  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md">Cetak / Simpan PDF</button>
   <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="rounded bg-stone-200 px-4 py-2">Kembali</a>
 </div>
 <div class="sheet shadow">
