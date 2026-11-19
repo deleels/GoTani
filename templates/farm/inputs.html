@@ -2,16 +2,26 @@
 {% load gotani %}
 {% block title %}Input Produksi{% endblock %}
 {% block content %}
+<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Inventaris Input</h1>
+    <p class="mt-1 text-sm text-stone-500">Pupuk, pestisida dan benih. Pemakaian di Laporan Kerja memotong stok; klik input untuk melihat ke mana saja ia dipakai.</p>
+  </div>
+</div>
+<div class="mb-5 grid gap-3 sm:grid-cols-2">
+  {% include "components/kpi.html" with label="Jenis input" value=items|length %}
+  {% include "components/kpi.html" with label="Stok menipis" value=low_count cls="text-amber-700" %}
+</div>
 <div class="grid gap-6 lg:grid-cols-3">
   <section class="{% if roles.finance %}lg:col-span-2{% else %}lg:col-span-3{% endif %}">
-    <h1 class="mb-3 text-lg font-semibold">Stok input produksi</h1>
+    <h2 class="mb-3 font-semibold">Stok input produksi</h2>
     <div class="overflow-x-auto rounded-lg border bg-white">
       <table class="w-full text-sm">
         <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Input</th><th class="p-2">Jenis</th><th class="p-2 text-right">Stok</th><th class="p-2 text-right">Batas peringatan</th>{% if roles.finance %}<th class="p-2 text-right">Biaya rata-rata</th>{% endif %}</tr></thead>
         <tbody>
         {% for item in items %}
           <tr class="border-t">
-            <td class="p-2">{{ item.name }} {% if item.is_low_stock %}<span class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Stok menipis</span>{% endif %}</td>
+            <td class="p-2"><a class="font-medium hover:underline" href="{% url 'farm:input_detail' item.pk %}">{{ item.name }}</a> {% if item.is_low_stock %}<span class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Stok menipis</span>{% endif %}</td>
             <td class="p-2">{{ item.get_item_type_display }}</td>
             <td class="p-2 text-right {% if item.is_low_stock %}font-semibold text-amber-700{% endif %}">{{ item.stock_qty|kg }} {{ item.unit }}</td>
             <td class="p-2 text-right text-stone-500">{{ item.min_alert_qty|kg }} {{ item.unit }}</td>

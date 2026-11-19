@@ -1,7 +1,1 @@
 {% extends "base.html" %}
-{% block subnav %}
-<div class="mx-auto flex max-w-7xl gap-1 px-4 pb-2 text-sm">
-  <a href="{% url 'pos:register' %}" class="rounded-full px-3 py-1 {% if request.resolver_match.url_name == 'register' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Register</a>
-  <a href="{% url 'pos:orders' %}" class="rounded-full px-3 py-1 {% if request.resolver_match.url_name == 'orders' %}bg-emerald-600 text-white{% else %}bg-stone-100 hover:bg-stone-200{% endif %}">Order hari ini</a>
-</div>
-{% endblock %}

@@ -44,3 +44,21 @@ def ensure_role_groups(Group) -> int:
         _, was_created = Group.objects.get_or_create(name=role)
         created += was_created
     return created
+
+
+PREHARVEST_CHECKLIST = [
+    "Masa henti pestisida (PHI) sudah terlewati",
+    "Sampel buah memenuhi kematangan / brix target",
+    "Alat panen, keranjang dan timbangan bersih",
+    "Area sortir dan gudang siap",
+    "Tenaga panen terjadwal",
+]
+
+
+def ensure_preharvest_checklist(PreHarvestChecklistItem) -> int:
+    """Seed the default checklist only when none exist (admin may edit freely afterwards)."""
+    if PreHarvestChecklistItem.objects.exists():
+        return 0
+    for i, text in enumerate(PREHARVEST_CHECKLIST, start=1):
+        PreHarvestChecklistItem.objects.create(text=text, order=i * 10)
+    return len(PREHARVEST_CHECKLIST)

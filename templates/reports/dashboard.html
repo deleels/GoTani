@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load gotani %}
-{% block title %}Dasbor{% endblock %}
+{% block title %}Analitik{% endblock %}
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
@@ -9,26 +9,39 @@
 {% endblock %}
 {% block content %}
 <div class="viz-root">
-<form method="get" class="mb-5 flex flex-wrap items-end gap-3 text-sm">
-  <h1 class="mr-auto text-lg font-semibold">Dasbor analitik</h1>
-  <label>Dari<input type="date" name="start" value="{{ m.start|date:'Y-m-d' }}" class="ml-1 rounded border border-stone-300 px-2 py-1"></label>
-  <label>Sampai<input type="date" name="end" value="{{ m.end|date:'Y-m-d' }}" class="ml-1 rounded border border-stone-300 px-2 py-1"></label>
-  <button class="rounded bg-emerald-600 px-3 py-1.5 text-white">Terapkan</button>
-  {% if form.errors %}<p class="w-full text-right text-red-700">{{ form.non_field_errors|join:" " }} Menampilkan 30 hari terakhir.</p>{% endif %}
-</form>
+<div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Analitik</h1>
+    <p class="mt-1 text-sm text-stone-500">Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual).</p>
+  </div>
+  <form method="get" class="flex flex-wrap items-end gap-2 text-sm">
+    <label class="w-40">Dari<input type="date" name="start" value="{{ m.start|date:'Y-m-d' }}"></label>
+    <label class="w-40">Sampai<input type="date" name="end" value="{{ m.end|date:'Y-m-d' }}"></label>
+    <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white">Terapkan</button>
+  </form>
+  {% if form.errors %}<p class="w-full text-right text-sm text-red-700">{{ form.non_field_errors|join:" " }} Menampilkan 30 hari terakhir.</p>{% endif %}
+</div>
 
 <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Pendapatan</div><div class="text-xl font-semibold">{{ k.revenue|rupiah }}</div><div class="text-xs text-stone-400">{{ k.orders }} order selesai</div></div>
-  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">HPP</div><div class="text-xl font-semibold">{{ k.cogs|rupiah }}</div></div>
-  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Laba kotor</div><div class="text-xl font-semibold">{{ k.gross_margin|rupiah }}</div><div class="text-xs text-stone-400">Margin {{ k.gross_margin_pct|pct }}</div></div>
-  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Kerugian susut/rusak</div><div class="text-xl font-semibold">{{ k.spoilage_loss|rupiah }}</div></div>
-  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Biaya siklus tak terserap</div><div class="text-xl font-semibold">{{ k.unabsorbed_cost|rupiah }}</div><div class="text-xs text-stone-400">Siklus ditutup dalam periode</div></div>
-  <div class="rounded-lg border bg-white p-4"><div class="text-xs text-stone-500">Overhead umum</div><div class="text-xl font-semibold">{{ k.overhead|rupiah }}</div><div class="text-xs text-stone-400">Umum {{ k.overhead_general|rupiah }} + elemen tanpa siklus</div></div>
-  <div class="col-span-2 rounded-lg border-2 {% if k.net_profit < 0 %}border-red-300 bg-red-50{% else %}border-emerald-300 bg-emerald-50{% endif %} p-4">
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pendapatan</div><div class="text-xl font-semibold">{{ k.revenue|rupiah }}</div><div class="text-xs text-stone-400">{{ k.orders }} order · {{ k.invoices }} invoice</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">HPP</div><div class="text-xl font-semibold">{{ k.cogs|rupiah }}</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Laba kotor</div><div class="text-xl font-semibold">{{ k.gross_margin|rupiah }}</div><div class="text-xs text-stone-400">Margin {{ k.gross_margin_pct|pct }}</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Kerugian susut/rusak</div><div class="text-xl font-semibold">{{ k.spoilage_loss|rupiah }}</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Biaya siklus tak terserap</div><div class="text-xl font-semibold">{{ k.unabsorbed_cost|rupiah }}</div><div class="text-xs text-stone-400">Siklus ditutup dalam periode</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Overhead umum</div><div class="text-xl font-semibold">{{ k.overhead|rupiah }}</div><div class="text-xs text-stone-400">Umum {{ k.overhead_general|rupiah }} + elemen tanpa siklus</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pendapatan lain (ongkos kirim)</div><div class="text-xl font-semibold">{{ k.other_income|rupiah }}</div></div>
+  <div class="rounded-xl border-2 {% if k.net_profit < 0 %}border-red-300 bg-red-50{% else %}border-emerald-300 bg-emerald-50{% endif %} p-4">
     <div class="text-xs text-stone-600">Laba bersih</div>
     <div class="text-2xl font-bold">{{ k.net_profit|rupiah }}</div>
-    <div class="text-xs text-stone-500">Laba kotor − susut − tak terserap − overhead. Pembelian input (kas keluar, bukan beban): {{ k.input_purchases|rupiah }}</div>
+    <div class="text-xs text-stone-500">Laba kotor + pendapatan lain − susut − tak terserap − overhead</div>
   </div>
+</div>
+
+<div class="mb-6 grid gap-3 md:grid-cols-4">
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">PPN terkumpul</div><div class="text-xl font-semibold">{{ k.ppn_collected|rupiah }}</div><div class="text-xs text-stone-400">Kewajiban pajak, bukan pendapatan</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Piutang berjalan</div><div class="text-xl font-semibold">{{ k.receivables_outstanding|rupiah }}</div><div class="text-xs text-stone-400">Per hari ini</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Piutang jatuh tempo</div><div class="text-xl font-semibold text-red-700">{{ k.receivables_overdue|rupiah }}</div></div>
+  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pembelian input (kas keluar)</div><div class="text-xl font-semibold">{{ k.input_purchases|rupiah }}</div><div class="text-xs text-stone-400">Aset persediaan, bukan beban</div></div>
 </div>
 
 {{ charts|json_script:"chart-data" }}
@@ -44,6 +57,10 @@
   <section class="rounded-lg border bg-white p-4">
     <h2 class="mb-2 font-semibold">Hasil jual (kg/m²) per jenis elemen</h2>
     <div class="h-64"><canvas id="chart-yield" role="img" aria-label="Kg layak jual per meter persegi per jenis elemen"></canvas></div>
+  </section>
+  <section class="rounded-lg border bg-white p-4">
+    <h2 class="mb-2 font-semibold">Pembagian kanal (POS vs Invoice)</h2>
+    <div class="h-64"><canvas id="chart-channel" role="img" aria-label="Pendapatan per kanal penjualan"></canvas></div>
   </section>
   <section class="rounded-lg border bg-white p-4">
     <h2 class="mb-2 font-semibold">Produk terlaris (pendapatan)</h2>
@@ -133,7 +150,20 @@
     });
   };
   hbar('chart-top', data.top.labels, data.top.values);
+  if (data.channel.values.some(v => v > 0)) new Chart(document.getElementById('chart-channel'), {
+    type: 'doughnut',
+    data: { labels: data.channel.labels, datasets: [{ data: data.channel.values, backgroundColor: [c('--series-1'), c('--series-3')], borderWidth: 0 }] },
+    options: { plugins: { tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + rp(ctx.parsed) } } } },
+  }); else empty('chart-channel', []);
   hbar('chart-expenses', data.expenses.labels, data.expenses.values);
+  window.addEventListener('gotani-theme', () => {
+    const st = getComputedStyle(document.querySelector('.viz-root'));
+    Chart.defaults.color = st.getPropertyValue('--ink-2').trim();
+    Object.values(Chart.instances).forEach((ch) => {
+      Object.values(ch.options.scales || {}).forEach((sc) => { if (sc.grid) sc.grid.color = st.getPropertyValue('--grid').trim(); });
+      ch.update();
+    });
+  });
 })();
 </script>
 {% endblock %}

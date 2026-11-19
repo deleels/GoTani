@@ -5,7 +5,8 @@ from datetime import timedelta
 
 from django import forms
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
@@ -29,17 +30,21 @@ def csv_response(filename: str, rows) -> HttpResponse:
 
 
 class HomeView(View):
-    """`/`: the dashboard for OWNER/MANAGER; others go to their own landing page."""
+    """`/`: Ringkasan for farm roles (D70); CASHIER lands on the POS; no role → 403."""
 
     def get(self, request):
         if not request.user.is_authenticated:
             return redirect(f"{reverse('login')}?next=/")
         roles = get_roles(request)
-        if roles.finance:
-            return DashboardView.as_view()(request)
+        if roles.farm:
+            from core.home import home_summary
+
+            ctx = home_summary(roles)
+            ctx["chart"] = {"labels": [s["stage"] for s in ctx["stages"]], "values": [s["count"] for s in ctx["stages"]]}
+            return render(request, "core/home.html", ctx)
         target = landing_url_name(roles)
         if target is None:
-            return DashboardView.as_view()(request)  # no role → 403 via the mixin
+            raise PermissionDenied("Akun Anda belum memiliki peran.")
         return redirect(target)
 
 
@@ -101,6 +106,10 @@ class DashboardView(RoleRequiredMixin, TemplateView):
                 "labels": [f"{r['variety']} {r['grade']}" for r in m["top_products"]],
                 "values": [f(r["revenue"]) for r in m["top_products"]],
             },
+            "channel": {
+                "labels": ["Kasir (POS)", "Invoice"],
+                "values": [f(m["kpis"]["revenue_pos"]), f(m["kpis"]["revenue_invoice"])],
+            },
             "expenses": {
                 "labels": [r["category"] for r in m["expenses_by_category"]],
                 "values": [f(r["amount"]) for r in m["expenses_by_category"]],
@@ -114,6 +123,12 @@ class TraceIndexView(RoleRequiredMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         number = request.GET.get("order", "").strip().upper()
+        if number.startswith("INV-"):
+            from invoicing.models import Invoice
+
+            invoice = Invoice.objects.filter(number=number).first()
+            if invoice and get_roles(request).finance:
+                return redirect("invoicing:invoice_detail", pk=invoice.pk)
         if number:
             order = SaleOrder.objects.filter(order_number=number).first()
             if order:

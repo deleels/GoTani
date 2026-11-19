@@ -72,10 +72,8 @@ def get_roles(request) -> UserRoles:
 
 def landing_url_name(roles: UserRoles) -> str | None:
     """Where a user starts after login."""
-    if roles.finance:
-        return "dashboard"
-    if roles.has(ROLE_WORKER):
-        return "farm:cycles"
+    if roles.farm:
+        return "home"
     if roles.has(ROLE_CASHIER):
         return "pos:register"
     return None

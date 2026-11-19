@@ -1,0 +1,6 @@
+{# Status tabs synced to ?tab= (D68). Needs `tabs` [(key, label)] and `tab`. Extra query: `extra` #}
+<div class="flex flex-wrap gap-1 rounded-lg bg-stone-100 p-1 text-sm">
+  {% for key, label in tabs %}
+  <a href="?tab={{ key }}{% if extra %}&{{ extra }}{% endif %}" class="rounded-md px-3 py-1 {% if tab == key %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>

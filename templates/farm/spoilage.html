@@ -2,6 +2,12 @@
 {% load gotani %}
 {% block title %}Susut/Rusak{% endblock %}
 {% block content %}
+<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Susut / Rusak</h1>
+    <p class="mt-1 text-sm text-stone-500">Catat produk busuk, rusak, atau menyusut dari lot tertentu; kerugiannya dihitung dari HPP lot.</p>
+  </div>
+</div>
 {{ lot_products|json_script:"lot-products" }}
 <div class="grid gap-6 lg:grid-cols-3">
   <aside class="self-start rounded-lg border bg-white p-4 lg:order-2"
@@ -33,6 +39,7 @@
         {% empty %}<tr><td colspan="6" class="p-3 text-stone-400">Belum ada.</td></tr>{% endfor %}
         </tbody>
       </table>
+      {% include "components/pagination.html" %}
     </div>
   </section>
 </div>

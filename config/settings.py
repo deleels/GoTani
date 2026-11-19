@@ -46,10 +46,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "core",
     "farm",
     "inventory",
     "pos",
     "reports",
+    "invoicing",
+    "geo",
 ]
 
 MIDDLEWARE = [
@@ -61,6 +64,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "core.middleware.ForcePasswordChangeMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -77,6 +81,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "farm.access.roles_context",
+                "core.nav.nav_context",
             ],
         },
     },
@@ -120,6 +125,17 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# External data cache (D73): weather 30 min, NDVI/soil 24 h. Table made by `createcachetable`.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "gotani_cache",
+    }
+}
+
+# Agromonitoring free-tier key (server-side only, never sent to the browser). Optional.
+AGRO_API_KEY = os.environ.get("AGRO_API_KEY", "")
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"

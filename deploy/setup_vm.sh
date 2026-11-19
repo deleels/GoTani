@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GoTani one-shot provisioning for Ubuntu 24.04 LTS on an Azure VM (D33, D39).
-# Idempotent: safe to re-run for updates (git pull, migrate, collectstatic, restart).
+# Idempotent: safe to re-run for updates (git pull, migrate, createcachetable, collectstatic, restart).
 #
 # Usage (on the VM):
 #   sudo GOTANI_DOMAIN=gotani.duckdns.org \
@@ -106,6 +106,7 @@ chmod 600 "$ENV_FILE"
 log "Migrate, collectstatic, checks"
 cd "$APP_DIR"
 as_app "$VENV/bin/python" manage.py migrate --noinput
+as_app "$VENV/bin/python" manage.py createcachetable
 as_app "$VENV/bin/python" manage.py collectstatic --noinput
 as_app "$VENV/bin/python" manage.py check --deploy
 if [[ "$SEED_DEMO" == "1" ]]; then

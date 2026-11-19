@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load ui gotani %}
+{% block title %}Catat Pembayaran{% endblock %}
+{% block content %}
+<a href="{% url 'invoicing:buyer_detail' buyer.pk %}" class="text-sm text-stone-500 hover:underline">← {{ buyer.name }}</a>
+<div class="mb-5 mt-1">
+  <h1 class="text-2xl font-bold tracking-tight">Catat Pembayaran</h1>
+  <p class="mt-1 text-sm text-stone-500">Uang dari {{ buyer }}. Bagi ke invoice yang masih terbuka; sisa yang tidak dialokasikan menjadi kredit pembeli (tidak bisa dicairkan, hanya untuk invoice berikutnya).</p>
+</div>
+<form method="post" enctype="multipart/form-data" x-data="{ amount: Number('{{ form.amount_idr.value|default:0 }}'.replace(',', '.')) || 0, allocs: {} , get used() { return Object.values(this.allocs).reduce((a, b) => a + (Number(b) || 0), 0) } }" class="grid gap-5 lg:grid-cols-3">{% csrf_token %}
+  <div class="rounded-xl border border-stone-200 bg-white p-4" @input="if ($event.target.name === 'amount_idr') amount = Number($event.target.value) || 0">
+    {% include "_form_fields.html" with cols="grid-cols-1" %}
+    {% if credit %}<p class="mt-3 text-xs text-emerald-700">Kredit yang sudah ada: {{ credit|rupiah }}</p>{% endif %}
+  </div>
+  <div class="rounded-xl border border-stone-200 bg-white lg:col-span-2">
+    <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Alokasi ke invoice</h2></div>
+    <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr><th class="px-4 py-2">Invoice</th><th class="px-4 py-2">Jatuh tempo</th><th class="px-4 py-2 text-right">Sisa</th><th class="w-44 px-4 py-2">Dibayar</th></tr></thead>
+      <tbody class="divide-y divide-stone-100">
+      {% for inv in open_invoices %}
+        <tr x-init="allocs[{{ inv.pk }}] = '{{ inv.entered }}'">
+          <td class="px-4 py-2 font-mono">{{ inv }}</td>
+          <td class="px-4 py-2">{{ inv.due_date|date:"d M Y" }}</td>
+          <td class="px-4 py-2 text-right">{{ inv.outstanding|rupiah }}</td>
+          <td class="px-4 py-2"><div class="flex gap-1"><input name="alloc_{{ inv.pk }}" type="number" step="0.01" min="0" max="{{ inv.outstanding|stringformat:'.2f' }}" x-model="allocs[{{ inv.pk }}]">
+            <button type="button" class="rounded bg-stone-100 px-2 text-xs hover:bg-stone-200" @click="allocs[{{ inv.pk }}] = '{{ inv.outstanding|stringformat:'.2f' }}'">Lunas</button></div></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="px-4 py-8 text-center text-stone-500">Tidak ada invoice terbuka — seluruh pembayaran akan menjadi kredit.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm">
+      <p>Dialokasikan <strong x-text="'Rp ' + Math.round(used).toLocaleString('id-ID')"></strong> · menjadi kredit
+        <strong :class="amount - used < 0 ? 'text-red-700' : 'text-emerald-700'" x-text="'Rp ' + Math.round(amount - used).toLocaleString('id-ID')"></strong></p>
+      <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700">Simpan Pembayaran</button>
+    </div>
+  </div>
+</form>
+{% endblock %}

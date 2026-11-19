@@ -2,7 +2,13 @@
 {% load gotani %}
 {% block title %}Harga Produk{% endblock %}
 {% block content %}
-<h1 class="mb-1 text-lg font-semibold">Produk belum berharga</h1>
+<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight">Harga Produk</h1>
+    <p class="mt-1 text-sm text-stone-500">Harga jual per kg (sudah termasuk PPN bila produk dikenai pajak). Harga katalog juga dipakai untuk membagi HPP antar grade.</p>
+  </div>
+</div>
+<h2 class="mb-1 font-semibold">Produk belum berharga</h2>
 <p class="mb-3 text-sm text-stone-500">Produk baru dari panen dibuat tanpa harga dan disembunyikan dari POS sampai harga ditetapkan.</p>
 <div class="mb-8 overflow-x-auto rounded-lg border bg-white">
   <table class="w-full text-sm">

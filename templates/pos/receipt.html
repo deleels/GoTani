@@ -55,7 +55,8 @@
   {% endfor %}
   {% endif %}
   <hr style="border-top:1px dashed #000;margin:6px 0">
-  <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1em"><span>TOTAL</span><span>{{ order.total_revenue_idr|rupiah }}</span></div>
+  <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1em"><span>TOTAL</span><span>{{ order.total_gross_idr|rupiah }}</span></div>
+  {% if order.total_tax_idr %}<div style="display:flex;justify-content:space-between;font-size:.9em"><span>termasuk PPN</span><span>{{ order.total_tax_idr|rupiah }}</span></div>{% endif %}
   <div style="display:flex;justify-content:space-between"><span>Bayar</span><span>{{ order.get_payment_method_display }}</span></div>
   <hr style="border-top:1px dashed #000;margin:6px 0">
   <div style="text-align:center">Terima kasih!</div>

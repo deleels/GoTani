@@ -12,7 +12,9 @@ sales over the last 30 days:
   overhead, a cycle-less element expense, cost landing on a closed cycle);
 * multiple graded harvest batches (RSV split where both grades are priced,
   equal split where one is not), spoilage, priced and unpriced products;
-* completed and voided POS orders.
+* completed and voided POS orders;
+* wholesale buyers with paid, partly-paid, overdue, voided and draft invoices,
+  PPN on one product, and a payment that leaves buyer credit.
 
 Every quantity is routed through the domain services in chronological order,
 so the result always passes `check_mass_balance`. Reference data (users,
@@ -38,6 +40,7 @@ from farm.bootstrap import (
     ROLE_OWNER,
     ROLE_WORKER,
     ensure_expense_categories,
+    ensure_preharvest_checklist,
     ensure_role_groups,
 )
 from farm.models import (
@@ -48,12 +51,16 @@ from farm.models import (
     FarmElement,
     HarvestBatch,
     InputItem,
+    PreHarvestChecklistItem,
     Unit,
     Variety,
 )
 from inventory import services as inventory
 from inventory.models import Grade, Product, SpoilageRecord
 from pos import services as pos
+from inventory.models import Tax
+from invoicing import services as invoicing
+from invoicing.models import Buyer, Invoice
 from pos.models import SaleOrder
 
 DEFAULT_DEMO_PASSWORD = "gotani-demo-2026"
@@ -68,10 +75,26 @@ DEMO_USERS = [
 ]
 
 VARIETIES = [
-    ("Melon Golden", "Melon"),
-    ("Cabai Rawit", "Cabai"),
-    ("Kakao Forastero", "Kakao"),
+    # name, crop, days to harvest
+    ("Melon Golden", "Melon", 75),
+    ("Cabai Rawit", "Cabai", 90),
+    ("Kakao Forastero", "Kakao", 110),
 ]
+
+# Cycle estimates (D60): plant count and expected sellable kg.
+ESTIMATES = {
+    "melon_old": (600, "450"),
+    "melon_new": (600, "480"),
+    "cabai": (1500, "380"),
+    "kakao": (220, "260"),
+}
+
+FARM_PROFILE = {"name": "Kebun GoTani", "address": "Jl. Raya Ciapus No. 12, Bogor, Jawa Barat",
+                "phone": "0251-555-0123", "latitude": "-6.595000", "longitude": "106.806000"}
+# A ~0.05 ha greenhouse footprint near the farm centre (no API call at seed time).
+SAMPLE_POLYGON = {"type": "Polygon", "coordinates": [[
+    [106.80580, -6.59520], [106.80605, -6.59520], [106.80605, -6.59500], [106.80580, -6.59500], [106.80580, -6.59520],
+]]}
 
 ELEMENTS = [
     ("Greenhouse A", FarmElement.ElementType.GREENHOUSE, D("500.00")),
@@ -134,9 +157,10 @@ class Command(BaseCommand):
         ensure_role_groups(Group)
         self.users = self._seed_users()
         self.varieties = {
-            name: Variety.objects.get_or_create(name=name, defaults={"crop": crop})[0]
-            for name, crop in VARIETIES
+            name: Variety.objects.get_or_create(name=name, defaults={"crop": crop, "days_to_harvest": days})[0]
+            for name, crop, days in VARIETIES
         }
+        ensure_preharvest_checklist(PreHarvestChecklistItem)
         self.elements = {
             name: FarmElement.objects.get_or_create(
                 name=name, defaults={"element_type": etype, "area_m2": area}
@@ -151,6 +175,7 @@ class Command(BaseCommand):
             for name, itype, unit, min_alert in INPUT_ITEMS
         }
         self.categories = {c.code: c for c in ExpenseCategory.objects.all()}
+        self._seed_profile_and_map()
 
         if HarvestBatch.objects.exists() or SaleOrder.objects.exists():
             self.stdout.write("Riwayat operasional sudah ada — dilewati (idempoten).")
@@ -170,6 +195,21 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     # Reference data
     # ------------------------------------------------------------------
+
+    def _seed_profile_and_map(self):
+        from core.services import get_farm_profile
+        from geo.models import FieldPolygon
+        from geo.services import clean_geometry
+
+        profile = get_farm_profile()
+        if profile.latitude is None:
+            for key, value in FARM_PROFILE.items():
+                setattr(profile, key, value)
+            profile.save()
+        if not FieldPolygon.objects.exists():
+            geometry, area = clean_geometry(SAMPLE_POLYGON)
+            FieldPolygon.objects.create(name="Greenhouse A (batas)", geojson=geometry, area_ha=area,
+                                        element=self.elements["Greenhouse A"])
 
     def _seed_users(self):
         User = get_user_model()
@@ -222,6 +262,7 @@ class Command(BaseCommand):
         self._plan_harvests()
         self._plan_spoilage()
         self._plan_sales()
+        self._plan_invoices()
 
         for _ts, _seq, fn in sorted(self.events, key=lambda e: (e[0], e[1])):
             fn(_ts)
@@ -269,8 +310,10 @@ class Command(BaseCommand):
         element, variety = CYCLES[key]
 
         def run(ts):
+            planted, expected = ESTIMATES[key]
             self.cycles[key] = farm.start_cycle(
-                self.elements[element], self.varieties[variety], timezone.localdate(ts)
+                self.elements[element], self.varieties[variety], timezone.localdate(ts),
+                planted_qty=planted, expected_yield_kg=D(expected),
             )
 
         self.on(days_ago, 6, run)
@@ -292,11 +335,19 @@ class Command(BaseCommand):
                 input_item=input_item,
                 application_method=method,
                 notes=notes,
+                duration_minutes=(45 if activity_type == A.IRRIGATION else None),
                 logged_at=ts,
                 user=self.users[ROLE_WORKER],
             )
 
         self.on(days_ago, 7, run, 30)
+
+    def _check(self, key, days_ago, n_items):
+        def run(ts):
+            items = list(PreHarvestChecklistItem.objects.filter(is_active=True))[:n_items]
+            farm.record_preharvest_check(self.cycles[key], items, user=self.users[ROLE_WORKER], recorded_at=ts)
+
+        self.on(days_ago, 7, run)
 
     def _close(self, key, days_ago):
         def run(ts):
@@ -319,6 +370,7 @@ class Command(BaseCommand):
         for days in (90, 60, 33):
             self._activity(MELON_OLD, days, A.IRRIGATION, qty="1500", method="Tetes")
         self._activity(MELON_OLD, 55, A.SCOUTING, notes="Kutu kebul ringan di sisi timur")
+        self._check(MELON_OLD, 37, 5)
         self._close(MELON_OLD, 27)
 
         # Fresh Melon Golden cycle in the same greenhouse.
@@ -332,6 +384,7 @@ class Command(BaseCommand):
 
         # Cabai Rawit in the open field, harvesting weekly.
         self._start(CABAI, 112)
+        self._check(CABAI, 36, 3)
         self._stages(CABAI, 105, 35)
         for days in (100, 85, 70, 55, 40, 25, 10):
             self._activity(CABAI, days, A.FERTILIZER, NPK, "10", "Tugal")
@@ -481,6 +534,83 @@ class Command(BaseCommand):
             pos.void_order(order, self.users[ROLE_MANAGER], now=ts + timedelta(minutes=20))
 
     # ------------------------------------------------------------------
+    # Plan: wholesale invoices & payments (P8)
+    # ------------------------------------------------------------------
+
+    BUYERS = [
+        # key, name, company, phone, terms
+        ("resto", "Ibu Sari", "Resto Sari Rasa", "0812-1111-2222", 14),
+        ("hotel", "Pak Hendra", "Hotel Puncak Asri", "0813-3333-4444", 30),
+        ("pasar", "Pak Budi", "Lapak Pasar Induk", "0815-5555-6666", 7),
+    ]
+
+    def _product(self, variety, grade):
+        return Product.objects.get(variety=self.varieties[variety], grade=grade)
+
+    def _invoice(self, days_ago, key, buyer, lines, issue=True, **terms):
+        """`lines`: [(variety, grade, kg, price-or-None)]; kg is capped to stock at that moment."""
+        def run(ts):
+            manager = self.users[ROLE_MANAGER]
+            raw = []
+            for variety, grade, kg, price in lines:
+                product = self._product(variety, grade)
+                qty = min(D(kg), product.stock_kg)
+                if qty > 0:
+                    raw.append((product, qty, D(price) if price else None))
+            if not raw:
+                return
+            invoice = invoicing.save_draft(manager, self.buyers[buyer], raw, **terms)
+            Invoice.objects.filter(pk=invoice.pk).update(created_at=ts)
+            if issue:
+                invoice = invoicing.issue_invoice(invoice, manager, issue_date=timezone.localdate(ts), now=ts)
+            self.invoices[key] = invoice
+
+        self.on(days_ago, 11, run)
+
+    def _pay(self, days_ago, buyer, method, amount_fn, allocate_to=()):
+        def run(ts):
+            invoices = [self.invoices[k] for k in allocate_to if k in self.invoices]
+            for inv in invoices:
+                inv.refresh_from_db()
+            amount, allocations = amount_fn(invoices)
+            invoicing.record_payment(self.users[ROLE_MANAGER], self.buyers[buyer], amount_idr=amount, method=method,
+                                     paid_on=timezone.localdate(ts), reference="Demo", allocations=allocations)
+
+        self.on(days_ago, 16, run)
+
+    def _plan_invoices(self):
+        self.invoices = {}
+
+        def setup(ts):
+            self.buyers = {
+                key: Buyer.objects.get_or_create(
+                    name=name, defaults={"company": company, "phone": phone, "payment_terms_days": terms})[0]
+                for key, name, company, phone, terms in self.BUYERS
+            }
+            ppn = Tax.objects.get_or_create(name="PPN", defaults={"rate_pct": D("11")})[0]
+            product = self._product("Kakao Forastero", Grade.HIGH)
+            product.tax = ppn  # processed cocoa: taxable for the demo; fresh produce stays exempt
+            product.save(update_fields=["tax"])
+
+        self.on(25, 7, setup)
+        self._invoice(24, "resto_paid", "resto", [("Melon Golden", Grade.HIGH, "20", None),
+                                                    ("Melon Golden", Grade.LOW, "10", "17000")])
+        self._invoice(18, "hotel_partial", "hotel", [("Cabai Rawit", Grade.HIGH, "15", "58000"),
+                                                       ("Kakao Forastero", Grade.HIGH, "10", None)],
+                      discount_type="PERCENT", discount_value=5, shipping_idr=50000, notes="Kirim ke dapur utama.")
+        self._invoice(16, "pasar_overdue", "pasar", [("Cabai Rawit", Grade.LOW, "20", None)])
+        self._invoice(10, "pasar_void", "pasar", [("Melon Golden", Grade.LOW, "8", None)])
+        self.on(8, 10, lambda ts: "pasar_void" in self.invoices and invoicing.void_invoice(
+            self.invoices["pasar_void"], self.users[ROLE_MANAGER], now=ts))
+        self._invoice(2, "resto_draft", "resto", [("Cabai Rawit", Grade.HIGH, "5", None)], issue=False,
+                      discount_type="AMOUNT", discount_value=10000)
+        # Overpays the first invoice → Rp 100.000 buyer credit.
+        self._pay(12, "resto", "TRANSFER", lambda inv: (inv[0].total_idr + 100000, [(inv[0], inv[0].total_idr)])
+                  if inv else (D("100000"), []), allocate_to=["resto_paid"])
+        self._pay(5, "hotel", "TRANSFER", lambda inv: (D("500000"), [(inv[0], min(D("500000"), inv[0].total_idr))])
+                  if inv else (D("500000"), []), allocate_to=["hotel_partial"])
+
+    # ------------------------------------------------------------------
 
     def _summary(self) -> str:
         orders = SaleOrder.objects
@@ -490,5 +620,6 @@ class Command(BaseCommand):
             f"{Product.objects.count()} produk "
             f"({Product.objects.filter(selling_price_idr__isnull=True).count()} tanpa harga), "
             f"{Expense.objects.count()} biaya, {SpoilageRecord.objects.count()} susut, "
-            f"{orders.count()} order ({orders.filter(status=SaleOrder.Status.VOIDED).count()} dibatalkan)."
+            f"{orders.count()} order ({orders.filter(status=SaleOrder.Status.VOIDED).count()} dibatalkan), "
+            f"{Buyer.objects.count()} pembeli, {Invoice.objects.count()} invoice."
         )

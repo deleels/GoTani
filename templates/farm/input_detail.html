@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load ui gotani %}
+{% block title %}{{ item.name }}{% endblock %}
+{% block content %}
+<div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
+  <a href="{% url 'farm:inputs' %}" class="text-sm text-stone-500 hover:underline">← Inventaris Input</a>
+  <div class="mb-5 mt-1 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="flex items-center gap-3 text-2xl font-bold tracking-tight">{{ item.name }} {% if item.is_low_stock %}{% pill "Stok menipis" tone="yellow" %}{% endif %}</h1>
+      <p class="mt-1 text-sm text-stone-500">{{ item.get_item_type_display }} · satuan {{ item.unit }}</p>
+    </div>
+    {% if roles.finance %}<button type="button" @click="sheet=true" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">{% icon "plus" 16 %} Tambah Stok</button>{% endif %}
+  </div>
+
+  <div class="mb-5 grid gap-3 sm:grid-cols-3">
+    {% with v=item.stock_qty|kg|add:" "|add:item.unit h=item.min_alert_qty|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with label="Stok saat ini" value=v hint="Batas peringatan "|add:h %}{% endwith %}
+    {% with v=used_total|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with label="Total terpakai" value=v %}{% endwith %}
+    {% if roles.finance %}{% include "components/kpi.html" with label="Biaya rata-rata per satuan" value=item.avg_cost_per_unit_idr|rupiah %}{% endif %}
+  </div>
+
+  <div class="grid gap-5 lg:grid-cols-3">
+    <div class="rounded-xl border border-stone-200 bg-white lg:col-span-2">
+      <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Riwayat mutasi</h2></div>
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200"><th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Jenis</th><th class="px-4 py-3">Dipakai di</th><th class="px-4 py-3 text-right">Jumlah</th><th class="px-4 py-3 text-right">Saldo</th></tr></thead>
+        <tbody class="divide-y divide-stone-100">
+        {% for r in page.object_list %}
+          <tr><td class="whitespace-nowrap px-4 py-3">{{ r.timestamp|date:"d M Y H:i" }}</td><td class="px-4 py-3">{{ r.get_movement_type_display }}</td>
+            <td class="px-4 py-3">{% if r.activity %}<a class="hover:underline" href="{% url 'farm:cycle_detail' r.activity.cycle_id %}">{{ r.activity.cycle.variety }} @ {{ r.activity.cycle.element }}</a> <span class="text-xs text-stone-400">{{ r.activity.get_activity_type_display }}</span>{% else %}<span class="text-stone-400">{{ r.reference|default:"—" }}</span>{% endif %}</td>
+            <td class="px-4 py-3 text-right {% if r.qty < 0 %}text-red-700{% else %}text-emerald-700{% endif %}">{{ r.qty|kg }}</td><td class="px-4 py-3 text-right">{{ r.balance|kg }}</td></tr>
+        {% empty %}{% include "farm/_empty_row.html" with cols=5 msg="Belum ada mutasi. Pembelian menambah stok; pemakaian di Laporan Kerja menguranginya." %}{% endfor %}
+        </tbody>
+      </table>
+      </div>
+      {% include "components/pagination.html" %}
+    </div>
+    <aside class="space-y-5">
+      <div class="rounded-xl border border-stone-200 bg-white p-4 text-sm">
+        <h2 class="mb-2 font-semibold">Pemakaian per siklus</h2>
+        {% for cycle, qty in by_cycle %}<div class="flex justify-between border-t border-stone-100 py-1.5 first:border-0"><a class="hover:underline" href="{% url 'farm:cycle_detail' cycle.pk %}">{{ cycle.variety }} @ {{ cycle.element }}</a><span>{{ qty|kg }} {{ item.unit }}</span></div>
+        {% empty %}<p class="text-stone-500">Belum dipakai.</p>{% endfor %}
+      </div>
+      {% if roles.finance and purchases %}
+      <div class="rounded-xl border border-stone-200 bg-white p-4 text-sm">
+        <h2 class="mb-2 font-semibold">Pembelian</h2>
+        {% for p in purchases %}<div class="border-t border-stone-100 py-1.5 first:border-0"><div class="flex justify-between"><span>{{ p.purchased_at|date:"d M Y" }}</span><span>{{ p.qty|kg }} {{ item.unit }}</span></div><p class="text-xs text-stone-500">@ {{ p.cost_per_unit_idr|rupiah }} · {{ p.supplier|default:"—" }}</p></div>{% endfor %}
+      </div>
+      {% endif %}
+    </aside>
+  </div>
+
+  {% if roles.finance %}
+  <div x-show="sheet" x-cloak class="fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
+    <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
+      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4"><h2 class="text-lg font-semibold">Tambah stok {{ item.name }}</h2>
+        <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button></div>
+      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+        {% include "_form_fields.html" with cols="grid-cols-1" %}
+        <p class="mt-2 text-xs text-stone-400">Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah.</p>
+        <div class="mt-auto flex justify-end gap-2 pt-6"><button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm">Batal</button>
+          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Simpan</button></div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

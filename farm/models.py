@@ -30,6 +30,7 @@ class PaymentMethod(models.TextChoices):
 class Variety(models.Model):
     name = models.CharField("nama", max_length=100, unique=True)
     crop = models.CharField("tanaman", max_length=100)
+    days_to_harvest = models.PositiveIntegerField("umur panen (hari)", null=True, blank=True)
 
     class Meta:
         ordering = ["name"]
@@ -87,6 +88,10 @@ class CropCycle(models.Model):
     )
     stage = models.CharField("tahap", max_length=20, choices=Stage.choices, default=Stage.PLANTING)
     planting_start_date = models.DateField("tanggal mulai tanam")
+    # Plant count — the one deliberate non-kg quantity (D60).
+    planted_qty = models.PositiveIntegerField("jumlah tanaman", null=True, blank=True)
+    expected_harvest_date = models.DateField("perkiraan panen", null=True, blank=True)
+    expected_yield_kg = models.DecimalField("perkiraan hasil (kg)", null=True, blank=True, **QTY)
     is_active = models.BooleanField("aktif", default=True)
     closed_at = models.DateTimeField("ditutup pada", null=True, blank=True)
 
@@ -100,6 +105,10 @@ class CropCycle(models.Model):
                 condition=Q(is_active=True),
                 name="cropcycle_one_active_per_element",
             ),
+            models.CheckConstraint(
+                condition=Q(expected_yield_kg__isnull=True) | Q(expected_yield_kg__gte=0),
+                name="cropcycle_expected_yield_nonneg",
+            ),
         ]
 
     def __str__(self):
@@ -108,6 +117,22 @@ class CropCycle(models.Model):
     @property
     def stage_index(self) -> int:
         return self.STAGE_ORDER.index(self.stage)
+
+    def days_growing(self, today=None) -> int:
+        """Rule 13: max(0, today − start); closed cycles stop at `closed_at`."""
+        if not self.is_active and self.closed_at:
+            end = timezone.localdate(self.closed_at)
+        else:
+            end = today or timezone.localdate()
+        return max(0, (end - self.planting_start_date).days)
+
+    def is_harvest_overdue(self, today=None) -> bool:
+        """Past `expected_harvest_date` without reaching HARVESTING (rule 32)."""
+        today = today or timezone.localdate()
+        return bool(
+            self.is_active and self.expected_harvest_date and self.expected_harvest_date < today
+            and self.stage_index < self.STAGE_ORDER.index(self.Stage.HARVESTING)
+        )
 
 
 class InputItem(models.Model):
@@ -255,6 +280,8 @@ class ActivityLog(models.Model):
     quantity = models.DecimalField("jumlah", default=0, **QTY)
     unit = models.CharField("satuan", max_length=4, choices=Unit.choices, blank=True)
     application_method = models.CharField("metode aplikasi", max_length=100, blank=True)
+    duration_minutes = models.PositiveIntegerField("durasi (menit)", null=True, blank=True)  # IRRIGATION only
+    photo = models.ImageField("foto", upload_to="scouting/%Y/%m/", blank=True)  # SCOUTING only
     notes = models.TextField("catatan", blank=True)
     logged_at = models.DateTimeField("waktu", default=timezone.now)
     recorded_by = models.ForeignKey(
@@ -278,6 +305,48 @@ class ActivityLog(models.Model):
 
     def __str__(self):
         return f"{self.get_activity_type_display()} — {self.cycle} ({self.logged_at:%Y-%m-%d})"
+
+
+class PreHarvestChecklistItem(models.Model):
+    """Admin-editable pre-harvest checklist line (D61)."""
+
+    text = models.CharField("butir", max_length=200)
+    order = models.PositiveIntegerField("urutan", default=0)
+    is_active = models.BooleanField("aktif", default=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+        verbose_name = "butir cek pra-panen"
+        verbose_name_plural = "butir cek pra-panen"
+
+    def __str__(self):
+        return self.text
+
+
+class PreHarvestCheck(models.Model):
+    """One checklist pass; several per cycle allowed, the latest counts (rule 14)."""
+
+    cycle = models.ForeignKey(CropCycle, on_delete=models.PROTECT, related_name="preharvest_checks",
+                              verbose_name="siklus")
+    checked_items = models.ManyToManyField(PreHarvestChecklistItem, blank=True, related_name="+",
+                                           verbose_name="butir tercentang")
+    completed_pct = models.DecimalField("persen selesai", max_digits=5, decimal_places=2, default=0)
+    notes = models.TextField("catatan", blank=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name="+", verbose_name="dicatat oleh")
+    recorded_at = models.DateTimeField("waktu", default=timezone.now)
+
+    class Meta:
+        ordering = ["-recorded_at", "-id"]
+        verbose_name = "cek pra-panen"
+        verbose_name_plural = "cek pra-panen"
+        constraints = [
+            models.CheckConstraint(condition=Q(completed_pct__gte=0, completed_pct__lte=100),
+                                   name="preharvestcheck_pct_range"),
+        ]
+
+    def __str__(self):
+        return f"Cek pra-panen {self.cycle} {self.completed_pct}%"
 
 
 class ExpenseCategory(models.Model):

@@ -1,5 +1,7 @@
 """POS register, checkout, receipt and void (thin views over `pos.services`)."""
 
+from datetime import date
+
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
@@ -103,14 +105,22 @@ class OrdersView(RoleRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         today = services.jakarta_date(timezone.now())
+        try:
+            day = date.fromisoformat(self.request.GET.get("date", "")) if self.request.GET.get("date") else today
+        except ValueError:
+            day = today
+        day = min(day, today)
         orders = list(
-            SaleOrder.objects.filter(order_number__startswith=services.order_number_prefix(today))
+            SaleOrder.objects.filter(order_number__startswith=services.order_number_prefix(day))
             .select_related("cashier")
             .order_by("-created_at", "-id")
         )
         for order in orders:
             order.voidable = services.can_void(order, self.request.user)
-        ctx.update(nav="pos", orders=orders, today=today)
+        done = [o for o in orders if o.status == SaleOrder.Status.COMPLETED]
+        ctx.update(nav="pos", orders=orders, today=day, is_today=day == today, max_date=today,
+                   kpi={"count": len(done), "gross": sum((o.total_gross_idr for o in done), 0),
+                        "tax": sum((o.total_tax_idr for o in done), 0), "voided": len(orders) - len(done)})
         return ctx
 
 

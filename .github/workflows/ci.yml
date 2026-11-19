@@ -54,7 +54,7 @@ jobs:
         run: python manage.py makemigrations --check --dry-run
 
       - name: Tests with coverage
-        run: coverage run --source=farm,inventory,pos manage.py test --verbosity 2
+        run: coverage run --source=core,farm,inventory,pos,reports,invoicing,geo manage.py test --verbosity 2
 
       - name: Coverage report (services.py >= 85%)
         run: |
@@ -64,6 +64,7 @@ jobs:
       - name: seed_demo is idempotent and mass-balanced
         run: |
           python manage.py migrate --noinput
+          python manage.py createcachetable
           python manage.py seed_demo
           python manage.py seed_demo
           python manage.py check_mass_balance

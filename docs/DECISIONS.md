@@ -56,3 +56,58 @@ Decisions locked during the spec grilling session (2026-11-19), informed by a RE
 - **D33 Postgres on same VM, Caddy HTTPS, nightly `pg_dump` (7 days), Tailwind CDN accepted** — single machine, credit-friendly.
 - **D39 DuckDNS + static public IP + update cron safety net** — stop/start of the VM won't break HTTPS on demo day.
 - **D40 Spec in `CLAUDE.md`, rationale here** — instruction file for coding sessions; this log feeds the report/viva.
+
+---
+
+# Product expansion (grilling session 2, 2026-11-19)
+
+Decided by comparing GoTani against the FarmCloud reverse-engineering report (`farmcloud.md`). Supersedes D1/D41 where they conflict.
+
+## Direction & scope
+- **D42 Product direction:** move toward a real product rather than rubric-minimal — but every new feature still ships with service tests; correctness stays the bar.
+- **D43 Zero-cost rule:** nothing that makes the developer pay — no paid APIs, gateways, or subscriptions; free no-card signups are fine; Azure runs on student credit — a hard personal constraint.
+- **D44 Still out of scope:** multi-farm, dryers, IoT, RFQ marketplace, Stripe/plans/plan gating (FarmCloud's SaaS billing serves paying tenants; GoTani has none), admin portals (Django admin suffices), self-signup/OTP/email reset, per-user finance toggle (4 roles already cover it), seedling lots, unit conversion, ratings, offline writes — large builds with no user in a single-farm app.
+- **D45 Docs first, then phases 7–11:** shell → money (tax/invoicing) → farm-ops extras → external APIs → PWA — money logic gets the most test time; riskiest, least-graded work last.
+
+## Tax & invoicing
+- **D46 `Tax` model, optional per product, rate snapshotted on every line** — fresh produce is mostly PPN-exempt; snapshots keep history immutable (same idea as D25).
+- **D47 POS tax-inclusive, invoices tax-exclusive** — shelf price is what a walk-in pays; B2B norm is subtotal + PPN.
+- **D48 Analytics net of tax; "PPN collected" separate KPI** — tax is a liability, not income.
+- **D49 `Buyer` back in scope as a plain customer directory** — invoicing needs a counterparty; RFQ/marketplace stays out.
+- **D50 Invoices draw real stock (locked FIFO, `INVOICE_SALE` / `INVOICE_VOID`)** — otherwise mass balance, COGS, margin and traceability silently miss wholesale sales.
+- **D51 Stored lifecycle DRAFT/ISSUED/VOID; payment status derived** — a derived status can never disagree with the payments.
+- **D52 Invoice unit price defaults to catalog, overridable by OWNER/MANAGER** — wholesale is negotiated; the RSV grade split (D5) keeps using catalog price so COGS is unaffected.
+- **D53 Discounts on invoices only (% or fixed), allocated to lines proportionally, last line takes the remainder, PPN on the discounted base** — Indonesian DPP is post-discount (FarmCloud taxes pre-discount and overstates tax); POS stays discount-free.
+- **D54 Shipping untaxed, "other income" outside gross margin** — it isn't product revenue.
+- **D55 `InvoicePayment` + `PaymentAllocation`; buyer credit = Σ payments − Σ allocations (derived)** — one model covers multi-invoice allocation and credit; balance can't drift.
+- **D56 Void releases allocations to credit; no refunds; payment deletable only while unallocated** — consistent with "no partial refunds"; money never disappears.
+- **D57 Due date = issue + `payment_terms_days` (editable); OVERDUE derived (Asia/Jakarta)** — no cron job needed.
+- **D58 `INV-YYYYMM-####` assigned at issue inside the transaction; A4 print-CSS with FarmProfile logo** — mirrors D30.
+- **D59 Accrual: invoice revenue/COGS on issue date; channel split + receivables KPIs** — matches when stock leaves the lots.
+
+## Farm operations
+- **D60 Cycle estimates:** `Variety.days_to_harvest`, `planted_qty` (plant count — deliberate exception to D6), `expected_harvest_date`, `expected_yield_kg` — enables estimate-vs-actual and the overdue-harvest alert.
+- **D61 Pre-harvest checklist with % snapshot; soft warning before HARVESTING** — useful signal without blocking a real harvest.
+- **D62 Activity extras (irrigation duration, scouting photo) + Laporan Kerja tabs per type** — FarmCloud's most-used screen pattern.
+- **D63 Input usage history + restock shortcut; element detail page** — answers "where did this fertilizer go" and "what has this greenhouse produced".
+- **D64 Notifications computed live, polled every 60 s; only `notifications_seen_at` stored** — no WebSocket, no rows to keep in sync.
+- **D65 Staff page: OWNER creates users with a temp password, forced change; deactivate not delete; no email** — email needs SMTP (cost/setup); users are referenced by sales and logs.
+
+## UI
+- **D66 Copy FarmCloud's layout patterns, not its brand** — the patterns are generic shadcn conventions; copying colours/fonts/copy would look like a knock-off.
+- **D67 Collapsible sidebar (grouped DASBOR/PENJUALAN/KEUANGAN/ALAT) + top bar (bell, theme, user menu) + dark mode** — scales to the new screen count.
+- **D68 One page anatomy for every list (subtitle per role, KPI cards, tabs, toolbar, ⋯ menu, pagination 10)** — consistency; built once as includes.
+- **D69 Short forms in right-side sheets; multi-line flows as full pages** — fast entry without cramming complex forms.
+- **D70 Ringkasan home for farm roles; analytics moves to KEUANGAN → Analitik** — the old dashboard was finance-only, workers had no home.
+- **D71 Detail pages with tabs + timelines; standard status pills; explanatory empty states; split-screen login without sign-up/reset** — timeline reuses `forward_trace`.
+
+## Geo & PWA
+- **D72 Singleton `FarmProfile` (name, address, lat/lon, logo)** — weather, map centre and invoice header need it; single farm (D2) so no tenant model.
+- **D73 Open-Meteo (weather, no key) + Agromonitoring free tier (polygons/NDVI/soil, key server-side); Leaflet + Esri tiles; GeoJSON in JSONField + shapely; DB cache; mocked in tests; graceful "data tidak tersedia"; linking a polygon never silently overwrites `area_m2`** — $0, avoids FarmCloud's leaked client-side key, CI stays offline, `area_m2` feeds kg/m² analytics.
+- **D74 PWA: installable + static cache + offline fallback page only** — offline writes would bypass row locks and validation.
+
+## Build-time refinements (P8–P11)
+- **D75 NDVI image is proxied through the server** — Agromonitoring image URLs embed the API key; `geo:polygon_ndvi` streams the cached PNG so the key never reaches the browser (completes D73).
+- **D76 Geodesic polygon area on a sphere (no pyproj)** — spherical-excess ring area is within ~0.5% of WGS84 at farm scale and adds no dependency; shapely only validates.
+- **D77 Notification "observed at" times** — low stock = last ledger movement, overdue invoice/harvest = the day after the due date, pending expense = newest `created_at`, unpriced = first lot; unread = later than `notifications_seen_at`.
+- **D78 `/` is Ringkasan for every farm role (OWNER/MANAGER included); Analitik stays at `/dashboard/`; CASHIER still lands on the POS** — one home for everyone who works the farm (D70).

@@ -1,0 +1,38 @@
+/* GoTani brand layer + dark-mode remap of the stone/emerald utility classes used across templates (D66, D67). */
+[x-cloak] { display: none !important; }
+body { font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif; }
+@media print { .no-print { display: none !important; } body { background: #fff !important; } .print-full { margin: 0 !important; padding: 0 !important; } }
+
+input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea {
+  border: 1px solid #d6d3d1; border-radius: .5rem; padding: .45rem .7rem; background: #fff; font-size: .875rem; width: 100%;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid #10b98155; border-color: #10b981; }
+
+.dark body, .dark .bg-stone-50 { background-color: #0c0f0d !important; }
+.dark .bg-white, .dark .bg-white\/70, .dark .bg-white\/60 { background-color: #151a17 !important; }
+.dark .bg-stone-100, .dark .hover\:bg-stone-100:hover, .dark .bg-stone-50\/60 { background-color: #1f2622 !important; }
+.dark .bg-stone-200, .dark .hover\:bg-stone-200:hover { background-color: #2a322d !important; }
+.dark .text-stone-900, .dark .text-stone-800 { color: #e7ece9 !important; }
+.dark .text-stone-700, .dark .text-stone-600 { color: #c3ccc6 !important; }
+.dark .text-stone-500, .dark .text-stone-400 { color: #8f9a93 !important; }
+.dark .border-stone-100, .dark .border-stone-200, .dark .border-stone-300, .dark .divide-stone-100 > * + *, .dark .divide-stone-200 > * + * { border-color: #2a322d !important; }
+.dark .bg-emerald-50 { background-color: #10291d !important; }
+.dark .text-emerald-800, .dark .text-emerald-700 { color: #6ee7b7 !important; }
+.dark .bg-red-50 { background-color: #2b1414 !important; } .dark .text-red-800 { color: #fca5a5 !important; }
+.dark .bg-amber-50 { background-color: #2b2210 !important; } .dark .text-amber-800 { color: #fcd34d !important; }
+.dark .bg-sky-50 { background-color: #0f2230 !important; }
+.dark input:not([type=checkbox]):not([type=radio]):not([type=file]), .dark select, .dark textarea { background: #0f1411; border-color: #2a322d; color: #e7ece9; }
+.dark .ring-amber-200, .dark .ring-sky-200, .dark .ring-teal-200, .dark .ring-red-200, .dark .ring-emerald-200, .dark .ring-stone-200 { --tw-ring-color: transparent; }
+.dark .bg-amber-100 { background-color: #3a2d0c !important; } .dark .bg-sky-100 { background-color: #0c2a3d !important; }
+.dark .bg-teal-100 { background-color: #0c332f !important; } .dark .bg-red-100 { background-color: #3d1212 !important; }
+.dark .bg-emerald-100 { background-color: #0d3324 !important; }
+.dark .text-amber-800 { color: #fcd34d !important; } .dark .text-sky-800 { color: #7dd3fc !important; }
+.dark .text-teal-800 { color: #5eead4 !important; }
+
+.dark .viz-root { --grid: #2a322d !important; --ink-2: #c3ccc6 !important; }
+#sw-update[hidden] { display: none !important; }
+.dark .bg-emerald-50\/60 { background-color: #10291d !important; }
+.dark .hover\:bg-stone-50:hover, .dark .hover\:bg-red-50:hover { background-color: #1f2622 !important; }
+.dark .border-emerald-200, .dark .border-sky-200, .dark .border-amber-200, .dark .border-red-200 { border-color: #2a322d !important; }
+.dark .text-sky-800 { color: #7dd3fc !important; } .dark .text-red-700 { color: #f87171 !important; } .dark .text-amber-700 { color: #fbbf24 !important; }
+.dark .bg-stone-800 { background-color: #e7ece9 !important; color: #0c0f0d !important; }

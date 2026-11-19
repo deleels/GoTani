@@ -1,0 +1,18 @@
+{% load ui %}
+<div x-show="sheet" x-cloak class="fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
+  <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
+    <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4">
+      <h2 class="text-lg font-semibold">{{ sheet_title }}</h2>
+      <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button>
+    </div>
+    <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      {% include "_form_fields.html" with cols="grid-cols-1" %}
+      <div class="mt-auto flex justify-end gap-2 pt-6">
+        <button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Batal</button>
+        <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">{{ submit }}</button>
+      </div>
+    </form>
+  </div>
+</div>

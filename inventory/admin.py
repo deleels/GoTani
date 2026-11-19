@@ -2,12 +2,17 @@ from django.contrib import admin
 
 from farm.admin import ReadOnlyLedgerAdmin
 
-from .models import Product, SpoilageRecord, StockLedger, StockLot
+from .models import Product, SpoilageRecord, StockLedger, StockLot, Tax
+
+
+@admin.register(Tax)
+class TaxAdmin(admin.ModelAdmin):
+    list_display = ["name", "rate_pct", "is_active"]
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["__str__", "variety", "grade", "selling_price_idr", "stock_kg"]
+    list_display = ["__str__", "variety", "grade", "selling_price_idr", "tax", "stock_kg"]
     list_filter = ["grade", "variety"]
     list_editable = ["selling_price_idr"]
     search_fields = ["variety__name"]

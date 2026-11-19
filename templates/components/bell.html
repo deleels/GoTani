@@ -1,0 +1,43 @@
+{% load ui %}
+{# Notifications bell (D64): live list polled every 60 s; opening marks all as seen. #}
+<div class="relative" x-data="bell('{% url 'core:notifications' %}', '{{ csrf_token }}')" x-init="load(); setInterval(() => load(), 60000)" @click.outside="open=false">
+  <button type="button" @click="toggle()" class="relative rounded-lg p-2 hover:bg-stone-100" aria-label="Notifikasi">
+    {% icon "bell" %}
+    <span x-show="unread > 0" x-cloak class="absolute right-1 top-1 grid h-4 min-w-[1rem] place-items-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white" x-text="unread > 9 ? '9+' : unread"></span>
+  </button>
+  <div x-show="open" x-cloak class="absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-stone-200 bg-white text-sm shadow-lg">
+    <div class="flex items-center justify-between border-b border-stone-200 px-4 py-3"><p class="font-semibold">Notifikasi</p><span class="text-xs text-stone-400" x-text="items.length + ' aktif'"></span></div>
+    <div class="max-h-96 overflow-y-auto">
+      <template x-if="error"><p class="px-4 py-6 text-center text-stone-500">Tidak dapat memuat notifikasi · <button type="button" class="underline" @click="load()">Coba lagi</button></p></template>
+      <template x-if="!error && !items.length"><p class="px-4 py-6 text-center text-stone-500">Semua beres — tidak ada yang perlu ditindaklanjuti.</p></template>
+      <template x-for="n in items" :key="n.kind + n.title">
+        <a :href="n.url" class="block border-b border-stone-100 px-4 py-3 last:border-0 hover:bg-stone-50" :class="n.unread && 'bg-emerald-50/60'">
+          <p class="font-medium" x-text="n.title"></p>
+          <p class="text-xs text-stone-500" x-text="n.body"></p>
+          <p class="mt-0.5 text-[11px] text-stone-400" x-text="n.at"></p>
+        </a>
+      </template>
+    </div>
+  </div>
+</div>
+<script>
+  function bell(url, csrf) {
+    return {
+      open: false, items: [], unread: 0, error: false,
+      async load() {
+        try {
+          const r = await fetch(url, { headers: { Accept: "application/json" } });
+          if (!r.ok) throw new Error(r.status);
+          const data = await r.json();
+          this.items = data.items; this.unread = data.unread; this.error = false;
+        } catch (e) { this.error = true; }
+      },
+      async toggle() {
+        this.open = !this.open;
+        if (this.open && this.unread) {
+          try { await fetch(url, { method: "POST", headers: { "X-CSRFToken": csrf } }); this.unread = 0; } catch (e) {}
+        }
+      },
+    };
+  }
+</script>
