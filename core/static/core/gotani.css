@@ -731,3 +731,45 @@ input[type=file]::file-selector-button:hover { border-color: var(--green-700); c
   font: 500 13px/1 var(--font-sans); cursor: pointer; }
 .app-lang__opt.is-on { background: var(--green-700); color: #fff; }
 .app-lang__opt:focus-visible { outline: 2px solid var(--green-700); outline-offset: 2px; }
+
+/* ---------- Phase 7 step 2: toasts, progress bar, page motion (D111) ----------
+   One motion scale everywhere: --dur-fast (150ms) for feedback, --dur-base (240ms) for toasts and the page
+   fade, --ease-out for all of it. Nothing moves under prefers-reduced-motion. */
+html { scrollbar-gutter: stable; }
+.app-toasts { position: fixed; right: var(--space-5); bottom: var(--space-5); z-index: 80; display: flex; flex-direction: column; align-items: flex-end;
+  gap: var(--space-2); width: min(24rem, calc(100vw - 2 * var(--space-4))); pointer-events: none; }
+.app-toast { pointer-events: auto; display: flex; align-items: flex-start; gap: var(--space-3); width: 100%; padding: var(--space-3) var(--space-3) var(--space-3) var(--space-3);
+  border-radius: var(--radius-lg); background: var(--surface-raised); color: var(--ink); box-shadow: var(--shadow-float);
+  font-size: 14px; line-height: 20px; animation: app-toast-in var(--dur-base) var(--ease-out) both; }
+.app-toast.is-leaving { animation: app-toast-out 200ms ease-in both; }
+.app-toast__icon { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-pill); background: var(--surface); color: var(--ink-muted); }
+.app-toast--success .app-toast__icon { background: var(--green-100); color: var(--green-700); }
+.app-toast--error .app-toast__icon { background: var(--pending-bg); color: var(--danger); }
+.app-toast--warning .app-toast__icon { background: var(--late-bg); color: var(--late-ink); }
+.app-toast__text { flex: 1; min-width: 0; padding-top: 6px; }
+.app-toast__close { flex: none; width: 32px; height: 32px; border: 0; border-radius: var(--radius-pill); background: none; color: var(--ink-muted); font-size: 20px; line-height: 1; cursor: pointer; }
+.app-toast__close:hover { background: var(--surface); color: var(--ink); }
+.app-toast__close:focus-visible { outline: 2px solid var(--green-700); outline-offset: 1px; }
+@keyframes app-toast-in { from { opacity: 0; transform: translateY(12px); } }
+@keyframes app-toast-out { to { opacity: 0; transform: translateY(8px); } }
+@media (max-width: 639.98px) {
+  .app-toasts { right: 50%; transform: translateX(50%); bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); align-items: stretch; }
+  body:has(.app-pos) .app-toasts { bottom: 96px; } /* above the POS total bar */
+}
+.app-progress { position: fixed; top: 0; left: 0; z-index: 90; height: 3px; width: 100%; transform-origin: 0 50%; transform: scaleX(0);
+  background: var(--green-600, var(--green-700)); opacity: 0; pointer-events: none; }
+.app-progress.is-on { opacity: 1; transform: scaleX(.85); transition: transform 2.4s cubic-bezier(.1, .7, .2, 1), opacity var(--dur-fast) ease; }
+.app-progress.is-done { opacity: 0; transform: scaleX(1); transition: transform var(--dur-fast) ease, opacity var(--dur-base) ease var(--dur-fast); }
+/* Every page: the content fades in the same way; the frame (sidebar, top bar) never moves. */
+.gt-root[data-motion="calm"] .app-main__inner { animation: app-page-in var(--dur-base) var(--ease-out) backwards; }
+@keyframes app-page-in { from { opacity: 0; transform: translateY(4px); } }
+.gt-root .app-error[data-gt-err] { display: flex; align-items: center; gap: var(--space-1); }
+.gt-root .app-error[data-gt-err] .gt-ico { flex: none; }
+/* Blocking notice (forced password change): centred dialog. */
+.app-notice { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: calc(100vh - 32px); border: 0; color: var(--ink); width: min(28rem, calc(100vw - 32px)); }
+.app-notice::backdrop { background: var(--scrim); }
+.app-notice .gt-dialog__icon { background: var(--late-bg); color: var(--late-ink); }
+@media (prefers-reduced-motion: reduce) {
+  .gt-root[data-motion="calm"] .app-main__inner, .app-toast, .app-toast.is-leaving { animation: none; }
+  .app-progress.is-on, .app-progress.is-done { transition: none; }
+}

@@ -139,6 +139,8 @@ JS_MSGIDS = [
     _l("%(item)s: %(cost)s per %(unit)s, %(pct)s lebih murah dari rata-rata %(avg)s."),
     _l("Harga ini mengubah biaya rata-rata input dan biaya pemakaian berikutnya. Periksa satuan dan angkanya."),
     _l("Simpan pembelian"), _l("Wajib diisi."), _l("Angka tidak valid."), _l("Periksa kolom yang ditandai."),
+    _l("Tutup"), _l("Email tidak valid."), _l("Minimal %(min)s."), _l("Maksimal %(max)s."),
+    _l("Minimal %(n)s karakter."), _l("Maksimal %(n)s karakter."), _l("Format tidak sesuai."),
 ]
 
 

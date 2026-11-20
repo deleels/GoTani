@@ -161,3 +161,13 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   CASHIER/WORKER in Indonesian; the browser's Accept-Language is ignored. Numbers follow the language
   (Rp15,000 · 0.5 kg in English). Invoice prints follow the customer's document language (default Indonesian);
   POS receipts stay Indonesian. `core.test_i18n` fails on any string without English.
+
+- **D111 One motion system, toasts and app-drawn validation (agreed 2026-11-20; supersedes D106).** Every page's
+  content fades in the same way (240 ms, `--ease-out`, 4 px rise); the frame (sidebar, top bar) never moves and
+  the scrollbar gutter is reserved so pages don't shift sideways. A thin green bar runs along the top while the
+  next page loads, and a second click on a link that is already loading is ignored. Ringkasan and Analitik keep
+  their one-time chart entrance. Messages are toasts (bottom right; success/info fade after 5 s, warnings and
+  errors stay); a notice that blocks work (temporary password) is a centred dialog. Forms are `novalidate`:
+  `core/static/core/forms.js` checks required/min/max/length/email on submit, writes the app's own message under
+  each field, scrolls to the first and shows a toast — no browser bubbles. Nothing animates under
+  `prefers-reduced-motion`.

@@ -210,4 +210,11 @@ TR = {
     "%(loss)s kg susut panen": "%(loss)s kg harvest loss",
     "%(n)s invoice terbit": "%(n)s issued",
     "Sisa batas bebas pajak tahun ini. Omzet pertama %(ex)s setiap tahun tidak dikenai pajak (wajib pajak orang pribadi).": "Tax-free allowance left this year. The first %(ex)s of revenue each year is tax-free (individual taxpayers).",
+    "Email tidak valid.": "Not a valid email.",
+    "Minimal %(min)s.": "At least %(min)s.",
+    "Maksimal %(max)s.": "At most %(max)s.",
+    "Minimal %(n)s karakter.": "At least %(n)s characters.",
+    "Maksimal %(n)s karakter.": "At most %(n)s characters.",
+    "Format tidak sesuai.": "Wrong format.",
+    "Ganti sekarang": "Change now",
 }

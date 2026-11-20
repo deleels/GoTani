@@ -66,3 +66,26 @@ class LanguageSwitchTests(TestCase):
     def test_browser_language_is_ignored(self):
         r = self.client.get(reverse("core:profile"), HTTP_ACCEPT_LANGUAGE="en-US,en;q=0.9")
         self.assertContains(r, 'lang="id"')
+
+
+class FeedbackUiTests(TestCase):
+    """Phase 7 step 2: messages are toasts, forced password change opens a notice dialog, forms load forms.js."""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("own2", password="x")
+        self.user.groups.add(Group.objects.get_or_create(name=ROLE_OWNER)[0])
+        self.client.force_login(self.user)
+
+    def test_messages_render_as_toasts(self):
+        r = self.client.post(reverse("core:profile"), {"first_name": "Ani", "last_name": "", "language": "id"}, follow=True)
+        self.assertContains(r, 'class="app-toast app-toast--success"')
+        self.assertContains(r, "Profil disimpan.")
+        self.assertContains(r, "core/forms.js")
+
+    def test_forced_password_change_opens_notice_dialog(self):
+        profile = get_user_profile(self.user)
+        profile.must_change_password = True
+        profile.save()
+        r = self.client.get(reverse("core:password_change"))
+        self.assertContains(r, 'id="forced-notice"')
+        self.assertNotContains(r, 'href="%s" class="app-back"' % reverse("core:profile"))
