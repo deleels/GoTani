@@ -23,6 +23,7 @@ SW_TEMPLATE = Path(settings.BASE_DIR) / "templates" / "core" / "sw.js"
 # Same-origin static files pre-cached at install time.
 PRECACHE = [
     "core/gotani.css",
+    "core/tailwind.css",
     "core/pwa.js",
     "core/icons/icon-192.png",
     "core/icons/icon-512.png",

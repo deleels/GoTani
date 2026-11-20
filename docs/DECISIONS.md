@@ -171,3 +171,12 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   `core/static/core/forms.js` checks required/min/max/length/email on submit, writes the app's own message under
   each field, scrolls to the first and shows a toast — no browser bubbles. Nothing animates under
   `prefers-reduced-motion`.
+
+- **D112 Speed first: prebuilt Tailwind, warm navigation (2026-11-20; supersedes the CDN part of D33 and Phase 7 Q5).**
+  The Tailwind Play CDN compiled CSS in the browser on every page load (blocking ~250 ms) and re-scanned the DOM on
+  every Alpine change. Tailwind is now built once into `core/static/core/tailwind.css` from
+  `tailwind/tailwind.config.js` (same config; rebuild with
+  `npx tailwindcss@3.4.16 -c tailwind/tailwind.config.js -i tailwind/input.css -o core/static/core/tailwind.css --minify`
+  after adding utility classes), loaded last like the CDN's style tag was. Fonts are preloaded, `forms.js` is
+  deferred, links are prefetched on hover/touch (speculation rules, `moderate`), the service worker uses navigation
+  preload, and the page fade is 150 ms from half opacity (D111's 240 ms from zero read as lag).

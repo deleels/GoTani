@@ -8,7 +8,7 @@ const STATIC_CACHE = `gotani-static-${VERSION}`;
 const OFFLINE_URL = "__OFFLINE__";
 const PRECACHE = [__PRECACHE__, OFFLINE_URL];
 const STATIC_PREFIX = "__STATIC_PREFIX__";
-const CDN_HOSTS = ["cdn.tailwindcss.com", "cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
+const CDN_HOSTS = ["cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(STATIC_CACHE).then((cache) => cache.addAll(PRECACHE)));
@@ -19,6 +19,8 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k.startsWith("gotani-static-") && k !== STATIC_CACHE).map((k) => caches.delete(k))))
+      // Navigation preload: the page request starts while the worker boots, not after.
+      .then(() => self.registration.navigationPreload && self.registration.navigationPreload.enable())
       .then(() => self.clients.claim())
   );
 });
@@ -51,7 +53,13 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+    event.respondWith((async () => {
+      try {
+        return (await event.preloadResponse) || (await fetch(request));
+      } catch (err) {
+        return caches.match(OFFLINE_URL);
+      }
+    })());
   }
   // Other data requests: default network behaviour, nothing cached.
 });

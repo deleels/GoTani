@@ -9,7 +9,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ## Tech Stack
 - Python 3.12+, Django 5.2+ (or 6.x), PostgreSQL 16 (automatic SQLite fallback when `DATABASE_URL` is not set)
-- Frontend: Django Templates + Tailwind CSS (CDN, accepted non-production compromise) + Alpine.js (CDN) + Chart.js (CDN) + Leaflet + Leaflet.draw (CDN, Esri World Imagery tiles)
+- Frontend: Django Templates + Tailwind CSS (prebuilt to core/static/core/tailwind.css from tailwind/tailwind.config.js, D112; rebuild after adding utility classes) + Alpine.js (CDN) + Chart.js (CDN) + Leaflet + Leaflet.draw (CDN, Esri World Imagery tiles)
 - Python deps added for later phases: `shapely` (polygon validation/area), `Pillow` (photos, logo), `requests` (external APIs)
 - Production: Gunicorn + WhiteNoise + Caddy reverse proxy on Ubuntu 24.04 LTS (Azure VM), PostgreSQL on the same VM
 - `TIME_ZONE = "Asia/Jakarta"`, `USE_TZ = True`, `LANGUAGE_CODE = "id"` — UI text in Bahasa Indonesia; code, identifiers, and enums in English
