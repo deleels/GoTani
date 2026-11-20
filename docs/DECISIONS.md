@@ -180,3 +180,8 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   after adding utility classes), loaded last like the CDN's style tag was. Fonts are preloaded, `forms.js` is
   deferred, links are prefetched on hover/touch (speculation rules, `moderate`), the service worker uses navigation
   preload, and the page fade is 150 ms from half opacity (D111's 240 ms from zero read as lag).
+
+- **D113 One POS step: 0.5 kg (Phase 7 step 3; supersedes the per-product step of D81).** `Product.pos_step_kg` is
+  removed (migration `inventory/0007`); the POS − / +, the first tap on a product and the quick-pick chips
+  (0.5 · 1 · 2 · 5 kg) all use 0.5 kg. Harga Produk shows one price column (the editable price is the current
+  price) and the low-stock limit under its own header. Old `POS_STEP_CHANGE` audit entries keep their label.

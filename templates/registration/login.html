@@ -4,18 +4,12 @@
 {% block title %}{% translate "Masuk" %}{% endblock %}
 {% block body %}
 <div class="grid min-h-screen lg:grid-cols-2">
-  <section class="app-login__panel hidden flex-col justify-between lg:flex">
-    <img src="{% static 'core/ds/logos/gotani-lockup-white.svg' %}" alt="{% translate 'GoTani' %}" class="app-login__lockup">
-    <div class="max-w-lg">
-      <h1 class="app-login__headline">{% translate "Dari benih sampai struk, semua tercatat." %}</h1>
-      <p class="app-login__tagline">{% translate "Catat siklus tanam, panen per grade, stok per lot, dan penjualan kasir maupun grosir — dengan HPP yang bisa ditelusuri sampai ke biaya asalnya." %}</p>
-    </div>
-    <p class="app-login__foot">{% translate "Satu kebun · Ketertelusuran penuh · Neraca massa terjaga" %}</p>
-  </section>
+  {# Phase 7: plain panel, kept empty as the stage for the coming three.js scene (mount it on #login-stage). #}
+  <section id="login-stage" class="app-login__panel hidden lg:block" aria-hidden="true"></section>
   <section class="app-login__form flex items-center justify-center px-6 py-12">
     <div class="w-full max-w-sm" x-data="{ show: false }">
-      <img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="{% translate 'GoTani' %}" class="app-login__lockup mb-10 lg:hidden">
-      <h2 class="app-login__title">{% translate "Selamat datang kembali" %}</h2>
+      <img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="{% translate 'GoTani' %}" class="app-login__lockup mb-10">
+      <h1 class="app-login__title">{% translate "Selamat datang kembali" %}</h1>
       <p class="app-login__sub mb-8 mt-2">{% translate "Masuk dengan akun yang diberikan pemilik kebun." %}</p>
       {% if form.errors %}<div class="gt-callout gt-callout--danger mb-6" role="alert"><span class="gt-callout__title">{% translate "Nama pengguna atau kata sandi salah." %}</span></div>{% endif %}
       <form method="post" class="space-y-5">

@@ -85,8 +85,9 @@ window.GT_LOCALE = window.GT_EN ? 'en-US' : 'id-ID';
   });
   document.addEventListener('input', function (e) { if (isNum(e.target)) reformat(e.target); });
   document.addEventListener('submit', function (e) {
-    e.target.querySelectorAll('input[data-num]').forEach(function (el) {
-      if (el.value.trim() === '') return;
+    // form.elements also holds inputs outside the <form> that join it with form="…" (Harga Produk rows).
+    Array.prototype.forEach.call(e.target.elements || [], function (el) {
+      if (el.tagName !== 'INPUT' || !el.hasAttribute('data-num') || el.value.trim() === '') return;
       var n = parse(el.value);
       if (!isNaN(n)) el.value = String(n);
     });

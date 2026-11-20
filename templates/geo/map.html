@@ -139,18 +139,19 @@
         <ul class="gt-list gt-list--divided">
           <template x-for="p in polygons" :key="p.id">
             <li class="app-poly" :class="selected && selected.id === p.id && 'is-on'">
-              <button type="button" class="app-poly__btn" @click="select(p.id)">
-                <span class="gt-row__title" x-text="p.name"></span>
+              <button type="button" class="app-poly__btn" @click="select(p.id)" :aria-expanded="(selected && selected.id === p.id) ? 'true' : 'false'">
+                <span class="app-poly__text"><span class="gt-row__title" x-text="p.name"></span>
                 <span class="app-poly__meta"><span class="app-row__meta" x-text="fmtArea(p) + (p.element ? ' · ' + p.element : '')"></span>
                   <span x-show="p.covered" class="gt-chip gt-chip--sm" title="{% translate 'Satelit melihat atap, bukan tanaman' %}">{% translate "beratap · tanpa NDVI" %}</span>
-                  <span x-show="!p.covered && p.too_small" class="gt-chip gt-chip--sm" title="{% translate 'Agromonitoring memerlukan poligon 1–3.000 ha' %}">{% translate "tanpa NDVI · &lt; 1 ha" %}</span></p>
+                  <span x-show="!p.covered && p.too_small" class="gt-chip gt-chip--sm" title="{% translate 'Agromonitoring memerlukan poligon 1–3.000 ha' %}">{% translate "tanpa NDVI · &lt; 1 ha" %}</span></span></span>
+                {% icon "chevron-right" 18 "app-poly__chev" %}
               </button>
               <div x-show="selected && selected.id === p.id" class="app-poly__edit">
                 <template x-if="p.element"><span class="gt-chip gt-chip--sm">{% translate "Terpetakan" %} <b x-text="fmtM2(p.area_m2)"></b> {% translate "m² · tercatat" %} <b x-text="fmtM2(p.element_area_m2)"></b> m²</span></template>
                 <template x-if="canEdit">
                   <div class="app-poly__edit">
                     <div class="app-rowform"><input x-model="p.name" class="app-field app-field--sm app-grow" aria-label="{% translate 'Nama poligon' %}"><button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="save(p, { name: p.name })">{% translate "Ganti nama" %}</button></div>
-                    <div class="app-rowform"><select class="app-field app-field--sm" aria-label="{% translate 'Elemen tertaut' %}" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">{% translate "— tautkan ke elemen —" %}</option>
+                    <div class="app-rowform"><select class="app-field app-field--sm" aria-label="{% translate 'Elemen tertaut' %}" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">{% translate "Tidak ditautkan" %}</option>
                       <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
                     <div class="app-rowform">
                       <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--solid gt-btn--sm" @click="useArea(p)" title="{% translate 'Pakai luas terpetakan sebagai luas elemen' %}">{% translate "Pakai luas" %}</button>

@@ -60,24 +60,33 @@
       <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan mutasi" %}</button>
     </form>
 
-    {% if can_close %}
-    <form method="post" class="gt-card app-shift__form" x-data="{ total() { let t = 0; this.$root.querySelectorAll('[data-denom]').forEach(i => t += (parseInt(i.value) || 0) * Number(i.dataset.denom)); return t; } }"
-          data-confirm-title="{% translate 'Tutup shift?' %}" data-confirm="{% translate 'Hitungan dikunci dan shift ditutup. Selisih dengan uang seharusnya akan ditinjau manajer.' %}" data-confirm-action="{% translate 'Tutup shift' %}" data-confirm-level="2">{% csrf_token %}
-      <input type="hidden" name="action" value="close">
-      <h2 class="gt-card__title">{% translate "Tutup shift" %} {% info_tip _("Isi jumlah lembar atau keping per pecahan. Uang seharusnya baru terlihat setelah hitungan dikunci.") %}</h2>
-      <table class="gt-table app-denoms">
-        <thead><tr><th>{% translate "Pecahan" %}</th><th class="num">{% translate "Jumlah" %}</th></tr></thead>
-        <tbody>{% for d in denominations %}<tr><td><label for="den-{{ d }}">{{ d|rupiah }}</label></td>
-          <td class="num"><input id="den-{{ d }}" name="d{{ d }}" data-denom="{{ d }}" type="number" min="0" step="1" inputmode="numeric" class="app-field app-field--sm app-denoms__input" @input="$el.closest('form').querySelector('[data-total]').textContent = gtRupiah(total())"></td></tr>{% endfor %}</tbody>
-      </table>
+  </aside>
+</div>
+{% endif %}
+{% if shift %}{% if can_close %}
+{# Close shift (Phase 7): full width, two columns — the count on the left (denominations in two columns), the total and the button on the right. #}
+<form method="post" class="gt-card app-close" x-data="{ total() { let t = 0; this.$root.querySelectorAll('[data-denom]').forEach(i => t += (parseInt(i.value) || 0) * Number(i.dataset.denom)); return t; } }"
+      aria-labelledby="h-close"
+      data-confirm-title="{% translate 'Tutup shift?' %}" data-confirm="{% translate 'Hitungan dikunci dan shift ditutup. Selisih dengan uang seharusnya akan ditinjau manajer.' %}" data-confirm-action="{% translate 'Tutup shift' %}" data-confirm-level="2">{% csrf_token %}
+  <input type="hidden" name="action" value="close">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-close">{% translate "Tutup shift" %} {% info_tip _("Isi jumlah lembar atau keping per pecahan. Uang seharusnya baru terlihat setelah hitungan dikunci.") %}</h2></div>
+  <div class="app-close__grid">
+    <fieldset class="app-close__count">
+      <legend class="sr-only">{% translate "Pecahan" %}</legend>
+      {% for d in denominations %}
+      <label class="app-denom" for="den-{{ d }}"><span class="app-denom__label">{{ d|rupiah }}</span>
+        <input id="den-{{ d }}" name="d{{ d }}" data-denom="{{ d }}" type="number" min="0" step="1" inputmode="numeric" placeholder="0" class="app-field app-field--sm app-denoms__input" @input="$el.closest('form').querySelector('[data-total]').textContent = gtRupiah(total())"></label>
+      {% endfor %}
+    </fieldset>
+    <div class="app-close__side">
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Total dihitung" %}</span><span class="gt-metric__value" data-total>{% translate "Rp0" %}</span></div>
       <label><span class="app-label">{% translate "Catatan (opsional)" %}</span><input name="close_note" class="app-field"></label>
       {% if shift.opened_by_id != request.user.pk %}<div class="gt-callout gt-callout--warning">{% icon "alert" 18 %}<div><span class="gt-callout__title">{% translate "Shift ini dibuka orang lain" %}</span><span class="gt-callout__body">{% translate "Penutupan dicatat sebagai tutup paksa." %}</span></div></div>{% endif %}
       <button class="gt-btn gt-btn--danger gt-btn--md gt-btn--block">{% translate "Tutup shift" %}</button>
-    </form>
-    {% endif %}
-  </aside>
-</div>
+    </div>
+  </div>
+</form>
+{% endif %}
 {% endif %}
 
 <section class="gt-card app-shift__history" aria-labelledby="h-history">

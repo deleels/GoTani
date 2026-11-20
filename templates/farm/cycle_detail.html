@@ -23,7 +23,7 @@
 
   {# Stage track: done green, current dark, still-to-come hatched ("not yet"). #}
   <section class="gt-card app-section" aria-labelledby="h-stage">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">{% translate "Tahap tanam" %}</h2><span class="gt-card__hint">{% if cycle.is_active %}{{ cycle.get_stage_display }}{% else %}{% translate "Ditutup" %}{% endif %}</span></div>
+    <div class="gt-card__head"><div class="app-stagehead"><h2 class="app-stagehead__label" id="h-stage">{% translate "Tahap sekarang" %}</h2><span class="app-stagehead__value">{% if cycle.is_active %}{{ cycle.get_stage_display }}{% else %}{% translate "Ditutup" %}{% endif %}</span></div></div>
     <div class="app-stages">
       <div class="gt-seg app-stages__bar" aria-hidden="true">{% for value, label in stage_choices %}<i class="{% if value == cycle.stage %}{% elif forloop.counter0 < cycle.stage_index %}ok{% else %}todo{% endif %}"></i>{% endfor %}</div>
       <ol class="app-stages__labels">{% for value, label in stage_choices %}<li class="{% if value == cycle.stage %}is-current{% elif forloop.counter0 < cycle.stage_index %}is-done{% endif %}"{% if value == cycle.stage %} aria-current="step"{% endif %}>{{ label }}</li>{% endfor %}</ol>

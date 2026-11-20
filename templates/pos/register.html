@@ -113,6 +113,7 @@
 {% block scripts %}
 <script>
   const CART_KEY = 'gotani-cart';
+  const STEP_KG = 0.5;  // − / + and the first tap (D113: one step for every product)
   function register() {
     return {
       products: JSON.parse(document.getElementById('pos-products').textContent),
@@ -159,7 +160,7 @@
       filtered() { const q = this.query.toLowerCase(); return this.products.filter(p => (p.name + ' ' + p.grade_label).toLowerCase().includes(q)); },
       qty(line) { return idNum.parse(line.qty) || 0; },
       r3(v) { return Math.round(v * 1000) / 1000; },
-      stepOf(line) { const p = this.product(line.id); return Number(p && p.step) || 0.5; },
+      stepOf() { return STEP_KG; },
       available(line) { const p = this.product(line.id); return p ? Number(p.available) : 0; },
       setQty(line, v) { line.qty = idNum.format(this.r3(v), 'kg'); this.save(); },
       bump(line, dir) {
@@ -174,10 +175,10 @@
       inCart(id) { const l = this.cart.find(l => l.id === id); return l ? this.qty(l) : 0; },
       remaining(p) { return Number(p.available) - this.inCart(p.id); },
       // Low stock on the tile: two steps or less left.
-      low(p) { return this.remaining(p) <= 2 * (Number(p.step) || 0.5); },
+      low(p) { return this.remaining(p) <= 2 * STEP_KG; },
       add(p) {
         const line = this.cart.find(l => l.id === p.id);
-        const step = this.r3(Math.min(Number(p.step) || 0.5, this.remaining(p)));
+        const step = this.r3(Math.min(STEP_KG, this.remaining(p)));
         if (step <= 0) return;
         if (line) this.setQty(line, this.qty(line) + step);
         else { this.cart.push({ id: p.id, qty: idNum.format(step, 'kg') }); this.save(); }

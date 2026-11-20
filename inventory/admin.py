@@ -21,7 +21,7 @@ class ProductAdmin(admin.ModelAdmin):
     def stock_kg(self, obj):
         return obj.stock_kg
 
-    AUDITED = ("selling_price_idr", "tax_id", "pos_step_kg")
+    AUDITED = ("selling_price_idr", "tax_id")
 
     def save_model(self, request, obj, form, change):
         """Admin edits land in the audit log too (D82)."""

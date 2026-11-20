@@ -27,11 +27,19 @@ INPUT_CSS = "app-field"  # D104: design-system field (gotani.css)
 
 
 class StyledForm(forms.Form):
-    """Applies Tailwind classes; accepts (and ignores by default) the `roles` kwarg."""
+    """Applies Tailwind classes; accepts (and ignores by default) the `roles` kwarg.
+
+    `show_when = {"field": "other=VALUE|VALUE2"}` shows a field's row only while another field has one of the
+    values (forms.js hides and disables it otherwise, so it is not submitted)."""
+
+    show_when: dict = {}
 
     def __init__(self, *args, roles=None, **kwargs):
         self.roles = roles
         super().__init__(*args, **kwargs)
+        for name, cond in self.show_when.items():
+            if name in self.fields:
+                self.fields[name].show_when = cond
         for field in self.fields.values():
             if isinstance(field, forms.ModelChoiceField) and field.empty_label in ("---------", "- Select an option -"):
                 field.empty_label = ""  # Phase 7: blank first option, no "pilih" text
@@ -181,6 +189,7 @@ class PurchaseForm(StyledForm):
 
 
 class ExpenseForm(StyledForm):
+    show_when = {"element": "scope=ELEMENT", "cycle": "scope=ELEMENT"}
     category = forms.ModelChoiceField(label=_l("Kategori"), queryset=ExpenseCategory.objects.all())
     scope = forms.ChoiceField(label=_l("Cakupan"), choices=Expense.Scope.choices)
     element = forms.ModelChoiceField(label=_l("Elemen"), queryset=FarmElement.objects.all(), required=False)
@@ -245,7 +254,6 @@ class SpoilageForm(StyledForm):
 
 class PriceForm(StyledForm):
     selling_price_idr = money_field(_l("Harga jual per kg (Rp)"))
-    pos_step_kg = qty_field(_l("Langkah kasir (kg)"), required=False)
     min_alert_kg = qty_field(_l("Batas stok menipis (kg)"), required=False, min_value=Decimal("0"))
 
 

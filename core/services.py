@@ -63,6 +63,8 @@ def update_farm_profile(actor, **fields) -> FarmProfile:
     profile = get_farm_profile()
     was_pkp = profile.is_pkp
     for key, value in fields.items():
+        if key == "logo" and value is False:  # "Clear" ticked on the file input: remove the logo
+            value = ""
         setattr(profile, key, value)
     profile.full_clean()
     with transaction.atomic():

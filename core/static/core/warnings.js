@@ -13,7 +13,7 @@
 
   // Harga Produk: a change of more than 30%, or a price below the open lots' average cost per kg.
   window.priceWarn = function (form) {
-    var price = idNum.parse(form.querySelector('[name=selling_price_idr]').value);
+    var price = idNum.parse(form.elements.selling_price_idr.value);
     var old = Number(form.dataset.oldPrice || 0), cogs = Number(form.dataset.cogs || 0), lines = [];
     if (!(price > 0)) return false;
     if (old > 0 && Math.abs(price - old) / old > 0.3) {

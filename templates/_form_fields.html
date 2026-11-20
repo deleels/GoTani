@@ -5,7 +5,7 @@
 <div class="grid gap-4 {{ cols|default:'sm:grid-cols-2' }}">
 {% for field in form %}
   {% if field.is_hidden %}{{ field }}{% else %}
-  <div class="app-formrow{% if field.widget_type == 'textarea' or field.name == 'notes' or field.widget_type == 'checkboxselectmultiple' or field.widget_type == 'radioselect' %} sm:col-span-full{% endif %}{% if field.errors %} app-formrow--error{% endif %}">
+  <div class="app-formrow{% if field.widget_type == 'textarea' or field.name == 'notes' or field.widget_type == 'checkboxselectmultiple' or field.widget_type == 'radioselect' %} sm:col-span-full{% endif %}{% if field.errors %} app-formrow--error{% endif %}"{% if field.field.show_when %} data-show-when="{{ field.field.show_when }}"{% endif %}>
     {% if field.widget_type == 'checkbox' %}
       <label class="gt-check" for="{{ field.id_for_label }}">{{ field }}<span><span class="gt-check__title">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</span>{% if field.help_text %}<span class="gt-check__desc" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</span>{% endif %}</span></label>
     {% elif field.widget_type == 'checkboxselectmultiple' %}

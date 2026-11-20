@@ -9,7 +9,7 @@
   </div>
 </div>
 <div class="gt-card app-tablecard app-section">
-  <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Belum berharga" %} {% info_tip _("Produk baru dari panen dibuat tanpa harga dan disembunyikan dari kasir sampai harga ditetapkan.") %}</h2></div>
+  <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Belum diberi harga" %} {% info_tip _("Produk baru dari panen dibuat tanpa harga dan disembunyikan dari kasir sampai harga ditetapkan.") %}</h2></div>
   <table class="gt-table">
     <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Stok" %}</th><th>{% translate "Tetapkan harga / kg" %}</th></tr></thead>
     <tbody>
@@ -18,25 +18,28 @@
         <td><form method="post" class="app-rowform" data-confirm="" data-confirm-if="priceWarn(form)" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
           <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required placeholder="{% translate 'mis. 25.000' %}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}">
           <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Simpan" %}</button></form></td></tr>
-    {% empty %}<tr><td colspan="3" class="app-empty-cell app-muted">{% translate "Semua produk sudah berharga." %}</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="3" class="app-empty-cell app-muted">{% translate "Semua produk sudah diberi harga." %}</td></tr>{% endfor %}
     </tbody>
   </table>
 </div>
 
 <div class="gt-card app-tablecard app-section">
-  <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Produk berharga" %}</h2></div>
+  <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Sudah diberi harga" %}</h2></div>
   <table class="gt-table">
-    <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Stok" %}</th><th class="num">{% translate "Harga sekarang" %}</th><th>{% translate "Harga/kg · langkah kasir · batas menipis" %} {% info_tip _("Langkah kasir: tombol − / + di kasir mengubah jumlah sebesar ini. Batas menipis: notifikasi bila stok di bawah angka ini; kosongkan untuk mematikan.") %}</th></tr></thead>
+    <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Stok" %}</th>
+      <th>{% translate "Harga / kg" %}</th>
+      <th><span class="app-labelrow">{% translate "Batas menipis (kg)" %} {% info_tip _("Notifikasi bila stok di bawah angka ini; kosongkan untuk mematikan.") %}</span></th>
+      <th></th></tr></thead>
     <tbody>
     {% for p in priced %}
-      <tr><td>{{ p }}</td><td class="num">{{ p.stock_kg|kg }} kg</td><td class="num">{{ p.selling_price_idr|rupiah }}</td>
-        <td><form method="post" class="app-rowform" data-confirm="" data-confirm-if="priceWarn(form)" data-old-price="{{ p.selling_price_idr }}" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
-          <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" value="{{ p.selling_price_idr|idnum:0 }}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}">
-          <input name="pos_step_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.pos_step_kg|idnum:3 }}" class="app-field app-field--sm app-num app-w-kg" aria-label="{% translate 'Langkah kasir (kg)' %}" title="{% translate 'Tombol − / + di kasir mengubah jumlah sebesar ini' %}">
-          <input name="min_alert_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.min_alert_kg|idnum:3 }}" placeholder="—" class="app-field app-field--sm app-num app-w-kg" aria-label="{% translate 'Batas stok menipis (kg)' %}" title="{% translate 'Notifikasi bila stok ≤ angka ini; kosongkan untuk mematikan' %}">
+      {# One form per row; the inputs sit in their own columns and join it through form="…". #}
+      <tr><td>{{ p }}</td><td class="num">{{ p.stock_kg|kg }} kg</td>
+        <td><input form="price-{{ p.pk }}" name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required value="{{ p.selling_price_idr|idnum:0 }}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}"></td>
+        <td><input form="price-{{ p.pk }}" name="min_alert_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.min_alert_kg|idnum:3 }}" placeholder="—" class="app-field app-field--sm app-num app-w-kg" aria-label="{% translate 'Batas stok menipis (kg)' %}"></td>
+        <td class="num"><form id="price-{{ p.pk }}" method="post" class="app-actions app-actions--equal" data-confirm="" data-confirm-if="priceWarn(form)" data-old-price="{{ p.selling_price_idr }}" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
           <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Simpan" %}</button>
           {% blocktranslate asvar t_data_confirm_title_5 with v1=p %}Hapus harga {{ v1 }}?{% endblocktranslate %}<button name="clear" value="1" class="gt-btn gt-btn--outline-danger gt-btn--sm" formnovalidate data-confirm-title="{{ t_data_confirm_title_5 }}" data-confirm="{% translate 'Produk akan disembunyikan dari kasir sampai diberi harga lagi.' %}" data-confirm-action="{% translate 'Hapus harga' %}" data-confirm-danger title="{% translate 'Hapus harga' %}">{% translate "Hapus" %}</button></form></td></tr>
-    {% empty %}<tr><td colspan="4" class="app-empty-cell app-muted">{% translate "Belum ada produk berharga." %}</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Belum ada produk yang diberi harga." %}</td></tr>{% endfor %}
     </tbody>
   </table>
 </div>

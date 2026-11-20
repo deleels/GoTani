@@ -154,22 +154,6 @@ def set_product_price(product: Product, price_idr, actor=None, reason: str = "")
     return product
 
 
-def set_pos_step(product: Product, step_kg, actor=None) -> Product:
-    """Kasir quantity step (D81): − / + change the line by this many kg; chips are its multiples."""
-    step_kg = Decimal(step_kg).quantize(QTY_STEP, rounding=ROUND_HALF_UP)
-    if step_kg <= 0:
-        raise ValidationError(_("Langkah kasir harus lebih dari 0 kg."))
-    old = product.pos_step_kg
-    product.pos_step_kg = step_kg
-    product.save(update_fields=["pos_step_kg"])
-    if old != step_kg:
-        from core.audit import log_event
-
-        log_event(actor, "POS_STEP_CHANGE", product, f"Langkah kasir {product}",
-                  before={"pos_step_kg": old}, after={"pos_step_kg": step_kg})
-    return product
-
-
 def set_min_alert(product: Product, min_kg, actor=None) -> Product:
     """Low-stock threshold for sellable produce (D98); None switches the alert off."""
     if min_kg is not None:

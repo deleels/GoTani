@@ -119,9 +119,6 @@ html body:has(> .app-frame) { background: var(--canvas); }
 /* Login (Phase 2): design-system dark panel left, raised form right. */
 .app-login__panel { padding: var(--space-10); background: var(--green-900); color: var(--ink-inverse); }
 .app-login__lockup { height: 40px; width: auto; align-self: flex-start; }
-.app-login__headline { font: var(--text-display); letter-spacing: -.8px; }
-.gt-root .app-login__tagline { margin-top: var(--space-5); font: var(--text-body-lg); color: rgba(255, 255, 255, .8); }
-.app-login__foot { font: var(--text-label); color: rgba(255, 255, 255, .8); }
 .app-login__form { background: var(--surface-raised); }
 .app-login__title { font: var(--text-heading-lg); letter-spacing: -.6px; }
 .app-login__sub { font-size: 14px; line-height: 20px; color: var(--ink-muted); }
@@ -423,6 +420,10 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 .app-mono { font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
 .app-block { display: block; }
 .app-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--space-2); flex-wrap: wrap; }
+/* Row actions that belong together (Approve / Reject / Delete): one line, equal widths (Phase 7). */
+.app-actions--equal { display: inline-grid; grid-auto-flow: column; grid-auto-columns: 1fr; flex-wrap: nowrap; }
+.app-actions--equal > form, .app-actions--equal > form > .gt-btn, .app-actions--equal > .gt-btn { width: 100%; }
+.app-actions--equal .gt-btn { justify-content: center; white-space: nowrap; min-width: 5.75rem; padding-inline: var(--space-3); }
 .app-row--void td { color: var(--ink-subtle); }
 .app-row--void td.num b { text-decoration: line-through; font-weight: 400; }
 /* Pesanan + Shift */
@@ -441,6 +442,16 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 .app-shift__openform label { display: flex; flex-direction: column; width: 14rem; }
 .app-denoms td { padding-top: 6px; padding-bottom: 6px; }
 .app-denoms__input { width: 6rem; text-align: right; margin-left: auto; display: block; }
+/* Close shift (Phase 7): count on the left in two columns, total + button on the right. */
+.app-close { margin-top: var(--space-5); }
+.app-close__grid { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); align-items: start; }
+.app-close__count { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2) var(--space-5); border: 0; padding: 0; margin: 0; min-width: 0; }
+.app-denom { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-1) 0; border-bottom: 1px solid var(--divider); font-variant-numeric: tabular-nums; }
+.app-denom__label { color: var(--ink); }
+.app-close__side { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-md); background: var(--canvas); }
+@media (max-width: 767px) {
+  .app-close__grid { grid-template-columns: 1fr; }
+}
 /* Receipt toolbar */
 .app-receipt__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); }
 .app-receipt__print { margin-left: auto; }
@@ -534,6 +545,10 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-element__head form { margin-left: auto; }
 .app-element__cycle { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--surface); }
 .app-element__stage { margin-top: calc(var(--space-1) * -1); }
+/* Current stage as the headline of a cycle (Phase 7). */
+.app-stagehead { display: flex; flex-direction: column; gap: 2px; flex-basis: 100%; }
+.app-stagehead__label { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--ink-muted); margin: 0; }
+.app-stagehead__value { font-size: 22px; line-height: 28px; font-weight: 600; color: var(--green-800); letter-spacing: -.01em; }
 .app-stage { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .app-stage--undo { margin-top: var(--space-2); }
 .app-check--inline { padding: 0; background: none; align-items: center; gap: var(--space-2); }
@@ -596,9 +611,18 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-chartbox { margin-top: var(--space-3); }
 .app-metrics3 { grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); }
 .app-soil { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); margin-top: var(--space-2); }
-.app-poly { padding: var(--space-3) 0; }
-.app-poly.is-on { padding-left: var(--space-3); padding-right: var(--space-3); border-radius: var(--radius-md); background: var(--green-100); }
-.app-poly__btn { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+/* Field boundaries list (Phase 7): each row reads as a button — hover tint, pointer, chevron that turns when open. */
+.app-poly { padding: var(--space-1) 0; }
+.app-poly.is-on { padding: var(--space-1) var(--space-3) var(--space-3); border-radius: var(--radius-md); background: var(--green-100); }
+.app-poly__btn { display: flex; align-items: center; gap: var(--space-3); margin: 0 calc(var(--space-2) * -1); width: calc(100% + 2 * var(--space-2)); padding: var(--space-2); border: 0; border-radius: var(--radius-md); background: none; text-align: left; cursor: pointer; font: inherit; color: inherit;
+  transition: background-color var(--dur-fast) ease; }
+.app-poly__btn:hover { background: var(--surface); }
+.app-poly.is-on .app-poly__btn:hover { background: transparent; }
+.app-poly__btn:focus-visible { outline: 2px solid var(--green-600); outline-offset: 0; }
+.app-poly__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.app-poly__chev { color: var(--ink-subtle); transition: transform var(--dur-fast) var(--ease-out), color var(--dur-fast) ease; }
+.app-poly__btn:hover .app-poly__chev { color: var(--ink); }
+.app-poly.is-on .app-poly__chev { transform: rotate(90deg); color: var(--green-700); }
 .app-poly__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
 .app-poly__edit { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2); }
 .app-grow { flex: 1; min-width: 0; }
@@ -774,3 +798,6 @@ html { scrollbar-gutter: stable; }
   .gt-root[data-motion="calm"] .app-main__inner, .app-toast, .app-toast.is-leaving { animation: none; }
   .app-progress.is-on, .app-progress.is-done { transition: none; }
 }
+/* Phase 7: the warning triangle's rounded corners reach within half a pixel of the 24-unit box, and an SVG clips
+   to its box by default, so at 14–18 px the bottom corners were shaved off. Icons may paint outside their box. */
+.gt-root svg.gt-ico { overflow: visible; }

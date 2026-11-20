@@ -141,6 +141,27 @@
     });
   });
 
+  /* ---------- conditional rows: data-show-when="field=A|B" ---------- */
+  function applyShowWhen(form) {
+    form.querySelectorAll('[data-show-when]').forEach(function (row) {
+      var m = row.getAttribute('data-show-when').split('='), ctl = form.elements[m[0]];
+      if (!ctl) return;
+      var val = ctl.type === 'checkbox' ? (ctl.checked ? 'on' : '') : ctl.value;
+      if (ctl instanceof RadioNodeList) val = ctl.value;
+      var on = m[1].split('|').indexOf(val) !== -1;
+      row.hidden = !on;
+      row.querySelectorAll('input, select, textarea').forEach(function (el) { el.disabled = !on; });
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('form').forEach(function (f) { if (f.querySelector('[data-show-when]')) applyShowWhen(f); });
+  });
+  document.addEventListener('change', function (e) {
+    var f = e.target && e.target.form;
+    if (f && f.querySelector('[data-show-when]')) applyShowWhen(f);
+  });
+  window.gtShowWhen = applyShowWhen;
+
   /* ---------- page navigation: progress bar + repeat-click guard ---------- */
   var bar, loading = null;
   function startProgress() {

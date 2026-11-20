@@ -14,22 +14,21 @@
     <div class="gt-card app-tablecard">
       <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Antrian persetujuan" %} <span class="app-tab__count">{{ pending|length }}</span></h2></div>
       <table class="gt-table">
-        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Kategori" %}</th><th>{% translate "Cakupan" %}</th><th>{% translate "Keterangan" %}</th><th class="num">{% translate "Jumlah" %}</th><th></th></tr></thead>
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Kategori" %}</th><th>{% translate "Keterangan" %}</th><th class="num">{% translate "Jumlah" %}</th><th></th></tr></thead>
         <tbody>
         {% for e in pending %}
           <tr>
             <td class="whitespace-nowrap">{{ e.date_incurred|date:"d-m-Y" }}</td>
-            <td>{{ e.category }}</td>
-            <td>{% if e.scope == 'GENERAL' %}{% translate "Umum" %}{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% endif %}{% endif %}</td>
+            <td>{{ e.category }}<span class="app-sub">{% if e.scope == 'GENERAL' %}{% translate "Umum" %}{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% endif %}{% endif %}</span></td>
             <td>{{ e.narration|default:"-" }}{% if e.vendor %}<span class="app-sub">{{ e.vendor }}</span>{% endif %}{% if e.receipt %}<a class="app-sub app-link" href="{{ e.receipt.url }}">{% translate "Bukti" %}</a>{% endif %}</td>
             <td class="num">{{ e.amount_idr|rupiah }}</td>
-            <td class="num"><span class="app-actions">
+            <td class="num"><span class="app-actions app-actions--equal">
               <form method="post" action="{% url 'farm:expense_approve' e.pk %}">{% csrf_token %}<button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Setujui" %}</button></form>
               <form method="post" action="{% url 'farm:expense_reject' e.pk %}">{% csrf_token %}<button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Tolak" %}</button></form>
               <form method="post" action="{% url 'farm:expense_delete' e.pk %}" data-confirm-title="{% translate 'Hapus biaya?' %}" data-confirm="{% translate 'Biaya ini dihapus permanen.' %}" data-confirm-action="{% translate 'Hapus biaya' %}" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form>
             </span></td>
           </tr>
-        {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">{% translate "Tidak ada biaya yang menunggu." %}</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Tidak ada biaya yang menunggu." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>

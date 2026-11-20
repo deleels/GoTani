@@ -53,9 +53,6 @@ class Product(models.Model):
     # D98: low-stock alert for sellable produce (NULL = no alert).
     min_alert_kg = models.DecimalField(_l("batas stok menipis (kg)"), max_digits=10, decimal_places=3, null=True, blank=True,
                                        validators=[MinValueValidator(Decimal("0"))])
-    # D81: kasir − / + step and quick-pick chips (step × 1, 2, 4, 10).
-    pos_step_kg = models.DecimalField(_l("langkah kasir (kg)"), max_digits=10, decimal_places=3, default=Decimal("0.5"),
-                                      validators=[MinValueValidator(Decimal("0.001"))])
     # NULL = untaxed (fresh produce is generally PPN-exempt).
     tax = models.ForeignKey(
         Tax, on_delete=models.PROTECT, null=True, blank=True, related_name="products", verbose_name=_l("pajak")

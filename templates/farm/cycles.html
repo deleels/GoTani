@@ -30,9 +30,10 @@
           {% endif %}
         </div>
         {% if el.active_cycle %}{% with c=el.active_cycle %}
+        {# Phase 7: the current stage is the headline; "Majukan tahap" below is a small secondary button. #}
         <div class="app-element__cycle">
+          <div class="app-stagehead"><span class="app-stagehead__label">{% translate "Tahap sekarang" %}</span><span class="app-stagehead__value">{{ c.get_stage_display }}</span></div>
           <a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a><span class="app-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"d-m-Y" }} {% translate "· hari ke-" %}{{ c.days }}</span>
-          {% pill c.get_stage_display tone="green" %}
           {% if c.expected_harvest_date %}{% if c.overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}<span class="app-row__meta">{% translate "Perkiraan panen" %} {{ c.expected_harvest_date|date:"d-m-Y" }}</span>{% endif %}
           {% if roles.finance %}<a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">{% translate "Telusuri" %}</a>{% endif %}
         </div>

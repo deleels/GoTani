@@ -25,12 +25,11 @@ class AuditLogTests(TestCase):
         self.product = Product.objects.create(variety=Variety.objects.create(name="Melon", crop="Melon"),
                                               grade=Grade.HIGH)
 
-    def test_price_and_step_changes_are_logged(self):
+    def test_price_changes_are_logged(self):
         inventory.set_product_price(self.product, 20000, actor=self.owner)
         inventory.set_product_price(self.product, 20000, actor=self.owner)  # unchanged: no entry
-        inventory.set_pos_step(self.product, "0.25", actor=self.owner)
         entries = list(AuditLog.objects.order_by("id"))
-        self.assertEqual([e.action for e in entries], ["PRICE_CHANGE", "POS_STEP_CHANGE"])
+        self.assertEqual([e.action for e in entries], ["PRICE_CHANGE"])
         self.assertEqual(entries[0].before, {"selling_price_idr": None})
         self.assertEqual(entries[0].after, {"selling_price_idr": "20000.00"})
         self.assertEqual(entries[0].actor, self.owner)
@@ -52,7 +51,7 @@ class AuditLogTests(TestCase):
         self.client.force_login(self.owner)
         url = reverse("admin:inventory_product_change", args=[self.product.pk])
         self.client.post(url, {"variety": self.product.variety_id, "grade": "HIGH", "selling_price_idr": "15000",
-                               "pos_step_kg": "0.5", "tax": ""})
+                               "tax": ""})
         entry = AuditLog.objects.get()
         self.assertEqual(entry.action, "PRODUCT_ADMIN_EDIT")
         self.assertEqual(entry.after, {"selling_price_idr": "15000.00"})

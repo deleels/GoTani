@@ -553,20 +553,20 @@ class NumberFormatAndStepTests(PosFixtures):
         self.assertEqual(order.lines.get(product=self.high).qty_kg, D("1.5"))
         self.assertEqual(order.lines.get(product=self.low).qty_kg, D("2.25"))
 
-    def test_step_defaults_and_is_set_from_price_page(self):
+    def test_price_page_sets_price_and_pos_steps_half_kg(self):
+        """Phase 7 (D113): no per-product step; the POS − / + and the first tap are always 0.5 kg."""
         from django.urls import reverse
 
-        self.assertEqual(self.high.pos_step_kg, D("0.5"))
         self.client.force_login(self.manager)
-        self.client.post(reverse("farm:prices"), {"product": self.high.pk, "selling_price_idr": "25.000",
-                                                  "pos_step_kg": "0,25"})
+        self.client.post(reverse("farm:prices"), {"product": self.high.pk, "selling_price_idr": "25.000"})
         self.high.refresh_from_db()
-        self.assertEqual((self.high.selling_price_idr, self.high.pos_step_kg), (D("25000"), D("0.25")))
+        self.assertEqual(self.high.selling_price_idr, D("25000"))
         self.client.force_login(self.cashier)
         products = self.client.get(reverse("pos:stock"), HTTP_ACCEPT="application/json").json()["products"]
-        self.assertEqual({p["id"]: p["step"] for p in products}[self.high.pk], "0.250")
+        self.assertNotIn("step", products[0])
         page = self.client.get(reverse("pos:register")).content.decode()
         self.assertIn('data-num="kg"', page)
+        self.assertIn("const STEP_KG = 0.5;", page)
 
 
 class BigLineWarningTests(PosFixtures):

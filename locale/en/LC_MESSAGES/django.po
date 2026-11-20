@@ -1839,10 +1839,6 @@ msgid "kg tersisa"
 msgstr "kg left"
 
 #: inventory\models.py
-msgid "langkah kasir (kg)"
-msgstr "cashier step (kg)"
-
-#: inventory\models.py
 msgid "lot"
 msgstr "lot"
 
@@ -1909,10 +1905,6 @@ msgstr "A stock movement can't be zero."
 #: inventory\services.py
 msgid "Jumlah susut/rusak harus lebih dari 0 kg."
 msgstr "Spoilage must be more than 0 kg."
-
-#: inventory\services.py
-msgid "Langkah kasir harus lebih dari 0 kg."
-msgstr "Cashier step must be more than 0 kg."
 
 #: inventory\services.py
 msgid "Masih ada opname %(product)s yang menunggu persetujuan."
@@ -2855,8 +2847,8 @@ msgid "Perubahan"
 msgstr "Change"
 
 #: templates\core\audit_log.html
-msgid "Perubahan harga, langkah kasir, dan status PKP akan muncul di sini secara otomatis."
-msgstr "Price changes, cashier steps and VAT status show up here automatically."
+msgid "Perubahan harga dan status PKP akan muncul di sini secara otomatis."
+msgstr "Price and VAT-status changes will appear here automatically."
 
 #: templates\core\audit_log.html
 msgid "Sebelum → sesudah"
@@ -3183,6 +3175,14 @@ msgid "Belum ada data."
 msgstr "No data yet."
 
 #: templates\farm\_stage_form.html
+msgid "%(u_cycle)s kembali dari %(u_from)s ke %(u_to)s."
+msgstr "%(u_cycle)s goes back from %(u_from)s to %(u_to)s."
+
+#: templates\farm\_stage_form.html
+msgid "Alasan pembatalan"
+msgstr "Reason for undoing"
+
+#: templates\farm\_stage_form.html
 msgid "Batalkan perpindahan"
 msgstr "Undo stage change"
 
@@ -3195,12 +3195,20 @@ msgid "Batalkan perpindahan terakhir: %(u_from)s → %(u_to)s"
 msgstr "Undo the last change: %(u_from)s → %(u_to)s"
 
 #: templates\farm\_stage_form.html
+msgid "Hanya bisa hari ini dan selama belum ada catatan baru."
+msgstr "Only possible today and while nothing new has been recorded."
+
+#: templates\farm\_stage_form.html
 msgid "Lewati tahap"
 msgstr "Skip stage"
 
 #: templates\farm\_stage_form.html
 msgid "Majukan tahap"
 msgstr "Next stage"
+
+#: templates\farm\_stage_form.html
+msgid "Siklus dibuka kembali."
+msgstr "The cycle is reopened."
 
 #: templates\farm\_stage_form.html
 msgid "Tahap tujuan"
@@ -3387,8 +3395,8 @@ msgid "Ringkas"
 msgstr "Summary"
 
 #: templates\farm\cycle_detail.html
-msgid "Tahap tanam"
-msgstr "Growth stage"
+msgid "Tahap sekarang"
+msgstr "Current stage"
 
 #: templates\farm\cycle_detail.html
 msgid "Telusuri"
@@ -4023,15 +4031,19 @@ msgid "— sistem"
 msgstr "— system"
 
 #: templates\farm\prices.html
+msgid "Batas menipis (kg)"
+msgstr "Low-stock alert (kg)"
+
+#: templates\farm\prices.html
 msgid "Batas stok menipis (kg)"
 msgstr "Low-stock level (kg)"
 
 #: templates\farm\prices.html
-msgid "Belum ada produk berharga."
-msgstr "No priced products yet."
+msgid "Belum ada produk yang diberi harga."
+msgstr "No product has a price yet."
 
 #: templates\farm\prices.html
-msgid "Belum berharga"
+msgid "Belum diberi harga"
 msgstr "Not priced yet"
 
 #: templates\farm\prices.html
@@ -4041,6 +4053,10 @@ msgstr "Remove price"
 #: templates\farm\prices.html
 msgid "Hapus harga %(v1)s?"
 msgstr "Remove the price of %(v1)s?"
+
+#: templates\farm\prices.html
+msgid "Harga / kg"
+msgstr "Price / kg"
 
 #: templates\farm\prices.html
 msgid "Harga Produk"
@@ -4059,24 +4075,8 @@ msgid "Harga per kg"
 msgstr "Price per kg"
 
 #: templates\farm\prices.html
-msgid "Harga sekarang"
-msgstr "Current price"
-
-#: templates\farm\prices.html
-msgid "Harga/kg · langkah kasir · batas menipis"
-msgstr "Price/kg · cashier step · low-stock level"
-
-#: templates\farm\prices.html
-msgid "Langkah kasir (kg)"
-msgstr "Cashier step (kg)"
-
-#: templates\farm\prices.html
-msgid "Langkah kasir: tombol − / + di kasir mengubah jumlah sebesar ini. Batas menipis: notifikasi bila stok di bawah angka ini; kosongkan untuk mematikan."
-msgstr "Cashier step: the − / + buttons at the POS change the quantity by this much. Low-stock level: notify when stock drops below it; leave blank to turn off."
-
-#: templates\farm\prices.html
-msgid "Notifikasi bila stok ≤ angka ini; kosongkan untuk mematikan"
-msgstr "Notify when stock ≤ this; leave blank to turn off"
+msgid "Notifikasi bila stok di bawah angka ini; kosongkan untuk mematikan."
+msgstr "Notify when stock falls below this; leave empty to turn it off."
 
 #: templates\farm\prices.html
 msgid "Produk akan disembunyikan dari kasir sampai diberi harga lagi."
@@ -4087,20 +4087,16 @@ msgid "Produk baru dari panen dibuat tanpa harga dan disembunyikan dari kasir sa
 msgstr "New products from harvests start without a price and stay hidden from the POS until priced."
 
 #: templates\farm\prices.html
-msgid "Produk berharga"
-msgstr "Priced products"
+msgid "Semua produk sudah diberi harga."
+msgstr "Every product has a price."
 
 #: templates\farm\prices.html
-msgid "Semua produk sudah berharga."
-msgstr "Every product has a price."
+msgid "Sudah diberi harga"
+msgstr "Priced"
 
 #: templates\farm\prices.html
 msgid "Tetapkan harga / kg"
 msgstr "Set price / kg"
-
-#: templates\farm\prices.html
-msgid "Tombol − / + di kasir mengubah jumlah sebesar ini"
-msgstr "The POS − / + buttons change the quantity by this much"
 
 #: templates\farm\prices.html
 msgid "mis. 25.000"
@@ -4563,6 +4559,10 @@ msgid "Tidak dapat terhubung ke server."
 msgstr "Can't reach the server."
 
 #: templates\geo\map.html
+msgid "Tidak ditautkan"
+msgstr "Not linked"
+
+#: templates\geo\map.html
 msgid "agar prakiraan cuaca tepat."
 msgstr "so the forecast is accurate."
 
@@ -4585,10 +4585,6 @@ msgstr "no NDVI · &lt; 1 ha"
 #: templates\geo\map.html
 msgid "· beratap"
 msgstr "· covered"
-
-#: templates\geo\map.html
-msgid "— tautkan ke elemen —"
-msgstr "Link to a plot"
 
 #: templates\invoicing\buyer_detail.html
 msgid "Alamat"
@@ -5295,6 +5291,10 @@ msgid "Bayar %(amount)s"
 msgstr "Pay %(amount)s"
 
 #: templates\pos\register.html
+msgid "Belum ada produk berharga."
+msgstr "No priced products yet."
+
+#: templates\pos\register.html
 msgid "Buka shift"
 msgstr "Open shift"
 
@@ -5595,14 +5595,6 @@ msgid "· tutup paksa oleh"
 msgstr "· force-closed by"
 
 #: templates\registration\login.html
-msgid "Catat siklus tanam, panen per grade, stok per lot, dan penjualan kasir maupun grosir — dengan HPP yang bisa ditelusuri sampai ke biaya asalnya."
-msgstr "Track crop cycles, harvests by grade, stock by lot, and POS and wholesale sales — with COGS you can trace back to every cost."
-
-#: templates\registration\login.html
-msgid "Dari benih sampai struk, semua tercatat."
-msgstr "From seed to receipt, everything on record."
-
-#: templates\registration\login.html
 msgid "Kata sandi"
 msgstr "Password"
 
@@ -5625,10 +5617,6 @@ msgstr "Username"
 #: templates\registration\login.html
 msgid "Nama pengguna atau kata sandi salah."
 msgstr "Wrong username or password."
-
-#: templates\registration\login.html
-msgid "Satu kebun · Ketertelusuran penuh · Neraca massa terjaga"
-msgstr "One farm · Full traceability · Balanced stock"
 
 #: templates\registration\login.html
 msgid "Selamat datang kembali"

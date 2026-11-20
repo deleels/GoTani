@@ -31,7 +31,6 @@ def catalog_payload():
             "grade_label": p.get_grade_display(),
             "price": str(p.selling_price_idr),
             "available": str(p.available_kg),
-            "step": str(p.pos_step_kg),
             "warn_kg": str(big.get(p.pk, services.POS_BIG_LINE_MIN_KG).quantize(Decimal("0.001"))),
         }
         for p in services.pos_catalog()

@@ -163,7 +163,8 @@ def stage_panel(cycle, finance: bool):
         entry, blocked = services.stage_undo_block(cycle)
         if entry is not None and entry.action == "STAGE_ADVANCE" and not blocked:
             panel["undo"] = {"from": CropCycle.Stage(entry.after["stage"]).label,
-                             "to": CropCycle.Stage(entry.before["stage"]).label}
+                             "to": CropCycle.Stage(entry.before["stage"]).label,
+                             "reopens": entry.after["stage"] == CropCycle.Stage.CLEARING}
     return panel
 
 
@@ -600,8 +601,6 @@ class PricesView(FarmPage):
             try:
                 inventory_services.set_product_price(product, form.cleaned_data["selling_price_idr"],
                                                      actor=request.user)
-                if form.cleaned_data.get("pos_step_kg"):
-                    inventory_services.set_pos_step(product, form.cleaned_data["pos_step_kg"], actor=request.user)
                 if "min_alert_kg" in request.POST:  # D98: blank switches the alert off
                     inventory_services.set_min_alert(product, form.cleaned_data.get("min_alert_kg"), actor=request.user)
             except ValidationError as exc:

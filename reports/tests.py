@@ -189,7 +189,7 @@ class RoleMatrixTests(SiteFixtures):
             self.assertEqual(response.status_code, 200)
             self.assertTemplateUsed(response, "core/home.html")  # Ringkasan (D70)
             if role == ROLE_WORKER:
-                self.assertNotRegex(response.content.decode(), r"Rp\d")
+                self.assertNotRegex(response.content.decode(), r"(?<![A-Za-z0-9])Rp\d")  # not inside a random CSRF token
             else:
                 self.assertContains(response, "Total penjualan")
 
@@ -205,7 +205,7 @@ class RoleMatrixTests(SiteFixtures):
             with self.subTest(page=name):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
-                self.assertNotRegex(response.content.decode(), r"Rp\d")
+                self.assertNotRegex(response.content.decode(), r"(?<![A-Za-z0-9])Rp\d")  # not inside a random CSRF token
                 self.assertNotContains(response, "Biaya")
         # The same pages do show money to a manager.
         self.login(ROLE_MANAGER)
