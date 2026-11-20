@@ -292,7 +292,7 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 .app-dash__date { display: flex; flex-direction: column; width: 10.5rem; }
 .app-dash__date .app-label { font-size: 12px; line-height: 16px; color: var(--ink-muted); }
 @media (max-width: 767.98px) { .app-dash__range { align-items: stretch; width: 100%; } .app-dash__range .gt-tabs--boxed { display: flex; } .app-dash__date { flex: 1; width: auto; } }
-.app-dash__stats { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin-bottom: var(--space-3); }
+.app-dash__stats { grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr)); margin-bottom: var(--space-3); }
 .app-stat__money { font-size: clamp(30px, 2.6vw, 40px); letter-spacing: -.8px; }
 .gt-stat .gt-stat__trend.app-stat__neutral { color: var(--ink-muted); }
 .gt-stat__title { display: flex; align-items: center; gap: var(--space-1); }
@@ -812,3 +812,20 @@ html { scrollbar-gutter: stable; }
 .gt-root .app-money > .app-field--sm { padding-left: 2.15rem; }
 .app-pct .app-money::before { content: "%"; left: auto; right: 14px; }
 .gt-root .app-pct .app-money > input { padding-left: 14px; padding-right: 2.2rem; }
+/* Sortable column headers (Phase 7, D115). */
+.app-sort { color: inherit; text-decoration: none; }
+.app-sort:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.app-sort.is-on { color: var(--ink); font-weight: 600; }
+.app-labelrow--end { justify-content: flex-end; }
+.app-buyer__value { margin-bottom: var(--space-3); }
+/* Analytics headline row (D115): five tiles side by side, so the numbers scale with the width instead of clipping. */
+:is(.app-dash__stats, .app-buyer__value) .gt-stat__value, :is(.app-dash__stats, .app-buyer__value) .gt-stat__value.app-stat__money { font-size: clamp(20px, 1.6vw, 30px); line-height: 1.15; letter-spacing: -.4px; white-space: nowrap; }
+:is(.app-dash__stats, .app-buyer__value) .gt-stat { min-width: 0; padding: var(--space-4) var(--space-4) var(--space-5); }
+:is(.app-dash__stats, .app-buyer__value) .gt-stat__title { white-space: nowrap; }
+@media (max-width: 767px) {
+  /* Two tiles a row on phones; the featured one (Net profit / LTGP) takes the full row. */
+  :is(.app-dash__stats, .app-buyer__value) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  :is(.app-dash__stats, .app-buyer__value) .gt-stat--featured { grid-column: 1 / -1; }
+  :is(.app-dash__stats, .app-buyer__value) .gt-stat__title { white-space: normal; }
+  :is(.app-dash__stats, .app-buyer__value) .gt-stat__value, :is(.app-dash__stats, .app-buyer__value) .gt-stat__value.app-stat__money { font-size: 20px; }
+}

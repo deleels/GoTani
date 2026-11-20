@@ -26,18 +26,23 @@
     </div>
     <div class="app-table-wrap">
       <table class="gt-table">
-        <thead><tr><th>{% translate "Pembeli" %}</th><th>{% translate "Kontak" %}</th><th>{% translate "Termin" %}</th><th class="num">{% translate "Piutang" %}</th><th class="num">{% translate "Kredit" %}</th></tr></thead>
+        <thead><tr><th{% if sort == 'name' %} aria-sort="ascending"{% endif %}><a class="app-sort{% if sort == 'name' %} is-on{% endif %}" href="?tab={{ tab }}&q={{ q|urlencode }}&sort=name">{% translate "Pembeli" %}</a></th><th>{% translate "Kontak" %}</th><th>{% translate "Termin" %}</th>
+          <th class="num"{% if sort == 'ltgp' %} aria-sort="descending"{% endif %}><span class="app-labelrow app-labelrow--end"><a class="app-sort{% if sort == 'ltgp' %} is-on{% endif %}" href="?tab={{ tab }}&q={{ q|urlencode }}&sort=ltgp">{% translate "LTGP" %}{% if sort == 'ltgp' %} ↓{% endif %}</a>{% info_tip _("Lifetime gross profit: laba kotor dari semua invoice terbit pembeli ini. Rumus: Pendapatan − HPP, sepanjang waktu.") %}</span></th>
+          <th{% if sort == 'last' %} aria-sort="descending"{% endif %}><a class="app-sort{% if sort == 'last' %} is-on{% endif %}" href="?tab={{ tab }}&q={{ q|urlencode }}&sort=last">{% translate "Order terakhir" %}{% if sort == 'last' %} ↓{% endif %}</a></th>
+          <th class="num">{% translate "Piutang" %}</th><th class="num">{% translate "Kredit" %}</th></tr></thead>
         <tbody>
         {% for b in page.object_list %}
           <tr>
             <td><a href="{% url 'invoicing:buyer_detail' b.pk %}" class="app-link--plain"><b>{{ b.name }}</b></a>{% if b.company %}<span class="app-sub">{{ b.company }}</span>{% endif %}</td>
             <td class="app-muted">{{ b.phone|default:"—" }}{% if b.email %}<span class="app-sub">{{ b.email }}</span>{% endif %}</td>
             <td>{% if b.payment_terms_days %}{{ b.payment_terms_days }} {% translate "hari" %}{% else %}{% translate "Saat diterima" %}{% endif %}</td>
+            <td class="num"><b>{{ b.ltgp|rupiah }}</b><span class="app-sub">{% blocktranslate with n=b.orders %}{{ n }} order{% endblocktranslate %}</span></td>
+            <td>{% if b.last_order %}{{ b.last_order|date:"d M Y" }}{% if b.cadence.at_risk %} {% pill _("Berisiko") tone="red" %}{% endif %}{% else %}<span class="app-muted">—</span>{% endif %}</td>
             <td class="num">{{ b.outstanding|rupiah }}</td>
             <td class="num {% if b.credit %}app-value--positive{% endif %}">{{ b.credit|rupiah }}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div>
+          <tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div>
             <span class="gt-callout__title">{% if q %}{% translate "Tidak ada pembeli yang cocok." %}{% else %}{% translate "Belum ada pembeli." %}{% endif %}</span>
             <span class="gt-callout__body">{% translate "Tambahkan restoran, pasar, atau pengepul yang membeli dalam jumlah besar agar bisa dibuatkan invoice." %}</span></div></div></td></tr>
         {% endfor %}

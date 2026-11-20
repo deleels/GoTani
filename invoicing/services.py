@@ -545,3 +545,52 @@ def open_invoices(buyer):
             inv.outstanding = inv.total_idr - paid
             out.append(inv)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Customer value (Phase 7, D115)
+# ---------------------------------------------------------------------------
+
+
+def with_customer_value(buyers):
+    """Annotate a Buyer queryset with lifetime numbers over ISSUED invoices (draft and void never count):
+    `ltgp` (lifetime gross profit = net revenue − COGS), `orders`, `first_order`, `last_order`."""
+    from django.db.models import Count, DecimalField, Max, Min, OuterRef, Subquery, Value
+    from django.db.models.functions import Coalesce
+
+    from .models import InvoiceLine
+
+    money = DecimalField(max_digits=16, decimal_places=2)
+    issued = Invoice.objects.filter(buyer=OuterRef("pk"), status=Invoice.Status.ISSUED)
+    revenue = (InvoiceLine.objects.filter(invoice__buyer=OuterRef("pk"), invoice__status=Invoice.Status.ISSUED)
+               .order_by().values("invoice__buyer").annotate(s=Sum("net_revenue_idr")).values("s"))
+    cogs = issued.order_by().values("buyer").annotate(s=Sum("total_cogs_idr")).values("s")
+    return buyers.annotate(
+        ltgp=Coalesce(Subquery(revenue, output_field=money), Value(ZERO), output_field=money)
+        - Coalesce(Subquery(cogs, output_field=money), Value(ZERO), output_field=money),
+        orders=Coalesce(Subquery(issued.order_by().values("buyer").annotate(c=Count("id")).values("c")), Value(0)),
+        first_order=Subquery(issued.order_by().values("buyer").annotate(d=Min("issue_date")).values("d")),
+        last_order=Subquery(issued.order_by().values("buyer").annotate(d=Max("issue_date")).values("d")),
+    )
+
+
+@dataclass
+class Cadence:
+    avg_gap_days: float | None  # average days between orders (needs two orders)
+    days_since_last: int | None
+    at_risk: bool  # no order for more than twice the usual gap
+
+
+AT_RISK_FACTOR = 2
+
+
+def customer_cadence(buyer, today=None) -> Cadence:
+    """Buying rhythm from an annotated buyer (`with_customer_value`)."""
+    today = today or timezone.localdate()
+    last = getattr(buyer, "last_order", None)
+    since = (today - last).days if last else None
+    gap = None
+    if getattr(buyer, "orders", 0) >= 2 and buyer.first_order and last:
+        gap = (last - buyer.first_order).days / (buyer.orders - 1)
+    at_risk = bool(gap and since is not None and since > AT_RISK_FACTOR * gap)
+    return Cadence(avg_gap_days=gap, days_since_last=since, at_risk=at_risk)

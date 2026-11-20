@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _l
 from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Prefetch, Q, Sum
+from django.db.models import F, Prefetch, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -56,16 +56,20 @@ class BuyersView(FinanceView):
     def context(self, request, form=None):
         tab = request.GET.get("tab", "active")
         q = request.GET.get("q", "").strip()
-        qs = Buyer.objects.filter(is_active=(tab != "inactive"))
+        sort = request.GET.get("sort", "name")
+        qs = services.with_customer_value(Buyer.objects.filter(is_active=(tab != "inactive")))
         if q:
             qs = qs.filter(Q(name__icontains=q) | Q(company__icontains=q) | Q(phone__icontains=q))
+        # D115: most valuable customers first on request; nulls (no orders yet) last.
+        qs = {"ltgp": qs.order_by("-ltgp", "name"), "last": qs.order_by(F("last_order").desc(nulls_last=True), "name")}.get(sort, qs)
         page = paginate(request, qs)
         for b in page.object_list:
             b.credit = services.buyer_credit(b)
             b.outstanding = sum((i.outstanding for i in services.open_invoices(b)), ZERO)
+            b.cadence = services.customer_cadence(b)
         summary = services.receivables_summary()
         return {
-            "page": page, "tab": tab, "q": q, "form": form or BuyerForm(),
+            "page": page, "tab": tab, "q": q, "sort": sort, "form": form or BuyerForm(),
             "sheet_open": bool(form is not None and form.errors) or self.request.GET.get("new") == "1",
             "stats": {"buyers": Buyer.objects.filter(is_active=True).count(), **summary},
             "ageing": services.receivables_ageing(),
@@ -88,11 +92,13 @@ class BuyerDetailView(FinanceView):
 
     def context(self, request, buyer, form=None):
         today = timezone.localdate()
+        buyer = services.with_customer_value(Buyer.objects.filter(pk=buyer.pk)).get()
         invoices = _annotate_status(list(buyer.invoices.order_by("-created_at", "-id")), today)
         payments = list(buyer.payments.prefetch_related("allocations__invoice").select_related("recorded_by"))
         open_inv = services.open_invoices(buyer)
         return {
             "buyer": buyer, "invoices": invoices, "payments": payments, "open_invoices": open_inv,
+            "cadence": services.customer_cadence(buyer, today),
             "credit": services.buyer_credit(buyer),
             "outstanding": sum((i.outstanding for i in open_inv), ZERO),
             "overdue": sum((i.outstanding for i in open_inv if i.due_date and i.due_date < today), ZERO),

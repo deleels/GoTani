@@ -18,6 +18,19 @@
     </div>
   </div>
 
+  {# Customer value (Phase 7, D115): what this customer is worth and whether they are still buying. #}
+  <div class="gt-grid app-kpis app-buyer__value" aria-label="{% translate 'Nilai pelanggan' %}">
+    {% include "components/kpi.html" with stat=True featured=True label=_("LTGP") value=buyer.ltgp|rupiah tip=_("Lifetime gross profit: laba kotor dari semua invoice terbit pembeli ini. Rumus: Pendapatan − HPP, sepanjang waktu.") %}
+    {% include "components/kpi.html" with stat=True label=_("Order") value=buyer.orders tip=_("Jumlah invoice yang sudah terbit (draf dan batal tidak dihitung).") %}
+    {% if cadence.avg_gap_days is not None %}{% blocktranslate asvar gap_v with d=cadence.avg_gap_days|floatformat:0 %}{{ d }} hari{% endblocktranslate %}{% else %}{% translate "—" as gap_v %}{% endif %}
+    {% include "components/kpi.html" with stat=True label=_("Jeda antar order") value=gap_v tip=_("Rata-rata hari di antara dua invoice. Rumus: (order terakhir − order pertama) ÷ (jumlah order − 1). Perlu minimal dua order.") %}
+    <div class="gt-stat app-stat">
+      <span class="gt-stat__title">{% translate "Order terakhir" %}{% info_tip _("Berisiko: belum order lebih dari 2× jeda biasanya. Saatnya menghubungi pembeli ini.") %}</span>
+      <span class="gt-stat__value">{% if buyer.last_order %}{{ buyer.last_order|date:"d M Y" }}{% else %}—{% endif %}</span>
+      {% if cadence.days_since_last is not None %}<span class="gt-stat__trend">{% blocktranslate with n=cadence.days_since_last %}{{ n }} hari lalu{% endblocktranslate %}{% if cadence.at_risk %} {% pill _("Berisiko") tone="red" %}{% endif %}</span>{% endif %}
+    </div>
+  </div>
+
   <div class="app-split app-section">
     <section class="gt-card" aria-labelledby="h-money">
       <div class="gt-card__head"><h2 class="gt-card__title" id="h-money">{% translate "Posisi tagihan" %}</h2></div>

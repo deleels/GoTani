@@ -197,3 +197,10 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   only for their method. "No discount" hides and clears the discount value. Every money field shows "Rp" inside
   the field and groups thousands as it is typed; areas group too. In development WhiteNoise serves static files
   with `max-age=0` so edits are never hidden by the browser cache.
+
+- **D115 Hormozi-style metrics (Phase 7 step 5).** Analytics opens on five numbers read like a P&L: Revenue,
+  Gross profit, Gross margin %, AOV (revenue ÷ POS orders + invoices) and Net profit (featured); VAT collected moves
+  into the profit breakdown. Each customer shows LTGP (gross profit of every issued invoice, all time), orders,
+  average days between orders, last order and an "At risk" flag when they have not ordered for more than 2× their
+  usual gap (needs two orders). The customers list shows LTGP and last order and sorts by either. Every metric has
+  an info chip with its meaning and formula. CAC and LTGP:CAC are left out: there is no marketing-spend data.

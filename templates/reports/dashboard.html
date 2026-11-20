@@ -27,28 +27,14 @@
 </div>
 {% if form.errors %}<div class="gt-callout gt-callout--danger mb-3" role="alert">{% icon "alert" 18 %}<span class="gt-callout__title">{{ form.non_field_errors|join:" " }} {% translate "Menampilkan 30 hari terakhir." %}</span></div>{% endif %}
 
+{# Headline metrics (Phase 7, D115): the P&L read left to right; every tile says what it means and how it is worked out. #}
 <div class="gt-grid app-dash__stats" style="--gt-row:0">
-  <div class="gt-stat gt-stat--featured app-stat">
-    <span class="gt-stat__title">{% translate "Laba bersih" %} {% info_tip _("Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead.") %}</span>
-    <span class="gt-stat__value app-stat__money">{{ k.net_profit|rupiah }}</span>
-    <span class="gt-stat__trend">{% if k.net_profit < 0 %}{% translate "Rugi pada periode ini" %}{% else %}{% translate "Untung pada periode ini" %}{% endif %}</span>
-  </div>
-  <div class="gt-stat app-stat">
-    <span class="gt-stat__title">{% translate "Laba kotor" %}</span>
-    <span class="gt-stat__value app-stat__money">{{ k.gross_margin|rupiah }}</span>
-    <span class="gt-stat__trend">{% translate "Margin" %} {{ k.gross_margin_pct|pct }}</span>
-  </div>
-  <div class="gt-stat app-stat">
-    <span class="gt-stat__title">{% translate "Pendapatan" %}</span>
-    <span class="gt-stat__value app-stat__money">{{ k.revenue|rupiah }}</span>
-    <span class="gt-stat__trend app-stat__neutral">{{ k.orders }} {% translate "order ·" %} {{ k.invoices }} {% translate "invoice" %}</span>
-  </div>
-  {% if farm_is_pkp or k.ppn_collected %}
-  <div class="gt-stat app-stat">
-    <span class="gt-stat__title">{% translate "PPN terkumpul" %} {% info_tip _("Kewajiban pajak, bukan pendapatan.") %}</span>
-    <span class="gt-stat__value app-stat__money">{{ k.ppn_collected|rupiah }}</span>
-  </div>
-  {% endif %}
+  {% include "components/kpi.html" with stat=True label=_("Pendapatan") value=k.revenue|rupiah tip=_("Uang dari penjualan kasir dan invoice, setelah diskon dan tanpa PPN. Rumus: total penjualan − diskon.") hint=k.transactions|stringformat:"d"|add:" "|add:_("transaksi") %}
+  {% include "components/kpi.html" with stat=True label=_("Laba kotor") value=k.gross_margin|rupiah tip=_("Yang tersisa setelah membayar biaya barang yang terjual. Rumus: Pendapatan − HPP.") %}
+  {% include "components/kpi.html" with stat=True label=_("Margin kotor") value=k.gross_margin_pct|pct tip=_("Laba kotor dari setiap Rp100 penjualan; makin tinggi, makin sehat harga jual. Rumus: Laba kotor ÷ Pendapatan × 100.") %}
+  {% include "components/kpi.html" with stat=True label=_("AOV") value=k.aov|rupiah tip=_("Average order value: rata-rata nilai satu transaksi. Rumus: Pendapatan ÷ jumlah transaksi (order kasir + invoice).") %}
+  {% if k.net_profit < 0 %}{% translate "Rugi pada periode ini" as np_hint %}{% else %}{% translate "Untung pada periode ini" as np_hint %}{% endif %}
+  {% include "components/kpi.html" with stat=True featured=True label=_("Laba bersih") value=k.net_profit|rupiah hint=np_hint tip=_("Laba setelah semua biaya. Rumus: Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead.") %}
 </div>
 
 <div class="app-dash__row">
@@ -56,6 +42,7 @@
     <div class="gt-card__head"><h2 class="gt-card__title" id="h-pl">{% translate "Rincian laba" %}</h2></div>
     <div class="gt-metrics app-dash__metrics">
       <div class="gt-metric"><span class="gt-metric__label">{% translate "HPP" %}</span><span class="gt-metric__value">{{ k.cogs|rupiah }}</span></div>
+      {% if farm_is_pkp or k.ppn_collected %}<div class="gt-metric"><span class="gt-metric__label">{% translate "PPN terkumpul" %} {% info_tip _("Kewajiban pajak, bukan pendapatan.") %}</span><span class="gt-metric__value">{{ k.ppn_collected|rupiah }}</span></div>{% endif %}
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Kerugian susut/rusak" %}</span><span class="gt-metric__value app-value--danger">{{ k.spoilage_loss|rupiah }}</span></div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Biaya siklus tak terserap" %} {% info_tip _("Biaya siklus yang ditutup dalam periode ini tanpa panen yang menyerapnya.") %}</span><span class="gt-metric__value">{{ k.unabsorbed_cost|rupiah }}</span></div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Overhead umum" %} {% info_tip _("Biaya umum ditambah biaya elemen yang tidak sedang punya siklus.") %}</span><span class="gt-metric__value">{{ k.overhead|rupiah }}</span><span class="gt-metric__note">{% translate "Umum" %} {{ k.overhead_general|rupiah }}</span></div>

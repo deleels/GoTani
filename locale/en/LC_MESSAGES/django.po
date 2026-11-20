@@ -2099,6 +2099,10 @@ msgid "harga per kg"
 msgstr "price per kg"
 
 #: invoicing\models.py
+msgid "invoice"
+msgstr "invoices"
+
+#: invoicing\models.py
 msgid "jatuh tempo"
 msgstr "due date"
 
@@ -4655,6 +4659,14 @@ msgid "· beratap"
 msgstr "· covered"
 
 #: templates\invoicing\buyer_detail.html
+msgid "%(d)s hari"
+msgstr "%(d)s days"
+
+#: templates\invoicing\buyer_detail.html
+msgid "%(n)s hari lalu"
+msgstr "%(n)s days ago"
+
+#: templates\invoicing\buyer_detail.html
 msgid "Alamat"
 msgstr "Address"
 
@@ -4673,6 +4685,14 @@ msgstr "No invoices for this customer yet."
 #: templates\invoicing\buyer_detail.html
 msgid "Belum ada pembayaran."
 msgstr "No payments yet."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Berisiko"
+msgstr "At risk"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Berisiko: belum order lebih dari 2× jeda biasanya. Saatnya menghubungi pembeli ini."
+msgstr "At risk: no order for more than 2× their usual gap. Time to get in touch."
 
 #: templates\invoicing\buyer_detail.html
 msgid "Bukti potong"
@@ -4703,6 +4723,14 @@ msgid "Jatuh tempo"
 msgstr "Due"
 
 #: templates\invoicing\buyer_detail.html
+msgid "Jeda antar order"
+msgstr "Days between orders"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Jumlah invoice yang sudah terbit (draf dan batal tidak dihitung)."
+msgstr "Number of issued invoices (drafts and voided ones don't count)."
+
+#: templates\invoicing\buyer_detail.html
 msgid "Kontak"
 msgstr "Contact"
 
@@ -4711,12 +4739,32 @@ msgid "Kredit tersedia"
 msgstr "Available credit"
 
 #: templates\invoicing\buyer_detail.html
+msgid "LTGP"
+msgstr "LTGP"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Lifetime gross profit: laba kotor dari semua invoice terbit pembeli ini. Rumus: Pendapatan − HPP, sepanjang waktu."
+msgstr "Lifetime gross profit: the gross profit from every issued invoice of this customer. Formula: Revenue − COGS, all time."
+
+#: templates\invoicing\buyer_detail.html
 msgid "Metode"
 msgstr "Method"
 
 #: templates\invoicing\buyer_detail.html
+msgid "Nilai pelanggan"
+msgstr "Customer value"
+
+#: templates\invoicing\buyer_detail.html
 msgid "Nomor"
 msgstr "Number"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Order"
+msgstr "Orders"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Order terakhir"
+msgstr "Last order"
 
 #: templates\invoicing\buyer_detail.html
 msgid "Pakai kredit"
@@ -4745,6 +4793,10 @@ msgstr "Receivables"
 #: templates\invoicing\buyer_detail.html
 msgid "Posisi tagihan"
 msgstr "Account balance"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Rata-rata hari di antara dua invoice. Rumus: (order terakhir − order pertama) ÷ (jumlah order − 1). Perlu minimal dua order."
+msgstr "Average days between two invoices. Formula: (last order − first order) ÷ (orders − 1). Needs at least two orders."
 
 #: templates\invoicing\buyer_detail.html
 msgid "Referensi"
@@ -4805,6 +4857,14 @@ msgstr "· balance"
 #: templates\invoicing\buyer_detail.html
 msgid "· termin"
 msgstr "· terms"
+
+#: templates\invoicing\buyer_detail.html
+msgid "—"
+msgstr "—"
+
+#: templates\invoicing\buyers.html
+msgid "%(n)s order"
+msgstr "%(n)s orders"
 
 #: templates\invoicing\buyers.html
 msgid "Belum ada pembeli."
@@ -5575,10 +5635,6 @@ msgid "Mutasi kas shift ini"
 msgstr "This shift's cash movements"
 
 #: templates\pos\shift.html
-msgid "Order"
-msgstr "Orders"
-
-#: templates\pos\shift.html
 msgid "Pecahan"
 msgstr "Denomination"
 
@@ -5711,8 +5767,16 @@ msgid "Tampilkan kata sandi"
 msgstr "Show password"
 
 #: templates\reports\dashboard.html
+msgid "AOV"
+msgstr "AOV"
+
+#: templates\reports\dashboard.html
 msgid "Aset persediaan, bukan beban: baru menjadi biaya saat dipakai."
 msgstr "Inventory asset, not an expense: it becomes a cost only when used."
+
+#: templates\reports\dashboard.html
+msgid "Average order value: rata-rata nilai satu transaksi. Rumus: Pendapatan ÷ jumlah transaksi (order kasir + invoice)."
+msgstr "Average order value: what one sale is worth on average. Formula: Revenue ÷ transactions (POS orders + invoices)."
 
 #: templates\reports\dashboard.html
 msgid "Bagian pendapatan periode ini dari kasir (POS) dan dari invoice."
@@ -5807,8 +5871,12 @@ msgid "Laba kotor "
 msgstr "Gross profit "
 
 #: templates\reports\dashboard.html
-msgid "Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead."
-msgstr "Gross profit + other income − spoilage − unabsorbed cycle cost − overhead."
+msgid "Laba kotor dari setiap Rp100 penjualan; makin tinggi, makin sehat harga jual. Rumus: Laba kotor ÷ Pendapatan × 100."
+msgstr "Gross profit from every Rp100 of sales; the higher, the healthier your prices. Formula: Gross profit ÷ Revenue × 100."
+
+#: templates\reports\dashboard.html
+msgid "Laba setelah semua biaya. Rumus: Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead."
+msgstr "Profit after every cost. Formula: Gross profit + other income − spoilage − unabsorbed cycle cost − overhead."
 
 #: templates\reports\dashboard.html
 msgid "Lima produk dengan pendapatan tertinggi"
@@ -5825,6 +5893,10 @@ msgstr "Area"
 #: templates\reports\dashboard.html
 msgid "Margin"
 msgstr "Margin"
+
+#: templates\reports\dashboard.html
+msgid "Margin kotor"
+msgstr "Gross margin"
 
 #: templates\reports\dashboard.html
 msgid "Margin per varietas × grade"
@@ -5931,6 +6003,10 @@ msgid "Total sisa tagihan invoice per hari ini, tidak terikat rentang tanggal."
 msgstr "Total unpaid invoice balance as of today, regardless of the date range."
 
 #: templates\reports\dashboard.html
+msgid "Uang dari penjualan kasir dan invoice, setelah diskon dan tanpa PPN. Rumus: total penjualan − diskon."
+msgstr "Money from POS sales and invoices, after discounts and without VAT. Formula: total sales − discounts."
+
+#: templates\reports\dashboard.html
 msgid "Uang masuk per metode"
 msgstr "Cash in by method"
 
@@ -5939,12 +6015,12 @@ msgid "Untung pada periode ini"
 msgstr "Profit this period"
 
 #: templates\reports\dashboard.html
-msgid "invoice"
-msgstr "invoices"
+msgid "Yang tersisa setelah membayar biaya barang yang terjual. Rumus: Pendapatan − HPP."
+msgstr "What is left after paying for the goods sold. Formula: Revenue − COGS."
 
 #: templates\reports\dashboard.html
-msgid "order ·"
-msgstr "orders ·"
+msgid "transaksi"
+msgstr "transactions"
 
 #: templates\reports\omzet_pph.html
 msgid "Bebas pajak"

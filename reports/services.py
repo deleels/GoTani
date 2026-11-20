@@ -360,6 +360,7 @@ def dashboard_metrics(start, end) -> dict:
         "net_profit": net,
         "orders": orders.count(),
         "invoices": invoices.count(),
+        "transactions": orders.count() + invoices.count(),
         "input_purchases": _money(purchases),
         "ppn_collected": ppn,
         "revenue_pos": pos_revenue,
@@ -424,6 +425,9 @@ def dashboard_metrics(start, end) -> dict:
         .annotate(s=Sum("amount_idr"))
         .order_by("-s")
     ]
+
+    # Phase 7 (D115): average order value over both channels — what one sale is worth.
+    kpis["aov"] = _money(revenue / kpis["transactions"]) if kpis["transactions"] else None
 
     return {
         "start": start,
