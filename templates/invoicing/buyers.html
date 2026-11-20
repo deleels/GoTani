@@ -59,7 +59,7 @@
           <td class="num {% if r.d61_90 %}app-value--danger{% endif %}">{{ r.d61_90|rupiah }}</td><td class="num {% if r.d90p %}app-value--danger{% endif %}">{% if r.d90p %}<b>{{ r.d90p|rupiah }}</b>{% else %}{{ r.d90p|rupiah }}{% endif %}</td>
           <td class="num"><b>{{ r.total|rupiah }}</b></td></tr>
       {% endfor %}
-        <tr class="gt-table__hl"><td><b>Total</b></td><td class="num">{{ ageing.totals.current|rupiah }}</td><td class="num">{{ ageing.totals.d1_30|rupiah }}</td><td class="num">{{ ageing.totals.d31_60|rupiah }}</td><td class="num">{{ ageing.totals.d61_90|rupiah }}</td><td class="num">{{ ageing.totals.d90p|rupiah }}</td><td class="num"><b>{{ ageing.totals.total|rupiah }}</b></td></tr>
+        <tr class="app-row--total"><td><b>Total</b></td><td class="num">{{ ageing.totals.current|rupiah }}</td><td class="num">{{ ageing.totals.d1_30|rupiah }}</td><td class="num">{{ ageing.totals.d31_60|rupiah }}</td><td class="num">{{ ageing.totals.d61_90|rupiah }}</td><td class="num">{{ ageing.totals.d90p|rupiah }}</td><td class="num"><b>{{ ageing.totals.total|rupiah }}</b></td></tr>
       </tbody>
     </table>
     </div>

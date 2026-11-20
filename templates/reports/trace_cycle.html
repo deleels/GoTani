@@ -1,99 +1,121 @@
 {% extends "base.html" %}
-{% load gotani %}
+{% load ui gotani %}
 {% block title %}Telusur siklus {{ trace.cycle.variety }}{% endblock %}
-{% block head %}<style>@page { size: A4; margin: 12mm; } @media print { section { break-inside: avoid-page; } table { font-size: 10px; } }</style>{% endblock %}
+{% block head %}<style>@page { size: A4; margin: 12mm; } @media print { section, .app-batch { break-inside: avoid-page; } table { font-size: 10px; } }</style>{% endblock %}
 {% block content %}
+{# Telusur siklus (Phase 5b): head + metrics, then the forward chain as numbered cards: kegiatan → panen (lot, susut, penjualan) → biaya belum terserap. #}
 {% with c=trace.cycle t=trace.totals %}
-<div class="no-print mb-4 flex flex-wrap gap-2 text-sm">
-  <a href="{% url 'reports:trace_index' %}" class="gt-btn gt-btn--outline gt-btn--sm">← Ketertelusuran</a>
-  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm" title="Cetak atau simpan sebagai PDF">Cetak</button>
-  <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--sm">Unduh CSV</a>
+<div class="gt-pagehead">
+  <div class="app-pagehead__text">
+    <a href="{% url 'reports:trace_index' %}" class="app-back no-print">{% icon "chevron-left" 16 %} Telusuri</a>
+    <h1>{{ c.variety }} <span class="app-muted">@ {{ c.element }}</span></h1>
+    <p class="app-chips"><span class="gt-chip gt-chip--sm">{{ c.element.get_element_type_display }}</span><span class="gt-chip gt-chip--sm">{{ c.element.area_m2|kg }} m²</span><span class="gt-chip gt-chip--sm">mulai {{ c.planting_start_date|date:"d M Y" }}</span><span class="gt-chip gt-chip--sm">{{ c.get_stage_display }}</span>{% if c.closed_at %}{% with d=c.closed_at|date:"d M Y" %}{% pill "Ditutup "|add:d tone="gray" %}{% endwith %}{% endif %}</p>
+  </div>
+  <div class="gt-pagehead__actions no-print">
+    <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--md">Unduh CSV</a>
+    <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="Cetak atau simpan sebagai PDF">Cetak</button>
+  </div>
 </div>
 
-<h1 class="text-xl font-semibold">{{ c.variety }} @ {{ c.element }}</h1>
-<p class="mb-4 text-sm text-stone-500">{{ c.element.get_element_type_display }} · {{ c.element.area_m2|kg }} m² · mulai {{ c.planting_start_date|date:"d-m-Y" }} · tahap {{ c.get_stage_display }}{% if c.closed_at %} · ditutup {{ c.closed_at|date:"d-m-Y" }}{% endif %}</p>
+<section class="gt-card app-section" aria-label="Ringkasan siklus">
+  <div class="gt-metrics app-metrics7">
+    <div class="gt-metric"><span class="gt-metric__label">Dipanen</span><span class="gt-metric__value">{{ t.harvested_kg|kg }} kg</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Terjual</span><span class="gt-metric__value">{{ t.sold_kg|kg }} kg</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Susut</span><span class="gt-metric__value{% if t.spoiled_kg %} app-value--late{% endif %}">{{ t.spoiled_kg|kg }} kg</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Sisa stok</span><span class="gt-metric__value">{{ t.remaining_kg|kg }} kg</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Pendapatan</span><span class="gt-metric__value">{{ t.revenue|rupiah }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Laba kotor</span><span class="gt-metric__value{% if t.gross_margin < 0 %} app-value--danger{% endif %}">{{ t.gross_margin|rupiah }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Tak terserap {% info_tip "Biaya siklus yang belum masuk HPP panen mana pun." %}</span><span class="gt-metric__value">{{ t.unabsorbed_cost|rupiah }}</span></div>
+  </div>
+</section>
 
-<div class="mb-6 grid grid-cols-2 gap-3 text-sm md:grid-cols-4 lg:grid-cols-7">
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Dipanen</div><div class="font-semibold">{{ t.harvested_kg|kg }} kg</div></div>
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Terjual</div><div class="font-semibold">{{ t.sold_kg|kg }} kg</div></div>
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Susut/rusak</div><div class="font-semibold">{{ t.spoiled_kg|kg }} kg</div></div>
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Sisa stok</div><div class="font-semibold">{{ t.remaining_kg|kg }} kg</div></div>
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Pendapatan</div><div class="font-semibold">{{ t.revenue|rupiah }}</div></div>
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Laba kotor</div><div class="font-semibold">{{ t.gross_margin|rupiah }}</div></div>
-  <div class="rounded border bg-white p-3"><div class="text-stone-500">Biaya tak terserap</div><div class="font-semibold">{{ t.unabsorbed_cost|rupiah }}</div></div>
-</div>
-
-<section class="mb-6">
-  <h2 class="mb-2 font-semibold">1. Kegiatan</h2>
-  <div class="overflow-x-auto rounded-lg border bg-white">
-    <table class="w-full text-sm">
-      <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Waktu</th><th class="p-2">Kegiatan</th><th class="p-2">Tahap</th><th class="p-2">Input</th><th class="p-2 text-right">Biaya input</th></tr></thead>
+<section class="gt-card app-tablecard app-section" aria-labelledby="h-act">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-act"><span class="app-trace__n">1</span> Kegiatan</h2></div>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>Waktu</th><th>Kegiatan</th><th>Tahap</th><th>Input</th><th class="num">Biaya input</th></tr></thead>
       <tbody>
       {% for a in trace.activities %}
-        <tr class="border-t"><td class="p-2">{{ a.logged_at|date:"d-m-Y H:i" }}</td><td class="p-2">{{ a.get_activity_type_display }}</td><td class="p-2">{{ a.get_stage_at_activity_display }}</td><td class="p-2">{% if a.input_item %}{{ a.input_item.name }} {{ a.quantity|kg }} {{ a.unit }}{% else %}-{% endif %}</td>
-        <td class="p-2 text-right">{% for e in a.usage_expenses.all %}{{ e.amount_idr|rupiah }}{% empty %}-{% endfor %}</td></tr>
-      {% empty %}<tr><td colspan="5" class="p-3 text-stone-400">Tidak ada kegiatan.</td></tr>{% endfor %}
+        <tr><td class="app-muted">{{ a.logged_at|date:"d M Y" }}<span class="app-sub">{{ a.logged_at|date:"H:i" }}</span></td><td>{{ a.get_activity_type_display }}</td><td><span class="gt-chip gt-chip--sm">{{ a.get_stage_at_activity_display }}</span></td><td>{% if a.input_item %}{{ a.input_item.name }} <span class="app-muted">{{ a.quantity|kg }} {{ a.unit }}</span>{% else %}—{% endif %}</td>
+        <td class="num">{% for e in a.usage_expenses.all %}{{ e.amount_idr|rupiah }}{% empty %}—{% endfor %}</td></tr>
+      {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">Tidak ada kegiatan.</td></tr>{% endfor %}
       </tbody>
     </table>
   </div>
 </section>
 
-<section class="mb-6">
-  <h2 class="mb-2 font-semibold">2. Panen, biaya terserap, lot, susut &amp; penjualan</h2>
+<section class="gt-card app-section" aria-labelledby="h-batch">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-batch"><span class="app-trace__n">2</span> Panen, lot, susut &amp; penjualan</h2></div>
   {% for bt in trace.batches %}{% with b=bt.batch %}
-  <div class="mb-4 rounded-lg border bg-white p-4">
-    <div class="flex flex-wrap items-baseline gap-x-4">
-      <h3 class="font-medium">Batch #{{ b.pk }} — {{ b.harvested_at|date:"d-m-Y H:i" }}</h3>
-      <span class="text-sm text-stone-500">HIGH {{ b.high_quality_kg|kg }} kg · LOW {{ b.low_quality_kg|kg }} kg · susut panen {{ b.harvest_loss_kg|kg }} kg</span>
-      <span class="text-sm">Biaya terserap <b>{{ b.absorbed_cost_idr|rupiah }}</b> → HPP/kg HIGH {{ b.unit_cogs_high_idr|rupiah }}, LOW {{ b.unit_cogs_low_idr|rupiah }}</span>
+  <div class="app-batch">
+    <div class="app-batch__head">
+      <span class="app-strong">Batch #{{ b.pk }} <span class="app-muted">· {{ b.harvested_at|date:"d M Y H:i" }}</span></span>
+      <span class="app-chips"><span class="gt-chip gt-chip--sm">HIGH {{ b.high_quality_kg|kg }} kg</span><span class="gt-chip gt-chip--sm">LOW {{ b.low_quality_kg|kg }} kg</span><span class="gt-chip gt-chip--sm">susut panen {{ b.harvest_loss_kg|kg }} kg</span></span>
     </div>
-    <details class="mt-2 text-sm" open>
-      <summary class="cursor-pointer text-stone-500">Biaya yang diserap ({{ bt.expenses|length }})</summary>
-      <table class="mt-1 w-full">
-        {% for e in bt.expenses %}<tr class="border-t"><td class="p-1">{{ e.date_incurred|date:"d-m-Y" }}</td><td class="p-1">{{ e.category }}</td><td class="p-1 text-stone-500">{{ e.narration|default:e.vendor }}</td><td class="p-1 text-right">{{ e.amount_idr|rupiah }}</td></tr>
-        {% empty %}<tr><td class="p-1 text-stone-400">Tidak ada.</td></tr>{% endfor %}
-      </table>
+    <dl class="gt-kv gt-kv--compact">
+      <div><dt>Biaya terserap</dt><dd>{{ b.absorbed_cost_idr|rupiah }}</dd></div>
+      <div><dt>HPP/kg HIGH · LOW</dt><dd>{{ b.unit_cogs_high_idr|rupiah }} · {{ b.unit_cogs_low_idr|rupiah }}</dd></div>
+    </dl>
+    <details class="app-batch__exp" open>
+      <summary>Biaya yang diserap <span class="app-tab__count">{{ bt.expenses|length }}</span></summary>
+      <div class="app-table-wrap"><table class="gt-table">
+        <tbody>
+        {% for e in bt.expenses %}<tr><td class="app-muted">{{ e.date_incurred|date:"d M Y" }}</td><td>{{ e.category }}</td><td class="app-muted">{{ e.narration|default:e.vendor }}</td><td class="num">{{ e.amount_idr|rupiah }}</td></tr>
+        {% empty %}<tr><td class="app-muted">Tidak ada.</td></tr>{% endfor %}
+        </tbody>
+      </table></div>
     </details>
     {% for lt in bt.lots %}{% with lot=lt.lot %}
-    <div class="mt-3 rounded border border-stone-200 p-3">
-      <div class="flex flex-wrap gap-x-4 text-sm">
-        <span class="font-medium">Lot #{{ lot.pk }} · {{ lot.product }}</span>
-        <span>awal {{ lot.qty_initial_kg|kg }} kg · terjual {{ lt.sold_kg|kg }} kg · susut {{ lt.spoiled_kg|kg }} kg · sisa {{ lot.qty_remaining_kg|kg }} kg</span>
-        <span class="text-stone-500">HPP/kg {{ lot.unit_cogs_idr|rupiah }}</span>
+    <div class="app-lot">
+      <div class="app-batch__head">
+        <span class="app-strong">Lot #{{ lot.pk }} · {{ lot.product }}</span>
+        <span class="app-muted">HPP/kg {{ lot.unit_cogs_idr|rupiah }}</span>
       </div>
+      <ol class="app-lotflow" aria-label="Aliran lot">
+        <li><span>Awal</span><b>{{ lot.qty_initial_kg|kg }} kg</b></li>
+        <li><span>Terjual</span><b>{{ lt.sold_kg|kg }} kg</b></li>
+        <li><span>Susut</span><b{% if lt.spoiled_kg %} class="app-value--late"{% endif %}>{{ lt.spoiled_kg|kg }} kg</b></li>
+        <li><span>Sisa</span><b>{{ lot.qty_remaining_kg|kg }} kg</b></li>
+      </ol>
       {% if lt.spoilages %}
-      <ul class="mt-1 text-xs text-amber-800">{% for s in lt.spoilages %}<li>Susut {{ s.recorded_at|date:"d-m-Y" }}: {{ s.qty_kg|kg }} kg ({{ s.get_reason_display }}) — kerugian {{ s.loss_idr|rupiah }}</li>{% endfor %}</ul>
+      <ul class="gt-list app-lot__spoil">{% for s in lt.spoilages %}<li>{% pill "Susut" tone="orange" %} {{ s.recorded_at|date:"d M Y" }} · {{ s.qty_kg|kg }} kg ({{ s.get_reason_display }}) · kerugian <b>{{ s.loss_idr|rupiah }}</b></li>{% endfor %}</ul>
       {% endif %}
       {% if lt.allocations %}
-      <table class="mt-2 w-full text-xs">
-        <thead class="text-left text-stone-500"><tr><th>Order</th><th>Tanggal</th><th class="text-right">Kg</th><th class="text-right">Harga/kg</th><th>Status</th></tr></thead>
+      <div class="app-table-wrap"><table class="gt-table">
+        <thead><tr><th>Order</th><th>Tanggal</th><th class="num">Kg</th><th class="num">Harga/kg</th><th>Status</th></tr></thead>
+        <tbody>
         {% for a in lt.allocations %}
-        <tr class="border-t {% if a.line.order.status == 'VOIDED' %}text-stone-400 line-through{% endif %}"><td><a class="font-mono text-emerald-700 underline" href="{% url 'reports:trace_order' a.line.order.order_number %}">{{ a.line.order.order_number }}</a></td><td>{{ a.line.order.created_at|date:"d-m-Y H:i" }}</td><td class="text-right">{{ a.qty_kg|kg }}</td><td class="text-right">{{ a.line.unit_price_idr|rupiah }}</td><td>{{ a.line.order.get_status_display }}</td></tr>
+        <tr{% if a.line.order.status == 'VOIDED' %} class="app-row--void"{% endif %}><td><a class="app-link app-mono" href="{% url 'reports:trace_order' a.line.order.order_number %}">{{ a.line.order.order_number }}</a></td><td class="app-muted">{{ a.line.order.created_at|date:"d M Y H:i" }}</td><td class="num">{{ a.qty_kg|kg }}</td><td class="num">{{ a.line.unit_price_idr|rupiah }}</td><td>{% pill a.line.order.get_status_display a.line.order.status %}</td></tr>
         {% endfor %}
-      </table>
+        </tbody>
+      </table></div>
       {% endif %}
       {% if lt.invoice_allocations %}
-      <table class="mt-2 w-full text-xs">
-        <thead class="text-left text-stone-500"><tr><th>Invoice</th><th>Pembeli</th><th class="text-right">Kg</th><th class="text-right">Harga/kg</th><th>Status</th></tr></thead>
+      <div class="app-table-wrap"><table class="gt-table">
+        <thead><tr><th>Invoice</th><th>Pembeli</th><th class="num">Kg</th><th class="num">Harga/kg</th><th>Status</th></tr></thead>
+        <tbody>
         {% for a in lt.invoice_allocations %}
-        <tr class="border-t {% if a.line.invoice.status == 'VOID' %}text-stone-400 line-through{% endif %}"><td><a class="font-mono text-emerald-700 underline" href="{% url 'invoicing:invoice_detail' a.line.invoice_id %}">{{ a.line.invoice }}</a></td><td>{{ a.line.invoice.buyer }}</td><td class="text-right">{{ a.qty_kg|kg }}</td><td class="text-right">{{ a.line.unit_price_idr|rupiah }}</td><td>{{ a.line.invoice.get_status_display }}</td></tr>
+        <tr{% if a.line.invoice.status == 'VOID' %} class="app-row--void"{% endif %}><td><a class="app-link app-mono" href="{% url 'invoicing:invoice_detail' a.line.invoice_id %}">{{ a.line.invoice }}</a></td><td>{{ a.line.invoice.buyer }}</td><td class="num">{{ a.qty_kg|kg }}</td><td class="num">{{ a.line.unit_price_idr|rupiah }}</td><td>{% pill a.line.invoice.get_status_display a.line.invoice.status %}</td></tr>
         {% endfor %}
-      </table>
+        </tbody>
+      </table></div>
       {% endif %}
     </div>
     {% endwith %}{% endfor %}
   </div>
   {% endwith %}{% empty %}
-  <p class="text-sm text-stone-400">Belum ada panen.</p>
+  <p class="app-muted">Belum ada panen.</p>
   {% endfor %}
 </section>
 
-<section>
-  <h2 class="mb-2 font-semibold">3. Biaya siklus belum terserap {% if not c.is_active %}<span class="text-sm font-normal text-red-700">(dihapusbukukan — siklus ditutup)</span>{% endif %}</h2>
-  <div class="overflow-x-auto rounded-lg border bg-white">
-    <table class="w-full text-sm">
-      {% for e in trace.unabsorbed_expenses %}<tr class="border-t"><td class="p-2">{{ e.date_incurred|date:"d-m-Y" }}</td><td class="p-2">{{ e.category }}</td><td class="p-2 text-stone-500">{{ e.narration|default:e.vendor }}</td><td class="p-2 text-right">{{ e.amount_idr|rupiah }}</td></tr>
-      {% empty %}<tr><td class="p-3 text-stone-400">Tidak ada.</td></tr>{% endfor %}
+<section class="gt-card app-tablecard app-section" aria-labelledby="h-unabs">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-unabs"><span class="app-trace__n">3</span> Biaya belum terserap {% if not c.is_active %}{% pill "Dihapusbukukan" tone="orange" %} {% info_tip "Siklus ditutup: biaya yang belum terserap dihapusbukukan." %}{% endif %}</h2></div>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <tbody>
+      {% for e in trace.unabsorbed_expenses %}<tr><td class="app-muted">{{ e.date_incurred|date:"d M Y" }}</td><td>{{ e.category }}</td><td class="app-muted">{{ e.narration|default:e.vendor }}</td><td class="num">{{ e.amount_idr|rupiah }}</td></tr>
+      {% empty %}<tr><td class="app-empty-cell app-muted">Tidak ada.</td></tr>{% endfor %}
+      </tbody>
     </table>
   </div>
 </section>

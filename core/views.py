@@ -121,6 +121,19 @@ class PasswordChangeView(auth_views.PasswordChangeView):
         messages.success(self.request, "Kata sandi berhasil diganti.")
         return response
 
+    def get_form(self, form_class=None):
+        # Indonesian labels regardless of the installed Django locale files (Phase 5b).
+        form = super().get_form(form_class)
+        labels = {"old_password": "Sandi lama", "new_password1": "Sandi baru", "new_password2": "Ulangi sandi baru"}
+        for name, label in labels.items():
+            if name in form.fields:
+                form.fields[name].label = label
+        if "new_password1" in form.fields:
+            form.fields["new_password1"].help_text = "Minimal 8 karakter, tidak mirip nama pengguna, tidak umum, dan tidak hanya angka."
+        if "new_password2" in form.fields:
+            form.fields["new_password2"].help_text = ""
+        return form
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         profile = getattr(self.request.user, "profile", None) if hasattr(self.request.user, "profile") else None

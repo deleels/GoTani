@@ -1,33 +1,45 @@
 {% extends "base.html" %}
-{% load gotani %}
+{% load ui gotani %}
 {% block title %}Telusur {{ order.order_number }}{% endblock %}
 {% block head %}<style>@page { size: A4 landscape; margin: 10mm; } @media print { table { font-size: 10px; } }</style>{% endblock %}
 {% block content %}
-<div class="no-print mb-4 flex flex-wrap gap-2 text-sm">
-  <a href="{% url 'reports:trace_index' %}" class="gt-btn gt-btn--outline gt-btn--sm">← Ketertelusuran</a>
-  <a href="{% url 'pos:receipt' order.pk %}" class="gt-btn gt-btn--outline gt-btn--sm">Struk</a>
-  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm" title="Cetak atau simpan sebagai PDF">Cetak</button>
-  <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--sm">Unduh CSV</a>
+{# Telusur order (Phase 5b): head with back link + actions, order facts as metrics, one card per line with its lot chain. #}
+<div class="gt-pagehead">
+  <div class="app-pagehead__text">
+    <a href="{% url 'reports:trace_index' %}" class="app-back no-print">{% icon "chevron-left" 16 %} Telusuri</a>
+    <h1 class="app-mono-head">{{ order.order_number }} {% pill order.get_status_display order.status %}</h1>
+  </div>
+  <div class="gt-pagehead__actions no-print">
+    <a href="{% url 'pos:receipt' order.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Struk</a>
+    <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--md">Unduh CSV</a>
+    <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="Cetak atau simpan sebagai PDF">Cetak</button>
+  </div>
 </div>
 
-<h1 class="font-mono text-xl font-semibold">{{ order.order_number }}</h1>
-<p class="mb-4 text-sm text-stone-500">{{ order.created_at|date:"d-m-Y H:i" }} · kasir {{ order.cashier }} · {{ order.get_payment_method_display }} · {{ order.get_status_display }}{% if order.voided_at %} ({{ order.voided_at|date:"d-m-Y H:i" }} oleh {{ order.voided_by }}){% endif %} · total {{ order.total_revenue_idr|rupiah }} · HPP {{ order.total_cogs_idr|rupiah }}</p>
+<section class="gt-card app-section" aria-label="Ringkasan order">
+  <div class="gt-metrics app-metrics4">
+    <div class="gt-metric"><span class="gt-metric__label">Waktu</span><span class="gt-metric__value">{{ order.created_at|date:"d M Y" }}</span><span class="gt-metric__note">{{ order.created_at|date:"H:i" }} · kasir {{ order.cashier }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">Pembayaran</span><span class="gt-metric__value">{{ order.get_payment_method_display }}</span>{% if order.voided_at %}<span class="gt-metric__note">Dibatalkan {{ order.voided_at|date:"d M Y H:i" }} oleh {{ order.voided_by }}</span>{% endif %}</div>
+    <div class="gt-metric"><span class="gt-metric__label">Total</span><span class="gt-metric__value">{{ order.total_revenue_idr|rupiah }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">HPP</span><span class="gt-metric__value">{{ order.total_cogs_idr|rupiah }}</span></div>
+  </div>
+</section>
 
 {% for line in order.lines.all %}
-<section class="mb-4 rounded-lg border bg-white p-4">
-  <h2 class="font-medium">{{ line.product }} — {{ line.qty_kg|kg }} kg × {{ line.unit_price_idr|rupiah }} <span class="text-sm font-normal text-stone-500">(HPP rata-rata {{ line.unit_cogs_idr|rupiah }}/kg)</span></h2>
-  <div class="mt-2 overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="text-left text-stone-500"><tr><th class="p-1">Lot</th><th class="p-1 text-right">Kg</th><th class="p-1 text-right">HPP/kg</th><th class="p-1">Batch panen</th><th class="p-1">Siklus</th><th class="p-1">Elemen</th></tr></thead>
+<section class="gt-card app-tablecard app-section">
+  <div class="gt-card__head"><h2 class="gt-card__title">{{ line.product }} <span class="app-muted">{{ line.qty_kg|kg }} kg × {{ line.unit_price_idr|rupiah }}</span> {% with u=line.unit_cogs_idr|rupiah %}{% info_tip "HPP rata-rata "|add:u|add:" per kg." %}{% endwith %}</h2></div>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>Lot</th><th class="num">Kg</th><th class="num">HPP/kg</th><th>Batch panen</th><th>Siklus</th><th>Elemen</th></tr></thead>
       <tbody>
       {% for a in line.allocations.all %}{% with b=a.lot.harvest_batch %}
-        <tr class="border-t">
-          <td class="p-1">#{{ a.lot_id }}</td>
-          <td class="p-1 text-right">{{ a.qty_kg|kg }}</td>
-          <td class="p-1 text-right">{{ a.unit_cogs_idr|rupiah }}</td>
-          <td class="p-1">#{{ b.pk }} · {{ b.harvested_at|date:"d-m-Y" }}</td>
-          <td class="p-1"><a class="text-emerald-700 underline" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }} (mulai {{ b.cycle.planting_start_date|date:"d-m-Y" }}, {{ b.cycle.get_stage_display }})</a></td>
-          <td class="p-1">{{ b.cycle.element }} · {{ b.cycle.element.get_element_type_display }}</td>
+        <tr>
+          <td class="app-mono">#{{ a.lot_id }}</td>
+          <td class="num">{{ a.qty_kg|kg }}</td>
+          <td class="num">{{ a.unit_cogs_idr|rupiah }}</td>
+          <td>#{{ b.pk }}<span class="app-sub">{{ b.harvested_at|date:"d M Y" }}</span></td>
+          <td><a class="app-link" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }}</a><span class="app-sub">mulai {{ b.cycle.planting_start_date|date:"d M Y" }} · {{ b.cycle.get_stage_display }}</span></td>
+          <td>{{ b.cycle.element }}<span class="app-sub">{{ b.cycle.element.get_element_type_display }}</span></td>
         </tr>
       {% endwith %}{% endfor %}
       </tbody>

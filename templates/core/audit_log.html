@@ -2,37 +2,36 @@
 {% load ui %}
 {% block title %}Log aktivitas{% endblock %}
 {% block content %}
-{% include "components/page_header.html" with title="Log Aktivitas" subtitle="Jejak perubahan penting: siapa, kapan, sebelum → sesudah, dan alasannya. Tidak dapat diubah atau dihapus." %}
-<div class="rounded-xl border border-stone-200 bg-white">
-  <form method="get" class="flex flex-wrap items-center gap-3 border-b border-stone-200 p-3">
-    <select name="action" onchange="this.form.submit()" class="w-auto rounded-lg border border-stone-300 px-2 py-1.5 text-sm" aria-label="Jenis perubahan">
+{# Log aktivitas (Phase 5b): gt-table; before → after as a compact kv list. #}
+{% include "components/page_header.html" with title="Log Aktivitas" subtitle="Jejak perubahan penting: siapa, kapan, sebelum → sesudah, dan alasannya. Tidak dapat diubah atau dihapus." actions="" %}
+<section class="gt-card" aria-label="Log aktivitas">
+  <form method="get" class="app-toolbar">
+    <select name="action" onchange="this.form.submit()" class="app-field app-field--sm app-field--auto" aria-label="Jenis perubahan">
       <option value="">Semua perubahan</option>
       {% for code, label in actions %}<option value="{{ code }}" {% if code == action %}selected{% endif %}>{{ label }}</option>{% endfor %}
     </select>
-    <input name="q" value="{{ q }}" placeholder="Cari ringkasan, alasan, pengguna…" class="ml-auto w-full rounded-lg border border-stone-300 px-2 py-1.5 text-sm sm:w-64">
+    <span class="app-toolbar__search"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">Cari log</span><input name="q" value="{{ q }}" placeholder="Cari ringkasan, alasan, pengguna…" class="app-field app-field--sm"></label></span>
   </form>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-        <th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Oleh</th><th class="px-4 py-3">Perubahan</th><th class="px-4 py-3">Sebelum → sesudah</th><th class="px-4 py-3">Alasan</th></tr></thead>
-      <tbody class="divide-y divide-stone-100">
+  <div class="app-table-wrap">
+    <table class="gt-table app-audit">
+      <thead><tr><th>Waktu</th><th>Oleh</th><th>Perubahan</th><th>Sebelum → sesudah</th><th>Alasan</th></tr></thead>
+      <tbody>
       {% for e in page.object_list %}
-        <tr class="align-top">
-          <td class="whitespace-nowrap px-4 py-3 text-stone-600">{{ e.created_at|date:"d M Y H:i" }}</td>
-          <td class="px-4 py-3">{{ e.actor.get_full_name|default:e.actor.username|default:"Sistem" }}</td>
-          <td class="px-4 py-3"><span class="text-xs text-stone-500">{{ e.action_label }}</span><p class="font-medium">{{ e.summary }}</p></td>
-          <td class="px-4 py-3 text-stone-700">{% for key, old, new in e.changes %}<div><span class="text-xs text-stone-400">{{ key }}</span> {{ old|default_if_none:"—" }} → {{ new|default_if_none:"—" }}</div>{% endfor %}</td>
-          <td class="px-4 py-3 text-stone-600">{{ e.reason|default:"—" }}</td>
+        <tr>
+          <td class="app-muted app-nowrap">{{ e.created_at|date:"d M Y" }}<span class="app-sub">{{ e.created_at|date:"H:i" }}</span></td>
+          <td>{{ e.actor.get_full_name|default:e.actor.username|default:"Sistem" }}</td>
+          <td><span class="gt-chip gt-chip--sm">{{ e.action_label }}</span><span class="app-block app-strong">{{ e.summary }}</span></td>
+          <td>{% if e.changes %}<dl class="gt-kv gt-kv--compact app-audit__kv">{% for key, old, new in e.changes %}<div><dt>{{ key }}</dt><dd>{{ old|default_if_none:"—" }} → {{ new|default_if_none:"—" }}</dd></div>{% endfor %}</dl>{% else %}<span class="app-muted">—</span>{% endif %}</td>
+          <td class="app-muted">{{ e.reason|default:"—" }}</td>
         </tr>
       {% empty %}
-        <tr><td colspan="5" class="px-4 py-12 text-center">
-          <p class="font-medium">{% if q or action %}Tidak ada catatan yang cocok.{% else %}Belum ada aktivitas tercatat.{% endif %}</p>
-          <p class="mt-1 text-sm text-stone-500">Perubahan harga, langkah kasir, dan status PKP akan muncul di sini secara otomatis.</p>
-        </td></tr>
+        <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div>
+          <span class="gt-callout__title">{% if q or action %}Tidak ada catatan yang cocok.{% else %}Belum ada aktivitas tercatat.{% endif %}</span>
+          <span class="gt-callout__body">Perubahan harga, langkah kasir, dan status PKP akan muncul di sini secara otomatis.</span></div></div></td></tr>
       {% endfor %}
       </tbody>
     </table>
   </div>
   {% include "components/pagination.html" %}
-</div>
+</section>
 {% endblock %}
