@@ -13,7 +13,8 @@ window.GT_LOCALE = window.GT_EN ? 'en-US' : 'id-ID';
 (function () {
   var PLACES = { money: 0, money2: 2, kg: 3 };
   var TH = window.GT_EN ? ',' : '.', DEC = window.GT_EN ? '.' : ',';
-  var NOT_KEEP = new RegExp('[^\d' + (DEC === '.' ? '\.' : ',') + ']', 'g');
+  // Everything except digits and this language's decimal mark (character class, so "." needs no escape).
+  var NOT_KEEP = new RegExp('[^0-9' + DEC + ']', 'g');
 
   // Parses what an input shows (thousands marks dropped, the decimal mark becomes "."); "Rp" and spaces ignored.
   function parse(v) {
@@ -100,7 +101,7 @@ window.GT_LOCALE = window.GT_EN ? 'en-US' : 'id-ID';
     });
   }
   document.addEventListener('DOMContentLoaded', function () { init(); });
-  window.idNum = { parse: parse, format: format, init: init };
+  window.idNum = { parse: parse, format: format, init: init, live: live };
 })();
 
 /* D105: money is written "Rp15.000" (Indonesian) / "Rp15,000" (English), no space. */
