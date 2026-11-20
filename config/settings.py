@@ -106,6 +106,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "id"
+# Indonesian only: without this, LocaleMiddleware follows the browser's Accept-Language and an
+# English browser got English month names ("31 December 2026") and Django form labels.
+LANGUAGES = [("id", "Bahasa Indonesia")]
 TIME_ZONE = "Asia/Jakarta"
 USE_I18N = True
 USE_TZ = True
