@@ -478,7 +478,8 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 /* Phase 4d page parts */
 .app-split--rev > :first-child { order: 2; }
 @media (max-width: 1023.98px) { .app-split--rev > :first-child { order: 0; } }
-.app-alloc { display: flex; align-items: center; gap: var(--space-2); }
+.app-alloc { display: grid; grid-template-columns: auto auto; justify-content: start; align-items: center; gap: var(--space-2); }
+.app-alloc > .app-error { grid-column: 1 / -1; margin: 0; }
 .app-alloc input { width: 9rem; }
 .app-alloc__col { width: 14rem; }
 .app-num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -801,3 +802,13 @@ html { scrollbar-gutter: stable; }
 /* Phase 7: the warning triangle's rounded corners reach within half a pixel of the 24-unit box, and an SVG clips
    to its box by default, so at 14–18 px the bottom corners were shaved off. Icons may paint outside their box. */
 .gt-root svg.gt-ico { overflow: visible; }
+/* Money fields (Phase 7, D114): "Rp" sits inside the field, the number is grouped as it is typed (numbers.js). */
+.app-money { position: relative; display: block; }
+.app-money--inline, .app-money--sm, td .app-money, .app-rowform .app-money { display: inline-block; }
+.app-money::before { content: "Rp"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-muted);
+  pointer-events: none; font-variant-numeric: tabular-nums; }
+.gt-root .app-money > input { padding-left: 2.6rem; }
+.app-money:has(> .app-field--sm)::before { left: 11px; font-size: 13px; }
+.gt-root .app-money > .app-field--sm { padding-left: 2.15rem; }
+.app-pct .app-money::before { content: "%"; left: auto; right: 14px; }
+.gt-root .app-pct .app-money > input { padding-left: 14px; padding-right: 2.2rem; }

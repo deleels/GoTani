@@ -11,7 +11,7 @@ window.GT_LOCALE = window.GT_EN ? 'en-US' : 'id-ID';
    Pressing "." or "," types the decimal mark where decimals are allowed. On submit every such input is
    rewritten to a plain machine number ("1500.25"). */
 (function () {
-  var PLACES = { money: 0, money2: 2, kg: 3 };
+  var PLACES = { money: 0, money2: 2, kg: 3, m2: 2 };
   var TH = window.GT_EN ? ',' : '.', DEC = window.GT_EN ? '.' : ',';
   // Everything except digits and this language's decimal mark (character class, so "." needs no escape).
   var NOT_KEEP = new RegExp('[^0-9' + DEC + ']', 'g');

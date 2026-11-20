@@ -140,6 +140,69 @@ class InvoicingViewTests(InvoiceFixtures):
         })
         self.assertEqual(r.status_code, 400)
         self.assertFalse(InvoicePayment.objects.exists())
+        self.assertContains(r, invoice.number if hasattr(invoice, "number") else str(invoice), status_code=400)
+
+
+class PaymentPageTests(InvoiceFixtures):
+    """Phase 7 step 4 (D114): prefilled balance, Indonesian-formatted partial amounts, leftover, tax opt-in."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.manager)
+        self.a = self.issue(self.draft([(self.high, 1, None)]))
+        self.b = self.issue(self.draft([(self.low, 1, None)]))
+        self.url = reverse("invoicing:buyer_payment_new", args=[self.buyer.pk])
+
+    def post(self, follow=False, **data):
+        return self.client.post(self.url, {"method": "CASH", "paid_on": timezone.localdate().isoformat(), **data},
+                                follow=follow)
+
+    def test_opens_prefilled_with_the_invoice_balance(self):
+        r = self.client.get(self.url, {"invoice": self.b.pk})
+        form = r.context["form"]
+        self.assertEqual(form.initial["amount_idr"], self.b.outstanding_idr)
+        self.assertEqual(r.context["open_invoices"][0].pk, self.b.pk)  # the one we came from is first
+        self.assertEqual(r.context["open_invoices"][0].entered, self.b.outstanding_idr)
+        self.assertEqual(r.context["open_invoices"][1].entered, "")
+        self.assertContains(r, 'class="app-money"')
+        whole = self.client.get(self.url).context["form"].initial["amount_idr"]
+        self.assertEqual(whole, self.a.outstanding_idr + self.b.outstanding_idr)
+
+    def test_partial_payment_with_indonesian_thousands(self):
+        part = (self.a.outstanding_idr / 2).quantize(D("1"))
+        typed = f"{int(part):,}".replace(",", ".")  # what the field shows: "12.500"
+        r = self.post(amount_idr=typed, **{f"alloc_{self.a.pk}": typed})
+        self.assertEqual(r.status_code, 302)
+        self.a.refresh_from_db()
+        self.assertEqual(self.a.outstanding_idr, self.a.total_idr - part)
+        self.assertEqual(self.a.payment_status(), "PARTIALLY_PAID")
+        self.assertEqual(inv.buyer_credit(self.buyer), 0)
+
+    def test_leftover_applied_to_other_open_invoices(self):
+        total = self.a.outstanding_idr + self.b.outstanding_idr
+        self.post(amount_idr=str(total), leftover="apply", **{f"alloc_{self.a.pk}": str(self.a.outstanding_idr)})
+        self.a.refresh_from_db(); self.b.refresh_from_db()
+        self.assertEqual((self.a.outstanding_idr, self.b.outstanding_idr), (0, 0))
+        self.assertEqual(inv.buyer_credit(self.buyer), 0)
+
+    def test_leftover_kept_as_credit_says_so(self):
+        r = self.post(amount_idr=str(self.a.outstanding_idr + 1000), leftover="credit",
+                      **{f"alloc_{self.a.pk}": str(self.a.outstanding_idr)}, follow=True)
+        self.assertEqual(inv.buyer_credit(self.buyer), 1000)
+        self.assertContains(r, "sebagai kredit")
+
+    def test_tax_slip_method_only_for_buyers_that_withhold(self):
+        r = self.client.get(self.url)
+        self.assertNotContains(r, 'value="PPH_WITHHELD"')
+        self.assertNotIn("withholding_slip_no", r.context["form"].fields)
+        self.buyer.withholds_tax = True
+        self.buyer.save()
+        r = self.client.get(self.url)
+        self.assertContains(r, 'value="PPH_WITHHELD"')
+        self.assertContains(r, 'data-show-when="method=PPH_WITHHELD"')
+        r = self.post(amount_idr="1000", method="PPH_WITHHELD")
+        self.assertEqual(r.status_code, 400)
+        self.assertContains(r, "nomor bukti potong", status_code=400)
 
 
 class ConfirmationTests(InvoiceFixtures):

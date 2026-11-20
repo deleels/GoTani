@@ -28,6 +28,11 @@ class Buyer(models.Model):
     is_active = models.BooleanField(_l("aktif"), default=True)
     document_language = models.CharField(_l("bahasa dokumen"), max_length=5, default="id", choices=settings.LANGUAGES,
                                          help_text=_l("Bahasa invoice yang dicetak untuk pembeli ini."))
+    # Phase 7 (D114): only buyers that withhold income tax (PPh 22/23) get the "Tax withheld" payment method.
+    withholds_tax = models.BooleanField(
+        _l("memotong PPh"), default=False,
+        help_text=_l("Centang untuk pembeli besar (BUMN, pabrik, distributor) yang memotong PPh dari pembayaran dan "
+                     "memberi bukti potong."))
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

@@ -141,6 +141,15 @@ JS_MSGIDS = [
     _l("Simpan pembelian"), _l("Wajib diisi."), _l("Angka tidak valid."), _l("Periksa kolom yang ditandai."),
     _l("Tutup"), _l("Email tidak valid."), _l("Minimal %(min)s."), _l("Maksimal %(max)s."),
     _l("Minimal %(n)s karakter."), _l("Maksimal %(n)s karakter."), _l("Format tidak sesuai."),
+    # Catat pembayaran (D114): payment_form.html and warnings.js
+    _l("%(invoice)s hanya bersisa %(balance)s."),
+    _l("Invoice mendapat %(applied)s, tetapi uang yang diterima hanya %(amount)s."),
+    _l("Pakai untuk %(invoices)s (jatuh tempo paling awal dulu)"), _l("Simpan sebagai kredit %(buyer)s"),
+    _l("Sisa %(left)s belum dialokasikan"), _l("Dari %(amount)s yang diterima, %(applied)s masuk ke invoice."),
+    _l("Simpan pembayaran"), _l("Simpan %(left)s sebagai kredit?"),
+    _l("%(amount)s melebihi semua tagihan terbuka %(buyer)s sebesar %(left)s."),
+    _l("Sisanya disimpan sebagai kredit %(buyer)s dan bisa dipakai untuk invoice berikutnya; tidak bisa dicairkan."),
+    _l("Simpan dengan kredit"),
 ]
 
 

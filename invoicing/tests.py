@@ -228,6 +228,11 @@ class PaymentTests(InvoiceFixtures):
             inv.allocate_payment(self.manager, free, self.a, 1)
 
     def test_pph_withheld_needs_slip(self):
+        with self.assertRaisesMessage(ValidationError, "tidak ditandai memotong PPh"):  # D114: opt-in per buyer
+            inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="PPH_WITHHELD", paid_on=TODAY,
+                               withholding_slip_no="BP-0")
+        self.buyer.withholds_tax = True
+        self.buyer.save()
         with self.assertRaises(ValidationError):
             inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="PPH_WITHHELD", paid_on=TODAY)
         with self.assertRaises(ValidationError):

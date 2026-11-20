@@ -18,7 +18,7 @@
   <div class="app-pos__shift-text"><span class="gt-callout__title">{% translate "Shift kasir belum dibuka" %}</span><span class="gt-callout__body">{% translate "Buka shift dengan modal awal di laci sebelum berjualan." %}</span></div>
   <form method="post" action="{% url 'pos:shift' %}" class="app-pos__shift-form">{% csrf_token %}
     <input type="hidden" name="action" value="open"><input type="hidden" name="next" value="{% url 'pos:register' %}">
-    <label><span class="app-label">{% translate "Modal awal (Rp)" %}</span><input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="app-field app-field--sm"></label>
+    <label><span class="app-label">{% translate "Modal awal (Rp)" %}</span><span class="app-money"><input name="opening_float" data-num="money" inputmode="decimal" autocomplete="off" value="{{ suggested_float|idnum:0 }}" class="app-field app-field--sm"></span></label>
     <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Buka shift" %}</button>
   </form>
 </div>
@@ -91,7 +91,7 @@
       </fieldset>
       <div x-show="method === 'CASH'" class="app-pos__cash">
         <div class="app-labelrow"><label class="app-label" for="pos-cash">{% translate "Uang diterima" %}</label>{% info_tip _("Kosongkan bila pembeli membayar uang pas.") %}</div>
-        <input id="pos-cash" name="cash_received" x-model="cash" data-num="money" inputmode="decimal" autocomplete="off" class="app-field">
+        <span class="app-money"><input id="pos-cash" name="cash_received" x-model="cash" data-num="money" inputmode="decimal" autocomplete="off" class="app-field"></span>
         <div class="app-chips">
           <template x-for="c in cashChips()" :key="c"><button type="button" @click="cash = idNum.format(c, 'money')" class="gt-chip gt-chip--sm app-chipbtn" x-text="c === dueTotal() ? '{% jt "Uang pas" %}' : rp(c)"></button></template>
         </div>

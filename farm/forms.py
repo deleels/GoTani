@@ -69,7 +69,7 @@ class DateTimeInput(forms.DateTimeInput):
 class ElementForm(StyledForm):
     name = forms.CharField(label=_l("Nama elemen"), max_length=100)
     element_type = forms.ChoiceField(label=_l("Jenis"), choices=FarmElement.ElementType.choices)
-    area_m2 = forms.DecimalField(label=_l("Luas (m²)"), max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
+    area_m2 = IDDecimalField(label=_l("Luas (m²)"), max_digits=10, decimal_places=2, min_value=Decimal("0.01"), kind="m2")
 
     def clean_name(self):
         name = self.cleaned_data["name"].strip()

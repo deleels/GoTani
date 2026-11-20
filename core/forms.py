@@ -11,8 +11,16 @@ ROLE_CHOICES = [(r, r) for r in ROLES]
 
 
 class StyledMixin:
+    """`show_when = {"field": "other=A|B"}`: the field's row shows only while `other` has one of the values
+    (forms.js hides and disables it otherwise, so it is not submitted)."""
+
+    show_when: dict = {}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for name, cond in self.show_when.items():
+            if name in self.fields:
+                self.fields[name].show_when = cond
         for field in self.fields.values():
             if isinstance(field, forms.ModelChoiceField) and field.empty_label in ("---------", "- Select an option -"):
                 field.empty_label = ""  # Phase 7: blank first option, no "pilih" text

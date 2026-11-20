@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    # Dev: WhiteNoise serves /static/ under runserver too, with max-age=0 while DEBUG, so the browser always
+    # revalidates and an edited script or stylesheet shows up on the next load (D112).
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "core",

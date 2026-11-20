@@ -58,7 +58,7 @@
     if (v.patternMismatch || v.typeMismatch) return T('Format tidak sesuai.');
     return el.validationMessage;
   }
-  function rowOf(el) { return el.closest('.app-formrow, label, .app-stackform > *') || el.parentElement; }
+  function rowOf(el) { return el.closest('[data-errors-at-end], .app-formrow, label, .app-stackform > *') || el.parentElement; }
   function clear(el) {
     var row = rowOf(el);
     el.removeAttribute('aria-invalid');
@@ -78,8 +78,10 @@
     p.innerHTML = '<svg class="gt-ico" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">' + ICON.error + '</svg><span></span>';
     p.lastChild.textContent = message(el);
     // flatpickr: the visible field is the alt input right after the hidden real one.
-    var anchor = el._flatpickr && el._flatpickr.altInput ? el._flatpickr.altInput : el;
-    if (el.type === 'radio' || el.type === 'checkbox') row.appendChild(p);
+    var anchor = el._flatpickr && el._flatpickr.altInput ? el._flatpickr.altInput : (el.closest('.app-money') || el);
+    var host = el.closest('[data-errors-at-end]');  // e.g. an input + button row: the message goes under both
+    if (host) host.appendChild(p);
+    else if (el.type === 'radio' || el.type === 'checkbox') row.appendChild(p);
     else anchor.insertAdjacentElement('afterend', p);
     var described = (anchor.getAttribute('aria-describedby') || '').split(' ').filter(function (x) { return x && x !== id; });
     described.push(id);

@@ -251,6 +251,14 @@ msgid "Tidak dapat menonaktifkan OWNER aktif terakhir."
 msgstr "You can't deactivate the last active OWNER."
 
 #: core\templatetags\ui.py
+msgid "%(amount)s melebihi semua tagihan terbuka %(buyer)s sebesar %(left)s."
+msgstr "%(amount)s is %(left)s more than everything %(buyer)s owes."
+
+#: core\templatetags\ui.py
+msgid "%(invoice)s hanya bersisa %(balance)s."
+msgstr "%(invoice)s only has %(balance)s left."
+
+#: core\templatetags\ui.py
 msgid "%(item)s: %(cost)s per %(unit)s, %(pct)s lebih mahal dari rata-rata %(avg)s."
 msgstr "%(item)s: %(cost)s per %(unit)s, %(pct)s more than the %(avg)s average."
 
@@ -273,6 +281,10 @@ msgstr "Last pre-harvest check: %(pct)s%% complete (incomplete)."
 #: core\templatetags\ui.py
 msgid "Cek pra-panen terakhir: %(pct)s%% lengkap."
 msgstr "Last pre-harvest check: %(pct)s%% complete."
+
+#: core\templatetags\ui.py
+msgid "Dari %(amount)s yang diterima, %(applied)s masuk ke invoice."
+msgstr "Of the %(amount)s received, %(applied)s goes to invoices."
 
 #: core\templatetags\ui.py
 msgid "Email tidak valid."
@@ -301,6 +313,10 @@ msgstr "Price up %(pct)s: %(old)s → %(new)s per kg."
 #: core\templatetags\ui.py
 msgid "Harga turun %(pct)s: %(old)s → %(new)s per kg."
 msgstr "Price down %(pct)s: %(old)s → %(new)s per kg."
+
+#: core\templatetags\ui.py
+msgid "Invoice mendapat %(applied)s, tetapi uang yang diterima hanya %(amount)s."
+msgstr "Invoices get %(applied)s, but only %(amount)s was received."
 
 #: core\templatetags\ui.py
 msgid "Konfirmasi"
@@ -335,6 +351,10 @@ msgid "Minimal %(n)s karakter."
 msgstr "At least %(n)s characters."
 
 #: core\templatetags\ui.py
+msgid "Pakai untuk %(invoices)s (jatuh tempo paling awal dulu)"
+msgstr "Apply to %(invoices)s (earliest due first)"
+
+#: core\templatetags\ui.py
 msgid "Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru."
 msgstr "Only an OWNER/MANAGER can undo this, on the same day, while nothing new has been logged."
 
@@ -363,8 +383,32 @@ msgid "Saya sudah memeriksa data ini"
 msgstr "I have checked this"
 
 #: core\templatetags\ui.py
+msgid "Simpan %(left)s sebagai kredit?"
+msgstr "Keep %(left)s as credit?"
+
+#: core\templatetags\ui.py
+msgid "Simpan dengan kredit"
+msgstr "Save with credit"
+
+#: core\templatetags\ui.py
 msgid "Simpan harga"
 msgstr "Save price"
+
+#: core\templatetags\ui.py
+msgid "Simpan pembayaran"
+msgstr "Save payment"
+
+#: core\templatetags\ui.py
+msgid "Simpan sebagai kredit %(buyer)s"
+msgstr "Keep as credit for %(buyer)s"
+
+#: core\templatetags\ui.py
+msgid "Sisa %(left)s belum dialokasikan"
+msgstr "%(left)s not applied yet"
+
+#: core\templatetags\ui.py
+msgid "Sisanya disimpan sebagai kredit %(buyer)s dan bisa dipakai untuk invoice berikutnya; tidak bisa dicairkan."
+msgstr "The rest is kept as credit for %(buyer)s and can be applied to their next invoice; it can't be paid out."
 
 #: core\templatetags\ui.py
 msgid "Tahap yang dilewati: %(list)s."
@@ -1943,6 +1987,10 @@ msgid "Baris invoice tidak valid."
 msgstr "Invalid invoice lines."
 
 #: invoicing\forms.py
+msgid "Isi nomor bukti potong dari pembeli."
+msgstr "Enter the tax slip number from the customer."
+
+#: invoicing\forms.py
 msgid "Jumlah diterima (Rp)"
 msgstr "Amount received (Rp)"
 
@@ -1993,6 +2041,10 @@ msgstr "Payment %(buyer)s %(amount)s"
 #: invoicing\models.py
 msgid "Belum dibayar"
 msgstr "Unpaid"
+
+#: invoicing\models.py
+msgid "Centang untuk pembeli besar (BUMN, pabrik, distributor) yang memotong PPh dari pembayaran dan memberi bukti potong."
+msgstr "Tick for large customers (state companies, factories, distributors) that withhold income tax from payments and give you a tax slip."
 
 #: invoicing\models.py
 msgid "Dibayar sebagian"
@@ -2053,6 +2105,10 @@ msgstr "due date"
 #: invoicing\models.py
 msgid "jenis diskon"
 msgstr "discount type"
+
+#: invoicing\models.py
+msgid "memotong PPh"
+msgstr "withholds tax"
 
 #: invoicing\models.py
 msgid "metode"
@@ -2119,8 +2175,20 @@ msgid "total HPP"
 msgstr "total COGS"
 
 #: invoicing\services.py
+msgid "%(buyer)s tidak ditandai memotong PPh."
+msgstr "%(buyer)s is not marked as withholding tax."
+
+#: invoicing\services.py
 msgid "%(invoice)s belum terbit atau sudah dibatalkan."
 msgstr "%(invoice)s isn't issued or is voided."
+
+#: invoicing\services.py
+msgid "%(invoice)s hanya bersisa %(outstanding)s; yang diisi %(amount)s."
+msgstr "%(invoice)s only has %(outstanding)s left; %(amount)s was entered."
+
+#: invoicing\services.py
+msgid "%(invoice)s: %(amount)s lebih dari sisa pembayaran %(unallocated)s."
+msgstr "%(invoice)s: %(amount)s is more than the %(unallocated)s left of this payment."
 
 #: invoicing\services.py
 msgid "%(product)s belum memiliki harga; isi harga per kg."
@@ -2145,6 +2213,10 @@ msgstr "> 90 days"
 #: invoicing\services.py
 msgid "Alasan wajib diisi."
 msgstr "A reason is required."
+
+#: invoicing\services.py
+msgid "Alokasi ke %(invoices)s berjumlah %(applied)s, lebih dari uang yang diterima %(amount)s."
+msgstr "Amounts for %(invoices)s add up to %(applied)s, more than the %(amount)s received."
 
 #: invoicing\services.py
 msgid "Belum jatuh tempo"
@@ -2251,14 +2323,6 @@ msgid "Potongan PPh wajib disertai nomor bukti potong."
 msgstr "Tax withheld needs a tax slip number."
 
 #: invoicing\services.py
-msgid "Sisa pembayaran hanya %(unallocated_idr)s."
-msgstr "Only %(unallocated_idr)s of the payment is left."
-
-#: invoicing\services.py
-msgid "Sisa tagihan %(invoice)s hanya %(outstanding_idr)s."
-msgstr "The balance of %(invoice)s is only %(outstanding_idr)s."
-
-#: invoicing\services.py
 msgid "Stok %(product)s tidak cukup: tersedia %(available)s kg, diminta %(requested)s kg."
 msgstr "Not enough %(product)s: %(available)s kg available, %(requested)s kg requested."
 
@@ -2269,6 +2333,10 @@ msgstr "No cashier shift is open; open one or untick \"Into the cash drawer\"."
 #: invoicing\services.py
 msgid "Uang ini masuk laci kasir; buka shift agar pengembaliannya tercatat."
 msgstr "This money went into the cash drawer; open a shift so the refund is recorded."
+
+#: invoicing\views.py
+msgid "%(left)s disimpan sebagai kredit %(buyer)s."
+msgstr "%(left)s kept as credit for %(buyer)s."
 
 #: invoicing\views.py
 msgid "Alokasi dilepas; dananya kembali menjadi kredit pembeli."
@@ -2307,32 +2375,32 @@ msgid "Invoice %(number)s diterbitkan; stok dipotong (FIFO)."
 msgstr "Invoice %(number)s issued; stock deducted (FIFO)."
 
 #: invoicing\views.py
-msgid "Jumlah alokasi tidak valid."
-msgstr "Invalid amount applied."
+msgid "Jumlah untuk %(invoices)s bukan angka."
+msgstr "The amount for %(invoices)s is not a number."
 
 #: invoicing\views.py
 msgid "Kredit diterapkan ke %(v)s."
 msgstr "Credit applied to %(v)s."
 
 #: invoicing\views.py
-msgid "Pembayaran dibatalkan; catatannya tetap disimpan."
-msgstr "Payment cancelled; the record is kept."
+msgid "Pembayaran %(amount)s dari %(buyer)s dicatat."
+msgstr "Payment of %(amount)s from %(buyer)s recorded."
 
 #: invoicing\views.py
-msgid "Pembayaran dicatat."
-msgstr "Payment recorded."
+msgid "Pembayaran dibatalkan; catatannya tetap disimpan."
+msgstr "Payment cancelled; the record is kept."
 
 #: invoicing\views.py
 msgid "Pembeli %(buyer)s ditambahkan."
 msgstr "Customer %(buyer)s added."
 
 #: invoicing\views.py
-msgid "Pembeli %(v)s."
-msgstr "Customer %(v)s."
+msgid "Pembeli diaktifkan."
+msgstr "Customer activated."
 
 #: invoicing\views.py
-msgid "Sisa %(left)s menjadi kredit pembeli."
-msgstr "%(left)s left over became customer credit."
+msgid "Pembeli dinonaktifkan."
+msgstr "Customer deactivated."
 
 #: invoicing\views.py
 msgid "Tanggal tidak valid."
@@ -5111,6 +5179,10 @@ msgid "Alokasi ke invoice"
 msgstr "Apply to invoices"
 
 #: templates\invoicing\payment_form.html
+msgid "Bagi otomatis"
+msgstr "Split automatically"
+
+#: templates\invoicing\payment_form.html
 msgid "Bagi uang ke invoice yang masih terbuka. Sisa yang tidak dialokasikan menjadi kredit pembeli (tidak bisa dicairkan, hanya untuk invoice berikutnya)."
 msgstr "Split the money across open invoices. Anything left over becomes customer credit (it can't be cashed out, only used on future invoices)."
 
@@ -5133,6 +5205,14 @@ msgstr "Applied"
 #: templates\invoicing\payment_form.html
 msgid "Dibayar untuk %(v1)s"
 msgstr "Paid on %(v1)s"
+
+#: templates\invoicing\payment_form.html
+msgid "Diterima"
+msgstr "Received"
+
+#: templates\invoicing\payment_form.html
+msgid "Kekurangan"
+msgstr "Short by"
 
 #: templates\invoicing\payment_form.html
 msgid "Kredit yang sudah ada:"

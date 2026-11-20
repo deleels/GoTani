@@ -16,7 +16,7 @@
     {% for p in unpriced %}
       <tr><td>{{ p }}</td><td class="num">{{ p.stock_kg|kg }} kg</td>
         <td><form method="post" class="app-rowform" data-confirm="" data-confirm-if="priceWarn(form)" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
-          <input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required placeholder="{% translate 'mis. 25.000' %}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}">
+          <span class="app-money"><input name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required placeholder="{% translate 'mis. 25.000' %}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}"></span>
           <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Simpan" %}</button></form></td></tr>
     {% empty %}<tr><td colspan="3" class="app-empty-cell app-muted">{% translate "Semua produk sudah diberi harga." %}</td></tr>{% endfor %}
     </tbody>
@@ -34,7 +34,7 @@
     {% for p in priced %}
       {# One form per row; the inputs sit in their own columns and join it through form="…". #}
       <tr><td>{{ p }}</td><td class="num">{{ p.stock_kg|kg }} kg</td>
-        <td><input form="price-{{ p.pk }}" name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required value="{{ p.selling_price_idr|idnum:0 }}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}"></td>
+        <td><span class="app-money"><input form="price-{{ p.pk }}" name="selling_price_idr" data-num="money" inputmode="decimal" autocomplete="off" required value="{{ p.selling_price_idr|idnum:0 }}" class="app-field app-field--sm app-num app-w-price" aria-label="{% translate 'Harga per kg' %}"></span></td>
         <td><input form="price-{{ p.pk }}" name="min_alert_kg" data-num="kg" inputmode="decimal" autocomplete="off" value="{{ p.min_alert_kg|idnum:3 }}" placeholder="—" class="app-field app-field--sm app-num app-w-kg" aria-label="{% translate 'Batas stok menipis (kg)' %}"></td>
         <td class="num"><form id="price-{{ p.pk }}" method="post" class="app-actions app-actions--equal" data-confirm="" data-confirm-if="priceWarn(form)" data-old-price="{{ p.selling_price_idr }}" data-cogs="{{ p.open_cogs|default_if_none:'' }}">{% csrf_token %}<input type="hidden" name="product" value="{{ p.pk }}">
           <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Simpan" %}</button>

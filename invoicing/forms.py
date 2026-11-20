@@ -19,7 +19,8 @@ from .models import Buyer, Invoice
 class BuyerForm(StyledMixin, forms.ModelForm):
     class Meta:
         model = Buyer
-        fields = ["name", "company", "phone", "email", "address", "payment_terms_days", "document_language", "notes"]
+        fields = ["name", "company", "phone", "email", "address", "payment_terms_days", "document_language",
+                  "withholds_tax", "notes"]
         widgets = {"address": forms.Textarea(attrs={"rows": 2}), "notes": forms.Textarea(attrs={"rows": 2})}
 
     def __init__(self, *args, **kwargs):
@@ -69,6 +70,8 @@ class IssueForm(StyledMixin, forms.Form):
 
 
 class PaymentForm(StyledMixin, forms.Form):
+    show_when = {"withholding_slip_no": "method=PPH_WITHHELD", "into_drawer": "method=CASH"}
+
     amount_idr = IDDecimalField(label=_l("Jumlah diterima (Rp)"), min_value=Decimal("0.01"), max_digits=14,
                                 decimal_places=2, kind="money")
     method = forms.ChoiceField(label=_l("Metode"), choices=InvoicePaymentMethod.choices, widget=forms.RadioSelect, initial="CASH")
@@ -80,6 +83,22 @@ class PaymentForm(StyledMixin, forms.Form):
                                           help_text=_l("Wajib untuk metode Potongan PPh (PPh yang dipotong pembeli)."))
     into_drawer = forms.BooleanField(label=_l("Masuk laci kasir"), required=False,
                                      help_text=_l("Tunai yang disimpan di laci shift yang sedang buka (D96)."))
+
+    def __init__(self, *args, buyer=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if buyer is not None and not buyer.withholds_tax:  # D114: tax slips only for buyers that withhold
+            self.fields["method"].choices = [c for c in self.fields["method"].choices
+                                             if c[0] != InvoicePaymentMethod.PPH_WITHHELD]
+            del self.fields["withholding_slip_no"]
+        else:
+            self.fields["withholding_slip_no"].help_text = ""
+            self.fields["withholding_slip_no"].widget.attrs["required"] = True  # only while the row is shown
+
+    def clean(self):
+        d = super().clean()
+        if d.get("method") == InvoicePaymentMethod.PPH_WITHHELD and not (d.get("withholding_slip_no") or "").strip():
+            self.add_error("withholding_slip_no", _("Isi nomor bukti potong dari pembeli."))
+        return d
 
 
 class CreditForm(StyledMixin, forms.Form):

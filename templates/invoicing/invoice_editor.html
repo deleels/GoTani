@@ -41,7 +41,7 @@
                 <span class="app-error" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">{% translate "Melebihi stok saat ini." %}</span>
               </td>
               <td><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required class="app-field app-field--sm app-num" aria-label="{% translate 'Kg' %}"></td>
-              <td><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : '{% jt "wajib" %}'" class="app-field app-field--sm app-num" aria-label="{% translate 'Harga per kg' %}"></td>
+              <td><span class="app-money"><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : '{% jt "wajib" %}'" class="app-field app-field--sm app-num" aria-label="{% translate 'Harga per kg' %}"></span></td>
               <td class="num"><b x-text="rp(sub(ln))"></b></td>
               <td class="num"><button type="button" @click="lines.splice(i,1)" class="gt-iconbtn gt-iconbtn--sm app-line__remove" aria-label="{% translate 'Hapus baris' %}">{% icon "trash" 16 %}</button></td>
             </tr>
@@ -56,7 +56,7 @@
       <div class="gt-card__head"><h2 class="gt-card__title" id="h-adj">{% translate "Diskon &amp; ongkir" %}</h2></div>
       <div class="app-adj">
         <label><span class="app-label">{% translate "Diskon" %}</span>{{ form.discount_type }}</label>
-        <label><span class="app-label">{% translate "Nilai diskon" %} <span x-text="dtype === 'PERCENT' ? '(%)' : '(Rp)'"></span></span>{{ form.discount_value }}{% for e in form.discount_value.errors %}<span class="app-error">{{ e }}</span>{% endfor %}</label>
+        <label x-show="dtype !== 'NONE'" :class="dtype === 'PERCENT' && 'app-pct'"><span class="app-label">{% translate "Nilai diskon" %} <span x-show="dtype === 'PERCENT'">(%)</span></span>{{ form.discount_value }}{% for e in form.discount_value.errors %}<span class="app-error">{{ e }}</span>{% endfor %}</label>
         <label><span class="app-labelrow"><span class="app-label">{% translate "Ongkos kirim" %}</span>{% if farm_is_pkp %}{% info_tip _("Ongkos kirim tanpa PPN.") %}{% endif %}</span>{{ form.shipping_idr }}</label>
         <label class="app-adj__full"><span class="app-label">{% translate "Catatan" %}</span>{{ form.notes }}</label>
       </div>

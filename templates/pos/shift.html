@@ -13,7 +13,7 @@
   <form method="post" class="app-shift__openform">{% csrf_token %}
     <input type="hidden" name="action" value="open">
     <label><span class="app-label">{% translate "Modal awal (Rp)" %}</span>
-      <input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="app-field"></label>
+      <span class="app-money"><input name="opening_float" data-num="money" inputmode="decimal" autocomplete="off" value="{{ suggested_float|idnum:0 }}" class="app-field"></span></label>
     <button class="gt-btn gt-btn--primary gt-btn--md">{% translate "Buka shift" %}</button>
   </form>
 </section>
@@ -53,7 +53,7 @@
       <h2 class="gt-card__title">{% translate "Catat mutasi kas" %}</h2>
       <label><span class="app-label">{% translate "Jenis" %}</span>
         <select name="kind" x-model="kind" class="app-field">{% for v, l in move_kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
-      <label><span class="app-label">{% translate "Jumlah (Rp)" %}</span><input name="amount" data-num="money" inputmode="decimal" required class="app-field"></label>
+      <label><span class="app-label">{% translate "Jumlah (Rp)" %}</span><span class="app-money"><input name="amount" data-num="money" inputmode="decimal" autocomplete="off" required class="app-field"></span></label>
       <label x-show="kind === 'EXPENSE'"><span class="app-labelrow"><span class="app-label">{% translate "Kategori biaya" %}</span>{% info_tip _("Membuat biaya tunai berstatus Menunggu persetujuan.") %}</span>
         <select name="category" class="app-field">{% for c in categories %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></label>
       <label><span class="app-label">{% translate "Catatan" %}</span><input name="note" class="app-field"></label>

@@ -20,7 +20,7 @@ _MULTI_DOT = re.compile(r"^-?\d{1,3}(\.\d{3}){2,}$")  # 1.500.000
 _ONE_GROUP = re.compile(r"^-?\d{1,3}\.\d{3}$")  # 15.000 — thousands only in a whole-Rupiah field
 
 # kind -> decimals allowed: money = whole Rupiah, money2 = Rupiah with ,xx, kg = up to 3 decimals.
-KINDS = {"money": 0, "money2": 2, "kg": 3}
+KINDS = {"money": 0, "money2": 2, "kg": 3, "m2": 2}  # m2 = areas (Phase 7)
 
 
 def parse_id_decimal(value, kind=None):
@@ -77,6 +77,14 @@ class IDNumberInput(forms.TextInput):
         if isinstance(value, (Decimal, int, float)) and not isinstance(value, bool):
             return format_id_decimal(value, KINDS[self.kind])
         return super().format_value(value)
+
+    def render(self, name, value, attrs=None, renderer=None):
+        html = super().render(name, value, attrs, renderer)
+        if self.kind.startswith("money"):  # Phase 7: money fields show "Rp" inside the field (.app-money)
+            from django.utils.safestring import mark_safe
+
+            return mark_safe(f'<span class="app-money">{html}</span>')
+        return html
 
 
 class IDDecimalField(forms.DecimalField):

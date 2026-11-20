@@ -22,6 +22,12 @@ from inventory.models import StockLedger, StockLot
 from inventory.services import exclusive_tax, move_lot_stock
 from pos.services import format_kg
 
+
+def _rp(value) -> str:
+    from farm.templatetags.gotani import rupiah
+
+    return rupiah(value)
+
 from .models import InvoicePaymentMethod
 from .models import (
     Buyer,
@@ -175,7 +181,8 @@ def save_draft(actor, buyer, raw_lines, *, discount_type=Invoice.DiscountType.NO
         raise ValidationError(_("Hanya invoice draf yang dapat diubah."))
     invoice.buyer = buyer
     invoice.discount_type = discount_type
-    invoice.discount_value = Decimal(discount_value or 0)
+    # "No discount" stores no value, so a number typed before switching to it does not linger (Phase 7).
+    invoice.discount_value = ZERO if discount_type == Invoice.DiscountType.NONE else Decimal(discount_value or 0)
     invoice.shipping_idr = q_money(shipping_idr or 0)
     invoice.notes = notes
     invoice.save()
@@ -340,9 +347,11 @@ def allocate_payment(actor, payment, invoice, amount) -> PaymentAllocation:
     if payment.voided_at:
         raise ValidationError(_("Pembayaran ini sudah dibatalkan."))
     if amount > payment.unallocated_idr:
-        raise ValidationError(_("Sisa pembayaran hanya %(unallocated_idr)s.") % {"unallocated_idr": payment.unallocated_idr})
+        raise ValidationError(_("%(invoice)s: %(amount)s lebih dari sisa pembayaran %(unallocated)s.") % {
+            "invoice": invoice, "amount": _rp(amount), "unallocated": _rp(payment.unallocated_idr)})
     if amount > invoice.outstanding_idr:
-        raise ValidationError(_("Sisa tagihan %(invoice)s hanya %(outstanding_idr)s.") % {"invoice": invoice, "outstanding_idr": invoice.outstanding_idr})
+        raise ValidationError(_("%(invoice)s hanya bersisa %(outstanding)s; yang diisi %(amount)s.") % {
+            "invoice": invoice, "outstanding": _rp(invoice.outstanding_idr), "amount": _rp(amount)})
     return PaymentAllocation.objects.create(payment=payment, invoice=invoice, amount_idr=amount)
 
 
@@ -369,13 +378,22 @@ def remove_allocation(actor, allocation, reason: str):
 
 @transaction.atomic
 def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", proof=None,
-                   allocations=(), into_drawer=False, withholding_slip_no="") -> InvoicePayment:
+                   allocations=(), into_drawer=False, withholding_slip_no="", apply_leftover=False) -> InvoicePayment:
     """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit.
-    `into_drawer` (CASH only, D96): the cash goes into the open shift's drawer."""
+    `into_drawer` (CASH only, D96): the cash goes into the open shift's drawer.
+    `apply_leftover` (D114): money left after `allocations` goes to the buyer's other open invoices, oldest due
+    first, instead of staying as credit."""
     require_finance(actor)
     amount = q_money(amount_idr)
     if amount <= 0:
         raise ValidationError(_("Jumlah pembayaran harus lebih dari 0."))
+    allocations = [(inv, q_money(a)) for inv, a in allocations if a and Decimal(a) > 0]
+    applied = sum((a for _inv, a in allocations), ZERO)
+    if applied > amount:
+        raise ValidationError(_("Alokasi ke %(invoices)s berjumlah %(applied)s, lebih dari uang yang diterima %(amount)s.") % {
+            "invoices": ", ".join(str(inv) for inv, _a in allocations), "applied": _rp(applied), "amount": _rp(amount)})
+    if method == InvoicePaymentMethod.PPH_WITHHELD and not buyer.withholds_tax:
+        raise ValidationError(_("%(buyer)s tidak ditandai memotong PPh.") % {"buyer": buyer})
     if method not in InvoicePaymentMethod.values:
         raise ValidationError(_("Metode pembayaran tidak dikenal."))
     slip = (withholding_slip_no or "").strip()
@@ -400,8 +418,15 @@ def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", p
         CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.INVOICE_PAYMENT, amount_idr=amount,
                                     payment=payment, note=f"{buyer}"[:255], created_by=actor)
     for invoice, alloc_amount in allocations:
-        if alloc_amount and Decimal(alloc_amount) > 0:
-            allocate_payment(actor, payment, invoice, alloc_amount)
+        allocate_payment(actor, payment, invoice, alloc_amount)
+    if apply_leftover:
+        left = amount - applied
+        for invoice in open_invoices(buyer):
+            if left <= 0:
+                break
+            take = min(left, invoice.outstanding)
+            allocate_payment(actor, payment, invoice, take)
+            left -= take
     return payment
 
 

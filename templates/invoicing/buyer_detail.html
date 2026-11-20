@@ -33,7 +33,7 @@
           <span class="gt-callout__title">{% translate "Pakai kredit" %} {{ credit|rupiah }}</span>
           <div class="app-credit__fields">
             <label><span class="app-label">{% translate "Invoice" %}</span><select name="invoice" class="app-field app-field--sm">{% for i in open_invoices %}<option value="{{ i.pk }}">{{ i }} {% translate "· sisa" %} {{ i.outstanding|rupiah }}</option>{% endfor %}</select></label>
-            <label class="app-credit__amt"><span class="app-label">{% translate "Jumlah" %}</span><input name="amount_idr" type="number" step="0.01" min="0.01" value="{{ credit|stringformat:'.2f' }}" class="app-field app-field--sm"></label>
+            <label class="app-credit__amt"><span class="app-label">{% translate "Jumlah" %}</span><span class="app-money"><input name="amount_idr" data-num="money" inputmode="decimal" autocomplete="off" required value="{{ credit|idnum:0 }}" class="app-field app-field--sm"></span></label>
             <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Terapkan" %}</button>
           </div>
         </div>

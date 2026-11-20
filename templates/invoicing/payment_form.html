@@ -3,7 +3,9 @@
 {% load ui gotani %}
 {% block title %}{% translate "Catat Pembayaran" %}{% endblock %}
 {% block content %}
-{# Payment form (Phase 4d): details card (method as radio cards) + allocation table with a live kv summary and Batal · Simpan. Posted names unchanged. #}
+{# Payment form (Phase 4d, D114): opens prefilled with the balance; typing the amount spreads it over the open invoices #}
+{# (the one we came from first, then oldest due) until a row is edited by hand. Each row names its own problem; money #}
+{# left over is confirmed as credit, or applied to the other open invoices. Posted field names unchanged. #}
 <div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
     <a href="{% url 'invoicing:buyer_detail' buyer.pk %}" class="app-back">{% icon "chevron-left" 16 %} {{ buyer.name }}</a>
@@ -11,20 +13,26 @@
     <p>{% translate "Uang dari" %} {{ buyer }}</p>
   </div>
 </div>
-<form method="post" enctype="multipart/form-data" x-data="{ amount: Number('{{ form.amount_idr.value|default:0 }}'.replace(',', '.')) || 0, allocs: {} , get used() { return Object.values(this.allocs).reduce((a, b) => a + (Number(b) || 0), 0) } }" class="app-split app-split--rev">{% csrf_token %}
+<form method="post" enctype="multipart/form-data" x-data="payment({{ manual|yesno:'true,false' }})" class="app-split app-split--rev"
+      data-buyer="{{ buyer }}" data-confirm="" data-confirm-if="paymentWarn(form)" data-confirm-choice-name="leftover">{% csrf_token %}
+  <input type="hidden" name="invoice" value="{{ preselect }}">
   <section class="gt-card" aria-labelledby="h-alloc">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-alloc">{% translate "Alokasi ke invoice" %}</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-alloc">{% translate "Alokasi ke invoice" %}</h2>
+      {% if open_invoices|length > 1 %}<button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="manual = false; spread()">{% translate "Bagi otomatis" %}</button>{% endif %}</div>
     <div class="app-table-wrap">
     <table class="gt-table">
       <thead><tr><th>{% translate "Invoice" %}</th><th>{% translate "Jatuh tempo" %}</th><th class="num">{% translate "Sisa" %}</th><th class="app-alloc__col">{% translate "Dibayar" %}</th></tr></thead>
       <tbody>
       {% for inv in open_invoices %}
-        <tr x-init="allocs[{{ inv.pk }}] = '{{ inv.entered }}'">
+        <tr>
           <td class="app-mono">{{ inv }}</td>
           <td class="app-muted">{{ inv.due_date|date:"d M Y" }}</td>
           <td class="num">{{ inv.outstanding|rupiah }}</td>
-          <td><div class="app-alloc">{% blocktranslate asvar t_aria_label_12 with v1=inv %}Dibayar untuk {{ v1 }}{% endblocktranslate %}<input name="alloc_{{ inv.pk }}" type="number" step="0.01" min="0" max="{{ inv.outstanding|stringformat:'.2f' }}" x-model="allocs[{{ inv.pk }}]" class="app-field app-field--sm app-num" aria-label="{{ t_aria_label_12 }}">
-            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="allocs[{{ inv.pk }}] = '{{ inv.outstanding|stringformat:'.2f' }}'">{% translate "Lunas" %}</button></div></td>
+          <td><div class="app-alloc" data-errors-at-end>{% blocktranslate asvar t_aria_label_12 with v1=inv %}Dibayar untuk {{ v1 }}{% endblocktranslate %}
+            <span class="app-money app-money--sm"><input name="alloc_{{ inv.pk }}" data-num="money" inputmode="decimal" autocomplete="off" data-alloc
+              data-invoice="{{ inv }}" data-outstanding="{{ inv.outstanding|stringformat:'.2f' }}" value="{% if inv.entered != '' %}{{ inv.entered|idnum:0 }}{% endif %}"
+              class="app-field app-field--sm app-num" aria-label="{{ t_aria_label_12 }}"></span>
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="full($el.previousElementSibling.querySelector('input'))">{% translate "Lunas" %}</button></div></td>
         </tr>
       {% empty %}
         <tr><td colspan="4" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">{% translate "Tidak ada invoice terbuka." %}</span><span class="gt-callout__body">{% translate "Seluruh pembayaran akan menjadi kredit." %}</span></div></div></td></tr>
@@ -33,18 +41,62 @@
     </table>
     </div>
     <dl class="gt-kv app-kv-total">
-      <div><dt>{% translate "Dialokasikan" %}</dt><dd x-text="gtRupiah(used)"></dd></div>
-      <div><dt>{% translate "Menjadi kredit" %}</dt><dd :class="amount - used < 0 ? 'app-value--danger' : 'app-value--positive'" x-text="gtRupiah(amount - used)"></dd></div>
+      <div><dt>{% translate "Diterima" %}</dt><dd x-text="gtRupiah(amount)"></dd></div>
+      <div><dt>{% translate "Dialokasikan" %}</dt><dd x-text="gtRupiah(applied)"></dd></div>
+      <div x-show="amount - applied > 0.004"><dt>{% translate "Menjadi kredit" %}</dt><dd class="app-value--positive" x-text="gtRupiah(amount - applied)"></dd></div>
+      <div x-show="applied - amount > 0.004" x-cloak><dt>{% translate "Kekurangan" %}</dt><dd class="app-value--danger" x-text="gtRupiah(applied - amount)"></dd></div>
     </dl>
     <div class="app-formfoot">
       <a href="{% url 'invoicing:buyer_detail' buyer.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
       <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button>
     </div>
   </section>
-  <section class="gt-card" aria-labelledby="h-payd" @input="if ($event.target.name === 'amount_idr') amount = idNum.parse($event.target.value) || 0">
+  <section class="gt-card" aria-labelledby="h-payd">
     <div class="gt-card__head"><h2 class="gt-card__title" id="h-payd">{% translate "Detail pembayaran" %}</h2></div>
     {% include "_form_fields.html" with cols="grid-cols-1" %}
     {% if credit %}<div class="gt-callout gt-callout--success">{% icon "check" 18 %}<div><span class="gt-callout__title">{% translate "Kredit yang sudah ada:" %} {{ credit|rupiah }}</span></div></div>{% endif %}
   </section>
 </form>
+<script>
+  function payment(manual) {
+    return {
+      manual, amount: 0, applied: 0,
+      init() {
+        this.amountEl = this.$root.querySelector('[name=amount_idr]');
+        this.rows = [...this.$root.querySelectorAll('[data-alloc]')];
+        this.$root.addEventListener('input', (e) => {
+          if (e.target === this.amountEl) { if (!this.manual) this.spread(); }
+          else if (e.target.hasAttribute('data-alloc')) this.manual = true;
+          this.sync();
+        });
+        this.sync();
+      },
+      val(el) { return idNum.parse(el.value) || 0; },
+      out(el) { return Number(el.dataset.outstanding); },
+      spread() {
+        let left = this.val(this.amountEl);
+        this.rows.forEach((el) => {
+          const take = Math.min(left, this.out(el));
+          el.value = take > 0 ? idNum.format(take, 'money') : '';
+          left -= Math.max(take, 0);
+        });
+        this.sync();
+      },
+      full(el) { el.value = idNum.format(this.out(el), 'money'); this.manual = true; this.sync(); },
+      // Each problem is named on its own field, so the app's validation (forms.js) shows it there.
+      sync() {
+        this.amount = this.val(this.amountEl);
+        this.applied = this.rows.reduce((s, el) => s + this.val(el), 0);
+        this.rows.forEach((el) => {
+          const v = this.val(el), o = this.out(el);
+          el.setCustomValidity(v > o + 0.004 ? gtT('%(invoice)s hanya bersisa %(balance)s.', { invoice: el.dataset.invoice, balance: gtRupiah(o) }) : '');
+        });
+        if (this.amountEl) {
+          this.amountEl.setCustomValidity(this.applied > this.amount + 0.004
+            ? gtT('Invoice mendapat %(applied)s, tetapi uang yang diterima hanya %(amount)s.', { applied: gtRupiah(this.applied), amount: gtRupiah(this.amount) }) : '');
+        }
+      },
+    };
+  }
+</script>
 {% endblock %}

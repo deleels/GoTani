@@ -1,5 +1,6 @@
 """Buyers, invoices and payments screens (thin views over `invoicing.services`). OWNER/MANAGER only (rule 24)."""
 
+from decimal import InvalidOperation
 from farm.templatetags.gotani import rupiah
 from django.utils.translation import gettext_lazy as _l
 from django.utils.translation import gettext as _
@@ -108,7 +109,7 @@ class BuyerDetailView(FinanceView):
         action = request.POST.get("action", "edit")
         if action == "toggle":
             services.update_buyer(request.user, buyer, is_active=not buyer.is_active)
-            messages.success(request, _("Pembeli %(v)s.") % {"v": 'diaktifkan' if buyer.is_active else 'dinonaktifkan'})
+            messages.success(request, _("Pembeli diaktifkan.") if buyer.is_active else _("Pembeli dinonaktifkan."))
             return redirect("invoicing:buyer_detail", pk=pk)
         if action == "credit":
             form = CreditForm(request.POST, buyer=buyer)
@@ -329,46 +330,79 @@ class AllocationRemoveView(FinanceView):
 
 
 class PaymentCreateView(FinanceView):
-    """Full page (D69): record money received and split it across open invoices; the rest is credit."""
+    """Full page (D69, D114): record money received and split it across open invoices; the rest is credit.
+
+    Opens prefilled: with ?invoice=<pk> the amount is that invoice's balance (and it is listed first),
+    otherwise the buyer's whole balance. The page spreads the amount over the invoices as it is typed."""
 
     template_name = "invoicing/payment_form.html"
 
+    def open_rows(self, request, buyer):
+        rows = services.open_invoices(buyer)
+        pre = request.GET.get("invoice") or request.POST.get("invoice")
+        rows.sort(key=lambda inv: str(inv.pk) != str(pre))  # the invoice we came from first; stable otherwise
+        return rows, pre
+
     def render_page(self, request, buyer, form, status=200, entered=None):
-        open_inv = services.open_invoices(buyer)
-        preselect = request.GET.get("invoice")
-        for inv in open_inv:
-            inv.entered = (entered or {}).get(inv.pk, str(inv.outstanding) if preselect == str(inv.pk) else "")
+        rows, pre = self.open_rows(request, buyer)
+        if entered is None:  # first open: spread the prefilled amount
+            left = form.initial.get("amount_idr") or ZERO
+            entered = {}
+            for inv in rows:
+                take = min(left, inv.outstanding)
+                entered[inv.pk] = take if take > 0 else ""
+                left -= take
+        for inv in rows:
+            inv.entered = entered.get(inv.pk, "")
         return render(request, self.template_name, {
-            "buyer": buyer, "form": form, "open_invoices": open_inv, "credit": services.buyer_credit(buyer),
+            "buyer": buyer, "form": form, "open_invoices": rows, "credit": services.buyer_credit(buyer),
+            "preselect": pre or "", "manual": status != 200,
         }, status=status)
 
     def get(self, request, pk):
         buyer = get_object_or_404(Buyer, pk=pk)
-        return self.render_page(request, buyer, PaymentForm(initial={"paid_on": timezone.localdate()}))
+        rows, pre = self.open_rows(request, buyer)
+        chosen = [inv for inv in rows if str(inv.pk) == str(pre)]
+        prefill = (chosen[0].outstanding if chosen else sum((inv.outstanding for inv in rows), ZERO)) or None
+        form = PaymentForm(buyer=buyer, initial={"paid_on": timezone.localdate(), "amount_idr": prefill})
+        return self.render_page(request, buyer, form)
 
     def post(self, request, pk):
         buyer = get_object_or_404(Buyer, pk=pk)
-        form = PaymentForm(request.POST, request.FILES)
-        entered = {}
-        allocations = []
+        form = PaymentForm(request.POST, request.FILES, buyer=buyer)
+        entered, allocations, bad = {}, [], []
         for inv in services.open_invoices(buyer):
             raw = request.POST.get(f"alloc_{inv.pk}", "").strip()
-            entered[inv.pk] = raw
-            if raw:
-                allocations.append((inv, raw))
+            if not raw:
+                continue
+            try:
+                value = parse_id_decimal(raw, "money")
+            except (InvalidOperation, ValueError):
+                entered[inv.pk] = raw
+                bad.append(str(inv))
+                continue
+            entered[inv.pk] = value
+            if value > 0:
+                allocations.append((inv, value))
+        if bad:
+            form.add_error(None, _("Jumlah untuk %(invoices)s bukan angka.") % {"invoices": ", ".join(bad)})
         if form.is_valid():
             d = form.cleaned_data
             try:
                 payment = services.record_payment(
                     request.user, buyer, amount_idr=d["amount_idr"], method=d["method"], paid_on=d["paid_on"],
                     reference=d["reference"], proof=d["proof"], allocations=allocations,
-                    into_drawer=d["into_drawer"], withholding_slip_no=d["withholding_slip_no"],
+                    into_drawer=d.get("into_drawer", False), withholding_slip_no=d.get("withholding_slip_no", ""),
+                    apply_leftover=request.POST.get("leftover") == "apply",
                 )
-            except (ValidationError, ArithmeticError, ValueError) as exc:
-                form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else _("Jumlah alokasi tidak valid."))
+            except ValidationError as exc:
+                form.add_error(None, error_text(exc))
             else:
                 left = payment.unallocated_idr
-                messages.success(request, _("Pembayaran dicatat.") + (" " + _("Sisa %(left)s menjadi kredit pembeli.") % {"left": rupiah(left)} if left else ""))
+                msg = _("Pembayaran %(amount)s dari %(buyer)s dicatat.") % {"amount": rupiah(payment.amount_idr), "buyer": buyer}
+                if left:
+                    msg += " " + _("%(left)s disimpan sebagai kredit %(buyer)s.") % {"left": rupiah(left), "buyer": buyer}
+                messages.success(request, msg)
                 return redirect("invoicing:buyer_detail", pk=buyer.pk)
         return self.render_page(request, buyer, form, status=400, entered=entered)
 

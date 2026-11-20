@@ -185,3 +185,15 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   removed (migration `inventory/0007`); the POS − / +, the first tap on a product and the quick-pick chips
   (0.5 · 1 · 2 · 5 kg) all use 0.5 kg. Harga Produk shows one price column (the editable price is the current
   price) and the low-stock limit under its own header. Old `POS_STEP_CHANGE` audit entries keep their label.
+
+- **D114 Invoice payments that do what you type (Phase 7 step 4; refines D69, D101).** Record payment opens prefilled
+  with the balance (the invoice you came from, listed first; otherwise everything the customer owes) and spreads the
+  amount over open invoices as it is typed, earliest due first, until a row is edited by hand ("Split
+  automatically" restarts it). Every problem is named where it is: "INV-… only has Rp832,500 left", "Invoices get
+  Rp900,000 but only Rp500,000 was received" — and the server says the same with the invoice numbers. Money left
+  over asks before saving: kept as the customer's credit, or (when other invoices are still open) applied to them.
+  "Tax withheld" (PPh with a tax slip) is offered only for customers ticked "withholds tax" (off by default;
+  customers that already used it were ticked by the migration); the slip number and "into the cash drawer" show
+  only for their method. "No discount" hides and clears the discount value. Every money field shows "Rp" inside
+  the field and groups thousands as it is typed; areas group too. In development WhiteNoise serves static files
+  with `max-age=0` so edits are never hidden by the browser cache.
