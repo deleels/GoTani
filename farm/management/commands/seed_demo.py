@@ -242,9 +242,12 @@ class Command(BaseCommand):
         day = timezone.localdate(self.now) - timedelta(days=days_ago)
         ts = timezone.make_aware(datetime.combine(day, time(hour, minute)))
         if ts > self.now:
-            # Squeeze today's not-yet-reached events into the minutes before now,
-            # preserving their relative order.
-            ts = self.now - timedelta(minutes=(24 * 60 - hour * 60 - minute) / 10)
+            # Squeeze today's not-yet-reached events into the gap between the start of the current
+            # minute and now, in time-of-day order. Every event that already happened today sits on a
+            # whole minute <= that start, so squeezed events always come after it (e.g. a 09:15 sale
+            # stays after the 07:00 shift opening when seeding at 07:48).
+            base = self.now.replace(second=0, microsecond=0)
+            ts = base + (self.now - base) * ((hour * 60 + minute) / (24 * 60))
         return ts
 
     def on(self, days_ago, hour, fn, minute=0):
