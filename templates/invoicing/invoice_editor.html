@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}{% if invoice %}Ubah {{ invoice }}{% else %}Invoice Baru{% endif %}{% endblock %}
+{% block title %}{% if invoice %}{% translate "Ubah" %} {{ invoice }}{% else %}{% translate "Invoice Baru" %}{% endif %}{% endblock %}
 {% block content %}
 {# Invoice editor (Phase 4d, CheckoutPage pattern): buyer card, lines table, adjustments, sticky summary with Batal · Simpan draf. invoiceEditor() and posted names unchanged. #}
 {{ products|json_script:"products-data" }}
@@ -8,8 +9,8 @@
 {% url 'invoicing:invoices' as list_url %}
 <div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
-    <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{{ list_url }}{% endif %}" class="app-back">{% icon "chevron-left" 16 %} Kembali</a>
-    <h1 class="app-pagehead__title">{% if invoice %}Ubah {{ invoice }}{% else %}Invoice baru{% endif %} {% if farm_is_pkp %}{% info_tip "Harga belum termasuk PPN. Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server." %}{% else %}{% info_tip "Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server." %}{% endif %}</h1>
+    <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{{ list_url }}{% endif %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
+    <h1 class="app-pagehead__title">{% if invoice %}{% translate "Ubah" %} {{ invoice }}{% else %}{% translate "Invoice baru" %}{% endif %} {% if farm_is_pkp %}{% info_tip _("Harga belum termasuk PPN. Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server.") %}{% else %}{% info_tip _("Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server.") %}{% endif %}</h1>
   </div>
 </div>
 
@@ -17,65 +18,65 @@
   <div class="app-side">
     {% if form.non_field_errors %}<div class="gt-callout gt-callout--danger" role="alert">{% icon "alert" 18 %}<div>{% for e in form.non_field_errors %}<span class="gt-callout__title">{{ e }}</span>{% endfor %}</div></div>{% endif %}
     <section class="gt-card" aria-labelledby="h-buyer">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-buyer">Pembeli</h2><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'invoicing:buyers' %}?new=1">{% icon "plus" 16 %} Pembeli</a></div>
-      <label for="{{ form.buyer.id_for_label }}" class="sr-only">Pembeli</label>{{ form.buyer }}
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-buyer">{% translate "Pembeli" %}</h2><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'invoicing:buyers' %}?new=1">{% icon "plus" 16 %} {% translate "Pembeli" %}</a></div>
+      <label for="{{ form.buyer.id_for_label }}" class="sr-only">{% translate "Pembeli" %}</label>{{ form.buyer }}
       {% for e in form.buyer.errors %}<p class="app-error">{{ e }}</p>{% endfor %}
     </section>
 
     <section class="gt-card" aria-labelledby="h-lines">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-lines">Baris produk</h2>
-        <button type="button" @click="add()" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} Baris</button></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-lines">{% translate "Baris produk" %}</h2>
+        <button type="button" @click="add()" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} {% translate "Baris" %}</button></div>
       <div class="app-table-wrap">
       <table class="gt-table app-lines">
-        <thead><tr><th>Produk</th><th class="app-lines__qty">Kg</th><th class="app-lines__price">Harga/kg</th><th class="num">Subtotal</th><th><span class="sr-only">Hapus</span></th></tr></thead>
+        <thead><tr><th>{% translate "Produk" %}</th><th class="app-lines__qty">{% translate "Kg" %}</th><th class="app-lines__price">{% translate "Harga/kg" %}</th><th class="num">{% translate "Subtotal" %}</th><th><span class="sr-only">{% translate "Hapus" %}</span></th></tr></thead>
         <tbody>
           <template x-for="(ln, i) in lines" :key="ln.key">
             <tr>
               <td>
-                <select name="product_id" x-model.number="ln.product" @change="defaultPrice(ln)" class="app-field app-field--sm" aria-label="Produk">
-                  <option value="">— pilih —</option>
+                <select name="product_id" x-model.number="ln.product" @change="defaultPrice(ln)" class="app-field app-field--sm" aria-label="{% translate 'Produk' %}">
+                  <option value="">{% translate "— pilih —" %}</option>
                   <template x-for="p in products" :key="p.id"><option :value="p.id" x-text="p.name" :selected="p.id === ln.product"></option></template>
                 </select>
-                <span class="app-sub" x-show="prod(ln)" x-text="prod(ln) ? 'Stok ' + fmtKg(prod(ln).available) + ' kg' + (Number(prod(ln).tax) ? ' · PPN ' + prod(ln).tax + '%' : '') : ''"></span>
-                <span class="app-error" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">Melebihi stok saat ini.</span>
+                <span class="app-sub" x-show="prod(ln)" x-text="prod(ln) ? gtT('{% jt "Stok %(kg)s kg" %}', { kg: fmtKg(prod(ln).available) }) + (Number(prod(ln).tax) ? ' · ' + gtT('{% jt "PPN %(rate)s%%" %}', { rate: prod(ln).tax }) : '') : ''"></span>
+                <span class="app-error" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">{% translate "Melebihi stok saat ini." %}</span>
               </td>
-              <td><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required class="app-field app-field--sm app-num" aria-label="Kg"></td>
-              <td><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : 'wajib'" class="app-field app-field--sm app-num" aria-label="Harga per kg"></td>
+              <td><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required class="app-field app-field--sm app-num" aria-label="{% translate 'Kg' %}"></td>
+              <td><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : '{% jt "wajib" %}'" class="app-field app-field--sm app-num" aria-label="{% translate 'Harga per kg' %}"></td>
               <td class="num"><b x-text="rp(sub(ln))"></b></td>
-              <td class="num"><button type="button" @click="lines.splice(i,1)" class="gt-iconbtn gt-iconbtn--sm app-line__remove" aria-label="Hapus baris">{% icon "trash" 16 %}</button></td>
+              <td class="num"><button type="button" @click="lines.splice(i,1)" class="gt-iconbtn gt-iconbtn--sm app-line__remove" aria-label="{% translate 'Hapus baris' %}">{% icon "trash" 16 %}</button></td>
             </tr>
           </template>
-          <tr x-show="!lines.length"><td colspan="5" class="app-empty-cell app-muted">Belum ada baris. Ketuk “+ Baris”.</td></tr>
+          <tr x-show="!lines.length"><td colspan="5" class="app-empty-cell app-muted">{% translate "Belum ada baris. Ketuk “+ Baris”." %}</td></tr>
         </tbody>
       </table>
       </div>
     </section>
 
     <section class="gt-card" aria-labelledby="h-adj">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-adj">Diskon &amp; ongkir</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-adj">{% translate "Diskon &amp; ongkir" %}</h2></div>
       <div class="app-adj">
-        <label><span class="app-label">Diskon</span>{{ form.discount_type }}</label>
-        <label><span class="app-label">Nilai diskon <span x-text="dtype === 'PERCENT' ? '(%)' : '(Rp)'"></span></span>{{ form.discount_value }}{% for e in form.discount_value.errors %}<span class="app-error">{{ e }}</span>{% endfor %}</label>
-        <label><span class="app-labelrow"><span class="app-label">Ongkos kirim</span>{% if farm_is_pkp %}{% info_tip "Ongkos kirim tanpa PPN." %}{% endif %}</span>{{ form.shipping_idr }}</label>
-        <label class="app-adj__full"><span class="app-label">Catatan</span>{{ form.notes }}</label>
+        <label><span class="app-label">{% translate "Diskon" %}</span>{{ form.discount_type }}</label>
+        <label><span class="app-label">{% translate "Nilai diskon" %} <span x-text="dtype === 'PERCENT' ? '(%)' : '(Rp)'"></span></span>{{ form.discount_value }}{% for e in form.discount_value.errors %}<span class="app-error">{{ e }}</span>{% endfor %}</label>
+        <label><span class="app-labelrow"><span class="app-label">{% translate "Ongkos kirim" %}</span>{% if farm_is_pkp %}{% info_tip _("Ongkos kirim tanpa PPN.") %}{% endif %}</span>{{ form.shipping_idr }}</label>
+        <label class="app-adj__full"><span class="app-label">{% translate "Catatan" %}</span>{{ form.notes }}</label>
       </div>
     </section>
   </div>
 
   <aside class="gt-card app-split__sticky" aria-labelledby="h-summary">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-summary">Ringkasan</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-summary">{% translate "Ringkasan" %}</h2></div>
     <dl class="gt-kv app-kv-total">
-      <div><dt>Subtotal</dt><dd x-text="rp(totals().subtotal)"></dd></div>
-      <div><dt>Diskon</dt><dd x-text="'− ' + rp(totals().discount)"></dd></div>
-      {% if farm_is_pkp %}<div><dt>PPN</dt><dd x-text="rp(totals().tax)"></dd></div>{% endif %}
-      <div><dt>Ongkos kirim</dt><dd x-text="rp(totals().shipping)"></dd></div>
-      <div><dt>Total</dt><dd x-text="rp(totals().total)"></dd></div>
+      <div><dt>{% translate "Subtotal" %}</dt><dd x-text="rp(totals().subtotal)"></dd></div>
+      <div><dt>{% translate "Diskon" %}</dt><dd x-text="'− ' + rp(totals().discount)"></dd></div>
+      {% if farm_is_pkp %}<div><dt>{% translate "PPN" %}</dt><dd x-text="rp(totals().tax)"></dd></div>{% endif %}
+      <div><dt>{% translate "Ongkos kirim" %}</dt><dd x-text="rp(totals().shipping)"></dd></div>
+      <div><dt>{% translate "Total" %}</dt><dd x-text="rp(totals().total)"></dd></div>
     </dl>
-    <div class="gt-callout gt-callout--warning" x-show="totals().total > 5000000" x-cloak>{% icon "alert" 18 %}<div><span class="gt-callout__title">Bea meterai Rp10.000</span><span class="gt-callout__body">Total di atas Rp5.000.000.</span></div></div>
+    <div class="gt-callout gt-callout--warning" x-show="totals().total > 5000000" x-cloak>{% icon "alert" 18 %}<div><span class="gt-callout__title">{% translate "Bea meterai Rp10.000" %}</span><span class="gt-callout__body">{% translate "Total di atas Rp5.000.000." %}</span></div></div>
     <div class="app-formfoot">
-      <span class="app-formfoot__note">Stok belum bergerak {% info_tip "Setelah disimpan, terbitkan dari halaman invoice. Stok baru dipotong saat terbit." %}</span>
-      <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{{ list_url }}{% endif %}" class="gt-btn gt-btn--outline gt-btn--md">Batal</a>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan draf</button>
+      <span class="app-formfoot__note">{% translate "Stok belum bergerak" %} {% info_tip _("Setelah disimpan, terbitkan dari halaman invoice. Stok baru dipotong saat terbit.") %}</span>
+      <a href="{% if invoice %}{% url 'invoicing:invoice_detail' invoice.pk %}{% else %}{{ list_url }}{% endif %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan draf" %}</button>
     </div>
   </aside>
 </form>
@@ -117,7 +118,7 @@ function invoiceEditor() {
       return { subtotal, discount, tax, shipping: this.ship, total: subtotal - discount + tax + this.ship };
     },
     rp(v) { return window.gtRupiah(v); },
-    fmtKg(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 3 }); },
+    fmtKg(v) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: 3 }); },
   };
 }
 </script>

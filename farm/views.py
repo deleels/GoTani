@@ -4,6 +4,7 @@ WORKER may run field operations but never sees money (D27): cost columns are
 hidden in templates via `roles.finance`, and money pages are FINANCE_ROLES only.
 """
 
+from django.utils.translation import gettext as _, gettext_lazy as _l
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -67,7 +68,7 @@ class CyclesView(FarmPage):
     form_class = StartCycleForm
     tab = "cycles"
     success_url_name = "farm:cycles"
-    success_message = "Siklus tanam dimulai."
+    success_message = _l("Siklus tanam dimulai.")
 
     def perform(self, form):
         d = form.cleaned_data
@@ -112,9 +113,9 @@ class ElementCreateView(FarmPage):
     allowed_roles = FINANCE_ROLES
     tab = "cycles"
     success_url_name = "farm:cycles"
-    success_message = "Elemen kebun ditambahkan."
-    extra_context = {"page_title": "Tambah elemen kebun", "back_url": "farm:cycles",
-                     "page_help": "Elemen adalah satu bedengan, bak hidroponik atau area tanam. Luasnya dipakai untuk hasil per m² dan untuk membagi biaya."}
+    success_message = _l("Elemen kebun ditambahkan.")
+    extra_context = {"page_title": _l("Tambah elemen kebun"), "back_url": "farm:cycles",
+                     "page_help": _l("Elemen adalah satu bedengan, bak hidroponik atau area tanam. Luasnya dipakai untuk hasil per m² dan untuk membagi biaya.")}
 
     def perform(self, form):
         return FarmElement.objects.create(**form.cleaned_data)
@@ -124,7 +125,7 @@ class ElementToggleView(ActionView):
     allowed_roles = FINANCE_ROLES
     model = FarmElement
     success_url_name = "farm:cycles"
-    success_message = "Status elemen diperbarui."
+    success_message = _l("Status elemen diperbarui.")
 
     def perform(self, element):
         return services.set_element_active(element, not element.is_active)
@@ -136,7 +137,7 @@ class UndoStageView(ActionView):
     allowed_roles = FINANCE_ROLES
     model = CropCycle
     success_url_name = "farm:cycles"
-    success_message = "Perpindahan tahap dibatalkan."
+    success_message = _l("Perpindahan tahap dibatalkan.")
 
     def get_success_url(self, cycle, result):
         return reverse("farm:cycle_detail", args=[cycle.pk])
@@ -170,12 +171,12 @@ class AdvanceStageView(ActionView):
     allowed_roles = FARM_ROLES
     model = CropCycle
     success_url_name = "farm:cycles"
-    success_message = "Tahap siklus diperbarui."
+    success_message = _l("Tahap siklus diperbarui.")
 
     def perform(self, cycle):
         form = StageForm(self.request.POST)
         if not form.is_valid():
-            raise ValidationError("Tahap tidak valid.")
+            raise ValidationError(_("Tahap tidak valid."))
         warning = services.harvest_readiness_warning(cycle, form.cleaned_data["stage"])
         result = services.advance_cycle_stage(cycle, form.cleaned_data["stage"], actor=self.request.user,
                                               allow_skip=bool(self.request.POST.get("skip")))
@@ -189,14 +190,14 @@ class AdvanceStageView(ActionView):
 
 REPORT_TABS = [
     # key, label, ActivityType or None
-    ("pemupukan", "Pemupukan", ActivityLog.ActivityType.FERTILIZER),
-    ("pestisida", "Pestisida", ActivityLog.ActivityType.PESTICIDE),
-    ("irigasi", "Irigasi", ActivityLog.ActivityType.IRRIGATION),
-    ("scouting", "Scouting", ActivityLog.ActivityType.SCOUTING),
-    ("penanaman", "Penanaman", ActivityLog.ActivityType.SEEDING),
-    ("prapanen", "Pra-panen", None),
-    ("panen", "Panen", None),
-    ("susut", "Susut", None),
+    ("pemupukan", _l("Pemupukan"), ActivityLog.ActivityType.FERTILIZER),
+    ("pestisida", _l("Pestisida"), ActivityLog.ActivityType.PESTICIDE),
+    ("irigasi", _l("Irigasi"), ActivityLog.ActivityType.IRRIGATION),
+    ("scouting", _l("Scouting"), ActivityLog.ActivityType.SCOUTING),
+    ("penanaman", _l("Penanaman"), ActivityLog.ActivityType.SEEDING),
+    ("prapanen", _l("Pra-panen"), None),
+    ("panen", _l("Panen"), None),
+    ("susut", _l("Susut"), None),
 ]
 TAB_TYPES = {key: t for key, _, t in REPORT_TABS if t}
 
@@ -207,7 +208,7 @@ class ActivitiesView(FarmPage):
     template_name = "farm/activities.html"
     form_class = ActivityForm
     tab = "activities"
-    success_message = "Laporan kerja dicatat."
+    success_message = _l("Laporan kerja dicatat.")
 
     def current_tab(self):
         tab = self.request.GET.get("tab") or self.request.POST.get("tab") or "pemupukan"
@@ -263,9 +264,9 @@ class ActivitiesView(FarmPage):
 class PreHarvestCheckView(FarmPage):
     template_name = "farm/form_page.html"
     form_class = PreHarvestForm
-    success_message = "Cek pra-panen dicatat."
-    extra_context = {"page_title": "Cek pra-panen", "back_url": "farm:activities", "back_query": "?tab=prapanen",
-                     "page_help": "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya."}
+    success_message = _l("Cek pra-panen dicatat.")
+    extra_context = {"page_title": _l("Cek pra-panen"), "back_url": "farm:activities", "back_query": "?tab=prapanen",
+                     "page_help": _l("Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya.")}
 
     def get_initial(self):
         return {"cycle": self.request.GET.get("cycle")}
@@ -276,7 +277,7 @@ class PreHarvestCheckView(FarmPage):
     def perform(self, form):
         d = form.cleaned_data
         check = services.record_preharvest_check(d["cycle"], d["items"], user=self.request.user, notes=d["notes"])
-        self.success_message = f"Cek pra-panen dicatat ({check.completed_pct.normalize():f}% lengkap)."
+        self.success_message = _("Cek pra-panen dicatat (%(pct)s%% lengkap).") % {"pct": f"{check.completed_pct.normalize():f}"}
         return check
 
 
@@ -284,7 +285,7 @@ class ActivityDeleteView(ActionView):
     allowed_roles = FINANCE_ROLES
     model = ActivityLog
     success_url_name = "farm:activities"
-    success_message = "Kegiatan dihapus; stok input dikembalikan."
+    success_message = _l("Kegiatan dihapus; stok input dikembalikan.")
 
     def perform(self, activity):
         services.delete_activity(activity)
@@ -301,7 +302,7 @@ class InputsView(FarmPage):
     post_roles = FINANCE_ROLES
     tab = "inputs"
     success_url_name = "farm:inputs"
-    success_message = "Pembelian input dicatat."
+    success_message = _l("Pembelian input dicatat.")
 
     def perform(self, form):
         d = form.cleaned_data
@@ -328,7 +329,7 @@ class ExpensesView(FarmPage):
     allowed_roles = FINANCE_ROLES
     tab = "expenses"
     success_url_name = "farm:expenses"
-    success_message = "Biaya dicatat dan menunggu persetujuan."
+    success_message = _l("Biaya dicatat dan menunggu persetujuan.")
 
     def perform(self, form):
         d = dict(form.cleaned_data)
@@ -356,7 +357,7 @@ class ExpensesView(FarmPage):
         month_start = timezone.localdate().replace(day=1)
         approved_month = Expense.objects.filter(status=Expense.Status.APPROVED, date_incurred__gte=month_start)
         ctx.update(
-            status=status, q=q, tabs=[("all", "Semua"), ("APPROVED", "Disetujui"), ("REJECTED", "Ditolak")],
+            status=status, q=q, tabs=[("all", _("Semua")), ("APPROVED", _("Disetujui")), ("REJECTED", _("Ditolak"))],
             kpi_pending=ctx["pending"].aggregate(s=Sum("amount_idr"))["s"] or 0,
             kpi_month=approved_month.aggregate(s=Sum("amount_idr"))["s"] or 0,
             kpi_overhead=approved_month.filter(cycle__isnull=True).aggregate(s=Sum("amount_idr"))["s"] or 0,
@@ -370,10 +371,10 @@ class ExpenseActionView(ActionView):
     success_url_name = "farm:expenses"
     action = ""
     MESSAGES = {
-        "approve": "Biaya disetujui.",
-        "reject": "Biaya ditolak.",
-        "revert": "Biaya dikembalikan ke Menunggu.",
-        "delete": "Biaya dihapus.",
+        "approve": _l("Biaya disetujui."),
+        "reject": _l("Biaya ditolak."),
+        "revert": _l("Biaya dikembalikan ke Menunggu."),
+        "delete": _l("Biaya dihapus."),
     }
 
     def perform(self, expense):
@@ -396,7 +397,7 @@ class HarvestsView(FarmPage):
     form_class = HarvestForm
     tab = "harvests"
     success_url_name = "farm:harvests"
-    success_message = "Panen dicatat; lot stok dibuat."
+    success_message = _l("Panen dicatat; lot stok dibuat.")
 
     REVIEW_FIELDS = ("cycle", "high_quality_kg", "low_quality_kg", "harvest_loss_kg", "number_of_bags",
                      "weight_per_bag_kg", "harvested_at")
@@ -442,7 +443,7 @@ class HarvestDeleteView(ActionView):
     allowed_roles = FINANCE_ROLES
     model = HarvestBatch
     success_url_name = "farm:harvests"
-    success_message = "Batch panen dihapus; biayanya kembali ke pool siklus."
+    success_message = _l("Batch panen dihapus; biayanya kembali ke pool siklus.")
 
     def perform(self, batch):
         services.delete_harvest_batch(batch)
@@ -456,7 +457,7 @@ class SpoilageView(FarmPage):
     form_class = SpoilageForm
     tab = "spoilage"
     success_url_name = "farm:spoilage"
-    success_message = "Susut/rusak dicatat."
+    success_message = _l("Susut/rusak dicatat.")
 
     def get_initial(self):
         initial = super().get_initial()
@@ -502,7 +503,7 @@ class SpoilageReverseView(ActionView):
     allowed_roles = FINANCE_ROLES
     model = SpoilageRecord
     success_url_name = "farm:spoilage"
-    success_message = "Catatan susut dibatalkan; stok dikembalikan ke lot."
+    success_message = _l("Catatan susut dibatalkan; stok dikembalikan ke lot.")
 
     def perform(self, record):
         return inventory_services.reverse_spoilage(record, self.request.user, self.request.POST.get("reason", ""))
@@ -539,21 +540,21 @@ class OpnameView(RoleRequiredMixin, View):
                 try:
                     counted = parse_id_decimal(request.POST.get("counted_kg", ""), "kg")
                 except Exception:
-                    raise ValidationError("Stok fisik tidak valid.")
+                    raise ValidationError(_("Stok fisik tidak valid."))
                 inventory_services.record_count(product, counted, request.user, request.POST.get("note", ""))
-                messages.success(request, "Opname dicatat; menunggu persetujuan OWNER/MANAGER.")
+                messages.success(request, _("Opname dicatat; menunggu persetujuan OWNER/MANAGER."))
             elif action in ("approve", "reject"):
                 if not self.roles.finance:
                     raise PermissionDenied
                 count = get_object_or_404(StockCount, pk=request.POST.get("count"))
                 if action == "approve":
                     count = inventory_services.approve_count(count, request.user)
-                    messages.success(request, f"Opname disetujui; {count.written_off_kg.normalize():f} kg dihapusbukukan.")
+                    messages.success(request, _("Opname disetujui; %(written_off_kg)s kg dihapusbukukan.") % {"written_off_kg": format(count.written_off_kg.normalize(), 'f')})
                 else:
                     inventory_services.reject_count(count, request.user, request.POST.get("reason", ""))
-                    messages.success(request, "Opname ditolak; stok tidak berubah.")
+                    messages.success(request, _("Opname ditolak; stok tidak berubah."))
             else:
-                raise ValidationError("Aksi tidak dikenal.")
+                raise ValidationError(_("Aksi tidak dikenal."))
         except ValidationError as exc:
             messages.error(request, error_text(exc))
         return redirect("farm:opname")
@@ -594,7 +595,7 @@ class PricesView(FarmPage):
         form = PriceForm(request.POST, roles=self.roles)
         if request.POST.get("clear"):
             inventory_services.set_product_price(product, None, actor=request.user)
-            messages.success(request, f"Harga {product} dihapus; produk disembunyikan dari POS.")
+            messages.success(request, _("Harga %(product)s dihapus; produk disembunyikan dari POS.") % {"product": product})
         elif form.is_valid():
             try:
                 inventory_services.set_product_price(product, form.cleaned_data["selling_price_idr"],
@@ -606,9 +607,9 @@ class PricesView(FarmPage):
             except ValidationError as exc:
                 messages.error(request, error_text(exc))
             else:
-                messages.success(request, f"Harga {product} disimpan.")
+                messages.success(request, _("Harga %(product)s disimpan.") % {"product": product})
         else:
-            messages.error(request, "Harga tidak valid.")
+            messages.error(request, _("Harga tidak valid."))
         return redirect(reverse("farm:prices"))
 
 
@@ -621,7 +622,7 @@ def cycle_timeline(cycle, finance=False):
 
     trace = forward_trace(cycle)
     events = [{"at": timezone.make_aware(datetime.combine(cycle.planting_start_date, datetime.min.time())),
-               "kind": "start", "title": f"Mulai tanam {cycle.variety}", "body": f"di {cycle.element}"}]
+               "kind": "start", "title": _("Mulai tanam %(variety)s") % {"variety": cycle.variety}, "body": _("di %(element)s") % {"element": cycle.element}}]
     for a in trace.activities:
         body = a.input_item.name + f" {a.quantity.normalize():f} {a.unit}" if a.input_item else (a.notes or a.application_method)
         if a.duration_minutes:
@@ -629,20 +630,20 @@ def cycle_timeline(cycle, finance=False):
         events.append({"at": a.logged_at, "kind": a.activity_type.lower(), "title": a.get_activity_type_display(),
                        "body": body, "who": a.recorded_by, "photo": a.photo})
     for check in cycle.preharvest_checks.all():
-        events.append({"at": check.recorded_at, "kind": "check", "title": "Cek pra-panen",
-                       "body": f"{check.completed_pct.normalize():f}% lengkap", "who": check.recorded_by})
+        events.append({"at": check.recorded_at, "kind": "check", "title": _("Cek pra-panen"),
+                       "body": _("%(completed_pct)s%% lengkap") % {"completed_pct": format(check.completed_pct.normalize(), 'f')}, "who": check.recorded_by})
     for bt in trace.batches:
         b = bt.batch
-        body = f"HIGH {b.high_quality_kg.normalize():f} kg · LOW {b.low_quality_kg.normalize():f} kg · susut {b.harvest_loss_kg.normalize():f} kg"
-        events.append({"at": b.harvested_at, "kind": "harvest", "title": f"Panen #{b.pk}", "body": body,
+        body = _("HIGH %(high)s kg · LOW %(low)s kg · susut %(loss)s kg") % {"high": f"{b.high_quality_kg.normalize():f}", "low": f"{b.low_quality_kg.normalize():f}", "loss": f"{b.harvest_loss_kg.normalize():f}"}
+        events.append({"at": b.harvested_at, "kind": "harvest", "title": _("Panen #%(pk)s") % {"pk": b.pk}, "body": body,
                        "money": b.absorbed_cost_idr if finance else None, "who": b.recorded_by})
         for lt in bt.lots:
             for sp in lt.spoilages:
-                events.append({"at": sp.recorded_at, "kind": "spoilage", "title": f"Susut {lt.lot.product}",
-                               "body": f"{sp.qty_kg.normalize():f} kg · {sp.get_reason_display()}",
+                events.append({"at": sp.recorded_at, "kind": "spoilage", "title": _("Susut %(product)s") % {"product": lt.lot.product},
+                               "body": _("%(qty_kg)s kg · %(reason)s") % {"qty_kg": format(sp.qty_kg.normalize(), 'f'), "reason": sp.get_reason_display()},
                                "money": sp.loss_idr if finance else None})
     if cycle.closed_at:
-        events.append({"at": cycle.closed_at, "kind": "close", "title": "Siklus ditutup", "body": ""})
+        events.append({"at": cycle.closed_at, "kind": "close", "title": _("Siklus ditutup"), "body": ""})
     events.sort(key=lambda e: e["at"], reverse=True)
     return trace, events
 
@@ -650,7 +651,7 @@ def cycle_timeline(cycle, finance=False):
 class CycleDetailView(FarmPage):
     template_name = "farm/cycle_detail.html"
     form_class = EstimatesForm
-    success_message = "Perkiraan siklus disimpan."
+    success_message = _l("Perkiraan siklus disimpan.")
 
     def dispatch(self, request, *args, **kwargs):
         self.cycle = get_object_or_404(CropCycle.objects.select_related("element", "variety"), pk=kwargs["pk"])
@@ -689,7 +690,7 @@ class CycleDetailView(FarmPage):
 class ElementDetailView(FarmPage):
     template_name = "farm/element_detail.html"
     form_class = StartCycleForm
-    success_message = "Siklus tanam dimulai."
+    success_message = _l("Siklus tanam dimulai.")
 
     def dispatch(self, request, *args, **kwargs):
         self.element = get_object_or_404(FarmElement, pk=kwargs["pk"])
@@ -743,7 +744,7 @@ class InputDetailView(FarmPage):
     template_name = "farm/input_detail.html"
     form_class = PurchaseForm
     post_roles = FINANCE_ROLES
-    success_message = "Stok input ditambah."
+    success_message = _l("Stok input ditambah.")
 
     def dispatch(self, request, *args, **kwargs):
         self.item = get_object_or_404(InputItem, pk=kwargs["pk"])

@@ -5,6 +5,8 @@ database cache (weather 30 min, NDVI/soil 24 h); a missing key or any failure
 returns None so the UI can show "data tidak tersedia" — never an exception.
 """
 
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
 import hashlib
 import logging
 import math
@@ -58,17 +60,17 @@ SAT_COVERED = "COVERED"
 COVERED_TYPES = {"GREENHOUSE", "SCREEN_HOUSE", "HYDROPONIC"}
 
 WEATHER_CODES = {
-    0: "Cerah", 1: "Cerah berawan", 2: "Berawan sebagian", 3: "Berawan", 45: "Berkabut", 48: "Berkabut",
-    51: "Gerimis ringan", 53: "Gerimis", 55: "Gerimis lebat", 61: "Hujan ringan", 63: "Hujan", 65: "Hujan lebat",
-    66: "Hujan beku", 67: "Hujan beku", 71: "Salju", 73: "Salju", 75: "Salju", 80: "Hujan lokal",
-    81: "Hujan lokal", 82: "Hujan deras", 95: "Badai petir", 96: "Badai petir", 99: "Badai petir",
+    0: _l("Cerah"), 1: _l("Cerah berawan"), 2: _l("Berawan sebagian"), 3: _l("Berawan"), 45: _l("Berkabut"), 48: _l("Berkabut"),
+    51: _l("Gerimis ringan"), 53: _l("Gerimis"), 55: _l("Gerimis lebat"), 61: _l("Hujan ringan"), 63: _l("Hujan"), 65: _l("Hujan lebat"),
+    66: _l("Hujan beku"), 67: _l("Hujan beku"), 71: _l("Salju"), 73: _l("Salju"), 75: _l("Salju"), 80: _l("Hujan lokal"),
+    81: _l("Hujan lokal"), 82: _l("Hujan deras"), 95: _l("Badai petir"), 96: _l("Badai petir"), 99: _l("Badai petir"),
 }
 RAIN_CODES = {61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99}
 
 
 def require_editor(actor):
     if not user_has_role(actor, ROLE_OWNER, ROLE_MANAGER):
-        raise PermissionDenied("Hanya OWNER/MANAGER yang dapat mengubah poligon.")
+        raise PermissionDenied(_("Hanya OWNER/MANAGER yang dapat mengubah poligon."))
 
 
 # ---------------------------------------------------------------------------
@@ -97,21 +99,21 @@ def clean_geometry(geojson) -> tuple[dict, Decimal]:
     if isinstance(geojson, dict) and geojson.get("type") == "Feature":
         geojson = geojson.get("geometry")
     if not isinstance(geojson, dict) or geojson.get("type") != "Polygon":
-        raise ValidationError("Geometri harus berupa satu poligon.")
+        raise ValidationError(_("Geometri harus berupa satu poligon."))
     try:
         geom = shape(geojson)
     except (ValueError, TypeError, KeyError, IndexError, AttributeError):
-        raise ValidationError("Koordinat poligon tidak valid.")
+        raise ValidationError(_("Koordinat poligon tidak valid."))
     if geom.is_empty or len(geom.exterior.coords) < 4:
-        raise ValidationError("Poligon minimal memiliki 3 titik.")
-    for lon, lat, *_ in geom.exterior.coords:
+        raise ValidationError(_("Poligon minimal memiliki 3 titik."))
+    for lon, lat, *_rest in geom.exterior.coords:
         if not (-180 <= lon <= 180 and -90 <= lat <= 90):
-            raise ValidationError("Koordinat di luar jangkauan bujur/lintang.")
+            raise ValidationError(_("Koordinat di luar jangkauan bujur/lintang."))
     if not geom.is_valid:
-        raise ValidationError(f"Poligon tidak valid (berpotongan sendiri?): {explain_validity(geom)}.")
+        raise ValidationError(_("Poligon tidak valid (berpotongan sendiri?): %(explain_validity)s.") % {"explain_validity": explain_validity(geom)})
     area = polygon_area_ha(geom)
     if area < MIN_HA or area > MAX_HA:
-        raise ValidationError(f"Luas poligon {area} ha di luar batas {MIN_HA}–{MAX_HA} ha.")
+        raise ValidationError(_("Luas poligon %(area)s ha di luar batas %(MIN_HA)s–%(MAX_HA)s ha.") % {"area": area, "MIN_HA": MIN_HA, "MAX_HA": MAX_HA})
     return {"type": "Polygon", "coordinates": geojson["coordinates"]}, area
 
 
@@ -121,14 +123,14 @@ def _check_total(area, exclude_pk=None):
         qs = qs.exclude(pk=exclude_pk)
     total = (qs.aggregate(s=Sum("area_ha"))["s"] or Decimal("0")) + area
     if total > TOTAL_MAX_HA:
-        raise ValidationError(f"Total luas semua poligon ({total} ha) melebihi batas {TOTAL_MAX_HA} ha.")
+        raise ValidationError(_("Total luas semua poligon (%(total)s ha) melebihi batas %(TOTAL_MAX_HA)s ha.") % {"total": total, "TOTAL_MAX_HA": TOTAL_MAX_HA})
 
 
 @transaction.atomic
 def create_polygon(actor, name, geojson, element=None) -> FieldPolygon:
     require_editor(actor)
     if not (name or "").strip():
-        raise ValidationError("Nama poligon wajib diisi.")
+        raise ValidationError(_("Nama poligon wajib diisi."))
     geometry, area = clean_geometry(geojson)
     _check_total(area)
     return FieldPolygon.objects.create(name=name.strip(), geojson=geometry, area_ha=area, element=element,
@@ -142,7 +144,7 @@ def update_polygon(actor, polygon, *, name=None, geojson=None, element=False) ->
     polygon = FieldPolygon.objects.select_for_update().get(pk=polygon.pk)
     if name is not None:
         if not name.strip():
-            raise ValidationError("Nama poligon wajib diisi.")
+            raise ValidationError(_("Nama poligon wajib diisi."))
         polygon.name = name.strip()
     if geojson is not None:
         geometry, area = clean_geometry(geojson)
@@ -168,7 +170,7 @@ def use_plotted_area(actor, polygon):
     """Explicit "use plotted area" action: copy the polygon area onto its element (rule 33)."""
     require_editor(actor)
     if polygon.element is None:
-        raise ValidationError("Poligon belum ditautkan ke elemen.")
+        raise ValidationError(_("Poligon belum ditautkan ke elemen."))
     element = polygon.element
     element.area_m2 = (polygon.area_ha * 10000).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     element.save(update_fields=["area_m2"])
@@ -228,7 +230,7 @@ SPRAY_FAIR_WIND = 10
 SPRAY_BAD_RAIN_PCT = 50  # within the next SPRAY_LOOKAHEAD_H hours
 SPRAY_HOT_C = 32
 SPRAY_LOOKAHEAD_H = 4
-SPRAY_LABELS = {"GOOD": "Baik", "FAIR": "Cukup", "BAD": "Buruk"}
+SPRAY_LABELS = {"GOOD": _l("Baik"), "FAIR": _l("Cukup"), "BAD": _l("Tidak direkomendasikan")}
 
 
 def spray_rating(now: dict, ahead: list) -> dict:
@@ -241,18 +243,18 @@ def spray_rating(now: dict, ahead: list) -> dict:
     raining = (now.get("rain_mm") or 0) > 0 or now.get("code") in RAIN_CODES
     max_pct = max([h.get("rain_pct") or 0 for h in ahead] or [0])
     if raining:
-        reasons.append("sedang hujan")
+        reasons.append(_("sedang hujan"))
     if wind > SPRAY_BAD_WIND:
-        reasons.append(f"angin {round(wind)} km/j")
+        reasons.append(_("angin %(wind)s km/j") % {"wind": round(wind)})
     if max_pct >= SPRAY_BAD_RAIN_PCT:
-        reasons.append(f"peluang hujan {round(max_pct)}% dalam {SPRAY_LOOKAHEAD_H} jam")
+        reasons.append(_("peluang hujan %(pct)s%% dalam %(hours)s jam") % {"pct": round(max_pct), "hours": SPRAY_LOOKAHEAD_H})
     if reasons:
         level = "BAD"
     else:
         if (now.get("temp") or 0) > SPRAY_HOT_C:
-            reasons.append(f"panas {round(now['temp'])} °C (semprot pagi/sore)")
+            reasons.append(_("panas %(temp)s °C (semprot pagi/sore)") % {"temp": round(now['temp'])})
         if SPRAY_FAIR_WIND <= wind <= SPRAY_BAD_WIND:
-            reasons.append(f"angin {round(wind)} km/j")
+            reasons.append(_("angin %(wind)s km/j") % {"wind": round(wind)})
         level = "FAIR" if reasons else "GOOD"
     return {"level": level, "label": SPRAY_LABELS[level], "reasons": reasons}
 
@@ -309,8 +311,8 @@ def _parse_weather(data, today=None):
             "rain_30d_mm": round(sum(d["rain_mm"] for d in history[-30:]), 1),
             "spray": spray_rating(current, hours[1:1 + SPRAY_LOOKAHEAD_H]),
             "next_good_spray": next((h["time"] for h in hours if h["spray"] == "GOOD"), None),
-            "rain_warning": (f"Hujan lebat diperkirakan {_id_date(rainy[0]['date'])} ({rainy[0]['rain_mm']} mm) — "
-                             "tunda penyemprotan & siapkan drainase.") if rainy else None,
+            "rain_warning": (_("Hujan lebat diperkirakan %(date)s (%(mm)s mm) — tunda penyemprotan & siapkan drainase.")
+                             % {"date": _id_date(rainy[0]['date']), "mm": rainy[0]['rain_mm']}) if rainy else None,
         }
     except (KeyError, IndexError, TypeError):
         return None
@@ -440,18 +442,18 @@ def satellite_block_reason(polygon: FieldPolygon):
 def satellite_message(reason, polygon: FieldPolygon):
     ha = f"{polygon.area_ha.normalize():f}".replace(".", ",")
     return {
-        SAT_NO_KEY: "Data tidak tersedia: kunci Agromonitoring (AGRO_API_KEY) belum dipasang di server.",
-        SAT_TOO_SMALL: (f"Data satelit tidak tersedia: poligon ini {ha} ha, sedangkan Agromonitoring memerlukan "
-                        "1–3.000 ha. Gambar poligon yang lebih luas (mis. seluruh lahan terbuka) untuk NDVI."),
-        SAT_COVERED: (f"Indeks vegetasi tidak ditampilkan: {polygon.element.get_element_type_display() if polygon.element_id else ''} "
-                      "beratap, jadi satelit melihat atapnya, bukan tanaman. Data tanah dan cuaca tetap tersedia."),
-        SAT_KEY_REJECTED: ("Data tidak tersedia: kunci Agromonitoring ditolak. Periksa AGRO_API_KEY; "
-                           "kunci baru bisa butuh beberapa jam sampai aktif."),
-        SAT_POLYGON_REJECTED: "Data tidak tersedia: Agromonitoring menolak poligon ini (periksa luas dan bentuknya).",
-        SAT_API_ERROR: "Data tidak tersedia: layanan Agromonitoring tidak merespons. Coba lagi nanti.",
-        SAT_NO_IMAGERY: ("Belum ada citra satelit untuk poligon ini. Citra pertama bisa butuh beberapa hari "
-                         "setelah poligon didaftarkan."),
-    }.get(reason, "Data tidak tersedia.")
+        SAT_NO_KEY: _("Data tidak tersedia: kunci Agromonitoring (AGRO_API_KEY) belum dipasang di server."),
+        SAT_TOO_SMALL: _("Data satelit tidak tersedia: poligon ini %(ha)s ha, sedangkan Agromonitoring memerlukan 1–3.000 ha. "
+                          "Gambar poligon yang lebih luas (mis. seluruh lahan terbuka) untuk NDVI.") % {"ha": ha},
+        SAT_COVERED: _("Indeks vegetasi tidak ditampilkan: %(type)s beratap, jadi satelit melihat atapnya, bukan tanaman. "
+                        "Data tanah dan cuaca tetap tersedia.") % {"type": polygon.element.get_element_type_display() if polygon.element_id else ""},
+        SAT_KEY_REJECTED: _("Data tidak tersedia: kunci Agromonitoring ditolak. Periksa AGRO_API_KEY; "
+                             "kunci baru bisa butuh beberapa jam sampai aktif."),
+        SAT_POLYGON_REJECTED: _("Data tidak tersedia: Agromonitoring menolak poligon ini (periksa luas dan bentuknya)."),
+        SAT_API_ERROR: _("Data tidak tersedia: layanan Agromonitoring tidak merespons. Coba lagi nanti."),
+        SAT_NO_IMAGERY: _("Belum ada citra satelit untuk poligon ini. Citra pertama bisa butuh beberapa hari "
+                           "setelah poligon didaftarkan."),
+    }.get(reason, _("Data tidak tersedia."))
 
 
 def ensure_agro_polygon(polygon: FieldPolygon):
@@ -579,17 +581,17 @@ def weather_alerts(weather, has_open_field_cycle: bool):
     tomorrow = weather["days"][1]
     when = _id_date(tomorrow["date"])
     if (tomorrow.get("rain_mm") or 0) >= ALERT_RAIN_MM:
-        out.append({"kind": "weather_rain", "title": f"Hujan lebat besok ({when})",
-                    "body": f"Diperkirakan {round(tomorrow['rain_mm'])} mm — tunda penyemprotan, cek drainase.",
+        out.append({"kind": "weather_rain", "title": _("Hujan lebat besok (%(when)s)") % {"when": when},
+                    "body": _("Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase.") % {"round": round(tomorrow['rain_mm'])},
                     "date": weather["days"][0]["date"]})
     if (tomorrow.get("gust_max") or 0) >= ALERT_GUST_KMH:
-        out.append({"kind": "weather_wind", "title": f"Angin kencang besok ({when})",
-                    "body": f"Hembusan hingga {round(tomorrow['gust_max'])} km/j — periksa penyangga dan atap.",
+        out.append({"kind": "weather_wind", "title": _("Angin kencang besok (%(when)s)") % {"when": when},
+                    "body": _("Hembusan hingga %(round)s km/j — periksa penyangga dan atap.") % {"round": round(tomorrow['gust_max'])},
                     "date": weather["days"][0]["date"]})
     recent = (weather.get("history") or [])[-ALERT_DRY_DAYS:]
     if has_open_field_cycle and len(recent) == ALERT_DRY_DAYS and all((d.get("rain_mm") or 0) < DRY_DAY_MM for d in recent):
-        out.append({"kind": "weather_dry", "title": f"{ALERT_DRY_DAYS} hari tanpa hujan",
-                    "body": "Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit.",
+        out.append({"kind": "weather_dry", "title": _("%(ALERT_DRY_DAYS)s hari tanpa hujan") % {"ALERT_DRY_DAYS": ALERT_DRY_DAYS},
+                    "body": _("Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit."),
                     "date": recent[-1]["date"]})
     return out
 

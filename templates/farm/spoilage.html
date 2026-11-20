@@ -1,39 +1,40 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Susut/Rusak{% endblock %}
+{% block title %}{% translate "Susut/Rusak" %}{% endblock %}
 {% block content %}
-{% include "components/page_header.html" with title="Susut / Rusak" subtitle="Catat produk busuk, rusak, atau menyusut dari lot tertentu; kerugiannya dihitung dari HPP lot." %}
+{% include "components/page_header.html" with title=_("Susut / Rusak") subtitle=_("Catat produk busuk, rusak, atau menyusut dari lot tertentu; kerugiannya dihitung dari HPP lot.") %}
 {{ lot_products|json_script:"lot-products" }}
 <div class="app-split app-split--rev">
   <aside class="gt-card app-split__sticky"
          x-data="spoilageForm({{ initial_product|default:'null' }})">
-    <div class="gt-card__head"><h2 class="gt-card__title">Catat susut</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat susut" %}</h2></div>
     {% if lot_products %}
-    <label class="app-stackform"><span class="app-labelrow"><span class="app-label">Produk</span>{% info_tip "Lot tertua dipilih otomatis; ubah bila yang rusak lot lain." %}</span>
+    <label class="app-stackform"><span class="app-labelrow"><span class="app-label">{% translate "Produk" %}</span>{% info_tip _("Lot tertua dipilih otomatis; ubah bila yang rusak lot lain.") %}</span>
       <select class="app-field" x-model.number="product" @change="pickOldest()">
         <template x-for="p in products" :key="p.id"><option :value="p.id" x-text="p.name" :selected="p.id === product"></option></template>
       </select>
     </label>
     {{ lot_remaining|json_script:"lot-remaining" }}
     <form method="post" class="app-stackform" x-ref="form" @input="summarize()" @change="summarize()"
-          data-confirm-title="Catat susut/rusak?" data-confirm="" data-confirm-action="Catat susut" data-confirm-level="2" data-confirm-danger>{% csrf_token %}
+          data-confirm-title="{% translate 'Catat susut/rusak?' %}" data-confirm="" data-confirm-action="{% translate 'Catat susut' %}" data-confirm-level="2" data-confirm-danger>{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Simpan</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan" %}</button>
     </form>
     {% else %}
-    <p class="app-muted">Tidak ada lot dengan stok.</p>
+    <p class="app-muted">{% translate "Tidak ada lot dengan stok." %}</p>
     {% endif %}
   </aside>
   <section class="gt-card app-tablecard">
-    <div class="gt-card__head"><h2 class="gt-card__title">Catatan susut</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catatan susut" %}</h2></div>
     <div>
       <table class="gt-table">
-        <thead><tr><th>Waktu</th><th>Lot</th><th>Alasan</th><th class="num">Kg</th>{% if roles.finance %}<th class="num">Kerugian</th>{% endif %}<th>Catatan</th><th></th></tr></thead>
+        <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Lot" %}</th><th>{% translate "Alasan" %}</th><th class="num">{% translate "Kg" %}</th>{% if roles.finance %}<th class="num">{% translate "Kerugian" %}</th>{% endif %}<th>{% translate "Catatan" %}</th><th></th></tr></thead>
         <tbody>
         {% for r in records %}
-          <tr><td class="whitespace-nowrap">{{ r.recorded_at|date:"d-m-Y H:i" }}</td><td>#{{ r.lot_id }} {{ r.lot.product }}</td><td>{{ r.get_reason_display }}</td><td class="num">{{ r.qty_kg|kg }}</td>{% if roles.finance %}<td class="num">{{ r.loss_idr|rupiah }}</td>{% endif %}<td class="app-muted">{{ r.notes|truncatechars:60 }}{% if r.reversed_at %}<span class="app-sub">Dibatalkan: {{ r.reversal_reason|truncatechars:60 }}</span>{% endif %}</td>
-            <td class="num">{% if r.reversed_at %}{% pill "Dibatalkan" tone="gray" %}{% elif r.can_reverse %}<form method="post" action="{% url 'farm:spoilage_reverse' r.pk %}" data-confirm-title="Batalkan susut #{{ r.pk }}?" data-confirm="{{ r.qty_kg|kg }} kg dikembalikan ke lot #{{ r.lot_id }} ({{ r.lot.product }}) sebagai mutasi pembatalan. Catatan aslinya tetap tersimpan." data-confirm-action="Batalkan susut" data-confirm-reason="Alasan pembatalan">{% csrf_token %}<button class="gt-btn gt-btn--outline gt-btn--sm">Batalkan</button></form>{% endif %}</td></tr>
-        {% empty %}<tr><td colspan="7" class="app-empty-cell app-muted">Belum ada susut tercatat.</td></tr>{% endfor %}
+          <tr><td class="whitespace-nowrap">{{ r.recorded_at|date:"d-m-Y H:i" }}</td><td>#{{ r.lot_id }} {{ r.lot.product }}</td><td>{{ r.get_reason_display }}</td><td class="num">{{ r.qty_kg|kg }}</td>{% if roles.finance %}<td class="num">{{ r.loss_idr|rupiah }}</td>{% endif %}<td class="app-muted">{{ r.notes|truncatechars:60 }}{% if r.reversed_at %}<span class="app-sub">{% translate "Dibatalkan:" %} {{ r.reversal_reason|truncatechars:60 }}</span>{% endif %}</td>
+            <td class="num">{% if r.reversed_at %}{% pill _("Dibatalkan") tone="gray" %}{% elif r.can_reverse %}{% blocktranslate asvar t_data_confirm_title_6 with v1=r.pk %}Batalkan susut #{{ v1 }}?{% endblocktranslate %}{% blocktranslate asvar t_data_confirm_7 with v1=r.qty_kg|kg v2=r.lot_id v3=r.lot.product %}{{ v1 }} kg dikembalikan ke lot #{{ v2 }} ({{ v3 }}) sebagai mutasi pembatalan. Catatan aslinya tetap tersimpan.{% endblocktranslate %}<form method="post" action="{% url 'farm:spoilage_reverse' r.pk %}" data-confirm-title="{{ t_data_confirm_title_6 }}" data-confirm="{{ t_data_confirm_7 }}" data-confirm-action="{% translate 'Batalkan susut' %}" data-confirm-reason="Alasan pembatalan">{% csrf_token %}<button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Batalkan" %}</button></form>{% endif %}</td></tr>
+        {% empty %}<tr><td colspan="7" class="app-empty-cell app-muted">{% translate "Belum ada susut tercatat." %}</td></tr>{% endfor %}
         </tbody>
       </table>
       {% include "components/pagination.html" %}
@@ -55,7 +56,7 @@
         const remaining = JSON.parse(document.getElementById('lot-remaining').textContent);
         const lot = f.querySelector('select[name=lot]').value, qty = idNum.parse(f.querySelector('[name=qty_kg]').value) || 0;
         const left = Number(remaining[lot] || 0);
-        let text = 'Susut ' + idNum.format(qty, 'kg') + ' kg dari lot #' + lot + ' (sisa ' + idNum.format(left, 'kg') + ' kg) dicatat sebagai kerugian dan stoknya berkurang.';
+        let text = '{% jt "Susut " %}' + idNum.format(qty, 'kg') + '{% jt " kg dari lot #" %}' + lot + '{% jt " (sisa " %}' + idNum.format(left, 'kg') + '{% jt " kg) dicatat sebagai kerugian dan stoknya berkurang." %}';
         if (left && qty > left * 0.5) text += '\nPeringatan: lebih dari 50% sisa lot ini (' + Math.round(qty / left * 100) + '%). Pastikan jumlah dan lotnya benar.';
         f.dataset.confirm = text;
       },

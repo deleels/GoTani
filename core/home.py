@@ -1,5 +1,7 @@
 """Ringkasan (home) numbers (D70). Read-only aggregates; money only for OWNER/MANAGER."""
 
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
 from datetime import timedelta
 from decimal import Decimal
 
@@ -14,11 +16,11 @@ ZERO = Decimal("0")
 
 WORK_TYPES = [
     # key (Laporan Kerja tab), label, ActivityType
-    ("pemupukan", "Pemupukan", ActivityLog.ActivityType.FERTILIZER),
-    ("pestisida", "Pestisida", ActivityLog.ActivityType.PESTICIDE),
-    ("irigasi", "Irigasi", ActivityLog.ActivityType.IRRIGATION),
-    ("scouting", "Scouting", ActivityLog.ActivityType.SCOUTING),
-    ("penanaman", "Penanaman", ActivityLog.ActivityType.SEEDING),
+    ("pemupukan", _l("Pemupukan"), ActivityLog.ActivityType.FERTILIZER),
+    ("pestisida", _l("Pestisida"), ActivityLog.ActivityType.PESTICIDE),
+    ("irigasi", _l("Irigasi"), ActivityLog.ActivityType.IRRIGATION),
+    ("scouting", _l("Scouting"), ActivityLog.ActivityType.SCOUTING),
+    ("penanaman", _l("Penanaman"), ActivityLog.ActivityType.SEEDING),
 ]
 
 
@@ -30,9 +32,9 @@ def weekly_work(now=None):
                   .annotate(n=Count("id")).values_list("activity_type", "n"))
     rows = [{"key": k, "label": label, "count": counts.get(t, 0)} for k, label, t in WORK_TYPES]
     rows += [
-        {"key": "prapanen", "label": "Pra-panen", "count": PreHarvestCheck.objects.filter(recorded_at__gte=since).count()},
-        {"key": "panen", "label": "Panen", "count": HarvestBatch.objects.filter(harvested_at__gte=since).count()},
-        {"key": "susut", "label": "Susut", "count": SpoilageRecord.objects.filter(recorded_at__gte=since).count()},
+        {"key": "prapanen", "label": _("Pra-panen"), "count": PreHarvestCheck.objects.filter(recorded_at__gte=since).count()},
+        {"key": "panen", "label": _("Panen"), "count": HarvestBatch.objects.filter(harvested_at__gte=since).count()},
+        {"key": "susut", "label": _("Susut"), "count": SpoilageRecord.objects.filter(recorded_at__gte=since).count()},
     ]
     return rows
 

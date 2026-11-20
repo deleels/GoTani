@@ -1,51 +1,52 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Panen{% endblock %}
+{% block title %}{% translate "Panen" %}{% endblock %}
 {% block content %}
-{% include "components/page_header.html" with title="Panen" subtitle="Setiap panen dipilah menjadi grade HIGH dan LOW; tiap grade menjadi lot stok dengan HPP-nya sendiri." %}
+{% include "components/page_header.html" with title=_("Panen") subtitle=_("Setiap panen dipilah menjadi grade HIGH dan LOW; tiap grade menjadi lot stok dengan HPP-nya sendiri.") %}
 <div class="gt-grid app-kpis">
-  {% include "components/kpi.html" with stat=True featured=True label="Panen bulan ini" value=kpi.n %}
-  {% with v=kpi.high|kg|add:" kg" %}{% include "components/kpi.html" with stat=True label="Grade HIGH" value=v %}{% endwith %}
-  {% with v=kpi.low|kg|add:" kg" h=kpi.loss|kg|add:" kg susut panen" %}{% include "components/kpi.html" with stat=True label="Grade LOW" value=v hint=h %}{% endwith %}
-  {% include "components/kpi.html" with stat=True label="Siap panen" value=kpi.harvesting tip="Siklus yang sedang di tahap Panen." %}
+  {% include "components/kpi.html" with stat=True featured=True label=_("Panen bulan ini") value=kpi.n %}
+  {% with v=kpi.high|kg|add:" kg" %}{% include "components/kpi.html" with stat=True label=_("Grade HIGH") value=v %}{% endwith %}
+  {% with v=kpi.low|kg|add:" kg" loss=kpi.loss|kg %}{% blocktranslate asvar h %}{{ loss }} kg susut panen{% endblocktranslate %}{% include "components/kpi.html" with stat=True label=_("Grade LOW") value=v hint=h %}{% endwith %}
+  {% include "components/kpi.html" with stat=True label=_("Siap panen") value=kpi.harvesting tip=_("Siklus yang sedang di tahap Panen.") %}
 </div>
 <div class="app-split app-split--rev">
   <aside class="gt-card app-split__sticky">
-    <div class="gt-card__head"><h2 class="gt-card__title">Catat panen {% info_tip "Batch tidak bisa diubah setelah disimpan; hapus dan catat ulang selama belum ada penjualan atau susut." %}</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat panen" %} {% info_tip _("Batch tidak bisa diubah setelah disimpan; hapus dan catat ulang selama belum ada penjualan atau susut.") %}</h2></div>
     {% if form.fields.cycle.queryset.exists %}
     <form method="post" class="app-stackform">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
       {% if review %}
       <input type="hidden" name="review_sig" value="{{ review_sig }}">
       <div class="app-review" data-harvest-review>
-        <span class="app-review__title">Tinjau sebelum menyimpan {% info_tip "Mengubah angka di atas memerlukan tinjauan ulang." %}</span>
+        <span class="app-review__title">{% translate "Tinjau sebelum menyimpan" %} {% info_tip _("Mengubah angka di atas memerlukan tinjauan ulang.") %}</span>
         <dl class="gt-kv gt-kv--compact">
-          <div><dt>Siap jual (HIGH + LOW)</dt><dd>{{ review.sellable_kg|kg }} kg</dd></div>
-          {% if review.expected_kg %}<div><dt>Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} / {{ review.expected_kg|kg }} kg ({{ review.pct_after|pct }})</dd></div>
-          {% else %}<div><dt>Total siklus setelah ini</dt><dd>{{ review.actual_after_kg|kg }} kg <span class="app-row__meta">(tanpa perkiraan)</span></dd></div>{% endif %}
-          {% if review.batch_avg_kg %}<div><dt>Rata-rata batch sebelumnya</dt><dd>{{ review.batch_avg_kg|kg }} kg</dd></div>{% endif %}
+          <div><dt>{% translate "Siap jual (HIGH + LOW)" %}</dt><dd>{{ review.sellable_kg|kg }} kg</dd></div>
+          {% if review.expected_kg %}<div><dt>{% translate "Total siklus setelah ini" %}</dt><dd>{{ review.actual_after_kg|kg }} / {{ review.expected_kg|kg }} {% translate "kg (" %}{{ review.pct_after|pct }})</dd></div>
+          {% else %}<div><dt>{% translate "Total siklus setelah ini" %}</dt><dd>{{ review.actual_after_kg|kg }} kg <span class="app-row__meta">{% translate "(tanpa perkiraan)" %}</span></dd></div>{% endif %}
+          {% if review.batch_avg_kg %}<div><dt>{% translate "Rata-rata batch sebelumnya" %}</dt><dd>{{ review.batch_avg_kg|kg }} kg</dd></div>{% endif %}
           {% if roles.finance %}
-          <div><dt>Biaya yang diserap</dt><dd>{{ review.pool_idr|rupiah }} <span class="app-row__meta">({{ review.expenses }} biaya)</span></dd></div>
-          <div><dt>HPP/kg HIGH · LOW</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}—{% endif %}</dd></div>
+          <div><dt>{% translate "Biaya yang diserap" %}</dt><dd>{{ review.pool_idr|rupiah }} <span class="app-row__meta">({{ review.expenses }} {% translate "biaya)" %}</span></dd></div>
+          <div><dt>{% translate "HPP/kg HIGH · LOW" %}</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}—{% endif %}</dd></div>
           {% endif %}
         </dl>
         {% for w in review.warnings %}<div class="gt-callout gt-callout--warning gt-callout--raised">{% icon "alert" 18 %}<div><span class="gt-callout__title">{{ w }}</span></div></div>{% endfor %}
       </div>
       <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block"
-              {% if review.warnings %}data-confirm-title="Simpan panen dengan peringatan?" data-confirm="{{ review.warnings|join:' ' }}" data-confirm-action="Simpan panen" data-confirm-level="2"{% endif %}>Simpan panen</button>
+              {% if review.warnings %}data-confirm-title="{% translate 'Simpan panen dengan peringatan?' %}" data-confirm="{{ review.warnings|join:' ' }}" data-confirm-action="{% translate 'Simpan panen' %}" data-confirm-level="2"{% endif %}>{% translate "Simpan panen" %}</button>
       {% else %}
-      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Tinjau panen</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Tinjau panen" %}</button>
       {% endif %}
     </form>
     {% else %}
-    <p class="app-muted">Tidak ada siklus di tahap Panen. Majukan tahap siklus terlebih dahulu.</p>
+    <p class="app-muted">{% translate "Tidak ada siklus di tahap Panen. Majukan tahap siklus terlebih dahulu." %}</p>
     {% endif %}
   </aside>
   <section class="gt-card app-tablecard">
-    <div class="gt-card__head"><h2 class="gt-card__title">Batch panen</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Batch panen" %}</h2></div>
     <div>
       <table class="gt-table">
-        <thead><tr><th>#</th><th>Waktu</th><th>Siklus</th><th class="num">HIGH</th><th class="num">LOW</th><th class="num">Susut</th>{% if roles.finance %}<th class="num">Biaya terserap</th><th class="num">HPP/kg H · L</th><th></th>{% endif %}</tr></thead>
+        <thead><tr><th>#</th><th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th class="num">HIGH</th><th class="num">LOW</th><th class="num">{% translate "Susut" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya terserap" %}</th><th class="num">{% translate "HPP/kg H · L" %}</th><th></th>{% endif %}</tr></thead>
         <tbody>
         {% for b in batches %}
           <tr>
@@ -58,10 +59,10 @@
             {% if roles.finance %}
             <td class="num">{{ b.absorbed_cost_idr|rupiah }}</td>
             <td class="whitespace-nowrap num">{{ b.unit_cogs_high_idr|rupiah }} · {{ b.unit_cogs_low_idr|rupiah }}</td>
-            <td><form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="Hapus batch panen #{{ b.pk }}?" data-confirm="Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut." data-confirm-action="Hapus batch" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Hapus</button></form></td>
+            <td>{% blocktranslate asvar t_data_confirm_title_3 with v1=b.pk %}Hapus batch panen #{{ v1 }}?{% endblocktranslate %}<form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="{{ t_data_confirm_title_3 }}" data-confirm="{% translate 'Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut.' %}" data-confirm-action="{% translate 'Hapus batch' %}" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form></td>
             {% endif %}
           </tr>
-        {% empty %}<tr><td colspan="9" class="app-empty-cell app-muted">Belum ada panen.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="9" class="app-empty-cell app-muted">{% translate "Belum ada panen." %}</td></tr>{% endfor %}
         </tbody>
       </table>
       {% include "components/pagination.html" %}

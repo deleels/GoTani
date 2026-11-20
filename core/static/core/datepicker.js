@@ -4,7 +4,7 @@
    Alpine templates) are picked up by a MutationObserver. Add data-native-date to opt out. */
 (function () {
   if (!window.flatpickr) return;
-  if (flatpickr.l10ns && flatpickr.l10ns.id) flatpickr.localize(flatpickr.l10ns.id);
+  if (!window.GT_EN && flatpickr.l10ns && flatpickr.l10ns.id) flatpickr.localize(flatpickr.l10ns.id);
   var SEL = 'input[type="date"]:not([data-native-date]), input[type="datetime-local"]:not([data-native-date])';
 
   function init(el) {

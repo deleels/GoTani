@@ -10,6 +10,7 @@
 Superusers pass every check (treated as OWNER).
 """
 
+from django.utils.translation import gettext as _
 from functools import cached_property
 
 from django.contrib.auth.mixins import AccessMixin
@@ -97,7 +98,7 @@ class RoleRequiredMixin(AccessMixin):
         if request.method not in ("GET", "HEAD", "OPTIONS") and self.post_roles is not None:
             required = self.post_roles
         if not roles.has(*required):
-            raise PermissionDenied("Anda tidak memiliki akses ke halaman ini.")
+            raise PermissionDenied(_("Anda tidak memiliki akses ke halaman ini."))
         self.roles = roles
         return super().dispatch(request, *args, **kwargs)
 

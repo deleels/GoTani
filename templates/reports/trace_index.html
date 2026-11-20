@@ -1,35 +1,36 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}Ketertelusuran{% endblock %}
+{% block title %}{% translate "Ketertelusuran" %}{% endblock %}
 {% block content %}
 {# Telusuri (Phase 5b): two cards — backward from a receipt/invoice number, forward from a cycle. #}
-{% include "components/page_header.html" with title="Telusuri" subtitle="Maju: siklus → kegiatan → biaya → panen → lot → susut → penjualan dan invoice. Mundur: nomor struk (GT-…) atau invoice (INV-…) → lot → panen → siklus → elemen." %}
+{% include "components/page_header.html" with title=_("Telusuri") subtitle=_("Maju: siklus → kegiatan → biaya → panen → lot → susut → penjualan dan invoice. Mundur: nomor struk (GT-…) atau invoice (INV-…) → lot → panen → siklus → elemen.") %}
 <div class="app-trace">
   <section class="gt-card" aria-labelledby="h-back">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-back">Mundur dari struk {% info_tip "Nomor order → baris → lot → batch panen → siklus → elemen." %}</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-back">{% translate "Mundur dari struk" %} {% info_tip _("Nomor order → baris → lot → batch panen → siklus → elemen.") %}</h2></div>
     <form method="get" class="app-rowform app-trace__form">
-      <label class="app-search app-grow">{% icon "search" 18 %}<span class="sr-only">Nomor struk atau invoice</span>
-        <input name="order" placeholder="GT-20261119-0001 atau INV-202611-0001" value="{{ not_found|default:'' }}" class="app-field app-field--sm app-mono" required></label>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Telusuri</button>
+      <label class="app-search app-grow">{% icon "search" 18 %}<span class="sr-only">{% translate "Nomor struk atau invoice" %}</span>
+        <input name="order" placeholder="{% translate 'GT-20261119-0001 atau INV-202611-0001' %}" value="{{ not_found|default:'' }}" class="app-field app-field--sm app-mono" required></label>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Telusuri" %}</button>
     </form>
-    {% if not_found %}<div class="gt-callout gt-callout--danger gt-callout--raised app-section-gap">{% icon "alert" 18 %}<div><span class="gt-callout__title">Order {{ not_found }} tidak ditemukan.</span></div></div>{% endif %}
-    <span class="app-trace__label">Order terbaru</span>
+    {% if not_found %}<div class="gt-callout gt-callout--danger gt-callout--raised app-section-gap">{% icon "alert" 18 %}<div><span class="gt-callout__title">{% translate "Order" %} {{ not_found }} {% translate "tidak ditemukan." %}</span></div></div>{% endif %}
+    <span class="app-trace__label">{% translate "Order terbaru" %}</span>
     <ul class="gt-list gt-list--divided">
       {% for o in recent_orders %}
       <li><a class="gt-row" href="{% url 'reports:trace_order' o.order_number %}">
         <span class="gt-row__body"><span class="gt-row__title app-mono">{{ o.order_number }}</span></span>
-        <span class="gt-row__trail">{% if o.status == 'VOIDED' %}{% pill "Batal" "VOIDED" %}{% endif %}<span class="gt-row__value{% if o.status == 'VOIDED' %} app-muted{% endif %}">{{ o.total_revenue_idr|rupiah }}</span>{% icon "chevron-right" 16 %}</span></a></li>
-      {% empty %}<li class="app-muted app-trace__empty">Belum ada order.</li>{% endfor %}
+        <span class="gt-row__trail">{% if o.status == 'VOIDED' %}{% pill _("Batal") "VOIDED" %}{% endif %}<span class="gt-row__value{% if o.status == 'VOIDED' %} app-muted{% endif %}">{{ o.total_revenue_idr|rupiah }}</span>{% icon "chevron-right" 16 %}</span></a></li>
+      {% empty %}<li class="app-muted app-trace__empty">{% translate "Belum ada order." %}</li>{% endfor %}
     </ul>
   </section>
   <section class="gt-card" aria-labelledby="h-fwd">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-fwd">Maju dari siklus {% info_tip "Siklus → kegiatan → biaya terserap → panen → lot → susut → penjualan." %}</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-fwd">{% translate "Maju dari siklus" %} {% info_tip _("Siklus → kegiatan → biaya terserap → panen → lot → susut → penjualan.") %}</h2></div>
     <ul class="gt-list gt-list--divided">
       {% for c in cycles %}
       <li><a class="gt-row" href="{% url 'reports:trace_cycle' c.pk %}">
-        <span class="gt-row__body"><span class="gt-row__title">{{ c.variety }} <span class="app-muted">@ {{ c.element }}</span></span><span class="gt-row__meta">mulai {{ c.planting_start_date|date:"d M Y" }}</span></span>
-        <span class="gt-row__trail">{% if c.is_active %}<span class="gt-chip gt-chip--sm">{{ c.get_stage_display }}</span>{% else %}{% pill "Ditutup" tone="gray" %}{% endif %}{% icon "chevron-right" 16 %}</span></a></li>
-      {% empty %}<li class="app-muted app-trace__empty">Belum ada siklus.</li>{% endfor %}
+        <span class="gt-row__body"><span class="gt-row__title">{{ c.variety }} <span class="app-muted">@ {{ c.element }}</span></span><span class="gt-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"d M Y" }}</span></span>
+        <span class="gt-row__trail">{% if c.is_active %}<span class="gt-chip gt-chip--sm">{{ c.get_stage_display }}</span>{% else %}{% pill _("Ditutup") tone="gray" %}{% endif %}{% icon "chevron-right" 16 %}</span></a></li>
+      {% empty %}<li class="app-muted app-trace__empty">{% translate "Belum ada siklus." %}</li>{% endfor %}
     </ul>
   </section>
 </div>

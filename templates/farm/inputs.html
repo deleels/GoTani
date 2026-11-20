@@ -1,41 +1,42 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Input Produksi{% endblock %}
+{% block title %}{% translate "Input Produksi" %}{% endblock %}
 {% block content %}
-{% include "components/page_header.html" with title="Inventaris Input" subtitle="Pupuk, pestisida dan benih. Pemakaian di Laporan Kerja memotong stok; klik input untuk melihat ke mana saja ia dipakai." %}
+{% include "components/page_header.html" with title=_("Inventaris Input") subtitle=_("Pupuk, pestisida dan benih. Pemakaian di Laporan Kerja memotong stok; klik input untuk melihat ke mana saja ia dipakai.") %}
 <div class="gt-grid app-kpis">
-  {% include "components/kpi.html" with stat=True featured=True label="Jenis input" value=items|length %}
-  {% include "components/kpi.html" with stat=True label="Stok menipis" value=low_count %}
+  {% include "components/kpi.html" with stat=True featured=True label=_("Jenis input") value=items|length %}
+  {% include "components/kpi.html" with stat=True label=_("Stok menipis") value=low_count %}
 </div>
 <div class="{% if roles.finance %}app-split{% endif %}">
   <section class="app-side">
     <div class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">Stok input</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Stok input" %}</h2></div>
       <table class="gt-table">
-        <thead><tr><th>Input</th><th>Jenis</th><th class="num">Stok</th><th class="num">Batas peringatan</th>{% if roles.finance %}<th class="num">Biaya rata-rata</th>{% endif %}</tr></thead>
+        <thead><tr><th>{% translate "Input" %}</th><th>{% translate "Jenis" %}</th><th class="num">{% translate "Stok" %}</th><th class="num">{% translate "Batas peringatan" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya rata-rata" %}</th>{% endif %}</tr></thead>
         <tbody>
         {% for item in items %}
           <tr>
-            <td><a class="app-link--plain app-strong" href="{% url 'farm:input_detail' item.pk %}">{{ item.name }}</a> {% if item.is_low_stock %}{% pill "Stok menipis" tone="yellow" %}{% endif %}</td>
+            <td><a class="app-link--plain app-strong" href="{% url 'farm:input_detail' item.pk %}">{{ item.name }}</a> {% if item.is_low_stock %}{% pill _("Stok menipis") tone="yellow" %}{% endif %}</td>
             <td>{{ item.get_item_type_display }}</td>
             <td class="num {% if item.is_low_stock %}app-value--late app-strong{% endif %}">{{ item.stock_qty|kg }} {{ item.unit }}</td>
             <td class="num app-muted">{{ item.min_alert_qty|kg }} {{ item.unit }}</td>
             {% if roles.finance %}<td class="num">{{ item.avg_cost_per_unit_idr|rupiah }}/{{ item.unit }}</td>{% endif %}
           </tr>
-        {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">Belum ada input. Tambahkan lewat Admin.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Belum ada input. Tambahkan lewat Admin." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
 
     {% if roles.finance %}
     <div class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">Pembelian terbaru {% info_tip "Aset persediaan: kas keluar, bukan beban laba rugi." %}</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Pembelian terbaru" %} {% info_tip _("Aset persediaan: kas keluar, bukan beban laba rugi.") %}</h2></div>
       <table class="gt-table">
-        <thead><tr><th>Tanggal</th><th>Input</th><th class="num">Jumlah</th><th class="num">Harga/satuan</th><th class="num">Total</th><th>Pemasok</th></tr></thead>
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Input" %}</th><th class="num">{% translate "Jumlah" %}</th><th class="num">{% translate "Harga/satuan" %}</th><th class="num">{% translate "Total" %}</th><th>{% translate "Pemasok" %}</th></tr></thead>
         <tbody>
         {% for p in purchases %}
           <tr><td>{{ p.purchased_at|date:"d-m-Y" }}</td><td>{{ p.item.name }}</td><td class="num">{{ p.qty|kg }} {{ p.item.unit }}</td><td class="num">{{ p.cost_per_unit_idr|rupiah }}</td><td class="num">{{ p.total_cost_idr|rupiah }}</td><td>{{ p.supplier|default:"-" }}</td></tr>
-        {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">Belum ada pembelian.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">{% translate "Belum ada pembelian." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
@@ -44,11 +45,11 @@
 
   {% if roles.finance %}
   <aside class="gt-card app-split__sticky">
-    <div class="gt-card__head"><h2 class="gt-card__title">Catat pembelian</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat pembelian" %}</h2></div>
     {{ input_costs|json_script:"input-costs" }}
     <form method="post" class="app-stackform" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Simpan pembelian</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan pembelian" %}</button>
     </form>
   </aside>
   {% endif %}

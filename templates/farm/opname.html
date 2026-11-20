@@ -1,42 +1,43 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Opname Stok{% endblock %}
+{% block title %}{% translate "Opname Stok" %}{% endblock %}
 {% block content %}
-{% include "components/page_header.html" with title="Opname Stok" subtitle="Hitung stok fisik per produk. Hanya kekurangan yang dihapusbukukan (FIFO dari lot tertua, dicatat sebagai susut) setelah disetujui OWNER/MANAGER; kelebihan hanya dicatat." %}
+{% include "components/page_header.html" with title=_("Opname Stok") subtitle=_("Hitung stok fisik per produk. Hanya kekurangan yang dihapusbukukan (FIFO dari lot tertua, dicatat sebagai susut) setelah disetujui OWNER/MANAGER; kelebihan hanya dicatat.") %}
 <div class="app-split app-split--rev">
   <aside class="gt-card app-split__sticky">
-    <div class="gt-card__head"><h2 class="gt-card__title">Catat hitungan</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat hitungan" %}</h2></div>
     {% if products %}
     <form method="post" class="app-stackform">{% csrf_token %}
       <input type="hidden" name="action" value="count">
-      <label class="app-fieldlabel"><span class="app-label">Produk</span>
-        <select name="product" class="app-field">{% for p in products %}<option value="{{ p.pk }}">{{ p }} — sistem {{ p.stock|kg }} kg</option>{% endfor %}</select></label>
-      <label class="app-fieldlabel"><span class="app-label">Stok fisik (kg)</span>
+      <label class="app-fieldlabel"><span class="app-label">{% translate "Produk" %}</span>
+        <select name="product" class="app-field">{% for p in products %}<option value="{{ p.pk }}">{{ p }} {% translate "— sistem" %} {{ p.stock|kg }} kg</option>{% endfor %}</select></label>
+      <label class="app-fieldlabel"><span class="app-label">{% translate "Stok fisik (kg)" %}</span>
         <input name="counted_kg" data-num="kg" inputmode="decimal" autocomplete="off" required class="app-field"></label>
-      <label class="app-fieldlabel"><span class="app-label">Catatan</span><input name="note" class="app-field"></label>
-      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Simpan hitungan</button>
+      <label class="app-fieldlabel"><span class="app-label">{% translate "Catatan" %}</span><input name="note" class="app-field"></label>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan hitungan" %}</button>
     </form>
-    {% else %}<p class="app-muted">Belum ada produk dengan lot. Catat panen dulu.</p>{% endif %}
+    {% else %}<p class="app-muted">{% translate "Belum ada produk dengan lot. Catat panen dulu." %}</p>{% endif %}
   </aside>
 
   <section class="app-side">
     <div class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">Stok per produk</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Stok per produk" %}</h2></div>
       <table class="gt-table">
-        <thead><tr><th>Produk</th><th class="num">Stok sistem</th><th class="num">Batas menipis</th><th>Status</th></tr></thead>
+        <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Stok sistem" %}</th><th class="num">{% translate "Batas menipis" %}</th><th>{% translate "Status" %}</th></tr></thead>
         <tbody>
         {% for p in products %}<tr><td>{{ p }}</td><td class="num">{{ p.stock|kg }} kg</td>
           <td class="num">{% if p.min_alert_kg is not None %}{{ p.min_alert_kg|kg }} kg{% else %}—{% endif %}</td>
-          <td>{% if p.low %}{% pill "Menipis" tone="orange" %}{% elif p.min_alert_kg is not None %}{% pill "Aman" tone="green" %}{% else %}<span class="app-row__meta">Atur batas di Harga Produk</span>{% endif %}</td></tr>
-        {% empty %}<tr><td colspan="4" class="app-empty-cell app-muted">Belum ada produk.</td></tr>{% endfor %}
+          <td>{% if p.low %}{% pill _("Menipis") tone="orange" %}{% elif p.min_alert_kg is not None %}{% pill _("Aman") tone="green" %}{% else %}<span class="app-row__meta">{% translate "Atur batas di Harga Produk" %}</span>{% endif %}</td></tr>
+        {% empty %}<tr><td colspan="4" class="app-empty-cell app-muted">{% translate "Belum ada produk." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
 
     <div class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">Riwayat opname</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Riwayat opname" %}</h2></div>
       <table class="gt-table">
-        <thead><tr><th>Waktu</th><th>Produk</th><th class="num">Sistem</th><th class="num">Fisik</th><th class="num">Selisih</th>{% if roles.finance %}<th class="num">Kerugian</th>{% endif %}<th>Status</th></tr></thead>
+        <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Produk" %}</th><th class="num">{% translate "Sistem" %}</th><th class="num">{% translate "Fisik" %}</th><th class="num">{% translate "Selisih" %}</th>{% if roles.finance %}<th class="num">{% translate "Kerugian" %}</th>{% endif %}<th>{% translate "Status" %}</th></tr></thead>
         <tbody>
         {% for c in page.object_list %}
           <tr><td class="whitespace-nowrap">{{ c.counted_at|date:"d-m-Y H:i" }}<p class="app-row__meta">{{ c.counted_by.username }}</p></td>
@@ -45,15 +46,15 @@
             <td class="num {% if c.difference_kg < 0 %}app-value--danger{% elif c.difference_kg > 0 %}app-value--late{% endif %}">{{ c.difference_kg|kg }} kg</td>
             {% if roles.finance %}<td class="num">{% if c.status == 'APPROVED' %}{{ c.loss_idr|rupiah }}{% else %}—{% endif %}</td>{% endif %}
             <td>
-              {% if c.status == 'PENDING' %}{% pill "Menunggu" tone="yellow" %}
+              {% if c.status == 'PENDING' %}{% pill _("Menunggu") tone="yellow" %}
                 {% if roles.finance %}<span class="app-actions app-actions--start">
-                  <form method="post" data-confirm-title="Setujui opname {{ c.product }}?" data-confirm="{% if c.shortfall_kg %}Kekurangan {{ c.shortfall_kg|kg }} kg dihapusbukukan FIFO dari lot tertua sebagai susut (penyusutan).{% else %}Tidak ada kekurangan; stok tidak berubah.{% endif %}" data-confirm-action="Setujui" data-confirm-level="2">{% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="count" value="{{ c.pk }}"><button class="gt-btn gt-btn--solid gt-btn--sm">Setujui</button></form>
-                  <form method="post" data-confirm-title="Tolak opname?" data-confirm="Hitungan ini tidak dipakai; stok tidak berubah." data-confirm-action="Tolak" data-confirm-reason="Alasan" data-confirm-reason-optional>{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="count" value="{{ c.pk }}"><button class="gt-btn gt-btn--outline gt-btn--sm">Tolak</button></form>
+                  {% blocktranslate asvar t_data_confirm_title_4 with v1=c.product %}Setujui opname {{ v1 }}?{% endblocktranslate %}<form method="post" data-confirm-title="{{ t_data_confirm_title_4 }}" data-confirm="{% if c.shortfall_kg %}Kekurangan {{ c.shortfall_kg|kg }} kg dihapusbukukan FIFO dari lot tertua sebagai susut (penyusutan).{% else %}Tidak ada kekurangan; stok tidak berubah.{% endif %}" data-confirm-action="{% translate 'Setujui' %}" data-confirm-level="2">{% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="count" value="{{ c.pk }}"><button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Setujui" %}</button></form>
+                  <form method="post" data-confirm-title="{% translate 'Tolak opname?' %}" data-confirm="{% translate 'Hitungan ini tidak dipakai; stok tidak berubah.' %}" data-confirm-action="{% translate 'Tolak' %}" data-confirm-reason="Alasan" data-confirm-reason-optional>{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="count" value="{{ c.pk }}"><button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Tolak" %}</button></form>
                 </span>{% endif %}
-              {% elif c.status == 'APPROVED' %}{% pill "Disetujui" tone="green" %}<p class="app-row__meta">{{ c.written_off_kg|kg }} kg dihapus</p>
-              {% else %}{% pill "Ditolak" tone="red" %}{% endif %}
+              {% elif c.status == 'APPROVED' %}{% pill _("Disetujui") tone="green" %}<p class="app-row__meta">{{ c.written_off_kg|kg }} {% translate "kg dihapus" %}</p>
+              {% else %}{% pill _("Ditolak") tone="red" %}{% endif %}
             </td></tr>
-        {% empty %}<tr><td colspan="7" class="app-empty-cell app-muted">Belum ada opname. Hitung stok fisik secara berkala untuk menemukan susut yang tidak tercatat.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="7" class="app-empty-cell app-muted">{% translate "Belum ada opname. Hitung stok fisik secara berkala untuk menemukan susut yang tidak tercatat." %}</td></tr>{% endfor %}
         </tbody>
       </table>
       {% include "components/pagination.html" %}

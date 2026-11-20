@@ -26,7 +26,7 @@
     return g.createPattern(c, "repeat");
   }
 
-  const num = (v, d) => Number(v || 0).toLocaleString("id-ID", { maximumFractionDigits: d == null ? 1 : d });
+  const num = (v, d) => Number(v || 0).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: d == null ? 1 : d });
 
   /* Value tag (design-system gt-bar__tip): a white pill with a green-400 border above one bar (beside it on
      horizontal charts), joined by a ringed dot. Set options.plugins.gtTag = { index, text }. */
@@ -81,12 +81,12 @@
     series: () => [t("--green-600"), t("--green-800"), t("--green-400"), hatch()],
     hatch,
     num,
-    /* Short money for axes (Rp277,5 jt · Rp593rb); exact money for tooltips via gtRupiah. */
+    /* Short money for axes (id: Rp277,5 jt · Rp593rb; en: Rp277.5M · Rp593K); exact money in tooltips via gtRupiah. */
     rpShort(v) {
-      const a = Math.abs(v), s = v < 0 ? "-" : "";
-      if (a >= 1e9) return s + "Rp" + num(a / 1e9, 1) + " M";
-      if (a >= 1e6) return s + "Rp" + num(a / 1e6, 1) + " jt";
-      if (a >= 1e3) return s + "Rp" + num(a / 1e3, 0) + "rb";
+      const a = Math.abs(v), s = v < 0 ? "-" : "", en = window.GT_EN;
+      if (a >= 1e9) return s + "Rp" + num(a / 1e9, 1) + (en ? "B" : " M");
+      if (a >= 1e6) return s + "Rp" + num(a / 1e6, 1) + (en ? "M" : " jt");
+      if (a >= 1e3) return s + "Rp" + num(a / 1e3, 0) + (en ? "K" : "rb");
       return s + "Rp" + num(a, 0);
     },
     grid: () => ({ color: t("--divider"), drawTicks: false }),

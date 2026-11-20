@@ -1,21 +1,22 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui %}
-{% block title %}Pengaturan{% endblock %}
+{% block title %}{% translate "Pengaturan" %}{% endblock %}
 {% block content %}
 {# Pengaturan (Phase 5b): one form card, Batal · Simpan footer (D104). #}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
-    <a href="{% url 'home' %}" class="app-back">{% icon "chevron-left" 16 %} Kembali</a>
-    <h1>Pengaturan Kebun {% info_tip "Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur." %}</h1>
+    <a href="{% url 'home' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
+    <h1>{% translate "Pengaturan Kebun" %} {% info_tip _("Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur.") %}</h1>
   </div>
 </div>
 <div class="app-formpage">
   <form method="post" enctype="multipart/form-data" class="gt-card">{% csrf_token %}
-    <div class="gt-card__head"><h2 class="gt-card__title">Profil kebun</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Profil kebun" %}</h2></div>
     {% include "_form_fields.html" %}
     <div class="gt-footer app-formpage__foot">
-      <a href="{% url 'home' %}" class="gt-btn gt-btn--outline gt-btn--md">Batal</a>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button>
+      <a href="{% url 'home' %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button>
     </div>
   </form>
 </div>

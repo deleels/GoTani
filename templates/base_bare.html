@@ -1,9 +1,9 @@
-{% load static %}<!doctype html>
-<html lang="id">
+{% load i18n %}{% load static ui %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'id' }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}GoTani{% endblock %} · GoTani</title>
+  <title>{% block title %}GoTani{% endblock %} {% translate "· GoTani" %}</title>
   <meta name="theme-color" content="#175738">
   <link rel="manifest" href="{% url 'manifest' %}">
   <link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/icons/favicon-32.png' %}">
@@ -44,6 +44,7 @@
       },
     };
   </script>
+  {% js_i18n %}
   <script src="{% static 'core/numbers.js' %}"></script>
   <script src="{% static 'core/confirm.js' %}" defer></script>
   <script src="{% static 'core/stage.js' %}" defer></script>
@@ -58,7 +59,7 @@
 <body class="gt-root min-h-screen bg-surface text-ink antialiased" data-motion="{% block motion %}calm{% endblock %}">
   {% block body %}{% endblock %}
   <div id="sw-update" hidden class="no-print fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-3 rounded-card bg-brand-900 px-4 py-3 text-sm text-ink-inverse shadow-lg" role="status">
-    <span>Versi baru tersedia</span><button type="button" class="gt-btn gt-btn--on-dark gt-btn--sm">Muat ulang</button>
+    <span>{% translate "Versi baru tersedia" %}</span><button type="button" class="gt-btn gt-btn--on-dark gt-btn--sm">{% translate "Muat ulang" %}</button>
   </div>
   <script src="{% static 'core/pwa.js' %}" defer></script>
   {% block scripts %}{% endblock %}

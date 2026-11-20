@@ -1,19 +1,20 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Elemen & Siklus{% endblock %}
+{% block title %}{% translate "Elemen & Siklus" %}{% endblock %}
 {% block content %}
-{% include "components/page_header.html" with title="Elemen & Siklus" subtitle="Greenhouse, lahan dan shadenet beserta siklus tanam aktifnya. Klik elemen atau varietas untuk detail dan linimasa." %}
+{% include "components/page_header.html" with title=_("Elemen & Siklus") subtitle=_("Greenhouse, lahan dan shadenet beserta siklus tanam aktifnya. Klik elemen atau varietas untuk detail dan linimasa.") %}
 <div class="app-chips app-section-gap">
-  {% for item in low_stock %}<a href="{% url 'farm:inputs' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--warning"></i>Stok menipis: {{ item.name }} ({{ item.stock_qty|kg }} {{ item.unit }})</a>{% endfor %}
-  {% if roles.finance and pending_expenses %}<a href="{% url 'farm:expenses' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--warning"></i>{{ pending_expenses }} biaya menunggu</a>{% endif %}
-  {% if roles.finance and unpriced %}<a href="{% url 'farm:prices' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--danger"></i>{{ unpriced }} produk tanpa harga</a>{% endif %}
+  {% for item in low_stock %}<a href="{% url 'farm:inputs' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--warning"></i>{% translate "Stok menipis:" %} {{ item.name }} ({{ item.stock_qty|kg }} {{ item.unit }})</a>{% endfor %}
+  {% if roles.finance and pending_expenses %}<a href="{% url 'farm:expenses' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--warning"></i>{{ pending_expenses }} {% translate "biaya menunggu" %}</a>{% endif %}
+  {% if roles.finance and unpriced %}<a href="{% url 'farm:prices' %}" class="gt-chip app-chiplink"><i class="gt-dot gt-dot--danger"></i>{{ unpriced }} {% translate "produk tanpa harga" %}</a>{% endif %}
 </div>
 
 <div class="app-split">
   <section class="app-side" aria-labelledby="h-elements">
     <div class="app-sectionhead">
-      <h2 class="gt-card__title" id="h-elements">Elemen kebun</h2>
-      {% if roles.finance %}<a href="{% url 'farm:element_create' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} Elemen</a>{% endif %}
+      <h2 class="gt-card__title" id="h-elements">{% translate "Elemen kebun" %}</h2>
+      {% if roles.finance %}<a href="{% url 'farm:element_create' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} {% translate "Elemen" %}</a>{% endif %}
     </div>
     <div class="app-side">
       {% for el in elements %}
@@ -21,37 +22,37 @@
         <div class="app-element__head">
           <h2 class="gt-card__title"><a class="app-link--plain" href="{% url 'farm:element_detail' el.pk %}">{{ el.name }}</a></h2>
           <span class="gt-chip gt-chip--sm">{{ el.get_element_type_display }} · {{ el.area_m2|kg }} m²</span>
-          {% if not el.is_active %}{% pill "Nonaktif" tone="gray" %}{% endif %}
+          {% if not el.is_active %}{% pill _("Nonaktif") tone="gray" %}{% endif %}
           {% if roles.finance %}
           <form method="post" action="{% url 'farm:element_toggle' el.pk %}" class="ml-auto">{% csrf_token %}
-            {% if el.is_active %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Nonaktifkan</button>{% else %}<button class="gt-btn gt-btn--outline gt-btn--sm">Aktifkan</button>{% endif %}
+            {% if el.is_active %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Nonaktifkan" %}</button>{% else %}<button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Aktifkan" %}</button>{% endif %}
           </form>
           {% endif %}
         </div>
         {% if el.active_cycle %}{% with c=el.active_cycle %}
         <div class="app-element__cycle">
-          <a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a><span class="app-row__meta">mulai {{ c.planting_start_date|date:"d-m-Y" }} · hari ke-{{ c.days }}</span>
+          <a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a><span class="app-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"d-m-Y" }} {% translate "· hari ke-" %}{{ c.days }}</span>
           {% pill c.get_stage_display tone="green" %}
-          {% if c.expected_harvest_date %}{% if c.overdue %}{% pill "Panen terlewat" tone="orange" %}{% endif %}<span class="app-row__meta">Perkiraan panen {{ c.expected_harvest_date|date:"d-m-Y" }}</span>{% endif %}
-          {% if roles.finance %}<a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">Telusuri</a>{% endif %}
+          {% if c.expected_harvest_date %}{% if c.overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}<span class="app-row__meta">{% translate "Perkiraan panen" %} {{ c.expected_harvest_date|date:"d-m-Y" }}</span>{% endif %}
+          {% if roles.finance %}<a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">{% translate "Telusuri" %}</a>{% endif %}
         </div>
         {% if c.panel.stages or c.panel.undo %}{% include "farm/_stage_form.html" with cycle=c panel=c.panel wrap_class="app-element__stage" %}{% endif %}
         {% endwith %}{% else %}
-        <p class="app-row__meta">Tidak ada siklus aktif.</p>
+        <p class="app-row__meta">{% translate "Tidak ada siklus aktif." %}</p>
         {% endif %}
       </div>
       {% endfor %}
     </div>
 
     <div class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">Siklus selesai</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Siklus selesai" %}</h2></div>
       <table class="gt-table">
-        <thead><tr><th>Siklus</th><th>Ditutup</th><th class="num">Panen</th>{% if roles.finance %}<th class="num">Biaya tak terserap</th><th></th>{% endif %}</tr></thead>
+        <thead><tr><th>{% translate "Siklus" %}</th><th>{% translate "Ditutup" %}</th><th class="num">{% translate "Panen" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya tak terserap" %}</th><th></th>{% endif %}</tr></thead>
         <tbody>
         {% for c in closed_cycles %}
           <tr><td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }} @ {{ c.element }}</a></td><td>{{ c.closed_at|date:"d-m-Y"|default:"-" }}</td><td class="num">{{ c.n_harvests }}</td>
-          {% if roles.finance %}<td class="num">{{ c.unabsorbed|rupiah }}</td><td class="num"><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">Telusuri</a></td>{% endif %}</tr>
-        {% empty %}<tr><td class="app-empty-cell app-muted" colspan="5">Belum ada siklus selesai.</td></tr>{% endfor %}
+          {% if roles.finance %}<td class="num">{{ c.unabsorbed|rupiah }}</td><td class="num"><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">{% translate "Telusuri" %}</a></td>{% endif %}</tr>
+        {% empty %}<tr><td class="app-empty-cell app-muted" colspan="5">{% translate "Belum ada siklus selesai." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
@@ -59,10 +60,10 @@
 
   <aside class="app-split__sticky">
     <div class="gt-card">
-      <div class="gt-card__head"><h2 class="gt-card__title">Mulai siklus</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Mulai siklus" %}</h2></div>
       <form method="post" class="app-stackform">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Mulai siklus</button>
+        <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Mulai siklus" %}</button>
       </form>
     </div>
   </aside>

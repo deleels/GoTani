@@ -1,36 +1,37 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}Telusur {{ order.order_number }}{% endblock %}
+{% block title %}{% translate "Telusur" %} {{ order.order_number }}{% endblock %}
 {% block head %}<style>@page { size: A4 landscape; margin: 10mm; } @media print { table { font-size: 10px; } }</style>{% endblock %}
 {% block content %}
 {# Telusur order (Phase 5b): head with back link + actions, order facts as metrics, one card per line with its lot chain. #}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
-    <a href="{% url 'reports:trace_index' %}" class="app-back no-print">{% icon "chevron-left" 16 %} Telusuri</a>
+    <a href="{% url 'reports:trace_index' %}" class="app-back no-print">{% icon "chevron-left" 16 %} {% translate "Telusuri" %}</a>
     <h1 class="app-mono-head">{{ order.order_number }} {% pill order.get_status_display order.status %}</h1>
   </div>
   <div class="gt-pagehead__actions no-print">
-    <a href="{% url 'pos:receipt' order.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Struk</a>
-    <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--md">Unduh CSV</a>
-    <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="Cetak atau simpan sebagai PDF">Cetak</button>
+    <a href="{% url 'pos:receipt' order.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Struk" %}</a>
+    <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Unduh CSV" %}</a>
+    <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="{% translate 'Cetak atau simpan sebagai PDF' %}">{% translate "Cetak" %}</button>
   </div>
 </div>
 
-<section class="gt-card app-section" aria-label="Ringkasan order">
+<section class="gt-card app-section" aria-label="{% translate 'Ringkasan order' %}">
   <div class="gt-metrics app-metrics4">
-    <div class="gt-metric"><span class="gt-metric__label">Waktu</span><span class="gt-metric__value">{{ order.created_at|date:"d M Y" }}</span><span class="gt-metric__note">{{ order.created_at|date:"H:i" }} · kasir {{ order.cashier }}</span></div>
-    <div class="gt-metric"><span class="gt-metric__label">Pembayaran</span><span class="gt-metric__value">{{ order.get_payment_method_display }}</span>{% if order.voided_at %}<span class="gt-metric__note">Dibatalkan {{ order.voided_at|date:"d M Y H:i" }} oleh {{ order.voided_by }}</span>{% endif %}</div>
-    <div class="gt-metric"><span class="gt-metric__label">Total</span><span class="gt-metric__value">{{ order.total_revenue_idr|rupiah }}</span></div>
-    <div class="gt-metric"><span class="gt-metric__label">HPP</span><span class="gt-metric__value">{{ order.total_cogs_idr|rupiah }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">{% translate "Waktu" %}</span><span class="gt-metric__value">{{ order.created_at|date:"d M Y" }}</span><span class="gt-metric__note">{{ order.created_at|date:"H:i" }} {% translate "· kasir" %} {{ order.cashier }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">{% translate "Pembayaran" %}</span><span class="gt-metric__value">{{ order.get_payment_method_display }}</span>{% if order.voided_at %}<span class="gt-metric__note">{% translate "Dibatalkan" %} {{ order.voided_at|date:"d M Y H:i" }} {% translate "oleh" %} {{ order.voided_by }}</span>{% endif %}</div>
+    <div class="gt-metric"><span class="gt-metric__label">{% translate "Total" %}</span><span class="gt-metric__value">{{ order.total_revenue_idr|rupiah }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">{% translate "HPP" %}</span><span class="gt-metric__value">{{ order.total_cogs_idr|rupiah }}</span></div>
   </div>
 </section>
 
 {% for line in order.lines.all %}
 <section class="gt-card app-tablecard app-section">
-  <div class="gt-card__head"><h2 class="gt-card__title">{{ line.product }} <span class="app-muted">{{ line.qty_kg|kg }} kg × {{ line.unit_price_idr|rupiah }}</span> {% with u=line.unit_cogs_idr|rupiah %}{% info_tip "HPP rata-rata "|add:u|add:" per kg." %}{% endwith %}</h2></div>
+  <div class="gt-card__head"><h2 class="gt-card__title">{{ line.product }} <span class="app-muted">{{ line.qty_kg|kg }} {% translate "kg ×" %} {{ line.unit_price_idr|rupiah }}</span> {% with u=line.unit_cogs_idr|rupiah %}{% blocktranslate asvar tip_cogs %}HPP rata-rata {{ u }} per kg.{% endblocktranslate %}{% info_tip tip_cogs %}{% endwith %}</h2></div>
   <div class="app-table-wrap">
     <table class="gt-table">
-      <thead><tr><th>Lot</th><th class="num">Kg</th><th class="num">HPP/kg</th><th>Batch panen</th><th>Siklus</th><th>Elemen</th></tr></thead>
+      <thead><tr><th>{% translate "Lot" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "HPP/kg" %}</th><th>{% translate "Batch panen" %}</th><th>{% translate "Siklus" %}</th><th>{% translate "Elemen" %}</th></tr></thead>
       <tbody>
       {% for a in line.allocations.all %}{% with b=a.lot.harvest_batch %}
         <tr>
@@ -38,7 +39,7 @@
           <td class="num">{{ a.qty_kg|kg }}</td>
           <td class="num">{{ a.unit_cogs_idr|rupiah }}</td>
           <td>#{{ b.pk }}<span class="app-sub">{{ b.harvested_at|date:"d M Y" }}</span></td>
-          <td><a class="app-link" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }}</a><span class="app-sub">mulai {{ b.cycle.planting_start_date|date:"d M Y" }} · {{ b.cycle.get_stage_display }}</span></td>
+          <td><a class="app-link" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }}</a><span class="app-sub">{% translate "mulai" %} {{ b.cycle.planting_start_date|date:"d M Y" }} · {{ b.cycle.get_stage_display }}</span></td>
           <td>{{ b.cycle.element }}<span class="app-sub">{{ b.cycle.element.get_element_type_display }}</span></td>
         </tr>
       {% endwith %}{% endfor %}

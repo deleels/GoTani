@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load static ui gotani %}
-{% block title %}Ringkasan{% endblock %}
-{% block motion %}full{% endblock %}
+{% block title %}{% translate "Ringkasan" %}{% endblock %}
+{% block motion %}{% translate "full" %}{% endblock %}
 {% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="{% static 'core/charts.js' %}"></script>{% endblock %}
 {% block content %}
@@ -11,22 +12,22 @@
     <h1>{{ greeting }}, {{ user.first_name|default:user.username }}</h1>
     <p class="app-pagehead__sub">{{ today_label }} {% subtitle "Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar." worker="Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan." as sub %}{% info_tip sub %}</p>
   </div>
-  <div class="gt-pagehead__actions"><a href="{% url 'farm:activities' %}?new=1" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Catat kerja</a></div>
+  <div class="gt-pagehead__actions"><a href="{% url 'farm:activities' %}?new=1" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Catat kerja" %}</a></div>
 </div>
 
 {# Work report strip: last 7 days. The featured card sums field work and lists each type. #}
 <div class="gt-grid app-home__stats" style="--gt-row:0">
   <a href="{% url 'farm:activities' %}" class="gt-stat gt-stat--featured app-stat">
-    <span class="gt-stat__title">Pekerjaan lapangan</span>
+    <span class="gt-stat__title">{% translate "Pekerjaan lapangan" %}</span>
     <span class="gt-stat__arrow" aria-hidden="true">{% icon "arrow" 16 %}</span>
-    <span class="gt-stat__value">{{ work_field.count }}<small>7 hari</small></span>
+    <span class="gt-stat__value">{{ work_field.count }}<small>{% translate "7 hari" %}</small></span>
     <span class="app-stat__chips">{% for w in work_field.rows %}<span class="gt-chip gt-chip--on-dark gt-chip--sm">{{ w.label }} {{ w.count }}</span>{% endfor %}</span>
   </a>
   {% for w in work_other %}
   <a href="{% url 'farm:activities' %}?tab={{ w.key }}" class="gt-stat app-stat">
     <span class="gt-stat__title">{{ w.label }}</span>
     <span class="gt-stat__arrow" aria-hidden="true">{% icon "arrow" 16 %}</span>
-    <span class="gt-stat__value">{{ w.count }}<small>7 hari</small></span>
+    <span class="gt-stat__value">{{ w.count }}<small>{% translate "7 hari" %}</small></span>
   </a>
   {% endfor %}
 </div>
@@ -34,35 +35,35 @@
 <div class="app-home__grid">
   <div class="app-home__col app-home__col--main">
   <section class="gt-card" style="--gt-row:1" aria-labelledby="h-stage">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">Tanaman per Tahap {% info_tip "Jumlah siklus aktif di tiap tahap tanam." %}</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">{% translate "Tanaman per Tahap" %} {% info_tip _("Jumlah siklus aktif di tiap tahap tanam.") %}</h2></div>
     {{ chart|json_script:"stage-data" }}
-    <div class="relative h-64"><canvas id="stage-chart" role="img" aria-label="Jumlah siklus aktif per tahap"></canvas></div>
+    <div class="relative h-64"><canvas id="stage-chart" role="img" aria-label="{% translate 'Jumlah siklus aktif per tahap' %}"></canvas></div>
   </section>
   {% if finance %}
   <section class="gt-hero" style="--gt-row:2" aria-labelledby="h-finance">
-    <div class="gt-hero__head"><h2 id="h-finance" class="app-hero__title">Total penjualan {% info_tip "POS + invoice, sepanjang waktu." %}</h2><a href="{% url 'dashboard' %}" class="gt-btn gt-btn--on-dark gt-btn--sm">Analitik {% icon "arrow" 16 %}</a></div>
+    <div class="gt-hero__head"><h2 id="h-finance" class="app-hero__title">{% translate "Total penjualan" %} {% info_tip _("POS + invoice, sepanjang waktu.") %}</h2><a href="{% url 'dashboard' %}" class="gt-btn gt-btn--on-dark gt-btn--sm">{% translate "Analitik" %} {% icon "arrow" 16 %}</a></div>
     <div class="gt-hero__value"><strong>{{ finance.sales|rupiah }}</strong></div>
     <div class="gt-hero__stats">
-      <div><span>Total biaya disetujui</span><b>{{ finance.expenses|rupiah }}</b></div>
-      <div><span>Biaya umum</span><b>{{ finance.expenses_general|rupiah }}</b></div>
-      <div><span>Biaya per elemen</span><b>{{ finance.expenses_element|rupiah }}</b></div>
+      <div><span>{% translate "Total biaya disetujui" %}</span><b>{{ finance.expenses|rupiah }}</b></div>
+      <div><span>{% translate "Biaya umum" %}</span><b>{{ finance.expenses_general|rupiah }}</b></div>
+      <div><span>{% translate "Biaya per elemen" %}</span><b>{{ finance.expenses_element|rupiah }}</b></div>
     </div>
   </section>
   {% endif %}
 
   <section class="gt-card" style="--gt-row:2" aria-labelledby="h-cycles">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-cycles">Siklus aktif</h2><a href="{% url 'farm:cycles' %}" class="gt-card__hint app-link">Semua elemen</a></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-cycles">{% translate "Siklus aktif" %}</h2><a href="{% url 'farm:cycles' %}" class="gt-card__hint app-link">{% translate "Semua elemen" %}</a></div>
     <ul class="gt-list gt-list--divided">
       {% for c in active_cycles %}
       <li class="gt-row">
         <span class="gt-row__body">
           <a class="gt-row__title app-link--plain" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a>
-          <span class="app-row__meta">{{ c.element }} · hari ke-{{ c.days }}{% if c.expected_harvest_date %} · panen {{ c.expected_harvest_date|date:"d M Y" }}{% endif %}</span>
-          {% if c.overdue %}<span class="app-row__meta app-value--danger">Perkiraan panen terlewat, tahap belum Panen</span>{% endif %}
+          <span class="app-row__meta">{{ c.element }} {% translate "· hari ke-" %}{{ c.days }}{% if c.expected_harvest_date %} {% translate "· panen" %} {{ c.expected_harvest_date|date:"d M Y" }}{% endif %}</span>
+          {% if c.overdue %}<span class="app-row__meta app-value--danger">{% translate "Perkiraan panen terlewat, tahap belum Panen" %}</span>{% endif %}
         </span>
         <span class="gt-row__trail">{% pill c.get_stage_display tone="green" %}</span>
       </li>
-      {% empty %}<li class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada siklus aktif.</span><span class="gt-callout__body">Mulai siklus dari halaman elemen untuk mulai mencatat.</span></div></li>{% endfor %}
+      {% empty %}<li class="gt-callout app-empty"><div><span class="gt-callout__title">{% translate "Belum ada siklus aktif." %}</span><span class="gt-callout__body">{% translate "Mulai siklus dari halaman elemen untuk mulai mencatat." %}</span></div></li>{% endfor %}
     </ul>
   </section>
   </div>
@@ -71,15 +72,15 @@
   </div>
   <div class="app-home__col">
   <section class="gt-card" style="--gt-row:1" aria-labelledby="h-farm">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-farm">Kebun</h2><a class="gt-card__hint app-link" href="{% url 'farm:cycles' %}">Elemen</a></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-farm">{% translate "Kebun" %}</h2><a class="gt-card__hint app-link" href="{% url 'farm:cycles' %}">{% translate "Elemen" %}</a></div>
     <div class="gt-metrics app-home__metrics">
       {% for e in elements %}<div class="gt-metric"><span class="gt-metric__label">{{ e.type }}</span><span class="gt-metric__value">{{ e.count }}</span></div>
-      {% empty %}<p class="gt-card__hint">Belum ada elemen aktif.</p>{% endfor %}
-      <div class="gt-metric"><span class="gt-metric__label">Staf aktif</span><span class="gt-metric__value">{{ staff_count }}</span></div>
+      {% empty %}<p class="gt-card__hint">{% translate "Belum ada elemen aktif." %}</p>{% endfor %}
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Staf aktif" %}</span><span class="gt-metric__value">{{ staff_count }}</span></div>
     </div>
   </section>
   <section class="gt-card" style="--gt-row:3" aria-labelledby="h-staff">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-staff">Staf</h2>{% if roles.label == 'OWNER' %}<a class="gt-card__hint app-link" href="{% url 'core:staff' %}">Kelola</a>{% endif %}</div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-staff">{% translate "Staf" %}</h2>{% if roles.label == 'OWNER' %}<a class="gt-card__hint app-link" href="{% url 'core:staff' %}">{% translate "Kelola" %}</a>{% endif %}</div>
     <ul class="gt-list">
       {% for s in staff %}<li class="gt-row"><span class="gt-row__lead"><span class="gt-avatar gt-avatar--sm">{{ s.initial }}</span></span><span class="gt-row__body"><span class="gt-row__title">{{ s.name }}</span><span class="app-row__meta">{{ s.role }}</span></span></li>{% endfor %}
     </ul>
@@ -88,7 +89,7 @@
   <section class="gt-callout gt-callout--warning app-home__notice" style="--gt-row:3" aria-labelledby="h-low">
     {% icon "alert" 18 %}
     <div>
-      <h2 class="gt-callout__title" id="h-low">Stok input menipis</h2>
+      <h2 class="gt-callout__title" id="h-low">{% translate "Stok input menipis" %}</h2>
       {% for i in low_stock %}<a href="{% url 'farm:input_detail' i.pk %}" class="app-notice__row">{{ i.name }} — {{ i.stock_qty|kg }} {{ i.unit }}</a>{% endfor %}
     </div>
   </section>
@@ -101,14 +102,14 @@
 <script>
 (function () {
   const canvas = document.getElementById("stage-chart");
-  if (!window.Chart || !window.gtCharts) { canvas.parentElement.innerHTML = '<p class="gt-card__hint">Tidak dapat memuat grafik.</p>'; return; }
+  if (!window.Chart || !window.gtCharts) { canvas.parentElement.innerHTML = '<p class="gt-card__hint">{% jt "Tidak dapat memuat grafik." %}</p>'; return; }
   const d = JSON.parse(document.getElementById("stage-data").textContent), G = window.gtCharts;
   new Chart(canvas, {
     type: "bar",
-    data: { labels: d.labels, datasets: [{ label: "Siklus", data: d.values, ...G.BAR, maxBarThickness: 20, backgroundColor: G.vary(d.values) }] },
+    data: { labels: d.labels, datasets: [{ label: "{% jt "Siklus" %}", data: d.values, ...G.BAR, maxBarThickness: 20, backgroundColor: G.vary(d.values) }] },
     options: { maintainAspectRatio: false, layout: { padding: { right: 72 } },
-               plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.parsed.x + " siklus" } },
-                          gtTag: { index: G.peakIndex(d.values), text: Math.max(0, ...d.values) + " siklus" } },
+               plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.parsed.x + "{% jt " siklus" %}" } },
+                          gtTag: { index: G.peakIndex(d.values), text: Math.max(0, ...d.values) + "{% jt " siklus" %}" } },
                // Horizontal: eight stage names never fit under vertical bars in a half-width card.
                indexAxis: "y",
                scales: { x: G.axis({ beginAtZero: true, ticks: { precision: 0, padding: 8, maxTicksLimit: 5 } }),

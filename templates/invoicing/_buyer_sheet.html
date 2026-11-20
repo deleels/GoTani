@@ -1,10 +1,10 @@
-{% load ui %}
+{% load i18n %}{% load ui %}
 {% with sheet_t=sheet_title %}{% include "components/sheet.html" with title=sheet_t %}{% endwith %}
     <form method="post" class="app-sheet__form">{% csrf_token %}
       <input type="hidden" name="action" value="edit">
       {% include "_form_fields.html" with cols="grid-cols-1" %}
       <div class="app-sheet__foot">
-        <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
+        <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>
         <button class="gt-btn gt-btn--solid gt-btn--md">{{ submit }}</button>
       </div>
     </form>

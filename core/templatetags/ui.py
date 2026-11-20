@@ -1,5 +1,6 @@
 """UI helpers: inline SVG icons (lucide-style strokes) and status pills (D71)."""
 
+from django.utils.translation import gettext_lazy as _l
 import json
 
 from django import template
@@ -41,6 +42,7 @@ ICONS = {
     "key": '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
     "leaf": '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.2-6.1C9.6 14.4 12 13 13 12"/>',
     "eye": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+    "globe": '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     "lock": '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     "alert": '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
 }
@@ -119,8 +121,52 @@ def void_confirm(title, body, action, level=1):
     )
 
 
+# Strings used by the static scripts (confirm.js, stage.js, warnings.js); `{% js_i18n %}` ships them as
+# window.GT_I18N so `gtT("…")` can translate them in the browser (Phase 7).
+JS_MSGIDS = [
+    _l("Alasan"), _l("Saya sudah memeriksa data ini"), _l("Batal"), _l("Konfirmasi"), _l("Lanjutkan"),
+    _l("Tahap yang dilewati: %(list)s."), _l("Peringatan: belum ada cek pra-panen."),
+    _l("Cek pra-panen terakhir: %(pct)s%% lengkap."), _l("Cek pra-panen terakhir: %(pct)s%% lengkap (belum lengkap)."),
+    _l("Pembersihan menutup siklus; tidak ada panen lagi setelah ini."),
+    _l("Biaya belum terserap %(amount)s dicatat sebagai biaya siklus tak terserap (write-off)."),
+    _l("Tidak ada biaya yang belum terserap."),
+    _l("Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru."),
+    _l("Majukan tahap?"), _l("Majukan ke %(stage)s"),
+    _l("Harga naik %(pct)s: %(old)s → %(new)s per kg."), _l("Harga turun %(pct)s: %(old)s → %(new)s per kg."),
+    _l("Harga di bawah HPP rata-rata lot yang masih ada (%(cogs)s/kg); setiap kg terjual merugi."),
+    _l("Periksa harga baru"), _l("Simpan harga"), _l("Harga beli tidak biasa"),
+    _l("%(item)s: %(cost)s per %(unit)s, %(pct)s lebih mahal dari rata-rata %(avg)s."),
+    _l("%(item)s: %(cost)s per %(unit)s, %(pct)s lebih murah dari rata-rata %(avg)s."),
+    _l("Harga ini mengubah biaya rata-rata input dan biaya pemakaian berikutnya. Periksa satuan dan angkanya."),
+    _l("Simpan pembelian"), _l("Wajib diisi."), _l("Angka tidak valid."), _l("Periksa kolom yang ditandai."),
+]
+
+
 @register.simple_tag
-def info_tip(text, label="Penjelasan"):
+def jt(text):
+    """Translation for a JS string literal inside a template script: `'{% jt "Batal" %}'` (escapejs'd)."""
+    from django.utils.html import escapejs
+    from django.utils.translation import gettext
+
+    return mark_safe(escapejs(gettext(text)))
+
+
+@register.simple_tag
+def js_i18n():
+    """window.GT_I18N for the static scripts (only when the active language is not the source language)."""
+    from django.utils.translation import get_language, gettext, override
+
+    lang = (get_language() or "id")[:2]
+    data = {}
+    if lang != "id":
+        with override("id"):  # Indonesian is the source text, so this yields the msgids
+            keys = [str(m) for m in JS_MSGIDS]
+        data = {k: gettext(k) for k in keys}
+    return mark_safe("<script>window.GT_LANG=%s;window.GT_I18N=%s;</script>" % (json.dumps(lang), json.dumps(data, ensure_ascii=False).replace("</", "<\\/")))
+
+
+@register.simple_tag
+def info_tip(text, label=_l("Penjelasan")):
     """Footnote behind an info chip (user preference): shown on hover, focus or tap via confirm.js."""
     return format_html(
         '<button type="button" class="gt-tip" data-tip="{}" aria-label="{}" aria-describedby="gt-tip">{}</button>',

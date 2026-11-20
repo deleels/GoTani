@@ -235,7 +235,7 @@ class ProfilePageTests(TestCase):
         self.client.force_login(user)
         url = reverse("core:profile")
         self.assertContains(self.client.get(url), "CASHIER")
-        self.assertRedirects(self.client.post(url, {"first_name": "Siti", "last_name": "Aminah"}), url)
+        self.assertRedirects(self.client.post(url, {"first_name": "Siti", "last_name": "Aminah", "language": "id"}), url)
         user.refresh_from_db()
         self.assertEqual(user.get_full_name(), "Siti Aminah")
         self.assertEqual(self.client.post(url, {"first_name": "  "}).status_code, 400)

@@ -1,10 +1,10 @@
-<!doctype html>
+{% load i18n %}<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#175738">
-  <title>Offline · GoTani</title>
+  <title>{% translate "Offline · GoTani" %}</title>
   <style>
     /* Self-contained (served from the service-worker cache): design-system token values inlined (Phase 5b). */
     :root { --surface: #f7f7f7; --raised: #fff; --ink: #000; --muted: #737373; --brand: #175738; --tint: #edf6ee; }
@@ -22,9 +22,9 @@
 <body>
   <div class="card">
     <div class="logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#175738" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.2-6.1C9.6 14.4 12 13 13 12"/></svg></div>
-    <h1>Anda sedang offline</h1>
-    <p>{{ farm_name|default:"GoTani" }} membutuhkan koneksi internet. Data tidak disimpan saat offline agar stok dan kas tetap akurat — sambungkan kembali lalu coba lagi.</p>
-    <button type="button" onclick="location.reload()">Coba lagi</button>
+    <h1>{% translate "Anda sedang offline" %}</h1>
+    <p>{{ farm_name|default:"GoTani" }} {% translate "membutuhkan koneksi internet. Data tidak disimpan saat offline agar stok dan kas tetap akurat — sambungkan kembali lalu coba lagi." %}</p>
+    <button type="button" onclick="location.reload()">{% translate "Coba lagi" %}</button>
   </div>
 </body>
 </html>

@@ -1,5 +1,7 @@
 """Cuaca & Satelit (D73): map page + small JSON endpoints. External calls only via `geo.services`."""
 
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
 import json
 from decimal import Decimal
 
@@ -16,7 +18,7 @@ from farm.views_common import error_text
 from . import services
 from .models import FieldPolygon
 
-UNAVAILABLE = "data tidak tersedia"
+UNAVAILABLE = _l("data tidak tersedia")
 
 
 def polygon_payload(p: FieldPolygon):
@@ -53,7 +55,7 @@ class JsonBodyMixin:
         try:
             return json.loads(request.body or b"{}")
         except ValueError:
-            raise ValidationError("Data JSON tidak valid.")
+            raise ValidationError(_("Data JSON tidak valid."))
 
 
 def _element(value):
@@ -153,8 +155,8 @@ class PlaceSearchView(RoleRequiredMixin, View):
     def get(self, request):
         places = services.search_places(request.GET.get("q", ""))
         if places is None:
-            return JsonResponse({"places": [], "message": "Pencarian lokasi tidak tersedia, coba lagi sebentar."})
-        return JsonResponse({"places": places, "message": None if places else "Lokasi tidak ditemukan."})
+            return JsonResponse({"places": [], "message": _("Pencarian lokasi tidak tersedia, coba lagi sebentar.")})
+        return JsonResponse({"places": places, "message": None if places else _("Lokasi tidak ditemukan.")})
 
 
 class WeatherView(RoleRequiredMixin, View):
@@ -169,7 +171,7 @@ class WeatherView(RoleRequiredMixin, View):
                 lat, lon = services.centroid(first)
         weather = services.fetch_weather(lat, lon)
         if weather is None:
-            reason = UNAVAILABLE if lat is not None else "Lokasi kebun belum diatur di Pengaturan"
+            reason = str(UNAVAILABLE) if lat is not None else _("Lokasi kebun belum diatur di Pengaturan")
             return JsonResponse({"weather": None, "message": reason})
         water = services.water_needs(weather)
         water["rows"] = [{k: (str(v) if isinstance(v, Decimal) else v) for k, v in r.items()} for r in water["rows"]]

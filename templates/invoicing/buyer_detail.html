@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
 {% block title %}{{ buyer.name }}{% endblock %}
 {% block content %}
@@ -6,83 +7,83 @@
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
   <div class="gt-pagehead app-pagehead--sm">
     <div class="app-pagehead__text">
-      <a href="{% url 'invoicing:buyers' %}" class="app-back">{% icon "chevron-left" 16 %} Pembeli</a>
-      <h1 class="app-pagehead__title">{{ buyer.name }} {% if not buyer.is_active %}{% pill "Nonaktif" "INACTIVE" %}{% endif %}</h1>
-      <p>{{ buyer.company|default:"Perorangan" }} · termin {% if buyer.payment_terms_days %}{{ buyer.payment_terms_days }} hari{% else %}saat diterima{% endif %}</p>
+      <a href="{% url 'invoicing:buyers' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Pembeli" %}</a>
+      <h1 class="app-pagehead__title">{{ buyer.name }} {% if not buyer.is_active %}{% pill _("Nonaktif") "INACTIVE" %}{% endif %}</h1>
+      <p>{{ buyer.company|default:"Perorangan" }} {% translate "· termin" %} {% if buyer.payment_terms_days %}{{ buyer.payment_terms_days }} {% translate "hari" %}{% else %}{% translate "saat diterima" %}{% endif %}</p>
     </div>
     <div class="gt-pagehead__actions">
-      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md">Ubah</button>
-      <a href="{% url 'invoicing:buyer_payment_new' buyer.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Catat bayar</a>
-      <a href="{% url 'invoicing:invoice_new' %}?buyer={{ buyer.pk }}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Invoice</a>
+      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Ubah" %}</button>
+      <a href="{% url 'invoicing:buyer_payment_new' buyer.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Catat bayar" %}</a>
+      <a href="{% url 'invoicing:invoice_new' %}?buyer={{ buyer.pk }}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Invoice" %}</a>
     </div>
   </div>
 
   <div class="app-split app-section">
     <section class="gt-card" aria-labelledby="h-money">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-money">Posisi tagihan</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-money">{% translate "Posisi tagihan" %}</h2></div>
       <div class="gt-metrics app-buyer__metrics">
-        <div class="gt-metric"><span class="gt-metric__label">Piutang</span><span class="gt-metric__value">{{ outstanding|rupiah }}</span></div>
-        <div class="gt-metric"><span class="gt-metric__label">Jatuh tempo</span><span class="gt-metric__value {% if overdue %}app-value--danger{% endif %}">{{ overdue|rupiah }}</span></div>
-        <div class="gt-metric"><span class="gt-metric__label">Kredit tersedia {% info_tip "Sisa pembayaran yang belum dialokasikan. Tidak bisa dicairkan, hanya untuk invoice berikutnya." %}</span><span class="gt-metric__value {% if credit %}app-value--positive{% endif %}">{{ credit|rupiah }}</span></div>
+        <div class="gt-metric"><span class="gt-metric__label">{% translate "Piutang" %}</span><span class="gt-metric__value">{{ outstanding|rupiah }}</span></div>
+        <div class="gt-metric"><span class="gt-metric__label">{% translate "Jatuh tempo" %}</span><span class="gt-metric__value {% if overdue %}app-value--danger{% endif %}">{{ overdue|rupiah }}</span></div>
+        <div class="gt-metric"><span class="gt-metric__label">{% translate "Kredit tersedia" %} {% info_tip _("Sisa pembayaran yang belum dialokasikan. Tidak bisa dicairkan, hanya untuk invoice berikutnya.") %}</span><span class="gt-metric__value {% if credit %}app-value--positive{% endif %}">{{ credit|rupiah }}</span></div>
       </div>
       {% if credit and open_invoices %}
       <form method="post" class="gt-callout gt-callout--success app-credit">{% csrf_token %}
         <input type="hidden" name="action" value="credit">
         <div class="app-credit__body">
-          <span class="gt-callout__title">Pakai kredit {{ credit|rupiah }}</span>
+          <span class="gt-callout__title">{% translate "Pakai kredit" %} {{ credit|rupiah }}</span>
           <div class="app-credit__fields">
-            <label><span class="app-label">Invoice</span><select name="invoice" class="app-field app-field--sm">{% for i in open_invoices %}<option value="{{ i.pk }}">{{ i }} · sisa {{ i.outstanding|rupiah }}</option>{% endfor %}</select></label>
-            <label class="app-credit__amt"><span class="app-label">Jumlah</span><input name="amount_idr" type="number" step="0.01" min="0.01" value="{{ credit|stringformat:'.2f' }}" class="app-field app-field--sm"></label>
-            <button class="gt-btn gt-btn--solid gt-btn--sm">Terapkan</button>
+            <label><span class="app-label">{% translate "Invoice" %}</span><select name="invoice" class="app-field app-field--sm">{% for i in open_invoices %}<option value="{{ i.pk }}">{{ i }} {% translate "· sisa" %} {{ i.outstanding|rupiah }}</option>{% endfor %}</select></label>
+            <label class="app-credit__amt"><span class="app-label">{% translate "Jumlah" %}</span><input name="amount_idr" type="number" step="0.01" min="0.01" value="{{ credit|stringformat:'.2f' }}" class="app-field app-field--sm"></label>
+            <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Terapkan" %}</button>
           </div>
         </div>
       </form>
       {% endif %}
     </section>
     <section class="gt-card" aria-labelledby="h-contact">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-contact">Kontak</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-contact">{% translate "Kontak" %}</h2></div>
       <dl class="gt-kv gt-kv--compact">
-        <div><dt>Telepon</dt><dd>{{ buyer.phone|default:"—" }}</dd></div>
-        {% if buyer.email %}<div><dt>Email</dt><dd>{{ buyer.email }}</dd></div>{% endif %}
-        {% if buyer.address %}<div><dt>Alamat</dt><dd class="app-pre">{{ buyer.address }}</dd></div>{% endif %}
+        <div><dt>{% translate "Telepon" %}</dt><dd>{{ buyer.phone|default:"—" }}</dd></div>
+        {% if buyer.email %}<div><dt>{% translate "Email" %}</dt><dd>{{ buyer.email }}</dd></div>{% endif %}
+        {% if buyer.address %}<div><dt>{% translate "Alamat" %}</dt><dd class="app-pre">{{ buyer.address }}</dd></div>{% endif %}
       </dl>
       {% if buyer.notes %}<p class="app-muted app-note">{{ buyer.notes }}</p>{% endif %}
-      <form method="post" class="app-note" data-confirm-title="Ubah status pembeli?" data-confirm="Pembeli nonaktif tidak muncul saat membuat invoice baru; invoice lamanya tetap ada." data-confirm-action="Ubah status">{% csrf_token %}<input type="hidden" name="action" value="toggle">
-        {% if buyer.is_active %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Nonaktifkan</button>{% else %}<button class="gt-btn gt-btn--outline gt-btn--sm">Aktifkan</button>{% endif %}</form>
+      <form method="post" class="app-note" data-confirm-title="{% translate 'Ubah status pembeli?' %}" data-confirm="{% translate 'Pembeli nonaktif tidak muncul saat membuat invoice baru; invoice lamanya tetap ada.' %}" data-confirm-action="{% translate 'Ubah status' %}">{% csrf_token %}<input type="hidden" name="action" value="toggle">
+        {% if buyer.is_active %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Nonaktifkan" %}</button>{% else %}<button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Aktifkan" %}</button>{% endif %}</form>
     </section>
   </div>
 
-  <section class="gt-card app-section" aria-label="Riwayat pembeli">
+  <section class="gt-card app-section" aria-label="{% translate 'Riwayat pembeli' %}">
     <div class="app-toolbar">
-      <nav class="gt-tabs" aria-label="Riwayat">
-        <a href="?tab=invoices" class="gt-tab app-tab{% if tab != 'payments' %} gt-tab--active{% endif %}"{% if tab != 'payments' %} aria-current="page"{% endif %}>Invoice <span class="app-tab__count">{{ invoices|length }}</span></a>
-        <a href="?tab=payments" class="gt-tab app-tab{% if tab == 'payments' %} gt-tab--active{% endif %}"{% if tab == 'payments' %} aria-current="page"{% endif %}>Pembayaran <span class="app-tab__count">{{ payments|length }}</span></a>
+      <nav class="gt-tabs" aria-label="{% translate 'Riwayat' %}">
+        <a href="?tab=invoices" class="gt-tab app-tab{% if tab != 'payments' %} gt-tab--active{% endif %}"{% if tab != 'payments' %} aria-current="page"{% endif %}>{% translate "Invoice" %} <span class="app-tab__count">{{ invoices|length }}</span></a>
+        <a href="?tab=payments" class="gt-tab app-tab{% if tab == 'payments' %} gt-tab--active{% endif %}"{% if tab == 'payments' %} aria-current="page"{% endif %}>{% translate "Pembayaran" %} <span class="app-tab__count">{{ payments|length }}</span></a>
       </nav>
     </div>
     <div class="app-table-wrap">
     {% if tab == 'payments' %}
       <table class="gt-table">
-        <thead><tr><th>Tanggal</th><th>Metode</th><th>Referensi</th><th>Dialokasikan ke</th><th class="num">Jumlah</th><th class="num">Sisa (kredit)</th><th class="num"><span class="sr-only">Aksi</span></th></tr></thead>
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Metode" %}</th><th>{% translate "Referensi" %}</th><th>{% translate "Dialokasikan ke" %}</th><th class="num">{% translate "Jumlah" %}</th><th class="num">{% translate "Sisa (kredit)" %}</th><th class="num"><span class="sr-only">{% translate "Aksi" %}</span></th></tr></thead>
         <tbody>
         {% for p in payments %}
           <tr{% if p.voided_at %} class="app-row--void"{% endif %}>
-            <td>{{ p.paid_on|date:"d M Y" }}{% if p.voided_at %}<span class="app-sub">{% pill "Dibatalkan" tone="gray" %} {% info_tip p.void_reason "Alasan" %}</span>{% endif %}</td>
-            <td>{{ p.get_method_display }}{% if p.withholding_slip_no %}<span class="app-sub">Bukti potong {{ p.withholding_slip_no }}</span>{% endif %}</td>
-            <td>{{ p.reference|default:"—" }}{% if p.proof %} · <a class="app-link" href="{{ p.proof.url }}">bukti</a>{% endif %}</td>
+            <td>{{ p.paid_on|date:"d M Y" }}{% if p.voided_at %}<span class="app-sub">{% pill _("Dibatalkan") tone="gray" %} {% info_tip p.void_reason "Alasan" %}</span>{% endif %}</td>
+            <td>{{ p.get_method_display }}{% if p.withholding_slip_no %}<span class="app-sub">{% translate "Bukti potong" %} {{ p.withholding_slip_no }}</span>{% endif %}</td>
+            <td>{{ p.reference|default:"—" }}{% if p.proof %} · <a class="app-link" href="{{ p.proof.url }}">{% translate "bukti" %}</a>{% endif %}</td>
             <td>{% for a in p.allocations.all %}<span class="app-block"><a class="app-mono app-link--plain" href="{% url 'invoicing:invoice_detail' a.invoice_id %}">{{ a.invoice }}</a> {{ a.amount_idr|rupiah }}</span>{% empty %}<span class="app-muted">—</span>{% endfor %}</td>
             <td class="num"><b>{{ p.amount_idr|rupiah }}</b></td>
             <td class="num">{{ p.unallocated_idr|rupiah }}</td>
             <td class="num">{% if roles.label == 'OWNER' and not p.allocations.all and not p.voided_at %}
-              <form method="post" action="{% url 'invoicing:buyer_payment_void' p.pk %}" data-confirm-title="Batalkan pembayaran?" data-confirm="Pembayaran yang belum dialokasikan ini dibatalkan dan tidak dihitung lagi sebagai kredit. Catatannya tetap disimpan (arsip 10 tahun)." data-confirm-action="Batalkan pembayaran" data-confirm-reason="Alasan" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Batalkan</button></form>{% endif %}</td>
+              <form method="post" action="{% url 'invoicing:buyer_payment_void' p.pk %}" data-confirm-title="{% translate 'Batalkan pembayaran?' %}" data-confirm="{% translate 'Pembayaran yang belum dialokasikan ini dibatalkan dan tidak dihitung lagi sebagai kredit. Catatannya tetap disimpan (arsip 10 tahun).' %}" data-confirm-action="{% translate 'Batalkan pembayaran' %}" data-confirm-reason="Alasan" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Batalkan" %}</button></form>{% endif %}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada pembayaran.</span><span class="gt-callout__body">Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit.</span></div></div></td></tr>
+          <tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">{% translate "Belum ada pembayaran." %}</span><span class="gt-callout__body">{% translate "Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit." %}</span></div></div></td></tr>
         {% endfor %}
         </tbody>
       </table>
     {% else %}
       <table class="gt-table">
-        <thead><tr><th>Nomor</th><th>Terbit</th><th>Jatuh tempo</th><th class="num">Total</th><th>Status</th></tr></thead>
+        <thead><tr><th>{% translate "Nomor" %}</th><th>{% translate "Terbit" %}</th><th>{% translate "Jatuh tempo" %}</th><th class="num">{% translate "Total" %}</th><th>{% translate "Status" %}</th></tr></thead>
         <tbody>
         {% for inv in invoices %}
           <tr>
@@ -93,7 +94,7 @@
             <td>{% pill inv.pay_label inv.pill_key %}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada invoice untuk pembeli ini.</span></div></div></td></tr>
+          <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">{% translate "Belum ada invoice untuk pembeli ini." %}</span></div></div></td></tr>
         {% endfor %}
         </tbody>
       </table>
@@ -101,6 +102,6 @@
     </div>
   </section>
 
-  {% include "invoicing/_buyer_sheet.html" with sheet_title="Ubah pembeli" submit="Simpan" %}
+  {% include "invoicing/_buyer_sheet.html" with sheet_title=_("Ubah pembeli") submit=_("Simpan") %}
 </div>
 {% endblock %}

@@ -1,4 +1,5 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load ui %}
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
@@ -6,7 +7,7 @@
 {% url back_url as back_href %}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
-    <a href="{{ back_href }}{{ back_query }}" class="app-back">{% icon "chevron-left" 16 %} Kembali</a>
+    <a href="{{ back_href }}{{ back_query }}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
     <h1>{{ page_title }}{% if page_help %} {% info_tip page_help %}{% endif %}</h1>
   </div>
 </div>
@@ -14,8 +15,8 @@
   <form method="post" enctype="multipart/form-data" class="gt-card app-formpage__main">{% csrf_token %}
     {% include "_form_fields.html" %}
     <div class="gt-footer app-formpage__foot">
-      <a href="{{ back_href }}{{ back_query }}" class="gt-btn gt-btn--outline gt-btn--md">Batal</a>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button>
+      <a href="{{ back_href }}{{ back_query }}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button>
     </div>
   </form>
 </div>

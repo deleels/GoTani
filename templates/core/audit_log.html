@@ -1,20 +1,21 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui %}
-{% block title %}Log aktivitas{% endblock %}
+{% block title %}{% translate "Log aktivitas" %}{% endblock %}
 {% block content %}
 {# Log aktivitas (Phase 5b): gt-table; before → after as a compact kv list. #}
-{% include "components/page_header.html" with title="Log Aktivitas" subtitle="Jejak perubahan penting: siapa, kapan, sebelum → sesudah, dan alasannya. Tidak dapat diubah atau dihapus." actions="" %}
-<section class="gt-card" aria-label="Log aktivitas">
+{% include "components/page_header.html" with title=_("Log Aktivitas") subtitle=_("Jejak perubahan penting: siapa, kapan, sebelum → sesudah, dan alasannya. Tidak dapat diubah atau dihapus.") actions="" %}
+<section class="gt-card" aria-label="{% translate 'Log aktivitas' %}">
   <form method="get" class="app-toolbar">
-    <select name="action" onchange="this.form.submit()" class="app-field app-field--sm app-field--auto" aria-label="Jenis perubahan">
-      <option value="">Semua perubahan</option>
+    <select name="action" onchange="this.form.submit()" class="app-field app-field--sm app-field--auto" aria-label="{% translate 'Jenis perubahan' %}">
+      <option value="">{% translate "Semua perubahan" %}</option>
       {% for code, label in actions %}<option value="{{ code }}" {% if code == action %}selected{% endif %}>{{ label }}</option>{% endfor %}
     </select>
-    <span class="app-toolbar__search"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">Cari log</span><input name="q" value="{{ q }}" placeholder="Cari ringkasan, alasan, pengguna…" class="app-field app-field--sm"></label></span>
+    <span class="app-toolbar__search"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari log" %}</span><input name="q" value="{{ q }}" placeholder="{% translate 'Cari ringkasan, alasan, pengguna…' %}" class="app-field app-field--sm"></label></span>
   </form>
   <div class="app-table-wrap">
     <table class="gt-table app-audit">
-      <thead><tr><th>Waktu</th><th>Oleh</th><th>Perubahan</th><th>Sebelum → sesudah</th><th>Alasan</th></tr></thead>
+      <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Oleh" %}</th><th>{% translate "Perubahan" %}</th><th>{% translate "Sebelum → sesudah" %}</th><th>{% translate "Alasan" %}</th></tr></thead>
       <tbody>
       {% for e in page.object_list %}
         <tr>
@@ -26,8 +27,8 @@
         </tr>
       {% empty %}
         <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div>
-          <span class="gt-callout__title">{% if q or action %}Tidak ada catatan yang cocok.{% else %}Belum ada aktivitas tercatat.{% endif %}</span>
-          <span class="gt-callout__body">Perubahan harga, langkah kasir, dan status PKP akan muncul di sini secara otomatis.</span></div></div></td></tr>
+          <span class="gt-callout__title">{% if q or action %}{% translate "Tidak ada catatan yang cocok." %}{% else %}{% translate "Belum ada aktivitas tercatat." %}{% endif %}</span>
+          <span class="gt-callout__body">{% translate "Perubahan harga, langkah kasir, dan status PKP akan muncul di sini secara otomatis." %}</span></div></div></td></tr>
       {% endfor %}
       </tbody>
     </table>

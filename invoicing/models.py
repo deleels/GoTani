@@ -1,5 +1,7 @@
 """Wholesale / B2B invoicing (D49–D59). Money math lives in `invoicing/services.py`."""
 
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
 from decimal import Decimal
 
 from django.conf import settings
@@ -16,20 +18,22 @@ ZERO = Decimal("0.00")
 class Buyer(models.Model):
     """Plain customer directory (D49) — no marketplace, no verification."""
 
-    name = models.CharField("nama", max_length=120)
-    company = models.CharField("perusahaan", max_length=120, blank=True)
-    phone = models.CharField("telepon", max_length=40, blank=True)
-    email = models.EmailField("email", blank=True)
-    address = models.TextField("alamat", blank=True)
-    payment_terms_days = models.PositiveIntegerField("termin (hari)", default=0, help_text="0 = jatuh tempo saat diterima")
-    notes = models.TextField("catatan", blank=True)
-    is_active = models.BooleanField("aktif", default=True)
+    name = models.CharField(_l("nama"), max_length=120)
+    company = models.CharField(_l("perusahaan"), max_length=120, blank=True)
+    phone = models.CharField(_l("telepon"), max_length=40, blank=True)
+    email = models.EmailField(_l("email"), blank=True)
+    address = models.TextField(_l("alamat"), blank=True)
+    payment_terms_days = models.PositiveIntegerField(_l("termin (hari)"), default=0, help_text=_l("0 = jatuh tempo saat diterima"))
+    notes = models.TextField(_l("catatan"), blank=True)
+    is_active = models.BooleanField(_l("aktif"), default=True)
+    document_language = models.CharField(_l("bahasa dokumen"), max_length=5, default="id", choices=settings.LANGUAGES,
+                                         help_text=_l("Bahasa invoice yang dicetak untuk pembeli ini."))
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "pembeli"
-        verbose_name_plural = "pembeli"
+        verbose_name = _l("pembeli")
+        verbose_name_plural = _l("pembeli")
 
     def __str__(self):
         return f"{self.name} ({self.company})" if self.company else self.name
@@ -37,48 +41,48 @@ class Buyer(models.Model):
 
 class Invoice(models.Model):
     class Status(models.TextChoices):
-        DRAFT = "DRAFT", "Draf"
-        ISSUED = "ISSUED", "Terbit"
-        VOID = "VOID", "Batal"
+        DRAFT = "DRAFT", _l("Draf")
+        ISSUED = "ISSUED", _l("Terbit")
+        VOID = "VOID", _l("Batal")
 
     class DiscountType(models.TextChoices):
-        NONE = "NONE", "Tanpa diskon"
-        PERCENT = "PERCENT", "Persen"
-        AMOUNT = "AMOUNT", "Nominal"
+        NONE = "NONE", _l("Tanpa diskon")
+        PERCENT = "PERCENT", _l("Persen")
+        AMOUNT = "AMOUNT", _l("Nominal")
 
     class PaymentStatus(models.TextChoices):  # derived, never stored (D51)
-        UNPAID = "UNPAID", "Belum dibayar"
-        PARTIALLY_PAID = "PARTIALLY_PAID", "Dibayar sebagian"
-        PAID = "PAID", "Lunas"
-        OVERDUE = "OVERDUE", "Jatuh tempo"
+        UNPAID = "UNPAID", _l("Belum dibayar")
+        PARTIALLY_PAID = "PARTIALLY_PAID", _l("Dibayar sebagian")
+        PAID = "PAID", _l("Lunas")
+        OVERDUE = "OVERDUE", _l("Jatuh tempo")
 
-    number = models.CharField("nomor", max_length=20, unique=True, null=True, blank=True)
-    buyer = models.ForeignKey(Buyer, on_delete=models.PROTECT, related_name="invoices", verbose_name="pembeli")
-    status = models.CharField("status", max_length=10, choices=Status.choices, default=Status.DRAFT)
-    issue_date = models.DateField("tanggal terbit", null=True, blank=True)
-    due_date = models.DateField("jatuh tempo", null=True, blank=True)
-    discount_type = models.CharField("jenis diskon", max_length=10, choices=DiscountType.choices, default=DiscountType.NONE)
-    discount_value = models.DecimalField("nilai diskon", default=0, **MONEY)
-    shipping_idr = models.DecimalField("ongkos kirim", default=0, **MONEY)
-    subtotal_idr = models.DecimalField("subtotal", default=0, **MONEY)
-    discount_idr = models.DecimalField("diskon", default=0, **MONEY)
-    tax_idr = models.DecimalField("pajak", default=0, **MONEY)
-    total_idr = models.DecimalField("total", default=0, **MONEY)
-    total_cogs_idr = models.DecimalField("total HPP", default=0, **MONEY)
-    notes = models.TextField("catatan", blank=True)
+    number = models.CharField(_l("nomor"), max_length=20, unique=True, null=True, blank=True)
+    buyer = models.ForeignKey(Buyer, on_delete=models.PROTECT, related_name="invoices", verbose_name=_l("pembeli"))
+    status = models.CharField(_l("status"), max_length=10, choices=Status.choices, default=Status.DRAFT)
+    issue_date = models.DateField(_l("tanggal terbit"), null=True, blank=True)
+    due_date = models.DateField(_l("jatuh tempo"), null=True, blank=True)
+    discount_type = models.CharField(_l("jenis diskon"), max_length=10, choices=DiscountType.choices, default=DiscountType.NONE)
+    discount_value = models.DecimalField(_l("nilai diskon"), default=0, **MONEY)
+    shipping_idr = models.DecimalField(_l("ongkos kirim"), default=0, **MONEY)
+    subtotal_idr = models.DecimalField(_l("subtotal"), default=0, **MONEY)
+    discount_idr = models.DecimalField(_l("diskon"), default=0, **MONEY)
+    tax_idr = models.DecimalField(_l("pajak"), default=0, **MONEY)
+    total_idr = models.DecimalField(_l("total"), default=0, **MONEY)
+    total_cogs_idr = models.DecimalField(_l("total HPP"), default=0, **MONEY)
+    notes = models.TextField(_l("catatan"), blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     created_at = models.DateTimeField(default=timezone.now)
     issued_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+")
     issued_at = models.DateTimeField(null=True, blank=True)
     voided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True, related_name="+")
     voided_at = models.DateTimeField(null=True, blank=True)
-    void_reason = models.CharField("alasan batal", max_length=20, choices=VoidReason.choices, blank=True)
-    void_note = models.TextField("catatan batal", blank=True)
+    void_reason = models.CharField(_l("alasan batal"), max_length=20, choices=VoidReason.choices, blank=True)
+    void_note = models.TextField(_l("catatan batal"), blank=True)
 
     class Meta:
         ordering = ["-created_at", "-id"]
-        verbose_name = "invoice"
-        verbose_name_plural = "invoice"
+        verbose_name = _l("invoice")
+        verbose_name_plural = _l("invoice")
         constraints = [
             models.CheckConstraint(condition=Q(shipping_idr__gte=0), name="invoice_shipping_nonneg"),
             models.CheckConstraint(condition=Q(discount_value__gte=0), name="invoice_discount_nonneg"),
@@ -89,7 +93,7 @@ class Invoice(models.Model):
         ]
 
     def __str__(self):
-        return self.number or f"Draf #{self.pk}"
+        return self.number or _("Draf #%(pk)s") % {"pk": self.pk}
 
     @property
     def paid_idr(self) -> Decimal:
@@ -123,15 +127,15 @@ class Invoice(models.Model):
 
 class InvoiceLine(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="lines")
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="+", verbose_name="produk")
-    qty_kg = models.DecimalField("kg", **QTY)
-    unit_price_idr = models.DecimalField("harga per kg", **MONEY)  # tax-exclusive (D47), overridable (D52)
-    line_subtotal_idr = models.DecimalField("subtotal", default=0, **MONEY)
-    discount_share_idr = models.DecimalField("bagian diskon", default=0, **MONEY)
-    tax_rate_pct = models.DecimalField("tarif pajak (%)", max_digits=5, decimal_places=2, default=0)
-    tax_idr = models.DecimalField("pajak", default=0, **MONEY)
-    net_revenue_idr = models.DecimalField("pendapatan bersih", default=0, **MONEY)
-    unit_cogs_idr = models.DecimalField("HPP per kg", default=0, **MONEY)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="+", verbose_name=_l("produk"))
+    qty_kg = models.DecimalField(_l("kg"), **QTY)
+    unit_price_idr = models.DecimalField(_l("harga per kg"), **MONEY)  # tax-exclusive (D47), overridable (D52)
+    line_subtotal_idr = models.DecimalField(_l("subtotal"), default=0, **MONEY)
+    discount_share_idr = models.DecimalField(_l("bagian diskon"), default=0, **MONEY)
+    tax_rate_pct = models.DecimalField(_l("tarif pajak (%)"), max_digits=5, decimal_places=2, default=0)
+    tax_idr = models.DecimalField(_l("pajak"), default=0, **MONEY)
+    net_revenue_idr = models.DecimalField(_l("pendapatan bersih"), default=0, **MONEY)
+    unit_cogs_idr = models.DecimalField(_l("HPP per kg"), default=0, **MONEY)
 
     class Meta:
         ordering = ["id"]
@@ -147,8 +151,8 @@ class InvoiceLine(models.Model):
 class InvoiceLineLotAllocation(models.Model):
     line = models.ForeignKey(InvoiceLine, on_delete=models.CASCADE, related_name="allocations")
     lot = models.ForeignKey(StockLot, on_delete=models.PROTECT, related_name="invoice_allocations")
-    qty_kg = models.DecimalField("kg", **QTY)
-    unit_cogs_idr = models.DecimalField("HPP per kg", **MONEY)
+    qty_kg = models.DecimalField(_l("kg"), **QTY)
+    unit_cogs_idr = models.DecimalField(_l("HPP per kg"), **MONEY)
 
     class Meta:
         constraints = [models.CheckConstraint(condition=Q(qty_kg__gt=0), name="invoicealloc_qty_positive")]
@@ -157,37 +161,37 @@ class InvoiceLineLotAllocation(models.Model):
 class InvoicePaymentMethod(models.TextChoices):
     """Invoice settlement methods: the POS methods plus PPh withheld by the buyer (D101) — not money received."""
 
-    CASH = "CASH", "Tunai"
-    QRIS = "QRIS", "QRIS"
-    TRANSFER = "TRANSFER", "Transfer"
-    PPH_WITHHELD = "PPH_WITHHELD", "Potongan PPh"
+    CASH = "CASH", _l("Tunai")
+    QRIS = "QRIS", _l("QRIS")
+    TRANSFER = "TRANSFER", _l("Transfer")
+    PPH_WITHHELD = "PPH_WITHHELD", _l("Potongan PPh")
 
 
 class InvoicePayment(models.Model):
     """Money received, recorded by hand (D55) — no gateway. Never deleted: voided with a reason (D100)."""
 
-    buyer = models.ForeignKey(Buyer, on_delete=models.PROTECT, related_name="payments", verbose_name="pembeli")
-    amount_idr = models.DecimalField("jumlah", **MONEY)
-    method = models.CharField("metode", max_length=20, choices=InvoicePaymentMethod.choices)
-    withholding_slip_no = models.CharField("nomor bukti potong", max_length=60, blank=True)
-    voided_at = models.DateTimeField("dibatalkan pada", null=True, blank=True)
+    buyer = models.ForeignKey(Buyer, on_delete=models.PROTECT, related_name="payments", verbose_name=_l("pembeli"))
+    amount_idr = models.DecimalField(_l("jumlah"), **MONEY)
+    method = models.CharField(_l("metode"), max_length=20, choices=InvoicePaymentMethod.choices)
+    withholding_slip_no = models.CharField(_l("nomor bukti potong"), max_length=60, blank=True)
+    voided_at = models.DateTimeField(_l("dibatalkan pada"), null=True, blank=True)
     voided_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True,
-                                  related_name="+", verbose_name="dibatalkan oleh")
-    void_reason = models.TextField("alasan batal", blank=True)
-    paid_on = models.DateField("tanggal bayar")
-    reference = models.CharField("referensi", max_length=120, blank=True)
-    proof = models.FileField("bukti", upload_to="payments/%Y/%m/", blank=True)
+                                  related_name="+", verbose_name=_l("dibatalkan oleh"))
+    void_reason = models.TextField(_l("alasan batal"), blank=True)
+    paid_on = models.DateField(_l("tanggal bayar"))
+    reference = models.CharField(_l("referensi"), max_length=120, blank=True)
+    proof = models.FileField(_l("bukti"), upload_to="payments/%Y/%m/", blank=True)
     recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ["-paid_on", "-id"]
-        verbose_name = "pembayaran"
-        verbose_name_plural = "pembayaran"
+        verbose_name = _l("pembayaran")
+        verbose_name_plural = _l("pembayaran")
         constraints = [models.CheckConstraint(condition=Q(amount_idr__gt=0), name="payment_amount_positive")]
 
     def __str__(self):
-        return f"Bayar {self.buyer} {self.amount_idr}"
+        return _("Bayar %(buyer)s %(amount)s") % {"buyer": self.buyer, "amount": self.amount_idr}
 
     @property
     def allocated_idr(self) -> Decimal:
@@ -201,7 +205,7 @@ class InvoicePayment(models.Model):
 class PaymentAllocation(models.Model):
     payment = models.ForeignKey(InvoicePayment, on_delete=models.CASCADE, related_name="allocations")
     invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="allocations")
-    amount_idr = models.DecimalField("jumlah", **MONEY)
+    amount_idr = models.DecimalField(_l("jumlah"), **MONEY)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:

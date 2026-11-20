@@ -1,4 +1,5 @@
 {% extends "base_bare.html" %}
+{% load i18n %}
 {% load static ui %}
 {% block body %}
 {% if user.is_authenticated %}
@@ -8,7 +9,7 @@
   <div x-show="mobile" x-cloak class="app-scrim no-print md:hidden" @click="mobile=false"></div>
 
   {# Sidebar: full width; on phones a slide-in sheet. #}
-  <aside class="gt-sidebar app-sidebar no-print" aria-label="Navigasi utama">
+  <aside class="gt-sidebar app-sidebar no-print" aria-label="{% translate 'Navigasi utama' %}">
     <a class="gt-brand app-brand" href="{% url 'home' %}">
       {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="app-brand__logo">
       {% else %}<img src="{% static 'core/ds/logos/gotani-mark.svg' %}" alt="">{% endif %}
@@ -42,15 +43,15 @@
     <div class="gt-sidebar__foot" x-data="installCard()" x-show="can" x-cloak>
       <div class="gt-dark app-install">
         <img src="{% static 'core/ds/logos/gotani-mark-white.svg' %}" width="28" height="28" alt="">
-        <span class="gt-dark__title">Pasang GoTani</span>
-        <span class="app-install__note">Buka kasir dan laporan langsung dari layar utama.</span>
-        <button type="button" class="gt-btn gt-btn--solid gt-btn--md gt-btn--block" @click="install()">Pasang</button>
+        <span class="gt-dark__title">{% translate "Pasang GoTani" %}</span>
+        <span class="app-install__note">{% translate "Buka kasir dan laporan langsung dari layar utama." %}</span>
+        <button type="button" class="gt-btn gt-btn--solid gt-btn--md gt-btn--block" @click="install()">{% translate "Pasang" %}</button>
       </div>
     </div>
   </aside>
 
   {# Collapsed (Ctrl/⌘ + B): an 80px icon rail. #}
-  <nav class="gt-rail app-rail no-print" aria-label="Navigasi utama (ringkas)">
+  <nav class="gt-rail app-rail no-print" aria-label="{% translate 'Navigasi utama (ringkas)' %}">
     <a href="{% url 'home' %}" aria-label="{{ farm_profile.name }}"><img class="gt-rail__logo" src="{% static 'core/ds/logos/gotani-app-icon.svg' %}" alt=""></a>
     {% for group in nav_groups %}{% for item in group.items %}
       {% if item.children %}
@@ -64,21 +65,30 @@
 
   <div class="gt-shell">
     <header class="gt-topbar app-topbar no-print">
-      <button type="button" class="gt-iconbtn gt-iconbtn--md md:hidden" @click="mobile=true" aria-label="Buka menu">{% icon "menu" 22 "gt-ico" %}</button>
+      <button type="button" class="gt-iconbtn gt-iconbtn--md md:hidden" @click="mobile=true" aria-label="{% translate 'Buka menu' %}">{% icon "menu" 22 "gt-ico" %}</button>
       <button type="button" class="gt-iconbtn gt-iconbtn--md hidden md:inline-grid" @click="toggle()"
-              :aria-label="collapsed ? 'Lebarkan sidebar' : 'Ciutkan sidebar'" title="Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)">{% icon "panel" 22 "gt-ico" %}</button>
+              :aria-label="collapsed ? '{% jt "Lebarkan sidebar" %}' : '{% jt "Ciutkan sidebar" %}'" title="{% translate 'Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)' %}">{% icon "panel" 22 "gt-ico" %}</button>
       <span class="flex-1"></span>
       {% include "components/bell.html" %}
       <div class="relative" x-data="{ open: false }" @click.outside="open=false" @keydown.escape="open=false">
-        <button type="button" @click="open=!open" class="gt-user app-user" :aria-expanded="open" aria-haspopup="menu" aria-label="Menu akun">
+        <button type="button" @click="open=!open" class="gt-user app-user" :aria-expanded="open" aria-haspopup="menu" aria-label="{% translate 'Menu akun' %}">
           <span class="gt-avatar">{{ user.username|first|upper }}</span>
           <span class="gt-user__text app-user__text">{{ user.get_full_name|default:user.username }}<span>{{ roles.label }}</span></span>
         </button>
         <div x-show="open" x-cloak class="app-menu" role="menu">
-          <a href="{% url 'core:profile' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "users" 18 "gt-ico" %}</span><span class="gt-row__title">Profil</span></a>
-          <a href="{% url 'core:password_change' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "key" 18 "gt-ico" %}</span><span class="gt-row__title">Ganti Kata Sandi</span></a>
-          {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "settings" 18 "gt-ico" %}</span><span class="gt-row__title">Admin Django</span></a>{% endif %}
-          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="gt-row app-menu__item app-menu__item--danger" role="menuitem"><span class="gt-row__lead">{% icon "logout" 18 "gt-ico" %}</span><span class="gt-row__title">Keluar</span></button></form>
+          <a href="{% url 'core:profile' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "users" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Profil" %}</span></a>
+          <a href="{% url 'core:password_change' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "key" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Ganti Kata Sandi" %}</span></a>
+          {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "settings" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Admin Django" %}</span></a>{% endif %}
+          {% get_current_language as CUR_LANG %}
+          <form method="post" action="{% url 'core:set_language' %}" class="app-lang" role="group" aria-label="{% translate 'Bahasa' %}">{% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <span class="app-lang__label">{% icon "globe" 18 "gt-ico" %}{% translate "Bahasa" %}</span>
+            <span class="app-lang__seg">
+              <button name="language" value="en" class="app-lang__opt{% if CUR_LANG == 'en' %} is-on{% endif %}"{% if CUR_LANG == 'en' %} aria-pressed="true"{% endif %}>EN</button>
+              <button name="language" value="id" class="app-lang__opt{% if CUR_LANG == 'id' %} is-on{% endif %}"{% if CUR_LANG == 'id' %} aria-pressed="true"{% endif %}>ID</button>
+            </span>
+          </form>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="gt-row app-menu__item app-menu__item--danger" role="menuitem"><span class="gt-row__lead">{% icon "logout" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Keluar" %}</span></button></form>
         </div>
       </div>
     </header>

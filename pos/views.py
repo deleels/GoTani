@@ -1,5 +1,6 @@
 """POS register, checkout, receipt and void (thin views over `pos.services`)."""
 
+from django.utils.translation import gettext as _
 from datetime import date
 from decimal import Decimal
 
@@ -71,7 +72,7 @@ class CheckoutView(RoleRequiredMixin, View):
     def post(self, request):
         ids, qtys = request.POST.getlist("product_id"), request.POST.getlist("qty_kg")
         if len(ids) != len(qtys):
-            messages.error(request, "Isi keranjang tidak valid.")
+            messages.error(request, _("Isi keranjang tidak valid."))
             return redirect("pos:register")
         try:
             order = services.checkout(
@@ -81,7 +82,7 @@ class CheckoutView(RoleRequiredMixin, View):
         except ValidationError as exc:
             messages.error(request, error_text(exc))
             return redirect("pos:register")
-        messages.success(request, f"Order {order.order_number} berhasil.")
+        messages.success(request, _("Order %(order_number)s berhasil.") % {"order_number": order.order_number})
         return redirect(f"{reverse('pos:receipt', args=[order.pk])}?new=1")
 
 
@@ -116,31 +117,31 @@ class ShiftView(RoleRequiredMixin, View):
         try:
             if action == "open":
                 services.open_shift(request.user, request.POST.get("opening_float") or "0")
-                messages.success(request, "Shift dibuka. Selamat berjualan!")
+                messages.success(request, _("Shift dibuka. Selamat berjualan!"))
                 return redirect(safe_next(request, reverse("pos:shift")))
             if action == "review":
                 shift = get_object_or_404(Shift, pk=request.POST.get("shift"))
                 services.review_shift(shift, request.user, request.POST.get("reason", ""))
-                messages.success(request, "Catatan tinjauan disimpan.")
+                messages.success(request, _("Catatan tinjauan disimpan."))
                 return redirect("pos:shift")
             shift = services.current_shift()
             if shift is None:
-                raise ValidationError("Tidak ada shift yang terbuka.")
+                raise ValidationError(_("Tidak ada shift yang terbuka."))
             if action == "move":
                 category = request.POST.get("category")
                 services.add_cash_movement(
                     shift, request.user, request.POST.get("kind", ""), request.POST.get("amount") or "0",
                     request.POST.get("note", ""),
                     category=ExpenseCategory.objects.filter(pk=category).first() if category else None)
-                messages.success(request, "Mutasi kas dicatat.")
+                messages.success(request, _("Mutasi kas dicatat."))
             elif action == "close":
                 counts = {d: request.POST.get(f"d{d}") for d in services.DENOMINATIONS}
                 closed = services.close_shift(shift, request.user, counts, request.POST.get("close_note", ""))
                 diff = closed.difference_idr
-                messages.success(request, "Shift ditutup." + ("" if not diff else
-                                 f" Selisih {services.format_rp(diff)} — menunggu tinjauan manajer."))
+                messages.success(request, _("Shift ditutup.") + ("" if not diff else
+                                 " " + _("Selisih %(diff)s — menunggu tinjauan manajer.") % {"diff": services.format_rp(diff)}))
             else:
-                raise ValidationError("Aksi tidak dikenal.")
+                raise ValidationError(_("Aksi tidak dikenal."))
         except ValidationError as exc:
             messages.error(request, error_text(exc))
         return redirect("pos:shift")
@@ -200,7 +201,7 @@ class VoidView(ActionView):
     def perform(self, order):
         order = services.void_order(order, self.request.user, reason=self.request.POST.get("void_reason", ""),
                                     note=self.request.POST.get("reason", ""))
-        self.success_message = f"Order {order.order_number} dibatalkan; stok dikembalikan."
+        self.success_message = _("Order %(number)s dibatalkan; stok dikembalikan.") % {"number": order.order_number}
         return order
 
     def get_success_url(self, obj, result):

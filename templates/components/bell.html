@@ -1,15 +1,15 @@
-{% load ui %}
+{% load i18n %}{% load ui %}
 {# Notifications bell (D64): live list polled every 60 s; opening marks all as seen. #}
 <div class="relative" x-data="bell('{% url 'core:notifications' %}', '{{ csrf_token }}')" x-init="load(); setInterval(() => load(), 60000)" @click.outside="open=false" @keydown.escape="open=false">
-  <button type="button" @click="toggle()" class="gt-iconbtn gt-iconbtn--md" aria-label="Notifikasi" :aria-expanded="open">
+  <button type="button" @click="toggle()" class="gt-iconbtn gt-iconbtn--md" aria-label="{% translate 'Notifikasi' %}" :aria-expanded="open">
     {% icon "bell" 22 "gt-ico" %}
     <span x-show="unread > 0" x-cloak class="gt-count" x-text="unread > 9 ? '9+' : unread"></span>
   </button>
   <div x-show="open" x-cloak class="app-menu app-menu--bell">
-    <div class="app-menu__head"><span class="app-menu__title">Notifikasi</span><span class="app-menu__meta" x-text="items.length + ' aktif'"></span></div>
+    <div class="app-menu__head"><span class="app-menu__title">{% translate "Notifikasi" %}</span><span class="app-menu__meta" x-text="items.length + ' {% jt "aktif" %}'"></span></div>
     <div class="app-menu__scroll">
-      <template x-if="error"><p class="app-menu__empty">Tidak dapat memuat notifikasi · <button type="button" class="underline" @click="load()">Coba lagi</button></p></template>
-      <template x-if="!error && !items.length"><p class="app-menu__empty">Semua beres — tidak ada yang perlu ditindaklanjuti.</p></template>
+      <template x-if="error"><p class="app-menu__empty">{% translate "Tidak dapat memuat notifikasi ·" %} <button type="button" class="underline" @click="load()">{% translate "Coba lagi" %}</button></p></template>
+      <template x-if="!error && !items.length"><p class="app-menu__empty">{% translate "Semua beres — tidak ada yang perlu ditindaklanjuti." %}</p></template>
       <template x-for="n in items" :key="n.kind + n.title">
         <a :href="n.url" class="gt-row app-menu__item">
           <span class="gt-row__lead app-menu__dot"><span class="gt-dot" x-show="n.unread"></span></span>

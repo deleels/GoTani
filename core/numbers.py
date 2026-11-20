@@ -9,6 +9,12 @@ import re
 from decimal import Decimal, InvalidOperation
 
 from django import forms
+from django.utils import translation
+
+
+def separators():
+    """(thousands, decimal) for the active language: id → ('.', ','), en → (',', '.')."""
+    return (",", ".") if (translation.get_language() or "id").startswith("en") else (".", ",")
 
 _MULTI_DOT = re.compile(r"^-?\d{1,3}(\.\d{3}){2,}$")  # 1.500.000
 _ONE_GROUP = re.compile(r"^-?\d{1,3}\.\d{3}$")  # 15.000 — thousands only in a whole-Rupiah field
@@ -30,7 +36,10 @@ def parse_id_decimal(value, kind=None):
     has_rp = text.lower().startswith("rp")
     if has_rp:
         text = text[2:]
-    if "," in text:
+    if separators()[0] == "," and not has_rp:
+        # English input: commas group thousands, a dot is the decimal point.
+        text = text.replace(",", "")
+    elif "," in text:
         text = text.replace(".", "").replace(",", ".")
     elif _MULTI_DOT.match(text) or ((kind == "money" or has_rp) and _ONE_GROUP.match(text)):
         text = text.replace(".", "")
@@ -46,9 +55,10 @@ def format_id_decimal(value, places=3) -> str:
     d = Decimal(str(value))
     sign = "-" if d < 0 else ""
     d = abs(d).quantize(Decimal(1).scaleb(-places))
-    whole, _, frac = f"{d:f}".partition(".")
+    whole, _sep, frac = f"{d:f}".partition(".")
     frac = frac.rstrip("0")
-    return sign + f"{int(whole):,}".replace(",", ".") + (f",{frac}" if frac else "")
+    th, dec = separators()
+    return sign + f"{int(whole):,}".replace(",", th) + (f"{dec}{frac}" if frac else "")
 
 
 class IDNumberInput(forms.TextInput):
@@ -57,8 +67,8 @@ class IDNumberInput(forms.TextInput):
         super().__init__({"inputmode": "decimal", "data-num": kind, "autocomplete": "off", **(attrs or {})})
 
     def format_value(self, value):
-        # Re-rendered bound data is the submitted machine text ("1500.25"): show it Indonesian too,
-        # because the browser reads every dot in an input as a thousands separator.
+        # Re-rendered bound data is the submitted machine text ("1500.25"): show it in the display
+        # format, because in Indonesian the browser reads every dot in an input as a thousands separator.
         if isinstance(value, str) and value.strip():
             try:
                 value = parse_id_decimal(value, self.kind)

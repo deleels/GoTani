@@ -1,45 +1,46 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}Shift & Kas{% endblock %}
+{% block title %}{% translate "Shift & Kas" %}{% endblock %}
 {% block content %}
 {# Shift & Kas (Phase 4c): open shift card with metrics, cash movements, blind count as a denomination table, history table. Posted field names unchanged. #}
-{% include "components/page_header.html" with title="Shift & Kas" subtitle="Satu laci kasir, satu shift terbuka. Penjualan hanya bisa saat shift terbuka; uang dihitung per pecahan saat tutup." %}
+{% include "components/page_header.html" with title=_("Shift & Kas") subtitle=_("Satu laci kasir, satu shift terbuka. Penjualan hanya bisa saat shift terbuka; uang dihitung per pecahan saat tutup.") %}
 
 {% if not shift %}
 <section class="gt-card app-shift__open" aria-labelledby="h-open">
-  <div class="gt-card__head"><h2 class="gt-card__title" id="h-open">Buka shift {% info_tip "Modal awal diisi dari hitungan terakhir." %}</h2></div>
-  <p class="app-muted">Belum ada shift terbuka. Isi modal awal di laci.</p>
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-open">{% translate "Buka shift" %} {% info_tip _("Modal awal diisi dari hitungan terakhir.") %}</h2></div>
+  <p class="app-muted">{% translate "Belum ada shift terbuka. Isi modal awal di laci." %}</p>
   <form method="post" class="app-shift__openform">{% csrf_token %}
     <input type="hidden" name="action" value="open">
-    <label><span class="app-label">Modal awal (Rp)</span>
+    <label><span class="app-label">{% translate "Modal awal (Rp)" %}</span>
       <input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="app-field"></label>
-    <button class="gt-btn gt-btn--primary gt-btn--md">Buka shift</button>
+    <button class="gt-btn gt-btn--primary gt-btn--md">{% translate "Buka shift" %}</button>
   </form>
 </section>
 {% else %}
 <div class="app-shift">
   <div class="app-shift__main">
     <section class="gt-card" aria-labelledby="h-shift">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-shift">{{ shift }} {% pill "Terbuka" tone="green" %}</h2>
-        <span class="gt-card__hint">Dibuka {{ shift.opened_by.get_full_name|default:shift.opened_by.username }} · {{ shift.opened_at|date:"d M H:i" }}</span></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-shift">{{ shift }} {% pill _("Terbuka") tone="green" %}</h2>
+        <span class="gt-card__hint">{% translate "Dibuka" %} {{ shift.opened_by.get_full_name|default:shift.opened_by.username }} · {{ shift.opened_at|date:"d M H:i" }}</span></div>
       <div class="gt-metrics app-shift__metrics">
-        <div class="gt-metric"><span class="gt-metric__label">Modal awal</span><span class="gt-metric__value">{{ summary.opening|rupiah }}</span></div>
-        <div class="gt-metric"><span class="gt-metric__label">Order</span><span class="gt-metric__value">{{ summary.orders }}</span>{% if summary.voided %}<span class="gt-metric__note app-value--danger">{{ summary.voided }} batal</span>{% endif %}</div>
-        {% if show_expected %}<div class="gt-metric"><span class="gt-metric__label">Uang seharusnya di laci</span><span class="gt-metric__value">{{ summary.expected|rupiah }}</span></div>
-        {% else %}<div class="gt-metric"><span class="gt-metric__label">Uang seharusnya {% info_tip "Disembunyikan sampai hitungan selesai (hitung buta)." %}</span><span class="gt-metric__value app-muted">—</span></div>{% endif %}
+        <div class="gt-metric"><span class="gt-metric__label">{% translate "Modal awal" %}</span><span class="gt-metric__value">{{ summary.opening|rupiah }}</span></div>
+        <div class="gt-metric"><span class="gt-metric__label">{% translate "Order" %}</span><span class="gt-metric__value">{{ summary.orders }}</span>{% if summary.voided %}<span class="gt-metric__note app-value--danger">{{ summary.voided }} {% translate "batal" %}</span>{% endif %}</div>
+        {% if show_expected %}<div class="gt-metric"><span class="gt-metric__label">{% translate "Uang seharusnya di laci" %}</span><span class="gt-metric__value">{{ summary.expected|rupiah }}</span></div>
+        {% else %}<div class="gt-metric"><span class="gt-metric__label">{% translate "Uang seharusnya" %} {% info_tip _("Disembunyikan sampai hitungan selesai (hitung buta).") %}</span><span class="gt-metric__value app-muted">—</span></div>{% endif %}
       </div>
       {% if summary.sales_by_method %}<div class="app-chips app-shift__methods">{% for label, v in summary.sales_by_method %}<span class="gt-chip gt-chip--sm">{{ label }} {{ v|rupiah }}</span>{% endfor %}</div>{% endif %}
     </section>
 
     <section class="gt-card" aria-labelledby="h-moves">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-moves">Mutasi kas shift ini</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-moves">{% translate "Mutasi kas shift ini" %}</h2></div>
       <div class="app-table-wrap">
         <table class="gt-table">
           <tbody>
           {% for m in summary.movements %}
             <tr><td class="app-muted">{{ m.created_at|date:"H:i" }}</td><td>{{ m.get_kind_display }}</td><td class="app-muted">{{ m.note }}</td>
               <td class="num {% if m.signed_idr < 0 %}app-value--danger{% else %}app-value--positive{% endif %}"><b>{{ m.signed_idr|rupiah }}</b></td></tr>
-          {% empty %}<tr><td class="app-empty-cell app-muted">Belum ada mutasi selain penjualan.</td></tr>{% endfor %}
+          {% empty %}<tr><td class="app-empty-cell app-muted">{% translate "Belum ada mutasi selain penjualan." %}</td></tr>{% endfor %}
           </tbody>
         </table>
       </div>
@@ -49,30 +50,30 @@
   <aside class="app-shift__side">
     <form method="post" class="gt-card app-shift__form" x-data="{ kind: 'TOP_UP' }">{% csrf_token %}
       <input type="hidden" name="action" value="move">
-      <h2 class="gt-card__title">Catat mutasi kas</h2>
-      <label><span class="app-label">Jenis</span>
+      <h2 class="gt-card__title">{% translate "Catat mutasi kas" %}</h2>
+      <label><span class="app-label">{% translate "Jenis" %}</span>
         <select name="kind" x-model="kind" class="app-field">{% for v, l in move_kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></label>
-      <label><span class="app-label">Jumlah (Rp)</span><input name="amount" data-num="money" inputmode="decimal" required class="app-field"></label>
-      <label x-show="kind === 'EXPENSE'"><span class="app-labelrow"><span class="app-label">Kategori biaya</span>{% info_tip "Membuat biaya tunai berstatus Menunggu persetujuan." %}</span>
+      <label><span class="app-label">{% translate "Jumlah (Rp)" %}</span><input name="amount" data-num="money" inputmode="decimal" required class="app-field"></label>
+      <label x-show="kind === 'EXPENSE'"><span class="app-labelrow"><span class="app-label">{% translate "Kategori biaya" %}</span>{% info_tip _("Membuat biaya tunai berstatus Menunggu persetujuan.") %}</span>
         <select name="category" class="app-field">{% for c in categories %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></label>
-      <label><span class="app-label">Catatan</span><input name="note" class="app-field"></label>
-      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">Simpan mutasi</button>
+      <label><span class="app-label">{% translate "Catatan" %}</span><input name="note" class="app-field"></label>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan mutasi" %}</button>
     </form>
 
     {% if can_close %}
     <form method="post" class="gt-card app-shift__form" x-data="{ total() { let t = 0; this.$root.querySelectorAll('[data-denom]').forEach(i => t += (parseInt(i.value) || 0) * Number(i.dataset.denom)); return t; } }"
-          data-confirm-title="Tutup shift?" data-confirm="Hitungan dikunci dan shift ditutup. Selisih dengan uang seharusnya akan ditinjau manajer." data-confirm-action="Tutup shift" data-confirm-level="2">{% csrf_token %}
+          data-confirm-title="{% translate 'Tutup shift?' %}" data-confirm="{% translate 'Hitungan dikunci dan shift ditutup. Selisih dengan uang seharusnya akan ditinjau manajer.' %}" data-confirm-action="{% translate 'Tutup shift' %}" data-confirm-level="2">{% csrf_token %}
       <input type="hidden" name="action" value="close">
-      <h2 class="gt-card__title">Tutup shift {% info_tip "Isi jumlah lembar atau keping per pecahan. Uang seharusnya baru terlihat setelah hitungan dikunci." %}</h2>
+      <h2 class="gt-card__title">{% translate "Tutup shift" %} {% info_tip _("Isi jumlah lembar atau keping per pecahan. Uang seharusnya baru terlihat setelah hitungan dikunci.") %}</h2>
       <table class="gt-table app-denoms">
-        <thead><tr><th>Pecahan</th><th class="num">Jumlah</th></tr></thead>
+        <thead><tr><th>{% translate "Pecahan" %}</th><th class="num">{% translate "Jumlah" %}</th></tr></thead>
         <tbody>{% for d in denominations %}<tr><td><label for="den-{{ d }}">{{ d|rupiah }}</label></td>
           <td class="num"><input id="den-{{ d }}" name="d{{ d }}" data-denom="{{ d }}" type="number" min="0" step="1" inputmode="numeric" class="app-field app-field--sm app-denoms__input" @input="$el.closest('form').querySelector('[data-total]').textContent = gtRupiah(total())"></td></tr>{% endfor %}</tbody>
       </table>
-      <div class="gt-metric"><span class="gt-metric__label">Total dihitung</span><span class="gt-metric__value" data-total>Rp0</span></div>
-      <label><span class="app-label">Catatan (opsional)</span><input name="close_note" class="app-field"></label>
-      {% if shift.opened_by_id != request.user.pk %}<div class="gt-callout gt-callout--warning">{% icon "alert" 18 %}<div><span class="gt-callout__title">Shift ini dibuka orang lain</span><span class="gt-callout__body">Penutupan dicatat sebagai tutup paksa.</span></div></div>{% endif %}
-      <button class="gt-btn gt-btn--danger gt-btn--md gt-btn--block">Tutup shift</button>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Total dihitung" %}</span><span class="gt-metric__value" data-total>{% translate "Rp0" %}</span></div>
+      <label><span class="app-label">{% translate "Catatan (opsional)" %}</span><input name="close_note" class="app-field"></label>
+      {% if shift.opened_by_id != request.user.pk %}<div class="gt-callout gt-callout--warning">{% icon "alert" 18 %}<div><span class="gt-callout__title">{% translate "Shift ini dibuka orang lain" %}</span><span class="gt-callout__body">{% translate "Penutupan dicatat sebagai tutup paksa." %}</span></div></div>{% endif %}
+      <button class="gt-btn gt-btn--danger gt-btn--md gt-btn--block">{% translate "Tutup shift" %}</button>
     </form>
     {% endif %}
   </aside>
@@ -80,25 +81,25 @@
 {% endif %}
 
 <section class="gt-card app-shift__history" aria-labelledby="h-history">
-  <div class="gt-card__head"><h2 class="gt-card__title" id="h-history">Riwayat shift</h2></div>
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-history">{% translate "Riwayat shift" %}</h2></div>
   <div class="app-table-wrap">
   <table class="gt-table">
-    <thead><tr><th>Shift</th><th>Ditutup</th><th class="num">Seharusnya</th><th class="num">Dihitung</th><th class="num">Selisih</th><th>Status</th></tr></thead>
+    <thead><tr><th>{% translate "Shift" %}</th><th>{% translate "Ditutup" %}</th><th class="num">{% translate "Seharusnya" %}</th><th class="num">{% translate "Dihitung" %}</th><th class="num">{% translate "Selisih" %}</th><th>{% translate "Status" %}</th></tr></thead>
     <tbody>
     {% for s in page.object_list %}
       <tr>
-        <td>{{ s }}<span class="app-row__meta app-block">{{ s.opened_by.username }}{% if s.force_closed %} · tutup paksa oleh {{ s.closed_by.username }}{% endif %}</span></td>
+        <td>{{ s }}<span class="app-row__meta app-block">{{ s.opened_by.username }}{% if s.force_closed %} {% translate "· tutup paksa oleh" %} {{ s.closed_by.username }}{% endif %}</span></td>
         <td>{{ s.closed_at|date:"d M H:i" }}</td>
         <td class="num">{{ s.expected_idr|rupiah }}</td><td class="num">{{ s.counted_idr|rupiah }}</td>
         <td class="num {% if s.difference_idr < 0 %}app-value--danger{% elif s.difference_idr > 0 %}app-value--warning{% endif %}"><b>{{ s.difference_idr|rupiah }}</b></td>
         <td>
-          {% if s.needs_review %}<span class="app-actions">{% pill "Perlu ditinjau" tone="yellow" %}
-            {% if show_expected %}<form method="post" data-confirm-title="Tinjau selisih {{ s }}" data-confirm="Selisih {{ s.difference_idr|rupiah }}. Catatan tinjauan disimpan di log aktivitas." data-confirm-action="Simpan tinjauan" data-confirm-reason="Catatan tinjauan">{% csrf_token %}<input type="hidden" name="action" value="review"><input type="hidden" name="shift" value="{{ s.pk }}"><button class="gt-btn gt-btn--outline gt-btn--sm">Tinjau</button></form>{% endif %}</span>
-          {% elif s.review_note %}{% pill "Ditinjau" tone="blue" %} {% info_tip s.review_note "Catatan tinjauan" %}
-          {% else %}{% pill "Sesuai" tone="green" %}{% endif %}
+          {% if s.needs_review %}<span class="app-actions">{% pill _("Perlu ditinjau") tone="yellow" %}
+            {% if show_expected %}{% blocktranslate asvar t_data_confirm_title_13 with v1=s %}Tinjau selisih {{ v1 }}{% endblocktranslate %}{% blocktranslate asvar t_data_confirm_14 with v1=s.difference_idr|rupiah %}Selisih {{ v1 }}. Catatan tinjauan disimpan di log aktivitas.{% endblocktranslate %}<form method="post" data-confirm-title="{{ t_data_confirm_title_13 }}" data-confirm="{{ t_data_confirm_14 }}" data-confirm-action="{% translate 'Simpan tinjauan' %}" data-confirm-reason="Catatan tinjauan">{% csrf_token %}<input type="hidden" name="action" value="review"><input type="hidden" name="shift" value="{{ s.pk }}"><button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Tinjau" %}</button></form>{% endif %}</span>
+          {% elif s.review_note %}{% pill _("Ditinjau") tone="blue" %} {% info_tip s.review_note "Catatan tinjauan" %}
+          {% else %}{% pill _("Sesuai") tone="green" %}{% endif %}
         </td>
       </tr>
-    {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">Belum ada shift yang ditutup.</td></tr>{% endfor %}
+    {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">{% translate "Belum ada shift yang ditutup." %}</td></tr>{% endfor %}
     </tbody>
   </table>
   </div>

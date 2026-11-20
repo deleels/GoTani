@@ -6,6 +6,7 @@ Domain violations raise `ValidationError` / `PermissionDenied` with Bahasa
 Indonesia messages suitable for display.
 """
 
+from django.utils.translation import gettext as _
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
@@ -49,9 +50,10 @@ def jakarta_date(dt):
 
 
 def format_kg(value) -> str:
-    """Human kg display: trailing zeros trimmed, Indonesian decimal comma (2,5 kg)."""
-    text = f"{Decimal(value).normalize():f}"
-    return text.replace(".", ",")
+    """Human kg display: trailing zeros trimmed, decimal mark of the active language (2,5 / 2.5 kg)."""
+    from farm.templatetags.gotani import kg
+
+    return kg(value)
 
 
 # ---------------------------------------------------------------------------
@@ -113,12 +115,12 @@ def next_order_number(created_at) -> str:
     )
     seq = int(last[len(prefix):]) + 1 if last else 1
     if seq > MAX_DAILY_ORDERS:
-        raise ValidationError("Batas nomor order harian (9999) telah tercapai.")
+        raise ValidationError(_("Batas nomor order harian (9999) telah tercapai."))
     return f"{prefix}{seq:04d}"
 
 
 def _create_order(payment_method, cashier, created_at) -> SaleOrder:
-    for _ in range(_NUMBER_RETRIES):
+    for _i in range(_NUMBER_RETRIES):
         try:
             with transaction.atomic():  # savepoint: a duplicate number only undoes this insert
                 return SaleOrder.objects.create(
@@ -129,7 +131,7 @@ def _create_order(payment_method, cashier, created_at) -> SaleOrder:
                 )
         except IntegrityError:
             continue
-    raise ValidationError("Gagal membuat nomor order, silakan coba lagi.")
+    raise ValidationError(_("Gagal membuat nomor order, silakan coba lagi."))
 
 
 # ---------------------------------------------------------------------------
@@ -161,18 +163,18 @@ def normalize_cart(items) -> list[CartLine]:
             product_id = int(product_id)
             qty = _q_qty(qty)
         except (TypeError, ValueError, InvalidOperation):
-            raise ValidationError("Isi keranjang tidak valid.") from None
+            raise ValidationError(_("Isi keranjang tidak valid.")) from None
         if qty <= 0:
-            raise ValidationError("Jumlah kg setiap produk harus lebih dari 0.")
+            raise ValidationError(_("Jumlah kg setiap produk harus lebih dari 0."))
         merged[product_id] = merged.get(product_id, ZERO) + qty
     if not merged:
-        raise ValidationError("Keranjang kosong.")
+        raise ValidationError(_("Keranjang kosong."))
     return [CartLine(pid, merged[pid]) for pid in sorted(merged)]
 
 
 def require_cashier(user) -> None:
     if not user_has_role(user, ROLE_OWNER, ROLE_MANAGER, ROLE_CASHIER):
-        raise PermissionDenied("Hanya KASIR, MANAGER, atau OWNER yang dapat melakukan penjualan.")
+        raise PermissionDenied(_("Hanya KASIR, MANAGER, atau OWNER yang dapat melakukan penjualan."))
 
 
 @transaction.atomic
@@ -184,10 +186,10 @@ def checkout(items, payment_method: str, cashier, created_at=None, cash_received
     """
     require_cashier(cashier)
     if payment_method not in PaymentMethod.values:
-        raise ValidationError(f"Metode pembayaran tidak dikenal: {payment_method}.")
+        raise ValidationError(_("Metode pembayaran tidak dikenal: %(payment_method)s.") % {"payment_method": payment_method})
     shift = Shift.objects.select_for_update().filter(is_open=True).first()
     if shift is None:
-        raise ValidationError("Buka shift kasir terlebih dahulu sebelum berjualan.")
+        raise ValidationError(_("Buka shift kasir terlebih dahulu sebelum berjualan."))
     cart = normalize_cart(items)
     created_at = created_at or timezone.now()
 
@@ -196,9 +198,9 @@ def checkout(items, payment_method: str, cashier, created_at=None, cash_received
     for line in cart:
         product = products.get(line.product_id)
         if product is None:
-            raise ValidationError(f"Produk #{line.product_id} tidak ditemukan.")
+            raise ValidationError(_("Produk #%(product_id)s tidak ditemukan.") % {"product_id": line.product_id})
         if product.selling_price_idr is None:
-            raise ValidationError(f"{product} belum memiliki harga jual dan tidak dapat dijual.")
+            raise ValidationError(_("%(product)s belum memiliki harga jual dan tidak dapat dijual.") % {"product": product})
 
     # D17: lock every open lot of the cart's products in one deterministic order.
     lots = list(
@@ -215,8 +217,8 @@ def checkout(items, payment_method: str, cashier, created_at=None, cash_received
         available = sum((lot.qty_remaining_kg for lot in lots_by_product[line.product_id]), ZERO)
         if available < line.qty_kg:
             shortages.append(
-                f"Stok {products[line.product_id]} tidak cukup: tersedia "
-                f"{format_kg(available)} kg, diminta {format_kg(line.qty_kg)} kg."
+                _("Stok %(product)s tidak cukup: tersedia %(available)s kg, diminta %(requested)s kg.")
+                % {"product": products[line.product_id], "available": format_kg(available), "requested": format_kg(line.qty_kg)}
             )
     if shortages:
         raise ValidationError(shortages)
@@ -279,7 +281,7 @@ def checkout(items, payment_method: str, cashier, created_at=None, cash_received
         due = whole_rupiah(order.total_gross_idr)
         received = due if cash_received in (None, "") else whole_rupiah(parse_id_decimal(cash_received, "money"))
         if received < due:
-            raise ValidationError(f"Uang diterima {format_rp(received)} kurang dari total {format_rp(due)}.")
+            raise ValidationError(_("Uang diterima %(format_rp)s kurang dari total %(format_rp2)s.") % {"format_rp": format_rp(received), "format_rp2": format_rp(due)})
         order.cash_received_idr, order.change_idr = received, received - due
         fields += ["cash_received_idr", "change_idr"]
     order.save(update_fields=fields)
@@ -292,16 +294,18 @@ def whole_rupiah(value) -> Decimal:
 
 
 def format_rp(value) -> str:
-    return "Rp" + f"{int(whole_rupiah(value)):,}".replace(",", ".")
+    from farm.templatetags.gotani import rupiah
+
+    return rupiah(whole_rupiah(value))
 
 
 def validate_void_reason(reason: str, note: str) -> tuple[str, str]:
     """D94: a fixed reason; "Lainnya" needs a note."""
     note = (note or "").strip()
     if reason not in VoidReason.values:
-        raise ValidationError("Pilih alasan pembatalan.")
+        raise ValidationError(_("Pilih alasan pembatalan."))
     if reason == VoidReason.OTHER and not note:
-        raise ValidationError("Alasan \"Lainnya\" wajib diberi catatan.")
+        raise ValidationError(_('Alasan "Lainnya" wajib diberi catatan.'))
     return reason, note
 
 
@@ -328,14 +332,14 @@ def open_shift(user, opening_float, now=None) -> Shift:
     require_cashier(user)
     amount = _q_money(parse_id_decimal(opening_float, "money"))
     if amount < 0:
-        raise ValidationError("Modal awal tidak boleh negatif.")
+        raise ValidationError(_("Modal awal tidak boleh negatif."))
     if Shift.objects.select_for_update().filter(is_open=True).exists():
-        raise ValidationError("Masih ada shift yang terbuka; tutup dulu sebelum membuka shift baru.")
+        raise ValidationError(_("Masih ada shift yang terbuka; tutup dulu sebelum membuka shift baru."))
     try:
         with transaction.atomic():
             return Shift.objects.create(opened_by=user, opened_at=now or timezone.now(), opening_float_idr=amount)
     except IntegrityError:
-        raise ValidationError("Masih ada shift yang terbuka.") from None
+        raise ValidationError(_("Masih ada shift yang terbuka.")) from None
 
 
 def shift_summary(shift: Shift) -> dict:
@@ -364,7 +368,7 @@ def shift_summary(shift: Shift) -> dict:
 def _locked_open(shift) -> Shift:
     shift = Shift.objects.select_for_update().get(pk=shift.pk)
     if not shift.is_open:
-        raise ValidationError("Shift ini sudah ditutup.")
+        raise ValidationError(_("Shift ini sudah ditutup."))
     return shift
 
 
@@ -375,20 +379,20 @@ def add_cash_movement(shift, user, kind, amount, note="", category=None, now=Non
 
     require_cashier(user)
     if kind not in MANUAL_MOVES:
-        raise ValidationError("Jenis mutasi kas tidak dikenal.")
+        raise ValidationError(_("Jenis mutasi kas tidak dikenal."))
     shift = _locked_open(shift)
     amount = whole_rupiah(parse_id_decimal(amount, "money"))
     if amount <= 0:
-        raise ValidationError("Jumlah harus lebih dari 0.")
+        raise ValidationError(_("Jumlah harus lebih dari 0."))
     if CashMovement.SIGN[kind] < 0 and amount > shift_summary(shift)["expected"]:
-        raise ValidationError("Jumlah melebihi uang yang seharusnya ada di laci.")
+        raise ValidationError(_("Jumlah melebihi uang yang seharusnya ada di laci."))
     expense = None
     now = now or timezone.now()
     if kind == CashMovement.Kind.EXPENSE:
         if category is None:
-            raise ValidationError("Pilih kategori biaya.")
+            raise ValidationError(_("Pilih kategori biaya."))
         if not (note or "").strip():
-            raise ValidationError("Tulis keperluan biaya.")
+            raise ValidationError(_("Tulis keperluan biaya."))
         expense = farm.create_expense(category, "GENERAL", amount, narration=note.strip(), payment_method="CASH",
                                       date_incurred=timezone.localdate(now))
     return CashMovement.objects.create(shift=shift, kind=kind, amount_idr=amount, note=(note or "").strip()[:255],
@@ -405,16 +409,16 @@ def close_shift(shift, user, denominations: dict, note: str = "", now=None) -> S
     shift = _locked_open(shift)
     manager = user_has_role(user, ROLE_OWNER, ROLE_MANAGER)
     if user.pk != shift.opened_by_id and not manager:
-        raise PermissionDenied("Hanya pembuka shift, MANAGER, atau OWNER yang dapat menutup shift ini.")
+        raise PermissionDenied(_("Hanya pembuka shift, MANAGER, atau OWNER yang dapat menutup shift ini."))
     counts = {}
     for denom in DENOMINATIONS:
         raw = (denominations or {}).get(denom, (denominations or {}).get(str(denom), 0)) or 0
         try:
             n = int(raw)
         except (TypeError, ValueError):
-            raise ValidationError(f"Jumlah lembar/keping Rp{denom} tidak valid.") from None
+            raise ValidationError(_("Jumlah lembar/keping Rp%(denom)s tidak valid.") % {"denom": denom}) from None
         if n < 0:
-            raise ValidationError("Jumlah lembar/keping tidak boleh negatif.")
+            raise ValidationError(_("Jumlah lembar/keping tidak boleh negatif."))
         if n:
             counts[str(denom)] = n
     counted = Decimal(sum(int(d) * n for d, n in counts.items()))
@@ -437,12 +441,12 @@ def review_shift(shift, user, note: str) -> Shift:
     from core.audit import log_event
 
     if not user_has_role(user, ROLE_OWNER, ROLE_MANAGER):
-        raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat meninjau selisih kas.")
+        raise PermissionDenied(_("Hanya OWNER atau MANAGER yang dapat meninjau selisih kas."))
     if not (note or "").strip():
-        raise ValidationError("Tulis catatan tinjauan.")
+        raise ValidationError(_("Tulis catatan tinjauan."))
     shift = Shift.objects.select_for_update().get(pk=shift.pk)
     if shift.is_open:
-        raise ValidationError("Shift masih terbuka.")
+        raise ValidationError(_("Shift masih terbuka."))
     shift.review_note, shift.reviewed_by, shift.reviewed_at = note.strip(), user, timezone.now()
     shift.save(update_fields=["review_note", "reviewed_by", "reviewed_at"])
     log_event(user, "SHIFT_REVIEW", shift, f"Tinjau selisih {shift}", after={"difference_idr": shift.difference_idr},
@@ -473,17 +477,16 @@ def void_order(order: SaleOrder, user, reason: str = "", note: str = "", now=Non
     shift: the refund is a cash-out of the current shift (D96).
     """
     if not user_has_role(user, ROLE_OWNER, ROLE_MANAGER):
-        raise PermissionDenied("Hanya OWNER atau MANAGER yang dapat membatalkan order.")
+        raise PermissionDenied(_("Hanya OWNER atau MANAGER yang dapat membatalkan order."))
     reason, note = validate_void_reason(reason, note)
     now = now or timezone.now()
 
     order = SaleOrder.objects.select_for_update().get(pk=order.pk)
     if order.status != SaleOrder.Status.COMPLETED:
-        raise ValidationError(f"Order {order.order_number} sudah dibatalkan.")
+        raise ValidationError(_("Order %(order_number)s sudah dibatalkan.") % {"order_number": order.order_number})
     if jakarta_date(order.created_at) != jakarta_date(now):
         raise ValidationError(
-            f"Order {order.order_number} hanya dapat dibatalkan pada hari yang sama "
-            f"({jakarta_date(order.created_at):%d-%m-%Y})."
+            _("Order %(order_number)s hanya dapat dibatalkan pada hari yang sama (%(jakarta_date)s).") % {"order_number": order.order_number, "jakarta_date": format(jakarta_date(order.created_at), '%d-%m-%Y')}
         )
 
     allocations = list(
@@ -509,7 +512,7 @@ def void_order(order: SaleOrder, user, reason: str = "", note: str = "", now=Non
     if order.payment_method == PaymentMethod.CASH:
         shift = Shift.objects.select_for_update().filter(is_open=True).first()
         if shift is None:
-            raise ValidationError("Buka shift kasir dulu: uang tunai order ini dikembalikan dari laci.")
+            raise ValidationError(_("Buka shift kasir dulu: uang tunai order ini dikembalikan dari laci."))
         CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.SALE_REFUND, order=order,
                                     amount_idr=whole_rupiah(order.total_gross_idr), note=order.order_number,
                                     created_by=user, created_at=now)

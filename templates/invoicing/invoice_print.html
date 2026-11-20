@@ -1,45 +1,47 @@
 {% extends "base_bare.html" %}
+{% load i18n %}
 {% load static ui gotani %}
 {% block title %}{{ invoice }}{% endblock %}
 {% block head %}<style>@page { size: A4; margin: 16mm; }</style>{% endblock %}
 {% block body %}
 {# Invoice print (Phase 5c): A4 document on design-system tokens; styles in gotani.css under "Documents". #}
 <div class="no-print app-docbar">
-  <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="app-back">{% icon "chevron-left" 16 %} Kembali</a>
-  <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="Cetak atau simpan sebagai PDF">Cetak</button>
+  <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
+  <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="{% translate 'Cetak atau simpan sebagai PDF' %}">{% translate "Cetak" %}</button>
 </div>
-<article class="app-doc">
+{# The document itself prints in the customer's document language (Phase 7). #}
+{% language invoice.buyer.document_language|default:"id" %}<article class="app-doc">
   <header class="app-doc__head">
     <div class="app-doc__from">
-      {% if profile.logo %}<img src="{{ profile.logo.url }}" alt="" class="app-doc__logo">{% else %}<img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="GoTani" class="app-doc__lockup">{% endif %}
+      {% if profile.logo %}<img src="{{ profile.logo.url }}" alt="" class="app-doc__logo">{% else %}<img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="{% translate 'GoTani' %}" class="app-doc__lockup">{% endif %}
       <div>
         <div class="app-doc__farm">{{ profile.name|default:"GoTani" }}</div>
         {% if profile.address %}<div class="app-doc__muted app-doc__pre">{{ profile.address }}</div>{% endif %}
-        {% if profile.phone %}<div class="app-doc__muted">Telp. {{ profile.phone }}</div>{% endif %}
+        {% if profile.phone %}<div class="app-doc__muted">{% translate "Telp." %} {{ profile.phone }}</div>{% endif %}
       </div>
     </div>
     <div class="app-doc__title">
-      <div class="app-doc__kind">INVOICE</div>
+      <div class="app-doc__kind">{% translate "INVOICE" %}</div>
       <div class="app-doc__number">{{ invoice }}</div>
-      {% if invoice.status == 'VOID' %}<div class="app-doc__stamp">DIBATALKAN</div>{% endif %}
+      {% if invoice.status == 'VOID' %}<div class="app-doc__stamp">{% translate "DIBATALKAN" %}</div>{% endif %}
     </div>
   </header>
 
   <section class="app-doc__parties">
     <div>
-      <div class="app-doc__label">Ditagihkan kepada</div>
+      <div class="app-doc__label">{% translate "Ditagihkan kepada" %}</div>
       <div class="app-doc__strong">{{ invoice.buyer.name }}</div>
       {% if invoice.buyer.company %}<div>{{ invoice.buyer.company }}</div>{% endif %}
       {% if invoice.buyer.address %}<div class="app-doc__muted app-doc__pre">{{ invoice.buyer.address }}</div>{% endif %}
     </div>
     <dl class="gt-kv gt-kv--compact app-doc__dates">
-      <div><dt>Tanggal</dt><dd>{{ invoice.issue_date|date:"d F Y"|default:"—" }}</dd></div>
-      <div><dt>Jatuh tempo</dt><dd>{{ invoice.due_date|date:"d F Y"|default:"—" }}</dd></div>
+      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ invoice.issue_date|date:"d F Y"|default:"—" }}</dd></div>
+      <div><dt>{% translate "Jatuh tempo" %}</dt><dd>{{ invoice.due_date|date:"d F Y"|default:"—" }}</dd></div>
     </dl>
   </section>
 
   <table class="app-doc__table">
-    <thead><tr><th>Produk</th><th class="num">Kg</th><th class="num">Harga/kg</th><th class="num">PPN</th><th class="num">Jumlah</th></tr></thead>
+    <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Harga/kg" %}</th><th class="num">{% translate "PPN" %}</th><th class="num">{% translate "Jumlah" %}</th></tr></thead>
     <tbody>
     {% for ln in invoice.lines.all %}
       <tr><td>{{ ln.product }}</td><td class="num">{{ ln.qty_kg|kg }}</td><td class="num">{{ ln.unit_price_idr|rupiah }}</td><td class="num">{% if ln.tax_rate_pct %}{{ ln.tax_rate_pct|pct:0 }}{% else %}—{% endif %}</td><td class="num">{{ ln.line_subtotal_idr|rupiah }}</td></tr>
@@ -48,14 +50,14 @@
   </table>
 
   <dl class="gt-kv gt-kv--compact app-doc__totals">
-    <div><dt>Subtotal</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>
-    {% if invoice.discount_idr %}<div><dt>Diskon</dt><dd>− {{ invoice.discount_idr|rupiah }}</dd></div>{% endif %}
-    {% if invoice.tax_idr or farm_is_pkp %}<div><dt>PPN</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>{% endif %}
-    {% if invoice.shipping_idr %}<div><dt>Ongkos kirim</dt><dd>{{ invoice.shipping_idr|rupiah }}</dd></div>{% endif %}
-    <div class="app-doc__total"><dt>Total</dt><dd>{{ invoice.total_idr|rupiah }}</dd></div>
+    <div><dt>{% translate "Subtotal" %}</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>
+    {% if invoice.discount_idr %}<div><dt>{% translate "Diskon" %}</dt><dd>− {{ invoice.discount_idr|rupiah }}</dd></div>{% endif %}
+    {% if invoice.tax_idr or farm_is_pkp %}<div><dt>{% translate "PPN" %}</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>{% endif %}
+    {% if invoice.shipping_idr %}<div><dt>{% translate "Ongkos kirim" %}</dt><dd>{{ invoice.shipping_idr|rupiah }}</dd></div>{% endif %}
+    <div class="app-doc__total"><dt>{% translate "Total" %}</dt><dd>{{ invoice.total_idr|rupiah }}</dd></div>
     {% if invoice.status == 'ISSUED' %}
-    <div><dt>Dibayar</dt><dd>{{ paid|rupiah }}</dd></div>
-    <div class="app-doc__due"><dt>Sisa tagihan</dt><dd>{{ outstanding|rupiah }}</dd></div>
+    <div><dt>{% translate "Dibayar" %}</dt><dd>{{ paid|rupiah }}</dd></div>
+    <div class="app-doc__due"><dt>{% translate "Sisa tagihan" %}</dt><dd>{{ outstanding|rupiah }}</dd></div>
     {% endif %}
   </dl>
 
@@ -63,13 +65,13 @@
 
   {% if invoice.needs_meterai %}
   <div class="app-doc__sign">
-    <div class="app-doc__meterai">Meterai Rp10.000</div>
+    <div class="app-doc__meterai">{% translate "Meterai Rp10.000" %}</div>
     <div class="app-doc__signline">{{ profile.name|default:"GoTani" }}</div>
   </div>
   {% endif %}
 
   <footer class="app-doc__foot">
-    {% if invoice.buyer.payment_terms_days %}Termin pembayaran {{ invoice.buyer.payment_terms_days }} hari sejak tanggal invoice. {% endif %}Terima kasih atas kerja samanya.
+    {% if invoice.buyer.payment_terms_days %}{% translate "Termin pembayaran" %} {{ invoice.buyer.payment_terms_days }} {% translate "hari sejak tanggal invoice." %} {% endif %}{% translate "Terima kasih atas kerja samanya." %}
   </footer>
-</article>
+</article>{% endlanguage %}
 {% endblock %}

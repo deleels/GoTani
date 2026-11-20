@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
 {% block title %}{{ cycle.variety }} @ {{ cycle.element }}{% endblock %}
 {% block content %}
@@ -7,22 +8,22 @@
     <div class="app-pagehead__text">
       <a href="{% url 'farm:element_detail' cycle.element_id %}" class="app-back">{% icon "chevron-left" 16 %} {{ cycle.element }}</a>
       <h1 class="app-pagehead__title">{{ cycle.variety }}
-        {% if cycle.is_active %}{% pill cycle.get_stage_display tone="green" %}{% else %}{% pill "Ditutup" tone="gray" %}{% endif %}
-        {% if overdue %}{% pill "Panen terlewat" tone="orange" %}{% endif %}</h1>
-      <p>{{ cycle.element }} · mulai {{ cycle.planting_start_date|date:"d M Y" }} · {{ days }} hari{% if not cycle.is_active %} · ditutup {{ cycle.closed_at|date:"d M Y" }}{% endif %}</p>
+        {% if cycle.is_active %}{% pill cycle.get_stage_display tone="green" %}{% else %}{% pill _("Ditutup") tone="gray" %}{% endif %}
+        {% if overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}</h1>
+      <p>{{ cycle.element }} {% translate "· mulai" %} {{ cycle.planting_start_date|date:"d M Y" }} · {{ days }} {% translate "hari" %}{% if not cycle.is_active %} {% translate "· ditutup" %} {{ cycle.closed_at|date:"d M Y" }}{% endif %}</p>
     </div>
     <div class="gt-pagehead__actions">
       {% if cycle.is_active %}
-      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md" title="Ubah perkiraan siklus">Perkiraan</button>
-      <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--outline gt-btn--md">Cek pra-panen</a>
+      <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md" title="{% translate 'Ubah perkiraan siklus' %}">{% translate "Perkiraan" %}</button>
+      <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Cek pra-panen" %}</a>
       {% endif %}
-      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Telusuri</a>{% endif %}
+      {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Telusuri" %}</a>{% endif %}
     </div>
   </div>
 
   {# Stage track: done green, current dark, still-to-come hatched ("not yet"). #}
   <section class="gt-card app-section" aria-labelledby="h-stage">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">Tahap tanam</h2><span class="gt-card__hint">{% if cycle.is_active %}{{ cycle.get_stage_display }}{% else %}Ditutup{% endif %}</span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-stage">{% translate "Tahap tanam" %}</h2><span class="gt-card__hint">{% if cycle.is_active %}{{ cycle.get_stage_display }}{% else %}{% translate "Ditutup" %}{% endif %}</span></div>
     <div class="app-stages">
       <div class="gt-seg app-stages__bar" aria-hidden="true">{% for value, label in stage_choices %}<i class="{% if value == cycle.stage %}{% elif forloop.counter0 < cycle.stage_index %}ok{% else %}todo{% endif %}"></i>{% endfor %}</div>
       <ol class="app-stages__labels">{% for value, label in stage_choices %}<li class="{% if value == cycle.stage %}is-current{% elif forloop.counter0 < cycle.stage_index %}is-done{% endif %}"{% if value == cycle.stage %} aria-current="step"{% endif %}>{{ label }}</li>{% endfor %}</ol>
@@ -32,34 +33,34 @@
 
   {% with ys=yield_summary %}
   <section class="gt-card app-section" aria-labelledby="h-short">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-short">Ringkas</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-short">{% translate "Ringkas" %}</h2></div>
     <div class="gt-metrics app-metrics4">
-      <div class="gt-metric"><span class="gt-metric__label">Perkiraan panen{% if cycle.variety.days_to_harvest %} {% with t=cycle.variety.days_to_harvest|stringformat:"d" %}{% info_tip "Umur panen varietas "|add:t|add:" hari." %}{% endwith %}{% endif %}</span>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Perkiraan panen" %}{% if cycle.variety.days_to_harvest %} {% with t=cycle.variety.days_to_harvest|stringformat:"d" %}{% blocktranslate asvar tip_age %}Umur panen varietas {{ t }} hari.{% endblocktranslate %}{% info_tip tip_age %}{% endwith %}{% endif %}</span>
         <span class="gt-metric__value {% if overdue %}app-value--late{% endif %}">{{ cycle.expected_harvest_date|date:"d/m/Y"|default:"—" }}</span></div>
-      <div class="gt-metric"><span class="gt-metric__label">Hasil layak jual</span>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Hasil layak jual" %}</span>
         <span class="gt-metric__value">{{ ys.actual_kg|kg }} kg</span>
         {% if ys.pct is not None %}<span class="gt-seg app-yield" aria-hidden="true"><i class="ok" style="flex: 0 0 {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></i><i class="todo"></i></span>
-        <span class="gt-metric__note">{{ ys.pct|pct }} dari {{ ys.expected_kg|kg }} kg</span>{% elif ys.expected_kg %}<span class="gt-metric__note">dari {{ ys.expected_kg|kg }} kg</span>{% endif %}</div>
-      <div class="gt-metric"><span class="gt-metric__label">Jumlah tanaman</span>
+        <span class="gt-metric__note">{{ ys.pct|pct }} {% translate "dari" %} {{ ys.expected_kg|kg }} kg</span>{% elif ys.expected_kg %}<span class="gt-metric__note">{% translate "dari" %} {{ ys.expected_kg|kg }} kg</span>{% endif %}</div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Jumlah tanaman" %}</span>
         <span class="gt-metric__value">{{ cycle.planted_qty|default:"—" }}</span>
-        {% if ys.per_plant_kg is not None %}<span class="gt-metric__note">{{ ys.per_plant_kg|kg }} kg per tanaman</span>{% endif %}</div>
-      <div class="gt-metric"><span class="gt-metric__label">Cek pra-panen</span>
+        {% if ys.per_plant_kg is not None %}<span class="gt-metric__note">{{ ys.per_plant_kg|kg }} {% translate "kg per tanaman" %}</span>{% endif %}</div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Cek pra-panen" %}</span>
         {% if latest_check %}<span class="gt-metric__value {% if latest_check.completed_pct < 100 %}app-value--late{% else %}app-value--positive{% endif %}">{{ latest_check.completed_pct|pct:0 }}</span><span class="gt-metric__note">{{ latest_check.recorded_at|date:"d M Y H:i" }}</span>
-        {% else %}<span class="gt-metric__value app-muted">—</span><span class="gt-metric__note">Belum ada</span>{% endif %}</div>
+        {% else %}<span class="gt-metric__value app-muted">—</span><span class="gt-metric__note">{% translate "Belum ada" %}</span>{% endif %}</div>
     </div>
   </section>
   {% endwith %}
 
   {% if roles.finance %}
   <div class="gt-grid app-kpis">
-    {% include "components/kpi.html" with stat=True featured=True label="Biaya terserap" value=trace.totals.absorbed_cost|rupiah tip="Biaya yang sudah masuk ke HPP panen." %}
-    {% include "components/kpi.html" with stat=True label="Belum terserap" value=unabsorbed|rupiah tip="Dihapusbukukan bila siklus ditutup." %}
-    {% include "components/kpi.html" with stat=True label="Pendapatan" value=trace.totals.revenue|rupiah tip="POS + invoice dari panen siklus ini." %}
+    {% include "components/kpi.html" with stat=True featured=True label=_("Biaya terserap") value=trace.totals.absorbed_cost|rupiah tip=_("Biaya yang sudah masuk ke HPP panen.") %}
+    {% include "components/kpi.html" with stat=True label=_("Belum terserap") value=unabsorbed|rupiah tip=_("Dihapusbukukan bila siklus ditutup.") %}
+    {% include "components/kpi.html" with stat=True label=_("Pendapatan") value=trace.totals.revenue|rupiah tip=_("POS + invoice dari panen siklus ini.") %}
   </div>
   {% endif %}
 
   <section class="gt-card" aria-labelledby="h-time">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-time">Linimasa</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-time">{% translate "Linimasa" %}</h2></div>
     <ol class="gt-stepper">
       {% for e in events %}
       <li class="gt-step gt-step--done app-step app-step--{{ e.kind }}">
@@ -67,7 +68,7 @@
         <div class="app-step__body">
           <span class="gt-step__title">{{ e.title }}</span>{% if e.body %} <span class="app-muted">{{ e.body }}</span>{% endif %}
           <span class="gt-step__meta app-block">{{ e.at|date:"d M Y H:i" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</span>
-          {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="Foto pengamatan" class="app-photo"></a>{% endif %}
+          {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-photo"></a>{% endif %}
         </div>
       </li>
       {% endfor %}
@@ -75,11 +76,11 @@
   </section>
 
   {% if cycle.is_active %}
-  {% include "components/sheet.html" with title="Perkiraan siklus" %}
+  {% include "components/sheet.html" with title=_("Perkiraan siklus") %}
       <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button></div>
+        <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button></div>
       </form>
   {% include "components/sheet.html" with end=True %}
   {% endif %}

@@ -33,6 +33,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
+from core.services import default_language_for_role, get_user_profile
 from farm import services as farm
 from farm.bootstrap import (
     ROLE_CASHIER,
@@ -229,6 +230,9 @@ class Command(BaseCommand):
             if created:
                 user.set_password(password)
                 user.save(update_fields=["password"])
+                profile = get_user_profile(user)  # Phase 7: role default UI language
+                profile.language = default_language_for_role(role)
+                profile.save(update_fields=["language"])
             user.groups.add(Group.objects.get(name=role))
             users[role] = user
         return users

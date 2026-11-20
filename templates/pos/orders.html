@@ -1,29 +1,30 @@
 {% extends "pos/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Pesanan{% endblock %}
+{% block title %}{% translate "Pesanan" %}{% endblock %}
 {% block content %}
 {# Pesanan (Phase 4c): table page pattern — page head with the date, three stat cards, gt-table; void via the shared reason dialog. #}
 <div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
-    <h1 class="app-pagehead__title">Pesanan {% info_tip "Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER." %}</h1>
+    <h1 class="app-pagehead__title">{% translate "Pesanan" %} {% info_tip _("Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER.") %}</h1>
     <p>{{ today|date:"l, j F Y" }}</p>
   </div>
   <form method="get" class="gt-pagehead__actions app-orders__date">
-    <label><span class="sr-only">Tanggal</span><input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" class="app-field app-field--sm" onchange="this.form.submit()"></label>
-    {% if not is_today %}<a href="?" class="gt-btn gt-btn--outline gt-btn--sm">Hari ini</a>{% endif %}
-    <a href="{% url 'pos:register' %}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Transaksi baru</a>
+    <label><span class="sr-only">{% translate "Tanggal" %}</span><input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ max_date|date:'Y-m-d' }}" class="app-field app-field--sm" onchange="this.form.submit()"></label>
+    {% if not is_today %}<a href="?" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Hari ini" %}</a>{% endif %}
+    <a href="{% url 'pos:register' %}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Transaksi baru" %}</a>
   </form>
 </div>
 <div class="gt-grid app-orders__stats">
-  {% include "components/kpi.html" with stat=True featured=True label="Total dibayar" value=kpi.gross|rupiah %}
-  {% include "components/kpi.html" with stat=True label="Order selesai" value=kpi.count %}
-  {% include "components/kpi.html" with stat=True label="Dibatalkan" value=kpi.voided %}
+  {% include "components/kpi.html" with stat=True featured=True label=_("Total dibayar") value=kpi.gross|rupiah %}
+  {% include "components/kpi.html" with stat=True label=_("Order selesai") value=kpi.count %}
+  {% include "components/kpi.html" with stat=True label=_("Dibatalkan") value=kpi.voided %}
 </div>
 <section class="gt-card" aria-labelledby="h-orders">
-  <div class="gt-card__head"><h2 class="gt-card__title" id="h-orders">Daftar order</h2></div>
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-orders">{% translate "Daftar order" %}</h2></div>
   <div class="app-table-wrap">
     <table class="gt-table">
-      <thead><tr><th>Nomor</th><th>Waktu</th><th>Kasir</th><th>Bayar</th><th class="num">Total</th><th>Status</th><th class="num"><span class="sr-only">Aksi</span></th></tr></thead>
+      <thead><tr><th>{% translate "Nomor" %}</th><th>{% translate "Waktu" %}</th><th>{% translate "Kasir" %}</th><th>{% translate "Bayar" %}</th><th class="num">{% translate "Total" %}</th><th>{% translate "Status" %}</th><th class="num"><span class="sr-only">{% translate "Aksi" %}</span></th></tr></thead>
       <tbody>
       {% for o in orders %}
         <tr{% if o.status == 'VOIDED' %} class="app-row--void"{% endif %}>
@@ -34,16 +35,16 @@
           <td class="num"><b>{{ o.total_gross_idr|rupiah }}</b></td>
           <td>{% pill o.get_status_display o.status %}</td>
           <td class="num"><span class="app-actions">
-            <a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'pos:receipt' o.pk %}">Struk</a>
+            <a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'pos:receipt' o.pk %}">{% translate "Struk" %}</a>
             {% if o.voidable %}
-            <form method="post" action="{% url 'pos:void' o.pk %}" {% void_confirm "Batalkan order "|add:o.order_number|add:"?" "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka." "Batalkan order" %}>{% csrf_token %}
+            {% blocktranslate asvar void_title with num=o.order_number %}Batalkan order {{ num }}?{% endblocktranslate %}<form method="post" action="{% url 'pos:void' o.pk %}" {% void_confirm void_title _("Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka.") _("Batalkan order") %}>{% csrf_token %}
               <input type="hidden" name="next" value="{% url 'pos:orders' %}">
-              <button class="gt-btn gt-btn--outline-danger gt-btn--sm">Batalkan</button>
+              <button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Batalkan" %}</button>
             </form>
             {% endif %}
           </span></td>
         </tr>
-      {% empty %}<tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada order pada tanggal ini.</span><span class="gt-callout__body">Penjualan dari Kasir (POS) muncul di sini lengkap dengan struknya.</span></div></div></td></tr>{% endfor %}
+      {% empty %}<tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div><span class="gt-callout__title">{% translate "Belum ada order pada tanggal ini." %}</span><span class="gt-callout__body">{% translate "Penjualan dari Kasir (POS) muncul di sini lengkap dengan struknya." %}</span></div></div></td></tr>{% endfor %}
       </tbody>
     </table>
   </div>

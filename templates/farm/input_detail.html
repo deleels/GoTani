@@ -1,29 +1,30 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
 {% block title %}{{ item.name }}{% endblock %}
 {% block content %}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
   <div class="gt-pagehead app-pagehead--sm">
     <div class="app-pagehead__text">
-      <a href="{% url 'farm:inputs' %}" class="app-back">{% icon "chevron-left" 16 %} Inventaris Input</a>
-      <h1 class="app-pagehead__title">{{ item.name }} {% if item.is_low_stock %}{% pill "Stok menipis" tone="orange" %}{% endif %}</h1>
-      <p>{{ item.get_item_type_display }} · satuan {{ item.unit }}</p>
+      <a href="{% url 'farm:inputs' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Inventaris Input" %}</a>
+      <h1 class="app-pagehead__title">{{ item.name }} {% if item.is_low_stock %}{% pill _("Stok menipis") tone="orange" %}{% endif %}</h1>
+      <p>{{ item.get_item_type_display }} {% translate "· satuan" %} {{ item.unit }}</p>
     </div>
-    {% if roles.finance %}<div class="gt-pagehead__actions"><button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} Tambah stok</button></div>{% endif %}
+    {% if roles.finance %}<div class="gt-pagehead__actions"><button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Tambah stok" %}</button></div>{% endif %}
   </div>
 
   <div class="gt-grid app-kpis">
-    {% with v=item.stock_qty|kg|add:" "|add:item.unit h=item.min_alert_qty|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with stat=True featured=True compact=True label="Stok saat ini" value=v hint="Batas peringatan "|add:h %}{% endwith %}
-    {% with v=used_total|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with stat=True compact=True label="Total terpakai" value=v %}{% endwith %}
-    {% if roles.finance %}{% include "components/kpi.html" with stat=True label="Biaya rata-rata" value=item.avg_cost_per_unit_idr|rupiah tip="Biaya rata-rata per satuan." %}{% endif %}
+    {% with v=item.stock_qty|kg|add:" "|add:item.unit h=item.min_alert_qty|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with stat=True featured=True compact=True label=_("Stok saat ini") value=v hint=_("Batas peringatan ")|add:h %}{% endwith %}
+    {% with v=used_total|kg|add:" "|add:item.unit %}{% include "components/kpi.html" with stat=True compact=True label=_("Total terpakai") value=v %}{% endwith %}
+    {% if roles.finance %}{% include "components/kpi.html" with stat=True label=_("Biaya rata-rata") value=item.avg_cost_per_unit_idr|rupiah tip=_("Biaya rata-rata per satuan.") %}{% endif %}
   </div>
 
   <div class="app-split">
     <section class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">Riwayat mutasi</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Riwayat mutasi" %}</h2></div>
       <div class="app-table-wrap">
       <table class="gt-table">
-        <thead><tr><th>Waktu</th><th>Jenis</th><th>Dipakai di</th><th class="num">Jumlah</th><th class="num">Saldo</th></tr></thead>
+        <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Jenis" %}</th><th>{% translate "Dipakai di" %}</th><th class="num">{% translate "Jumlah" %}</th><th class="num">{% translate "Saldo" %}</th></tr></thead>
         <tbody>
         {% for r in page.object_list %}
           <tr><td class="whitespace-nowrap">{{ r.timestamp|date:"d M Y H:i" }}</td><td>{{ r.get_movement_type_display }}</td>
@@ -37,15 +38,15 @@
     </section>
     <aside class="app-side">
       <section class="gt-card">
-        <div class="gt-card__head"><h2 class="gt-card__title">Pemakaian per siklus</h2></div>
+        <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Pemakaian per siklus" %}</h2></div>
         <ul class="gt-list gt-list--divided">
         {% for cycle, qty in by_cycle %}<li class="gt-row"><span class="gt-row__body"><a class="gt-row__title app-link--plain" href="{% url 'farm:cycle_detail' cycle.pk %}">{{ cycle.variety }}</a><span class="app-row__meta">{{ cycle.element }}</span></span><span class="gt-row__value">{{ qty|kg }} {{ item.unit }}</span></li>
-        {% empty %}<li class="app-muted">Belum dipakai.</li>{% endfor %}
+        {% empty %}<li class="app-muted">{% translate "Belum dipakai." %}</li>{% endfor %}
         </ul>
       </section>
       {% if roles.finance and purchases %}
       <section class="gt-card">
-        <div class="gt-card__head"><h2 class="gt-card__title">Pembelian</h2></div>
+        <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Pembelian" %}</h2></div>
         <ul class="gt-list gt-list--divided">
         {% for p in purchases %}<li class="gt-row"><span class="gt-row__body"><span class="gt-row__title">{{ p.qty|kg }} {{ item.unit }}</span><span class="app-row__meta">@ {{ p.cost_per_unit_idr|rupiah }} · {{ p.supplier|default:"—" }}</span></span><span class="gt-row__trail app-row__meta">{{ p.purchased_at|date:"d M Y" }}</span></li>{% endfor %}
         </ul>
@@ -59,9 +60,9 @@
       {{ input_costs|json_script:"input-costs" }}
       <form method="post" class="app-sheet__form" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <p class="app-row__meta">Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah.</p>
-        <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">Batal</button>
-          <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button></div>
+        <p class="app-row__meta">{% translate "Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah." %}</p>
+        <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button></div>
       </form>
   {% include "components/sheet.html" with end=True %}
   {% endif %}

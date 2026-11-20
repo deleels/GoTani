@@ -1,36 +1,37 @@
 {% extends "pos/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Kasir{% endblock %}
+{% block title %}{% translate "Kasir (POS)" %}{% endblock %}
 {% block content %}
 {# Kasir (Phase 4c): product card grid + sticky cart on the design system; on phones the cart is a bottom sheet behind a total bar. Alpine logic and posted field names are unchanged. #}
 {{ products|json_script:"pos-products" }}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
-    <h1>Kasir</h1>
-    <p class="app-pagehead__sub">{% if shift %}Shift dibuka {{ shift.opened_at|date:"H:i" }}{% else %}Shift belum dibuka{% endif %} {% info_tip "Stok diperbarui otomatis tiap 15 detik. Total final dihitung server dengan harga resmi." %}</p>
+    <h1>{% translate "Kasir (POS)" %}</h1>
+    <p class="app-pagehead__sub">{% if shift %}{% translate "Shift dibuka" %} {{ shift.opened_at|date:"H:i" }}{% else %}{% translate "Shift belum dibuka" %}{% endif %} {% info_tip _("Stok diperbarui otomatis tiap 15 detik. Total final dihitung server dengan harga resmi.") %}</p>
   </div>
-  <div class="gt-pagehead__actions"><a href="{% url 'pos:orders' %}" class="gt-btn gt-btn--outline gt-btn--md">Riwayat penjualan</a></div>
+  <div class="gt-pagehead__actions"><a href="{% url 'pos:orders' %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Riwayat penjualan" %}</a></div>
 </div>
 {% if not shift %}
 <div class="gt-callout gt-callout--warning app-pos__shift" role="status">
   {% icon "alert" 18 %}
-  <div class="app-pos__shift-text"><span class="gt-callout__title">Shift kasir belum dibuka</span><span class="gt-callout__body">Buka shift dengan modal awal di laci sebelum berjualan.</span></div>
+  <div class="app-pos__shift-text"><span class="gt-callout__title">{% translate "Shift kasir belum dibuka" %}</span><span class="gt-callout__body">{% translate "Buka shift dengan modal awal di laci sebelum berjualan." %}</span></div>
   <form method="post" action="{% url 'pos:shift' %}" class="app-pos__shift-form">{% csrf_token %}
     <input type="hidden" name="action" value="open"><input type="hidden" name="next" value="{% url 'pos:register' %}">
-    <label><span class="app-label">Modal awal (Rp)</span><input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="app-field app-field--sm"></label>
-    <button class="gt-btn gt-btn--solid gt-btn--md">Buka shift</button>
+    <label><span class="app-label">{% translate "Modal awal (Rp)" %}</span><input name="opening_float" data-num="money" inputmode="decimal" value="{{ suggested_float|idnum:0 }}" class="app-field app-field--sm"></label>
+    <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Buka shift" %}</button>
   </form>
 </div>
 {% endif %}
 <div x-data="register()" class="app-pos" @keydown.escape.window="cartOpen = false">
   <section class="app-pos__catalog" aria-labelledby="h-products">
     <div class="app-pos__toolbar">
-      <h2 class="gt-card__title" id="h-products">Produk</h2>
-      <label class="app-pos__search">{% icon "search" 18 %}<span class="sr-only">Cari produk</span><input type="search" x-model="query" placeholder="Cari produk…" class="app-field app-field--sm"></label>
-      <span class="app-row__meta" x-show="updatedAt" x-text="'Stok ' + updatedAt"></span>
+      <h2 class="gt-card__title" id="h-products">{% translate "Produk" %}</h2>
+      <label class="app-pos__search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari produk" %}</span><input type="search" x-model="query" placeholder="{% translate 'Cari produk…' %}" class="app-field app-field--sm"></label>
+      <span class="app-row__meta" x-show="updatedAt" x-text="gtT('{% jt "Stok %(time)s" %}', { time: updatedAt })"></span>
     </div>
     <template x-if="products.length === 0">
-      <div class="gt-callout app-empty"><div><span class="gt-callout__title">Belum ada produk berharga.</span><span class="gt-callout__body">Tetapkan harga di menu Harga Produk.</span></div></div>
+      <div class="gt-callout app-empty"><div><span class="gt-callout__title">{% translate "Belum ada produk berharga." %}</span><span class="gt-callout__body">{% translate "Tetapkan harga di menu Harga Produk." %}</span></div></div>
     </template>
     <div class="app-pos__grid">
       <template x-for="p in filtered()" :key="p.id">
@@ -41,8 +42,8 @@
           </span>
           <span class="gt-chip gt-chip--sm app-product__grade" :class="p.grade === 'HIGH' ? 'gt-chip--tint' : ''" x-text="p.grade_label"></span>
           <span class="app-product__price"><span x-text="rp(p.price)"></span><small>/kg</small></span>
-          <span class="app-product__stock" :class="low(p) && 'app-product__stock--low'"><i class="gt-dot" :class="low(p) ? 'gt-dot--danger' : ''"></i><span x-text="fmtKg(remaining(p)) + ' kg tersedia'"></span></span>
-          <span x-show="inCart(p.id)" class="app-product__qty" x-text="fmtKg(inCart(p.id)) + ' kg di keranjang'"></span>
+          <span class="app-product__stock" :class="low(p) && 'app-product__stock--low'"><i class="gt-dot" :class="low(p) ? 'gt-dot--danger' : ''"></i><span x-text="gtT('{% jt "%(kg)s kg tersedia" %}', { kg: fmtKg(remaining(p)) })"></span></span>
+          <span x-show="inCart(p.id)" class="app-product__qty" x-text="gtT('{% jt "%(kg)s kg di keranjang" %}', { kg: fmtKg(inCart(p.id)) })"></span>
         </button>
       </template>
     </div>
@@ -50,14 +51,14 @@
 
   <div class="app-pos__scrim" x-show="cartOpen" x-cloak @click="cartOpen = false"></div>
   <aside class="gt-card app-pos__cart" :class="cartOpen && 'is-open'" aria-labelledby="h-cart">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-cart">Keranjang</h2>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-cart">{% translate "Keranjang" %}</h2>
       <span class="app-pos__cart-tools">
-        <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" x-show="cart.length" @click="cart = []; save()">Kosongkan</button>
-        <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken app-pos__close" @click="cartOpen = false" aria-label="Tutup keranjang">{% icon "x" 16 %}</button>
+        <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" x-show="cart.length" @click="cart = []; save()">{% translate "Kosongkan" %}</button>
+        <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken app-pos__close" @click="cartOpen = false" aria-label="{% translate 'Tutup keranjang' %}">{% icon "x" 16 %}</button>
       </span></div>
     <form method="post" action="{% url 'pos:checkout' %}" @submit="submitting = true" data-confirm="" data-confirm-if="posWarn(form)" class="app-pos__form">
       {% csrf_token %}
-      <template x-if="cart.length === 0"><p class="app-muted app-pos__empty">Keranjang kosong. Ketuk produk untuk menambah.</p></template>
+      <template x-if="cart.length === 0"><p class="app-muted app-pos__empty">{% translate "Keranjang kosong. Ketuk produk untuk menambah." %}</p></template>
       <ul class="app-pos__lines">
         <template x-for="(line, i) in cart" :key="line.id">
           <li class="app-line">
@@ -67,45 +68,45 @@
               <span class="app-line__total" x-text="rp(subtotal(line))"></span>
             </div>
             <div class="app-line__qty">
-              <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="bump(line, -1)" :disabled="qty(line) <= stepOf(line)" aria-label="Kurangi">{% icon "minus" 16 %}</button>
-              <input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="line.qty" @input="save()" aria-label="Jumlah kg" class="app-field app-field--sm app-line__input" required>
-              <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="bump(line, 1)" :disabled="qty(line) + stepOf(line) > available(line)" aria-label="Tambah">{% icon "plus" 16 %}</button>
+              <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="bump(line, -1)" :disabled="qty(line) <= stepOf(line)" aria-label="{% translate 'Kurangi' %}">{% icon "minus" 16 %}</button>
+              <input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="line.qty" @input="save()" aria-label="{% translate 'Jumlah kg' %}" class="app-field app-field--sm app-line__input" required>
+              <button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" @click="bump(line, 1)" :disabled="qty(line) + stepOf(line) > available(line)" aria-label="{% translate 'Tambah' %}">{% icon "plus" 16 %}</button>
               <span class="app-row__meta app-line__unit">kg</span>
-              <button type="button" class="gt-iconbtn gt-iconbtn--sm app-line__remove" @click="remove(i)" aria-label="Hapus dari keranjang">{% icon "trash" 16 %}</button>
+              <button type="button" class="gt-iconbtn gt-iconbtn--sm app-line__remove" @click="remove(i)" aria-label="{% translate 'Hapus dari keranjang' %}">{% icon "trash" 16 %}</button>
             </div>
             <div class="app-chips">
               <template x-for="c in chips(line)" :key="c">
                 <button type="button" @click="setQty(line, c)" class="gt-chip gt-chip--sm app-chipbtn" :class="qty(line) === c && 'is-on'" x-text="idNum.format(c, 'kg') + ' kg'"></button>
               </template>
             </div>
-            <p class="app-error" x-show="over(line)">Melebihi stok tersedia (<span x-text="fmtKg(product(line.id)?.available)"></span> kg)</p>
+            <p class="app-error" x-show="over(line)">{% translate "Melebihi stok tersedia (" %}<span x-text="fmtKg(product(line.id)?.available)"></span> {% translate "kg)" %}</p>
           </li>
         </template>
       </ul>
-      <dl class="gt-kv app-pos__total"><div><dt>Total {% info_tip "Perkiraan dari harga di layar. Total final, termasuk PPN bila ada, dihitung server dengan harga resmi." %}</dt><dd x-text="rp(total())"></dd></div></dl>
-      <fieldset class="app-pos__pay"><legend class="app-label">Pembayaran</legend>
+      <dl class="gt-kv app-pos__total"><div><dt>{% translate "Total" %} {% info_tip _("Perkiraan dari harga di layar. Total final, termasuk PPN bila ada, dihitung server dengan harga resmi.") %}</dt><dd x-text="rp(total())"></dd></div></dl>
+      <fieldset class="app-pos__pay"><legend class="app-label">{% translate "Pembayaran" %}</legend>
         <div class="app-pos__methods">{% for value, label in payment_methods %}
           <label class="gt-radio app-pos__method"><input type="radio" name="payment_method" value="{{ value }}" x-model="method"><span class="gt-radio__title">{{ label }}</span></label>{% endfor %}
         </div>
       </fieldset>
       <div x-show="method === 'CASH'" class="app-pos__cash">
-        <div class="app-labelrow"><label class="app-label" for="pos-cash">Uang diterima</label>{% info_tip "Kosongkan bila pembeli membayar uang pas." %}</div>
+        <div class="app-labelrow"><label class="app-label" for="pos-cash">{% translate "Uang diterima" %}</label>{% info_tip _("Kosongkan bila pembeli membayar uang pas.") %}</div>
         <input id="pos-cash" name="cash_received" x-model="cash" data-num="money" inputmode="decimal" autocomplete="off" class="app-field">
         <div class="app-chips">
-          <template x-for="c in cashChips()" :key="c"><button type="button" @click="cash = idNum.format(c, 'money')" class="gt-chip gt-chip--sm app-chipbtn" x-text="c === dueTotal() ? 'Uang pas' : rp(c)"></button></template>
+          <template x-for="c in cashChips()" :key="c"><button type="button" @click="cash = idNum.format(c, 'money')" class="gt-chip gt-chip--sm app-chipbtn" x-text="c === dueTotal() ? '{% jt "Uang pas" %}' : rp(c)"></button></template>
         </div>
-        <div class="gt-metric app-pos__change" x-show="cash"><span class="gt-metric__label">Kembalian</span><span class="gt-metric__value" :class="change() < 0 && 'app-value--danger'" x-text="change() < 0 ? 'Kurang ' + rp(-change()) : rp(change())"></span></div>
+        <div class="gt-metric app-pos__change" x-show="cash"><span class="gt-metric__label">{% translate "Kembalian" %}</span><span class="gt-metric__value" :class="change() < 0 && 'app-value--danger'" x-text="change() < 0 ? gtT('{% jt "Kurang %(amount)s" %}', { amount: rp(-change()) }) : rp(change())"></span></div>
       </div>
       <button class="gt-btn gt-btn--primary gt-btn--md gt-btn--block app-pos__paybtn"
               :disabled="!hasShift || cart.length === 0 || submitting || cart.some(l => over(l) || !(qty(l) > 0)) || (method === 'CASH' && cash && change() < 0)"
-              x-text="cart.length ? 'Bayar ' + rp(total()) : 'Bayar'">Bayar</button>
-      <p x-show="!hasShift" class="app-help app-pos__note">Buka shift untuk mulai berjualan.</p>
+              x-text="cart.length ? gtT('{% jt "Bayar %(amount)s" %}', { amount: rp(total()) }) : '{% jt "Bayar" %}'">{% translate "Bayar" %}</button>
+      <p x-show="!hasShift" class="app-help app-pos__note">{% translate "Buka shift untuk mulai berjualan." %}</p>
     </form>
   </aside>
 
   <div class="gt-bottombar app-pos__bar" x-show="!cartOpen">
-    <span class="app-pos__bartotal"><span class="app-row__meta" x-text="cart.length + ' produk'"></span><b x-text="rp(total())"></b></span>
-    <button type="button" class="gt-btn gt-btn--solid gt-btn--md" @click="cartOpen = true" :disabled="!cart.length">Lihat keranjang</button>
+    <span class="app-pos__bartotal"><span class="app-row__meta" x-text="gtT('{% jt "%(n)s produk" %}', { n: cart.length })"></span><b x-text="rp(total())"></b></span>
+    <button type="button" class="gt-btn gt-btn--solid gt-btn--md" @click="cartOpen = true" :disabled="!cart.length">{% translate "Lihat keranjang" %}</button>
   </div>
 </div>
 {% endblock %}
@@ -128,19 +129,20 @@
       },
       init() {
         try { this.cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch (e) { this.cart = []; }
-        // Older carts stored qty as a number; the input now holds Indonesian text (D81).
+        // The cart is stored with plain numbers so it survives a language switch (Phase 7); the input shows the
+        // number in the active language. Older carts stored display text such as "0,5".
         this.cart = this.cart.filter(l => this.product(l.id))
-          .map(l => ({ id: l.id, qty: typeof l.qty === 'number' ? idNum.format(l.qty, 'kg') : String(l.qty) }));
+          .map(l => ({ id: l.id, qty: idNum.format(typeof l.qty === 'number' ? l.qty : Number(String(l.qty).replace(',', '.')), 'kg') }));
         setInterval(() => this.refresh(), 15000);
         // D87: unusually large lines (> 3x the 30-day average line, min 20 kg) get one confirmation.
         window.posWarn = (form) => {
           const big = this.cart.filter(l => { const p = this.product(l.id); return p && this.qty(l) > Number(p.warn_kg || 20); });
           if (!big.length) return false;
-          form.dataset.confirmTitle = 'Jumlah tidak biasa';
+          form.dataset.confirmTitle = '{% jt "Jumlah tidak biasa" %}';
           form.dataset.confirm = big.map(l => { const p = this.product(l.id);
-            return p.name + ' ' + p.grade_label + ': ' + idNum.format(this.qty(l), 'kg') + ' kg (biasanya di bawah ' + idNum.format(Number(p.warn_kg), 'kg') + ' kg).'; })
+            return p.name + ' ' + p.grade_label + ': ' + idNum.format(this.qty(l), 'kg') + '{% jt " kg (biasanya di bawah " %}' + idNum.format(Number(p.warn_kg), 'kg') + ' kg).'; })
             .join('\n') + '\nPeriksa koma desimal sebelum membayar.';
-          form.dataset.confirmAction = 'Tetap bayar';
+          form.dataset.confirmAction = '{% jt "Tetap bayar" %}';
           return true;
         };
       },
@@ -149,10 +151,10 @@
           const res = await fetch('{% url "pos:stock" %}', { headers: { 'Accept': 'application/json' } });
           if (!res.ok) return;
           this.products = (await res.json()).products;
-          this.updatedAt = new Date().toLocaleTimeString('id-ID');
+          this.updatedAt = new Date().toLocaleTimeString(window.GT_LOCALE);
         } catch (e) { /* offline: keep last known stock */ }
       },
-      save() { try { localStorage.setItem(CART_KEY, JSON.stringify(this.cart)); } catch (e) {} },
+      save() { try { localStorage.setItem(CART_KEY, JSON.stringify(this.cart.map(l => ({ id: l.id, qty: idNum.parse(l.qty) })))); } catch (e) {} },
       product(id) { return this.products.find(p => p.id === id); },
       filtered() { const q = this.query.toLowerCase(); return this.products.filter(p => (p.name + ' ' + p.grade_label).toLowerCase().includes(q)); },
       qty(line) { return idNum.parse(line.qty) || 0; },
@@ -185,7 +187,7 @@
       subtotal(line) { const p = this.product(line.id); return p ? this.qty(line) * Number(p.price) : 0; },
       total() { return this.cart.reduce((s, l) => s + this.subtotal(l), 0); },
       rp(v) { return window.gtRupiah(v); },
-      fmtKg(v) { return Number(v || 0).toLocaleString('id-ID', { maximumFractionDigits: 3 }); },
+      fmtKg(v) { return Number(v || 0).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: 3 }); },
     };
   }
 </script>

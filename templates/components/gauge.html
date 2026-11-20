@@ -1,4 +1,4 @@
-{# Design-system Gauge: half donut for a share of a whole. Hatched track = what is not yet there. #}
+{% load i18n %}{# Design-system Gauge: half donut for a share of a whole. Hatched track = what is not yet there. #}
 <div class="app-gauge">
   <div class="gt-gauge" role="img" aria-label="{% for s in segs %}{{ s.label }} {{ s.pct }}%{% if not forloop.last %}, {% endif %}{% endfor %}">
     <svg viewBox="0 0 200 110" aria-hidden="true"><defs><pattern id="hatch-{{ uid }}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--surface-raised)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--hatch)" stroke-width="2.4"/></pattern></defs>
@@ -9,6 +9,6 @@
   </div>
   <div class="gt-legend app-gauge__legend">
     {% for s in segs %}<span><i{% if s.tone == 'prog' %} class="dark"{% endif %}></i>{{ s.label }} <b>{{ s.pct }}%</b></span>{% endfor %}
-    {% if empty %}<span><i class="hatch"></i>Belum ada</span>{% endif %}
+    {% if empty %}<span><i class="hatch"></i>{% translate "Belum ada" %}</span>{% endif %}
   </div>
 </div>

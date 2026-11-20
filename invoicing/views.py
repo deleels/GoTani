@@ -1,5 +1,8 @@
 """Buyers, invoices and payments screens (thin views over `invoicing.services`). OWNER/MANAGER only (rule 24)."""
 
+from farm.templatetags.gotani import rupiah
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Prefetch, Q, Sum
@@ -74,7 +77,7 @@ class BuyersView(FinanceView):
         form = BuyerForm(request.POST)
         if form.is_valid():
             buyer = services.create_buyer(request.user, **form.cleaned_data)
-            messages.success(request, f"Pembeli {buyer} ditambahkan.")
+            messages.success(request, _("Pembeli %(buyer)s ditambahkan.") % {"buyer": buyer})
             return redirect("invoicing:buyer_detail", pk=buyer.pk)
         return render(request, self.template_name, self.context(request, form), status=400)
 
@@ -105,7 +108,7 @@ class BuyerDetailView(FinanceView):
         action = request.POST.get("action", "edit")
         if action == "toggle":
             services.update_buyer(request.user, buyer, is_active=not buyer.is_active)
-            messages.success(request, f"Pembeli {'diaktifkan' if buyer.is_active else 'dinonaktifkan'}.")
+            messages.success(request, _("Pembeli %(v)s.") % {"v": 'diaktifkan' if buyer.is_active else 'dinonaktifkan'})
             return redirect("invoicing:buyer_detail", pk=pk)
         if action == "credit":
             form = CreditForm(request.POST, buyer=buyer)
@@ -115,14 +118,14 @@ class BuyerDetailView(FinanceView):
                 except ValidationError as exc:
                     messages.error(request, error_text(exc))
                 else:
-                    messages.success(request, f"Kredit diterapkan ke {form.cleaned_data['invoice']}.")
+                    messages.success(request, _("Kredit diterapkan ke %(v)s.") % {"v": form.cleaned_data['invoice']})
             else:
-                messages.error(request, "Data kredit tidak valid.")
+                messages.error(request, _("Data kredit tidak valid."))
             return redirect("invoicing:buyer_detail", pk=pk)
         form = BuyerForm(request.POST, instance=Buyer.objects.get(pk=pk))
         if form.is_valid():
             services.update_buyer(request.user, buyer, **form.cleaned_data)
-            messages.success(request, "Data pembeli disimpan.")
+            messages.success(request, _("Data pembeli disimpan."))
             return redirect("invoicing:buyer_detail", pk=pk)
         return render(request, self.template_name, self.context(request, buyer, form), status=400)
 
@@ -130,8 +133,8 @@ class BuyerDetailView(FinanceView):
 # --- Invoices ---------------------------------------------------------------------------
 
 INVOICE_TABS = [
-    ("all", "Semua"), ("draft", "Draf"), ("unpaid", "Belum lunas"), ("overdue", "Jatuh tempo"),
-    ("paid", "Lunas"), ("void", "Batal"),
+    ("all", _l("Semua")), ("draft", _l("Draf")), ("unpaid", _l("Belum lunas")), ("overdue", _l("Jatuh tempo")),
+    ("paid", _l("Lunas")), ("void", _l("Batal")),
 ]
 
 
@@ -185,7 +188,7 @@ class InvoiceEditorView(FinanceView):
             return None
         invoice = get_object_or_404(Invoice, pk=pk)
         if invoice.status != Invoice.Status.DRAFT:
-            raise PermissionDenied("Hanya invoice draf yang dapat diubah.")
+            raise PermissionDenied(_("Hanya invoice draf yang dapat diubah."))
         return invoice
 
     def render_editor(self, request, invoice, form, lines, status=200):
@@ -227,7 +230,7 @@ class InvoiceEditorView(FinanceView):
             except (ValueError, ValidationError) as exc:
                 form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else str(exc))
             else:
-                messages.success(request, "Draf invoice disimpan. Terbitkan untuk memotong stok.")
+                messages.success(request, _("Draf invoice disimpan. Terbitkan untuk memotong stok."))
                 return redirect("invoicing:invoice_detail", pk=invoice.pk)
         return self.render_editor(request, invoice, form, echo, status=400)
 
@@ -281,23 +284,23 @@ class InvoiceActionView(FinanceView):
         try:
             if action == "issue":
                 if request.POST.get("confirmed_checked") != "1":  # D88: level-2 confirmation
-                    raise ValidationError("Centang \"Saya sudah memeriksa data ini\" untuk menerbitkan invoice.")
+                    raise ValidationError(_('Centang "Saya sudah memeriksa data ini" untuk menerbitkan invoice.'))
                 form = IssueForm(request.POST)
                 if not form.is_valid():
-                    raise ValidationError("Tanggal tidak valid.")
+                    raise ValidationError(_("Tanggal tidak valid."))
                 invoice = services.issue_invoice(invoice, request.user, issue_date=form.cleaned_data["issue_date"],
                                                  due_date=form.cleaned_data["due_date"])
-                msg = f"Invoice {invoice.number} diterbitkan; stok dipotong (FIFO)."
+                msg = _("Invoice %(number)s diterbitkan; stok dipotong (FIFO).") % {"number": invoice.number}
             elif action == "void":
                 services.void_invoice(invoice, request.user, reason=request.POST.get("void_reason", ""),
                                       note=request.POST.get("reason", ""))
-                msg = f"Invoice {invoice.number} dibatalkan; stok dikembalikan dan pembayaran menjadi kredit."
+                msg = _("Invoice %(number)s dibatalkan; stok dikembalikan dan pembayaran menjadi kredit.") % {"number": invoice.number}
             elif action == "delete":
                 services.delete_draft(request.user, invoice)
-                messages.success(request, "Draf invoice dihapus.")
+                messages.success(request, _("Draf invoice dihapus."))
                 return redirect("invoicing:invoices")
             else:
-                raise ValidationError("Aksi tidak dikenal.")
+                raise ValidationError(_("Aksi tidak dikenal."))
         except ValidationError as exc:
             messages.error(request, error_text(exc))
         else:
@@ -318,7 +321,7 @@ class AllocationRemoveView(FinanceView):
             messages.error(request, error_text(exc))
             invoice = allocation.invoice
         else:
-            messages.success(request, "Alokasi dilepas; dananya kembali menjadi kredit pembeli.")
+            messages.success(request, _("Alokasi dilepas; dananya kembali menjadi kredit pembeli."))
         return redirect("invoicing:invoice_detail", invoice.pk)
 
 
@@ -362,10 +365,10 @@ class PaymentCreateView(FinanceView):
                     into_drawer=d["into_drawer"], withholding_slip_no=d["withholding_slip_no"],
                 )
             except (ValidationError, ArithmeticError, ValueError) as exc:
-                form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else "Jumlah alokasi tidak valid.")
+                form.add_error(None, error_text(exc) if isinstance(exc, ValidationError) else _("Jumlah alokasi tidak valid."))
             else:
                 left = payment.unallocated_idr
-                messages.success(request, "Pembayaran dicatat." + (f" Sisa Rp{left:,.0f} menjadi kredit pembeli.".replace(",", ".") if left else ""))
+                messages.success(request, _("Pembayaran dicatat.") + (" " + _("Sisa %(left)s menjadi kredit pembeli.") % {"left": rupiah(left)} if left else ""))
                 return redirect("invoicing:buyer_detail", pk=buyer.pk)
         return self.render_page(request, buyer, form, status=400, entered=entered)
 
@@ -382,5 +385,5 @@ class PaymentVoidView(FinanceView):
         except ValidationError as exc:
             messages.error(request, error_text(exc))
         else:
-            messages.success(request, "Pembayaran dibatalkan; catatannya tetap disimpan.")
+            messages.success(request, _("Pembayaran dibatalkan; catatannya tetap disimpan."))
         return redirect(reverse("invoicing:buyer_detail", args=[payment.buyer_id]) + "?tab=payments")

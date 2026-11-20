@@ -1,5 +1,6 @@
 """Sidebar navigation (D67), filtered by role. Items whose URL isn't built yet are skipped."""
 
+from django.utils.translation import gettext_lazy as _l
 from django.urls import NoReverseMatch, reverse
 
 from farm.access import get_roles
@@ -7,36 +8,36 @@ from farm.bootstrap import ROLE_OWNER
 
 # (label, url name, icon, flag, active url-name prefixes)
 GROUPS = [
-    ("DASBOR", [
-        ("Ringkasan", "home", "home", "any", ("home", "dashboard")),
-        ("Laporan Kerja", "farm:activities", "clipboard", "farm", ("farm:activities", "farm:preharvest")),
-        ("Aset Kebun", None, "sprout", "farm", (), [
-            ("Elemen & Siklus", "farm:cycles", ("farm:cycles", "farm:element", "farm:cycle")),
-            ("Inventaris Input", "farm:inputs", ("farm:input",)),
-            ("Panen", "farm:harvests", ("farm:harvests",)),
-            ("Susut / Rusak", "farm:spoilage", ("farm:spoilage",)),
-            ("Opname Stok", "farm:opname", ("farm:opname",)),
+    (_l("DASBOR"), [
+        (_l("Ringkasan"), "home", "home", "any", ("home", "dashboard")),
+        (_l("Laporan Kerja"), "farm:activities", "clipboard", "farm", ("farm:activities", "farm:preharvest")),
+        (_l("Aset Kebun"), None, "sprout", "farm", (), [
+            (_l("Elemen & Siklus"), "farm:cycles", ("farm:cycles", "farm:element", "farm:cycle")),
+            (_l("Inventaris Input"), "farm:inputs", ("farm:input",)),
+            (_l("Panen"), "farm:harvests", ("farm:harvests",)),
+            (_l("Susut / Rusak"), "farm:spoilage", ("farm:spoilage",)),
+            (_l("Opname Stok"), "farm:opname", ("farm:opname",)),
         ]),
-        ("Cuaca & Satelit", "geo:map", "map", "farm", ("geo:",)),
+        (_l("Cuaca & Satelit"), "geo:map", "map", "farm", ("geo:",)),
     ]),
-    ("PENJUALAN", [
-        ("Kasir (POS)", "pos:register", "cart", "pos", ("pos:register",)),
-        ("Pesanan", "pos:orders", "receipt", "pos", ("pos:orders", "pos:receipt")),
-        ("Shift & Kas", "pos:shift", "wallet", "pos", ("pos:shift",)),
-        ("Invoice", "invoicing:invoices", "file", "finance", ("invoicing:invoice",)),
-        ("Pembeli", "invoicing:buyers", "users", "finance", ("invoicing:buyer",)),
+    (_l("PENJUALAN"), [
+        (_l("Kasir (POS)"), "pos:register", "cart", "pos", ("pos:register",)),
+        (_l("Pesanan"), "pos:orders", "receipt", "pos", ("pos:orders", "pos:receipt")),
+        (_l("Shift & Kas"), "pos:shift", "wallet", "pos", ("pos:shift",)),
+        (_l("Invoice"), "invoicing:invoices", "file", "finance", ("invoicing:invoice",)),
+        (_l("Pembeli"), "invoicing:buyers", "users", "finance", ("invoicing:buyer",)),
     ]),
-    ("KEUANGAN", [
-        ("Biaya", "farm:expenses", "wallet", "finance", ("farm:expense",)),
-        ("Harga Produk", "farm:prices", "tag", "finance", ("farm:prices",)),
-        ("Analitik", "dashboard", "chart", "finance", ("dashboard",)),
-        ("Omzet & PPh", "omzet_pph", "file", "finance", ("omzet_pph",)),
+    (_l("KEUANGAN"), [
+        (_l("Biaya"), "farm:expenses", "wallet", "finance", ("farm:expense",)),
+        (_l("Harga Produk"), "farm:prices", "tag", "finance", ("farm:prices",)),
+        (_l("Analitik"), "dashboard", "chart", "finance", ("dashboard",)),
+        (_l("Omzet & PPh"), "omzet_pph", "file", "finance", ("omzet_pph",)),
     ]),
-    ("ALAT", [
-        ("Telusuri", "reports:trace_index", "search", "finance", ("reports:",)),
-        ("Log aktivitas", "core:audit_log", "clipboard", "finance", ("core:audit_log",)),
-        ("Staf", "core:staff", "user-cog", "owner", ("core:staff",)),
-        ("Pengaturan", "core:settings", "settings", "owner", ("core:settings",)),
+    (_l("ALAT"), [
+        (_l("Telusuri"), "reports:trace_index", "search", "finance", ("reports:",)),
+        (_l("Log aktivitas"), "core:audit_log", "clipboard", "finance", ("core:audit_log",)),
+        (_l("Staf"), "core:staff", "user-cog", "owner", ("core:staff",)),
+        (_l("Pengaturan"), "core:settings", "settings", "owner", ("core:settings",)),
     ]),
 ]
 

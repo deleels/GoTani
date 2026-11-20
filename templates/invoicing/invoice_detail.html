@@ -1,38 +1,39 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
 {% block title %}{{ invoice }}{% endblock %}
 {% block content %}
 {# Invoice detail (Phase 4d): head with status + actions, issue callout for drafts, metrics, lines table, totals kv, payments, history feed. Posted field names unchanged. #}
 <div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
-    <a href="{% url 'invoicing:invoices' %}" class="app-back">{% icon "chevron-left" 16 %} Invoice</a>
+    <a href="{% url 'invoicing:invoices' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Invoice" %}</a>
     <h1 class="app-pagehead__title"><span class="app-mono-head">{{ invoice }}</span> {% pill invoice.pay_label invoice.pill_key %}</h1>
-    <p><a class="app-link--plain" href="{% url 'invoicing:buyer_detail' invoice.buyer_id %}">{{ invoice.buyer }}</a>{% if invoice.issue_date %} · terbit {{ invoice.issue_date|date:"d M Y" }}{% endif %}</p>
+    <p><a class="app-link--plain" href="{% url 'invoicing:buyer_detail' invoice.buyer_id %}">{{ invoice.buyer }}</a>{% if invoice.issue_date %} {% translate "· terbit" %} {{ invoice.issue_date|date:"d M Y" }}{% endif %}</p>
   </div>
   <div class="gt-pagehead__actions">
     {% if invoice.status == 'DRAFT' %}
-      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'delete' %}" data-confirm-title="Hapus draf?" data-confirm="Draf ini belum memotong stok dan akan dihapus permanen." data-confirm-action="Hapus draf" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--md">Hapus</button></form>
-      <a href="{% url 'invoicing:invoice_edit' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Ubah</a>
+      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'delete' %}" data-confirm-title="{% translate 'Hapus draf?' %}" data-confirm="{% translate 'Draf ini belum memotong stok dan akan dihapus permanen.' %}" data-confirm-action="{% translate 'Hapus draf' %}" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--md">{% translate "Hapus" %}</button></form>
+      <a href="{% url 'invoicing:invoice_edit' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Ubah" %}</a>
     {% elif invoice.status == 'ISSUED' %}
-      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'void' %}" {% void_confirm "Batalkan invoice?" "Stok dikembalikan ke lot asal dan pembayaran yang sudah dialokasikan menjadi kredit pembeli. Tidak bisa dibatalkan." "Batalkan invoice" 2 %}>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--md">Batalkan</button></form>
-      <a href="{% url 'invoicing:invoice_print' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">Cetak</a>
-      {% if outstanding %}<a href="{% url 'invoicing:buyer_payment_new' invoice.buyer_id %}?invoice={{ invoice.pk }}" class="gt-btn gt-btn--primary gt-btn--md">Catat bayar</a>{% endif %}
+      <form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'void' %}" {% void_confirm _("Batalkan invoice?") _("Stok dikembalikan ke lot asal dan pembayaran yang sudah dialokasikan menjadi kredit pembeli. Tidak bisa dibatalkan.") _("Batalkan invoice") 2 %}>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--md">{% translate "Batalkan" %}</button></form>
+      <a href="{% url 'invoicing:invoice_print' invoice.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Cetak" %}</a>
+      {% if outstanding %}<a href="{% url 'invoicing:buyer_payment_new' invoice.buyer_id %}?invoice={{ invoice.pk }}" class="gt-btn gt-btn--primary gt-btn--md">{% translate "Catat bayar" %}</a>{% endif %}
     {% endif %}
   </div>
 </div>
 
 {% if invoice.status == 'DRAFT' %}
-<form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'issue' %}"
-      data-confirm-title="Terbitkan invoice untuk {{ invoice.buyer }}?" data-confirm-level="2" data-confirm-action="Terbitkan"
-      data-confirm="Total {{ invoice.total_idr|rupiah }} untuk {{ invoice.lines.count }} baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah — hanya dibatalkan."
+{% blocktranslate asvar t_data_confirm_title_9 with v1=invoice.buyer %}Terbitkan invoice untuk {{ v1 }}?{% endblocktranslate %}{% blocktranslate asvar t_data_confirm_10 with v1=invoice.total_idr|rupiah v2=invoice.lines.count %}Total {{ v1 }} untuk {{ v2 }} baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah — hanya dibatalkan.{% endblocktranslate %}<form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'issue' %}"
+      data-confirm-title="{{ t_data_confirm_title_9 }}" data-confirm-level="2" data-confirm-action="{% translate 'Terbitkan' %}"
+      data-confirm="{{ t_data_confirm_10 }}"
       class="gt-callout gt-callout--on-white app-issue">{% csrf_token %}
   {% icon "info" 18 %}
   <div class="app-issue__body">
-    <span class="gt-callout__title">Siap diterbitkan? {% info_tip "Menerbitkan memberi nomor, memotong stok FIFO dari lot terlama, dan mengunci harga & pajak." %}</span>
+    <span class="gt-callout__title">{% translate "Siap diterbitkan?" %} {% info_tip _("Menerbitkan memberi nomor, memotong stok FIFO dari lot terlama, dan mengunci harga & pajak.") %}</span>
     <div class="app-issue__fields">
       <label><span class="app-label">{{ issue_form.issue_date.label }}</span>{{ issue_form.issue_date }}</label>
-      <label><span class="app-labelrow"><span class="app-label">{{ issue_form.due_date.label }}</span>{% with t=invoice.buyer.payment_terms_days|stringformat:"d" %}{% info_tip "Termin pembeli: "|add:t|add:" hari." %}{% endwith %}</span>{{ issue_form.due_date }}</label>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Terbitkan</button>
+      <label><span class="app-labelrow"><span class="app-label">{{ issue_form.due_date.label }}</span>{% with t=invoice.buyer.payment_terms_days|stringformat:"d" %}{% blocktranslate asvar tip_terms %}Termin pembeli: {{ t }} hari.{% endblocktranslate %}{% info_tip tip_terms %}{% endwith %}</span>{{ issue_form.due_date }}</label>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Terbitkan" %}</button>
     </div>
   </div>
 </form>
@@ -40,25 +41,25 @@
 
 {% if invoice.status == 'ISSUED' %}
 <div class="gt-grid app-kpis">
-  {% include "components/kpi.html" with stat=True featured=True label="Total" value=invoice.total_idr|rupiah %}
-  {% include "components/kpi.html" with stat=True label="Dibayar" value=paid|rupiah %}
-  {% if outstanding %}{% include "components/kpi.html" with stat=True label="Sisa tagihan" value=outstanding|rupiah cls="text-red-700" %}{% else %}{% include "components/kpi.html" with stat=True label="Sisa tagihan" value=outstanding|rupiah %}{% endif %}
-  {% include "components/kpi.html" with stat=True compact=True label="Jatuh tempo" value=invoice.due_date|date:"d/m/Y" %}
+  {% include "components/kpi.html" with stat=True featured=True label=_("Total") value=invoice.total_idr|rupiah %}
+  {% include "components/kpi.html" with stat=True label=_("Dibayar") value=paid|rupiah %}
+  {% if outstanding %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah cls="text-red-700" %}{% else %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah %}{% endif %}
+  {% include "components/kpi.html" with stat=True compact=True label=_("Jatuh tempo") value=invoice.due_date|date:"d/m/Y" %}
 </div>
 {% endif %}
 
 <div class="app-split">
   <section class="gt-card" aria-labelledby="h-lines">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-lines">Baris produk</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-lines">{% translate "Baris produk" %}</h2></div>
     <div class="app-table-wrap">
     <table class="gt-table">
-      <thead><tr><th>Produk</th><th class="num">Kg</th><th class="num">Harga/kg</th><th class="num">Diskon</th><th class="num">PPN</th><th class="num">Subtotal</th></tr></thead>
+      <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Harga/kg" %}</th><th class="num">{% translate "Diskon" %}</th><th class="num">{% translate "PPN" %}</th><th class="num">{% translate "Subtotal" %}</th></tr></thead>
       <tbody>
       {% for ln in invoice.lines.all %}
         <tr>
           <td><b>{{ ln.product }}</b>
             {% for a in ln.allocations.all %}
-            <span class="app-sub">{{ a.qty_kg|kg }} kg dari LOT-{{ a.lot_id }} · panen {{ a.lot.harvested_at|date:"d M" }} · {{ a.lot.harvest_batch.cycle.element }} · HPP {{ a.unit_cogs_idr|rupiah }}/kg · <a class="app-link" href="{% url 'reports:trace_cycle' a.lot.harvest_batch.cycle_id %}">telusuri</a></span>
+            <span class="app-sub">{{ a.qty_kg|kg }} {% translate "kg dari LOT-" %}{{ a.lot_id }} {% translate "· panen" %} {{ a.lot.harvested_at|date:"d M" }} · {{ a.lot.harvest_batch.cycle.element }} {% translate "· HPP" %} {{ a.unit_cogs_idr|rupiah }}{% translate "/kg ·" %} <a class="app-link" href="{% url 'reports:trace_cycle' a.lot.harvest_batch.cycle_id %}">{% translate "telusuri" %}</a></span>
             {% endfor %}
           </td>
           <td class="num">{{ ln.qty_kg|kg }}</td>
@@ -76,31 +77,31 @@
 
   <aside class="app-side">
     {% if invoice.needs_meterai and invoice.status != 'VOID' %}
-    <div class="gt-callout gt-callout--warning">{% icon "alert" 18 %}<div><span class="gt-callout__title">Bea meterai Rp10.000</span><span class="gt-callout__body">Total di atas Rp5.000.000: tempel meterai (atau e-meterai) pada invoice yang diserahkan ke pembeli.</span></div></div>
+    <div class="gt-callout gt-callout--warning">{% icon "alert" 18 %}<div><span class="gt-callout__title">{% translate "Bea meterai Rp10.000" %}</span><span class="gt-callout__body">{% translate "Total di atas Rp5.000.000: tempel meterai (atau e-meterai) pada invoice yang diserahkan ke pembeli." %}</span></div></div>
     {% endif %}
     <section class="gt-card" aria-labelledby="h-sum">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-sum">Ringkasan</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-sum">{% translate "Ringkasan" %}</h2></div>
       <dl class="gt-kv app-kv-total">
-        <div><dt>Subtotal</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>
-        {% if invoice.discount_idr %}<div><dt>Diskon{% if invoice.discount_type == 'PERCENT' %} ({{ invoice.discount_value|pct:0 }}){% endif %}</dt><dd>− {{ invoice.discount_idr|rupiah }}</dd></div>{% endif %}
-        {% if invoice.tax_idr or farm_is_pkp %}<div><dt>PPN</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>{% endif %}
-        {% if invoice.shipping_idr %}<div><dt>Ongkos kirim</dt><dd>{{ invoice.shipping_idr|rupiah }}</dd></div>{% endif %}
-        {% if invoice.status == 'ISSUED' %}<div><dt>HPP {% info_tip "Harga pokok dari lot yang dipotong saat terbit." %}</dt><dd>{{ invoice.total_cogs_idr|rupiah }}</dd></div>{% endif %}
-        <div><dt>Total</dt><dd>{{ invoice.total_idr|rupiah }}</dd></div>
+        <div><dt>{% translate "Subtotal" %}</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>
+        {% if invoice.discount_idr %}<div><dt>{% translate "Diskon" %}{% if invoice.discount_type == 'PERCENT' %} ({{ invoice.discount_value|pct:0 }}){% endif %}</dt><dd>− {{ invoice.discount_idr|rupiah }}</dd></div>{% endif %}
+        {% if invoice.tax_idr or farm_is_pkp %}<div><dt>{% translate "PPN" %}</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>{% endif %}
+        {% if invoice.shipping_idr %}<div><dt>{% translate "Ongkos kirim" %}</dt><dd>{{ invoice.shipping_idr|rupiah }}</dd></div>{% endif %}
+        {% if invoice.status == 'ISSUED' %}<div><dt>{% translate "HPP" %} {% info_tip _("Harga pokok dari lot yang dipotong saat terbit.") %}</dt><dd>{{ invoice.total_cogs_idr|rupiah }}</dd></div>{% endif %}
+        <div><dt>{% translate "Total" %}</dt><dd>{{ invoice.total_idr|rupiah }}</dd></div>
       </dl>
       {% if invoice.status == 'ISSUED' and outstanding and credit %}
-      <div class="gt-callout gt-callout--success">{% icon "check" 18 %}<div><span class="gt-callout__title">Kredit {{ credit|rupiah }} tersedia</span><a class="gt-btn gt-btn--outline gt-btn--sm app-empty__cta" href="{% url 'invoicing:buyer_detail' invoice.buyer_id %}">Pakai kredit</a></div></div>
+      <div class="gt-callout gt-callout--success">{% icon "check" 18 %}<div><span class="gt-callout__title">{% translate "Kredit" %} {{ credit|rupiah }} {% translate "tersedia" %}</span><a class="gt-btn gt-btn--outline gt-btn--sm app-empty__cta" href="{% url 'invoicing:buyer_detail' invoice.buyer_id %}">{% translate "Pakai kredit" %}</a></div></div>
       {% endif %}
     </section>
 
     {% if invoice.allocations.all %}
     <section class="gt-card" aria-labelledby="h-pay">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-pay">Pembayaran</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-pay">{% translate "Pembayaran" %}</h2></div>
       <ul class="gt-list gt-list--divided">
       {% for a in invoice.allocations.all %}
         <li class="gt-row">
           <span class="gt-row__body"><span class="gt-row__title">{{ a.amount_idr|rupiah }}</span><span class="app-row__meta">{{ a.payment.paid_on|date:"d M Y" }} · {{ a.payment.get_method_display }}</span></span>
-          {% if invoice.status == 'ISSUED' %}<span class="gt-row__trail"><form method="post" action="{% url 'invoicing:allocation_remove' a.pk %}" data-confirm-title="Lepas pembayaran ini?" data-confirm="{{ a.amount_idr|rupiah }} dilepas dari {{ invoice }} dan kembali menjadi kredit {{ invoice.buyer }}. Status pembayaran invoice ikut berubah." data-confirm-action="Lepas pembayaran" data-confirm-reason="Alasan">{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">Lepas</button></form></span>{% endif %}
+          {% if invoice.status == 'ISSUED' %}<span class="gt-row__trail">{% blocktranslate asvar t_data_confirm_11 with v1=a.amount_idr|rupiah v2=invoice v3=invoice.buyer %}{{ v1 }} dilepas dari {{ v2 }} dan kembali menjadi kredit {{ v3 }}. Status pembayaran invoice ikut berubah.{% endblocktranslate %}<form method="post" action="{% url 'invoicing:allocation_remove' a.pk %}" data-confirm-title="{% translate 'Lepas pembayaran ini?' %}" data-confirm="{{ t_data_confirm_11 }}" data-confirm-action="{% translate 'Lepas pembayaran' %}" data-confirm-reason="Alasan">{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Lepas" %}</button></form></span>{% endif %}
         </li>
       {% endfor %}
       </ul>
@@ -108,11 +109,11 @@
     {% endif %}
 
     <section class="gt-card" aria-labelledby="h-hist">
-      <div class="gt-card__head"><h2 class="gt-card__title" id="h-hist">Riwayat</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title" id="h-hist">{% translate "Riwayat" %}</h2></div>
       <ul class="gt-list app-history">
-        <li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--muted"></i></span><span class="gt-row__body"><span class="gt-row__title">Dibuat</span><span class="app-row__meta">{{ invoice.created_at|date:"d M Y H:i" }} · {{ invoice.created_by }}</span></span></li>
-        {% if invoice.issued_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot"></i></span><span class="gt-row__body"><span class="gt-row__title">Terbit</span><span class="app-row__meta">{{ invoice.issued_at|date:"d M Y H:i" }} · {{ invoice.issued_by }}</span></span></li>{% endif %}
-        {% if invoice.voided_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--danger"></i></span><span class="gt-row__body"><span class="gt-row__title app-value--danger">Dibatalkan</span><span class="app-row__meta">{{ invoice.voided_at|date:"d M Y H:i" }} · {{ invoice.voided_by }}</span></span></li>{% endif %}
+        <li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--muted"></i></span><span class="gt-row__body"><span class="gt-row__title">{% translate "Dibuat" %}</span><span class="app-row__meta">{{ invoice.created_at|date:"d M Y H:i" }} · {{ invoice.created_by }}</span></span></li>
+        {% if invoice.issued_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot"></i></span><span class="gt-row__body"><span class="gt-row__title">{% translate "Terbit" %}</span><span class="app-row__meta">{{ invoice.issued_at|date:"d M Y H:i" }} · {{ invoice.issued_by }}</span></span></li>{% endif %}
+        {% if invoice.voided_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--danger"></i></span><span class="gt-row__body"><span class="gt-row__title app-value--danger">{% translate "Dibatalkan" %}</span><span class="app-row__meta">{{ invoice.voided_at|date:"d M Y H:i" }} · {{ invoice.voided_by }}</span></span></li>{% endif %}
       </ul>
     </section>
   </aside>

@@ -1,12 +1,13 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui %}
-{% block title %}Profil{% endblock %}
+{% block title %}{% translate "Profil" %}{% endblock %}
 {% block content %}
 {# Profil (Phase 5b): identity card (gt-person + kv) beside the form card. #}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
-    <a href="{% url 'home' %}" class="app-back">{% icon "chevron-left" 16 %} Kembali</a>
-    <h1>Profil {% info_tip "Akun Anda. Peran dan status akun diatur oleh OWNER di halaman Staf." %}</h1>
+    <a href="{% url 'home' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
+    <h1>{% translate "Profil" %} {% info_tip _("Akun Anda. Peran dan status akun diatur oleh OWNER di halaman Staf.") %}</h1>
   </div>
 </div>
 <div class="app-split app-split--rev app-profile">
@@ -16,17 +17,17 @@
       <span class="gt-person__text"><span class="gt-person__name app-strong">{{ user.get_full_name|default:user.username }}</span><span class="gt-person__meta">@{{ user.username }}</span></span>
     </div>
     <dl class="gt-kv gt-kv--compact app-section-gap">
-      <div><dt>Peran</dt><dd>{% if role %}<span class="gt-chip gt-chip--sm">{{ role }}</span>{% else %}—{% endif %}</dd></div>
-      <div><dt>Bergabung</dt><dd>{{ user.date_joined|date:"d M Y" }}</dd></div>
+      <div><dt>{% translate "Peran" %}</dt><dd>{% if role %}<span class="gt-chip gt-chip--sm">{{ role }}</span>{% else %}—{% endif %}</dd></div>
+      <div><dt>{% translate "Bergabung" %}</dt><dd>{{ user.date_joined|date:"d M Y" }}</dd></div>
     </dl>
-    <a href="{% url 'core:password_change' %}" class="gt-btn gt-btn--outline gt-btn--md gt-btn--block app-section-gap">Ganti sandi</a>
+    <a href="{% url 'core:password_change' %}" class="gt-btn gt-btn--outline gt-btn--md gt-btn--block app-section-gap">{% translate "Ganti sandi" %}</a>
   </aside>
   <form method="post" class="gt-card">{% csrf_token %}
-    <div class="gt-card__head"><h2 class="gt-card__title">Data diri</h2></div>
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Data diri" %}</h2></div>
     {% include "_form_fields.html" %}
     <div class="gt-footer app-formpage__foot">
-      <a href="{% url 'home' %}" class="gt-btn gt-btn--outline gt-btn--md">Batal</a>
-      <button class="gt-btn gt-btn--solid gt-btn--md">Simpan</button>
+      <a href="{% url 'home' %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button>
     </div>
   </form>
 </div>

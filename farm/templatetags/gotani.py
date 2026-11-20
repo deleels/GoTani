@@ -1,4 +1,4 @@
-"""Display filters: `Rp15.000` (whole Rupiah, ROUND_HALF_UP), kg and percentages."""
+"""Display filters: `Rp15.000` / `Rp15,000` by active language (whole Rupiah, ROUND_HALF_UP), kg and percentages."""
 
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -16,8 +16,14 @@ def _dec(value):
         return None
 
 
+def _seps():
+    from core.numbers import separators
+
+    return separators()
+
+
 def _thousands(n: Decimal) -> str:
-    return f"{int(n):,}".replace(",", ".")
+    return f"{int(n):,}".replace(",", _seps()[0])
 
 
 @register.filter
@@ -41,7 +47,7 @@ def kg(value):
     d = abs(d)
     whole = int(d)
     frac = f"{d - whole:f}"[2:].rstrip("0") if d != whole else ""
-    return f"{sign}{_thousands(Decimal(whole))}" + (f",{frac}" if frac else "")
+    return f"{sign}{_thousands(Decimal(whole))}" + (f"{_seps()[1]}{frac}" if frac else "")
 
 
 @register.filter
@@ -58,4 +64,4 @@ def pct(value, places=1):
     if d is None:
         return "-"
     q = Decimal(1).scaleb(-int(places))
-    return f"{d.quantize(q, rounding=ROUND_HALF_UP)}".replace(".", ",") + "%"
+    return f"{d.quantize(q, rounding=ROUND_HALF_UP)}".replace(".", _seps()[1]) + "%"

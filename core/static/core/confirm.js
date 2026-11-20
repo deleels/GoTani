@@ -35,13 +35,13 @@
       '<h2 id="gt-confirm-title" class="gt-dialog__title"></h2>' +
       '<div data-body class="app-confirm__body"></div>' +
       '<div data-extra class="app-confirm__extra"></div>' +
-      '<fieldset data-choice-wrap class="app-confirm__field"><legend class="app-label">Alasan</legend><div data-choice class="app-confirm__choices"></div></fieldset>' +
+      '<fieldset data-choice-wrap class="app-confirm__field"><legend class="app-label">' + gtT('Alasan') + '</legend><div data-choice class="app-confirm__choices"></div></fieldset>' +
       '<div data-reason-wrap class="app-confirm__field"><label class="app-label" for="gt-confirm-reason" data-reason-label></label>' +
       '<textarea id="gt-confirm-reason" data-reason rows="2" class="app-field"></textarea></div>' +
       '<label data-check-wrap class="gt-check app-confirm__check"><input type="checkbox" data-check>' +
-      '<span class="gt-check__title">Saya sudah memeriksa data ini</span></label>' +
+      '<span class="gt-check__title">' + gtT('Saya sudah memeriksa data ini') + '</span></label>' +
       '<div class="app-confirm__actions">' +
-      '<button value="cancel" data-cancel class="gt-btn gt-btn--outline gt-btn--md">Batal</button>' +
+      '<button value="cancel" data-cancel class="gt-btn gt-btn--outline gt-btn--md">' + gtT('Batal') + '</button>' +
       '<button value="ok" data-ok class="gt-btn gt-btn--md"></button>' +
       '</div></form>';
     document.body.appendChild(dlg);
@@ -75,7 +75,7 @@
   function gtConfirm(opts) {
     if (!dlg) build();
     if (resolver) resolver(false);
-    dlg.querySelector('#gt-confirm-title').textContent = opts.title || 'Konfirmasi';
+    dlg.querySelector('#gt-confirm-title').textContent = opts.title || gtT('Konfirmasi');
     var icon = dlg.querySelector('[data-icon]');
     icon.innerHTML = opts.danger ? ICON_ALERT : ICON_CHECK;
     icon.className = 'gt-dialog__icon' + (opts.danger ? ' app-dialog__icon--danger' : '');
@@ -108,7 +108,7 @@
     dlg.querySelector('[data-check-wrap]').style.display = Number(opts.level || 1) < 2 ? 'none' : '';
     dlg.querySelector('[data-check]').checked = false;
     var ok = dlg.querySelector('[data-ok]');
-    ok.textContent = opts.action || 'Lanjutkan';
+    ok.textContent = opts.action || gtT('Lanjutkan');
     ok.className = 'gt-btn gt-btn--md ' + (opts.danger ? 'gt-btn--danger' : 'gt-btn--solid');
     dlg.returnValue = '';
     dlg._sync();

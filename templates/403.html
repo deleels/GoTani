@@ -1,15 +1,16 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui %}
-{% block title %}Akses ditolak{% endblock %}
+{% block title %}{% translate "Akses ditolak" %}{% endblock %}
 {% block content %}
 {# 403 (Phase 5b): centred card with the mark, title and one action. #}
 <div class="app-errorpage">
   <div class="gt-card app-errorpage__card">
     <span class="app-errorpage__mark" aria-hidden="true">{% icon "lock" 28 %}</span>
     <span class="app-errorpage__code">403</span>
-    <h1 class="app-errorpage__title">Akses ditolak</h1>
+    <h1 class="app-errorpage__title">{% translate "Akses ditolak" %}</h1>
     <p class="app-muted">{{ exception|default:"Peran Anda tidak memiliki akses ke halaman ini." }}</p>
-    <a href="{% url 'home' %}" class="gt-btn gt-btn--solid gt-btn--md">Ke beranda</a>
+    <a href="{% url 'home' %}" class="gt-btn gt-btn--solid gt-btn--md">{% translate "Ke beranda" %}</a>
   </div>
 </div>
 {% endblock %}
