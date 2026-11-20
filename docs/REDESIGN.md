@@ -514,6 +514,50 @@ disappeared.
 
 ---
 
+## 8b. Phase 7: feedback round (agreed 2026-11-20, runs before Phase 6)
+
+Agreed with the owner in a grilling session. One commit per step, tests green each time, check-in after step 1.
+
+1. **Language.** English becomes the source language; the current Indonesian becomes the `id` translation
+   (unchanged). Per-user language (EN | ID) in Profil and the account menu; defaults OWNER/MANAGER → en,
+   CASHIER/WORKER → id. Industry terms in English (Revenue, Gross profit, Net profit, COGS, Gross margin,
+   AOV, LTGP, Cash flow, Install, Shift, Invoice). No machine translation; one glossary (~150 terms) reviewed
+   by the owner together with 5 screens in English (Dashboard, Kasir, Invoice, Biaya, Siklus) before the rest.
+   A test fails on any untranslated string. Number/date format follows the language (en: Rp3,000 · 0.5 kg ·
+   31 Dec 2026; id: Rp3.000 · 0,5 kg · 31 Des 2026). Buyer documents follow a per-buyer "Document language"
+   (default id); POS receipts stay id.
+2. **Forms, messages, motion.** Messages become toasts (bottom right); blocking notices (forced password
+   change) become a centred dialog. Browser validation bubbles replaced by inline app messages + scroll to
+   the first error. One page transition everywhere (~150 ms fade, one easing/duration scale), a thin top
+   progress bar, repeat clicks on a loading nav link ignored, no layout shift between pages (stable scrollbar
+   gutter, fixed sidebar); nothing under reduced motion; Dashboard/Analytics keep their one-time chart
+   animation. Supersedes D106. No "— pilih —" placeholder text.
+3. **Page fixes.** Biaya: Setujui/Tolak/Hapus one row, same size; Elemen/Siklus hidden when scope is Umum.
+   Harga produk: remove "langkah kasir" (field and DB column; POS steps 0.5 kg), merge current price and
+   price/kg into one column, own header over the low-stock input, "Belum diberi harga". Shift: close-shift
+   form in two columns. Elemen kebun: current stage is the headline, "Majukan tahap" a smaller button.
+   Spray "Buruk" → "Tidak direkomendasikan". Login: plain left panel (three.js later). Warning icon not
+   clipped. Map field list looks clickable (hover, cursor, chevron). "Pasang" → "Install".
+4. **Invoice payments.** Reproduce and fix partial payment; payment opens prefilled with the balance;
+   overpayment confirmed as buyer credit with an option to apply it; warnings name the invoice and amount.
+   "Withholds tax" checkbox per buyer (off by default) shows the tax-slip method (with required slip number)
+   only for those buyers. Discount value hidden when "no discount". Every money input shows Rp, groups
+   thousands live, keeps the caret, accepts pasted "Rp 3.000"; kg inputs 3 decimals (all fields audited).
+5. **Metrics (Hormozi-style).** Dashboard: Revenue, Gross profit, Gross margin %, AOV, Net profit. Buyer page:
+   LTGP, orders, average days between orders, last order, "At risk" when overdue by > 2× their usual gap;
+   buyers list sortable by LTGP. CAC and LTGP:CAC left out (no marketing-spend data). Every metric has an
+   info chip with its meaning and formula.
+6. **Map and admin.** Polygon drawing: undo last point (button + Backspace); after finishing, vertices stay
+   draggable, midpoint handles add points, right-click deletes a point, saved only on "Simpan"; restyled
+   shapes (green outline, soft fill, white round handles). NDVI: smooth colour ramp, labelled legend, cleaner
+   timeline. Django admin restyled with the design system by overriding admin templates/CSS (no new library).
+7. **Phase 6** clean-up (below) with the lighter screen check agreed: OWNER every screen at 1440 and 390,
+   CASHIER on its own screens, 768 spot checks; stat-card tone via `tone=` instead of colour classes; delete
+   only provably unused CSS/icons; verify `core/static/core/ds/` matches the design-system source; keep the
+   Tailwind CDN. Branch is not pushed.
+
+---
+
 ## 9. Text for `docs/DECISIONS.md`
 
 - **D104 Adopt GoTani-design-system; light theme only.** The app takes its tokens, font and `gt-`
