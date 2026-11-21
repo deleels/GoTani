@@ -267,6 +267,7 @@ REPORT_TABS = [
     ("irigasi", _l("Irigasi"), ActivityLog.ActivityType.IRRIGATION),
     ("scouting", _l("Scouting"), ActivityLog.ActivityType.SCOUTING),
     ("penanaman", _l("Penanaman"), ActivityLog.ActivityType.SEEDING),
+    ("lainnya", _l("Lainnya"), ActivityLog.ActivityType.OTHER),
     ("prapanen", _l("Pra-panen"), None),
     ("panen", _l("Panen"), None),
     ("susut", _l("Susut"), None),
@@ -301,6 +302,7 @@ class ActivitiesView(FarmPage):
             input_item=d.get("input_item"), application_method=d.get("application_method") or "",
             notes=d.get("notes") or "", user=self.request.user,
             duration_minutes=d.get("duration_minutes"), photo=d.get("photo"), logged_at=d.get("logged_at"),
+            task_name=d.get("task_name") or "", worker_count=d.get("worker_count"),
         )
 
     def get_context_data(self, **kwargs):

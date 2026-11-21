@@ -474,6 +474,13 @@ INPUT_EXPENSE_CATEGORY = {
 ACTIVITY_BACKDATE_DAYS = 3
 
 
+def other_allowed_on_closed(cycle: CropCycle) -> bool:
+    """D127: Lainnya work (clean-up after the last harvest) may still be logged on a cycle closed at CLEARING
+    within the back-dating window."""
+    return (cycle.stage == CropCycle.Stage.CLEARING and cycle.closed_at is not None
+            and cycle.closed_at >= timezone.now() - timedelta(days=ACTIVITY_BACKDATE_DAYS))
+
+
 def check_activity_time(cycle: CropCycle, logged_at=None, limit_backdate: bool = True):
     """D126: when the work was done. Default now; at most 3 days back, never in the future, never before the
     cycle started."""
@@ -504,11 +511,14 @@ def log_activity(
     duration_minutes=None,
     photo=None,
     limit_backdate: bool = True,
+    task_name: str = "",
+    worker_count=None,
 ) -> ActivityLog:
     """Log a field activity; consuming an input deducts stock and books an
     APPROVED INPUT_USAGE cycle expense of qty × avg cost (rule 11, D22, D34)."""
     cycle = CropCycle.objects.select_for_update().get(pk=cycle.pk)
-    if not cycle.is_active:
+    is_other = activity_type == ActivityLog.ActivityType.OTHER
+    if not cycle.is_active and not (is_other and other_allowed_on_closed(cycle)):
         raise ValidationError(_("Kegiatan tidak dapat dicatat pada siklus yang sudah ditutup."))
     quantity = q_qty(quantity)
     if quantity < 0:
@@ -532,14 +542,24 @@ def log_activity(
             raise ValidationError(_("Jumlah pemakaian input harus lebih dari 0."))
     elif activity_type == ActivityLog.ActivityType.SEEDING:
         raise ValidationError(_("Penanaman benih harus memilih input benih."))
-    # Rule 15: duration only for irrigation, photo only for scouting.
+    # Rule 15: duration only for irrigation and Lainnya, photo only for scouting and Lainnya (D127).
     if duration_minutes is not None:
-        if activity_type != ActivityLog.ActivityType.IRRIGATION:
-            raise ValidationError(_("Durasi hanya untuk kegiatan irigasi."))
+        if activity_type not in (ActivityLog.ActivityType.IRRIGATION, ActivityLog.ActivityType.OTHER):
+            raise ValidationError(_("Durasi hanya untuk kegiatan irigasi dan lainnya."))
         if int(duration_minutes) <= 0:
-            raise ValidationError(_("Durasi irigasi harus lebih dari 0 menit."))
-    if photo and activity_type != ActivityLog.ActivityType.SCOUTING:
-        raise ValidationError(_("Foto hanya untuk kegiatan pengamatan (scouting)."))
+            raise ValidationError(_("Durasi harus lebih dari 0 menit."))
+    if photo and activity_type not in (ActivityLog.ActivityType.SCOUTING, ActivityLog.ActivityType.OTHER):
+        raise ValidationError(_("Foto hanya untuk kegiatan pengamatan (scouting) dan lainnya."))
+    task_name = (task_name or "").strip()
+    if is_other:
+        if not task_name:
+            raise ValidationError(_("Isi nama pekerjaan."))
+        if len(task_name) > 80:
+            raise ValidationError(_("Nama pekerjaan paling banyak 80 huruf."))
+        if worker_count is not None and int(worker_count) <= 0:
+            raise ValidationError(_("Jumlah pekerja harus lebih dari 0."))
+    elif task_name or worker_count is not None:
+        raise ValidationError(_("Nama pekerjaan dan jumlah pekerja hanya untuk kegiatan lainnya."))
 
     activity = ActivityLog.objects.create(
         cycle=cycle,
@@ -554,6 +574,8 @@ def log_activity(
         recorded_by=user,
         duration_minutes=duration_minutes,
         photo=photo or "",
+        task_name=task_name,
+        worker_count=worker_count,
     )
 
     if input_item is not None:

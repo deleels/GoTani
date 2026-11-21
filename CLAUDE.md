@@ -35,7 +35,7 @@ An engineering programming class project modeling end-to-end agricultural produc
   - Constraint: `CheckConstraint(stock_qty >= 0)`
 - `InputPurchase`: `item` (FK), `qty` (Decimal > 0), `cost_per_unit_idr` (Decimal > 0), `supplier`, `purchased_at`, `recorded_by` — inventory asset purchase; shown in cash-out report, NOT in P&L.
 - `InputLedger`: `item` (FK), `movement_type` (PURCHASE / USAGE / USAGE_REVERSAL), `qty` (signed Decimal), `reference`, `timestamp` — append-only.
-- `ActivityLog`: `cycle` (FK), `activity_type` (IRRIGATION / FERTILIZER / PESTICIDE / SCOUTING / SEEDING), `stage_at_activity` (snapshot of cycle stage), `input_item` (nullable FK), `quantity` (Decimal), `unit` (L / mL / KG / G), `application_method`, `duration_minutes` (nullable; IRRIGATION), `photo` (optional ImageField; SCOUTING), `notes`, `logged_at` (when the work was done: default now, ≤ 3 days back, not before the cycle start, D126), `created_at` (when recorded), `recorded_by`
+- `ActivityLog`: `cycle` (FK), `activity_type` (IRRIGATION / FERTILIZER / PESTICIDE / SCOUTING / SEEDING / OTHER), `stage_at_activity` (snapshot of cycle stage), `input_item` (nullable FK), `quantity` (Decimal), `unit` (L / mL / KG / G), `application_method`, `duration_minutes` (nullable; IRRIGATION), `photo` (optional ImageField; SCOUTING, OTHER), `notes`, `task_name` + `worker_count` (OTHER), `logged_at` (when the work was done: default now, ≤ 3 days back, not before the cycle start, D126), `created_at` (when recorded), `recorded_by`
 - `PreHarvestChecklistItem`: `text`, `order`, `is_active` — admin-editable.
 - `PreHarvestCheck`: `cycle` (FK), `checked_items` (M2M PreHarvestChecklistItem), `completed_pct` (Decimal snapshot), `recorded_by`, `recorded_at` — several per cycle allowed; the latest counts.
 - `ExpenseCategory`: `code` (unique), `name` — admin-editable, seeded with BIBIT, PUPUK, PESTISIDA, TENAGA_KERJA, UTILITAS, PERALATAN, LAINNYA.
@@ -88,7 +88,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 12. A `FarmElement` cannot be deactivated while it has an active cycle.
 13. **Estimates:** `expected_harvest_date` defaults to `planting_start_date + variety.days_to_harvest` (editable). Days growing = `max(0, today − start)` (closed cycles: `closed_at − start`). Yield estimate vs actual = Σ batch sellable kg vs `expected_yield_kg`.
 14. **Pre-harvest checklist:** `completed_pct = checked active items / total active items × 100`, snapshotted on save. Advancing to HARVESTING with no check or a latest check < 100% shows a **warning** but is allowed.
-15. **Activity fields:** `duration_minutes` only for IRRIGATION (> 0 if given); `photo` only for SCOUTING.
+15. **Activity fields:** `duration_minutes` only for IRRIGATION and OTHER (> 0 if given); `photo` only for SCOUTING and OTHER. OTHER ("Lainnya", D127) needs `task_name` (≤ 80), optional `worker_count` (> 0, OTHER only), never an input item, and may also be logged on a cycle closed at CLEARING within the last 3 days; labour cost stays a manual TENAGA_KERJA expense.
 
 ### Inventory & tax
 16. **All stock mutations go through** `inventory.services.move_lot_stock()` and `farm.services.move_input_stock()`: `select_for_update` the row, validate, mutate, append ledger. Nothing else touches quantities.
@@ -146,7 +146,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 - **Page anatomy** (reusable template includes + Alpine): title + role-specific subtitle; primary action top-right; KPI stat cards; status tabs synced to `?tab=`; toolbar (search, date range, "Atur kolom" column visibility in localStorage); table with ⋯ row menu; footer "Baris per halaman · Halaman x dari y · « ‹ › »", default 10.
 - **Forms:** short create/edit forms open in a right-side sheet (server validation errors reopen it); invoice editor, payment allocation, harvest entry and POS are full pages.
 - **Ringkasan** (home for farm roles): weekly work-report strip by type + "Catat Kerja Hari Ini", weather widget, "Tanaman per Tahap" chart, counters per element type + staff; finance card (all-time sales, expenses, general vs element-specific) for OWNER/MANAGER only. CASHIER lands on POS.
-- **Laporan Kerja:** tabs Pemupukan · Pestisida · Irigasi · Scouting · Penanaman · Pra-panen · Panen · Susut, per-type columns; "Laporan Baru" picker opens the per-type form.
+- **Laporan Kerja:** tabs Pemupukan · Pestisida · Irigasi · Scouting · Penanaman · Lainnya · Pra-panen · Panen · Susut, per-type columns; "Laporan Baru" picker opens the per-type form.
 - **Detail pages** (cycle, element, input item, buyer, invoice): overview card + tabs + timeline from ledgers/logs (cycle timeline reuses `forward_trace`).
 - **Status pills:** pending = yellow, issued/approved = blue (info), partially paid = teal (partial), overdue/void/rejected = red, paid/completed = green, draft = neutral. Every empty state explains the feature + CTA; async widgets show "Tidak dapat memuat … · Coba lagi".
 - **Login:** split screen — dark left panel (logo, headline, tagline), form right (username, password with eye toggle, "Masuk"); no sign-up, no forgot-password.

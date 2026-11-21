@@ -4,7 +4,10 @@ is enforced by `farm.services` / `inventory.services`."""
 from django.utils.translation import gettext as _, gettext_lazy as _l
 from decimal import Decimal
 
+from datetime import timedelta
+
 from django import forms
+from django.db.models import Q
 from django.utils import timezone
 
 from core.forms import apply_select_prompts
@@ -188,6 +191,9 @@ class ActivityForm(StyledForm):
     duration_minutes = forms.IntegerField(label=_l("Durasi"), min_value=1, required=False)
     photo = forms.ImageField(label=_l("Foto"), required=False)
     notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+    task_name = forms.CharField(label=_l("Pekerjaan"), max_length=80, required=False,
+                                help_text=_l("Contoh: penyiangan, pemangkasan, pasang ajir."))
+    worker_count = forms.IntegerField(label=_l("Jumlah pekerja (opsional)"), min_value=1, required=False)
     logged_at = forms.DateTimeField(label=_l("Waktu kegiatan"), required=False, widget=DateTimeInput(),
                                     help_text=_l("Kosongkan untuk sekarang. Paling lama 3 hari ke belakang."))
 
@@ -198,6 +204,8 @@ class ActivityForm(StyledForm):
         ActivityLog.ActivityType.SEEDING: ["cycle", "logged_at", "input_item", "quantity", "application_method", "notes"],
         ActivityLog.ActivityType.IRRIGATION: ["cycle", "logged_at", "quantity", "unit", "duration_minutes", "application_method", "notes"],
         ActivityLog.ActivityType.SCOUTING: ["cycle", "logged_at", "photo", "notes"],
+        ActivityLog.ActivityType.OTHER: ["cycle", "logged_at", "task_name", "duration_minutes", "worker_count",
+                                         "photo", "notes"],
     }
     INPUT_TYPE = {
         ActivityLog.ActivityType.FERTILIZER: InputItem.ItemType.FERTILIZER,
@@ -225,6 +233,15 @@ class ActivityForm(StyledForm):
             if activity_type == ActivityLog.ActivityType.IRRIGATION:
                 self.fields["quantity"].label = _("Volume air")
                 self.fields["unit"].initial = Unit.L
+            if activity_type == ActivityLog.ActivityType.OTHER:
+                from .services import ACTIVITY_BACKDATE_DAYS
+
+                since = timezone.now() - timedelta(days=ACTIVITY_BACKDATE_DAYS)
+                self.fields["task_name"].required = True
+                self.fields["duration_minutes"].label = _("Durasi (opsional)")
+                self.fields["cycle"].queryset = CropCycle.objects.filter(
+                    Q(is_active=True) | Q(stage=CropCycle.Stage.CLEARING, closed_at__gte=since)
+                ).select_related("element", "variety")
         if "unit" in self.fields and "quantity" in self.fields:
             join_unit(self, "quantity", "unit")
         if "duration_minutes" in self.fields:
@@ -235,8 +252,9 @@ class ActivityForm(StyledForm):
         data = super().clean()
         if self.fixed_type:
             data["activity_type"] = self.fixed_type
-        for name in ("input_item", "unit", "application_method", "notes", "duration_minutes", "photo", "logged_at"):
-            data.setdefault(name, None if name in ("input_item", "duration_minutes", "photo", "logged_at") else "")
+        nullable = ("input_item", "duration_minutes", "photo", "logged_at", "worker_count")
+        for name in nullable + ("unit", "application_method", "notes", "task_name"):
+            data.setdefault(name, None if name in nullable else "")
         item = data.get("input_item")
         if item and not data.get("unit"):
             data["unit"] = item.unit  # an input activity always uses the item's own unit

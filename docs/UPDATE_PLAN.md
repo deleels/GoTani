@@ -57,7 +57,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - Table shows the activity time, with "dicatat <time>" underneath when it differs from the record time.
 - `stage_at_activity` stays the cycle's current stage (no stage history per timestamp).
 
-## 5. "Lainnya" work type (D127)
+## 5. "Lainnya" work type (D127) ✅
 - New `OTHER` activity type: `task_name` (required, 80 chars), optional `duration_minutes` (> 0),
   new nullable `worker_count` (> 0, OTHER only), optional photo; never uses an input item; any stage,
   including CLEARING. Own "Lainnya" tab in Laporan Kerja. Labour cost stays a manual TENAGA_KERJA expense.

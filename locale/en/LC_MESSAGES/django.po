@@ -815,6 +815,14 @@ msgid "Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."
 msgstr "E.g. chilli 1.05 · melon 1.0 · cocoa 1.0 (FAO-56, mid-season)."
 
 #: farm\forms.py
+msgid "Contoh: penyiangan, pemangkasan, pasang ajir."
+msgstr "For example: weeding, pruning, staking."
+
+#: farm\forms.py
+msgid "Durasi (opsional)"
+msgstr "Duration (optional)"
+
+#: farm\forms.py
 msgid "Grade A / HIGH (kg)"
 msgstr "Grade A / HIGH (kg)"
 
@@ -849,6 +857,10 @@ msgstr "Quantity (kg)"
 #: farm\forms.py
 msgid "Jumlah karung"
 msgstr "Number of sacks"
+
+#: farm\forms.py
+msgid "Jumlah pekerja (opsional)"
+msgstr "Number of workers (optional)"
 
 #: farm\forms.py
 msgid "Koefisien tanaman Kc (opsional)"
@@ -1179,10 +1191,6 @@ msgid "elemen kebun"
 msgstr "plot"
 
 #: farm\models.py
-msgid "foto"
-msgstr "photo"
-
-#: farm\models.py
 msgid "grade HIGH (kg)"
 msgstr "grade HIGH (kg)"
 
@@ -1225,6 +1233,10 @@ msgstr "quantity (signed)"
 #: farm\models.py
 msgid "jumlah karung"
 msgstr "number of sacks"
+
+#: farm\models.py
+msgid "jumlah pekerja"
+msgstr "number of workers"
 
 #: farm\models.py
 msgid "jumlah tanaman"
@@ -1273,6 +1285,10 @@ msgstr "payment method"
 #: farm\models.py
 msgid "nama"
 msgstr "name"
+
+#: farm\models.py
+msgid "pekerjaan"
+msgstr "task"
 
 #: farm\models.py
 msgid "pemasok"
@@ -1431,12 +1447,12 @@ msgid "Cakupan biaya tidak dikenal: %(scope)s."
 msgstr "Unknown expense scope: %(scope)s."
 
 #: farm\services.py
-msgid "Durasi hanya untuk kegiatan irigasi."
-msgstr "Duration is only for irrigation."
+msgid "Durasi hanya untuk kegiatan irigasi dan lainnya."
+msgstr "Duration is only for irrigation and other work."
 
 #: farm\services.py
-msgid "Durasi irigasi harus lebih dari 0 menit."
-msgstr "Irrigation duration must be more than 0 minutes."
+msgid "Durasi harus lebih dari 0 menit."
+msgstr "Duration must be more than 0 minutes."
 
 #: farm\services.py
 msgid "Elemen %(name)s diubah"
@@ -1463,8 +1479,8 @@ msgid "Field tidak dapat diubah: %(join)s."
 msgstr "These fields can't change: %(join)s."
 
 #: farm\services.py
-msgid "Foto hanya untuk kegiatan pengamatan (scouting)."
-msgstr "Photos are only for scouting entries."
+msgid "Foto hanya untuk kegiatan pengamatan (scouting) dan lainnya."
+msgstr "Photos are only for scouting and other work."
 
 #: farm\services.py
 msgid "Hanya OWNER atau MANAGER yang dapat melakukan tindakan ini."
@@ -1495,6 +1511,10 @@ msgid "Isi jumlah dan harga pembelian pertama, atau kosongkan keduanya."
 msgstr "Fill in both the first purchase quantity and price, or leave both empty."
 
 #: farm\services.py
+msgid "Isi nama pekerjaan."
+msgstr "Fill in the task name."
+
+#: farm\services.py
 msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif."
 msgstr "The element type can only change while no crop cycle is active."
 
@@ -1513,6 +1533,10 @@ msgstr "Amount must be more than 0."
 #: farm\services.py
 msgid "Jumlah karung harus lebih dari 0."
 msgstr "Number of sacks must be more than 0."
+
+#: farm\services.py
+msgid "Jumlah pekerja harus lebih dari 0."
+msgstr "Number of workers must be more than 0."
 
 #: farm\services.py
 msgid "Jumlah pemakaian input harus lebih dari 0."
@@ -1561,6 +1585,14 @@ msgstr "That input name is already used."
 #: farm\services.py
 msgid "Nama input wajib diisi."
 msgstr "Input name is required."
+
+#: farm\services.py
+msgid "Nama pekerjaan dan jumlah pekerja hanya untuk kegiatan lainnya."
+msgstr "Task name and number of workers are only for other work."
+
+#: farm\services.py
+msgid "Nama pekerjaan paling banyak 80 huruf."
+msgstr "The task name can be at most 80 characters."
 
 #: farm\services.py
 msgid "Nama varietas dan tanaman wajib diisi."
@@ -3799,6 +3831,14 @@ msgid "Metode / catatan"
 msgstr "Method / notes"
 
 #: templates\farm\activities.html
+msgid "Pekerja"
+msgstr "Workers"
+
+#: templates\farm\activities.html
+msgid "Pekerjaan"
+msgstr "Task"
+
+#: templates\farm\activities.html
 msgid "Semua pekerjaan lapangan per jenis. Pemakaian input otomatis memotong stok dan dibukukan ke biaya siklus."
 msgstr "All field work by type. Input usage deducts stock automatically and is booked to the cycle cost."
 
@@ -3821,6 +3861,10 @@ msgstr "Volume"
 #: templates\farm\activities.html
 msgid "dicatat"
 msgstr "recorded"
+
+#: templates\farm\activities.html
+msgid "foto"
+msgstr "photo"
 
 #: templates\farm\activities.html
 msgid "mnt"
@@ -6769,6 +6813,15 @@ msgstr "About %(round)s mm expected — hold off spraying and check drainage."
 
 msgid "Durasi (menit)"
 msgstr "Duration (minutes)"
+
+msgid "Durasi hanya untuk kegiatan irigasi."
+msgstr "Duration is only for irrigation."
+
+msgid "Durasi irigasi harus lebih dari 0 menit."
+msgstr "Irrigation duration must be more than 0 minutes."
+
+msgid "Foto hanya untuk kegiatan pengamatan (scouting)."
+msgstr "Photos are only for scouting entries."
 
 msgid "Hembusan hingga %(round)s km/j — periksa penyangga dan atap."
 msgstr "Gusts up to %(round)s km/h — check supports and roofs."

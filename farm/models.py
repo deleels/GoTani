@@ -284,6 +284,8 @@ class ActivityLog(models.Model):
         # Consumes a SEED input item → BIBIT usage expense (rule 11).
         SEEDING = "SEEDING", _l("Penanaman Benih")
         SCOUTING = "SCOUTING", _l("Pengamatan")
+        # D127: any other field work (weeding, pruning, trellising ...); never uses an input item.
+        OTHER = "OTHER", _l("Lainnya")
 
     cycle = models.ForeignKey(
         CropCycle, on_delete=models.PROTECT, related_name="activities", verbose_name=_l("siklus")
@@ -306,6 +308,8 @@ class ActivityLog(models.Model):
     duration_minutes = models.PositiveIntegerField(_l("durasi (menit)"), null=True, blank=True)  # IRRIGATION only
     photo = models.ImageField(_l("foto"), upload_to="scouting/%Y/%m/", blank=True)  # SCOUTING only
     notes = models.TextField(_l("catatan"), blank=True)
+    task_name = models.CharField(_l("pekerjaan"), max_length=80, blank=True)  # OTHER only (D127)
+    worker_count = models.PositiveIntegerField(_l("jumlah pekerja"), null=True, blank=True)  # OTHER only
     # D126: logged_at = when the work was done (up to 3 days back); created_at = when it was recorded.
     logged_at = models.DateTimeField(_l("waktu"), default=timezone.now)
     created_at = models.DateTimeField(_l("dicatat pada"), default=timezone.now, editable=False)

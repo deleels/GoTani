@@ -74,6 +74,7 @@
           <th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th>{% translate "Tahap" %}</th>
           {% if report_tab == 'irigasi' %}<th class="num">{% translate "Volume" %}</th><th class="num">{% translate "Durasi" %}</th>
           {% elif report_tab == 'scouting' %}<th>{% translate "Foto" %}</th>
+          {% elif report_tab == 'lainnya' %}<th>{% translate "Pekerjaan" %}</th><th class="num">{% translate "Durasi" %}</th><th class="num">{% translate "Pekerja" %}</th>
           {% else %}<th>{% translate "Input" %}</th><th class="num">{% translate "Jumlah" %}</th>{% endif %}
           <th>{% translate "Metode / catatan" %}</th><th>{% translate "Oleh" %}</th>{% if roles.finance %}<th></th>{% endif %}</tr></thead>
         <tbody>
@@ -83,6 +84,7 @@
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' a.cycle_id %}">{{ a.cycle.variety }} @ {{ a.cycle.element }}</a></td>
             <td>{{ a.get_stage_at_activity_display }}</td>
             {% if report_tab == 'irigasi' %}<td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}-{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}-{% endif %}</td>
+            {% elif report_tab == 'lainnya' %}<td class="app-strong">{{ a.task_name }}{% if a.photo %} <a href="{{ a.photo.url }}" target="_blank" class="app-link">{% translate "foto" %}</a>{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}-{% endif %}</td><td class="num">{{ a.worker_count|default:"-" }}</td>
             {% elif report_tab == 'scouting' %}<td>{% if a.photo %}<a href="{{ a.photo.url }}" target="_blank"><img src="{{ a.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-thumb"></a>{% else %}-{% endif %}</td>
             {% else %}<td>{% if a.input_item %}<a class="app-link--plain" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}-{% endif %}</td><td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}-{% endif %}</td>{% endif %}
             <td class="app-muted">{{ a.application_method }}{% if a.application_method and a.notes %} · {% endif %}{{ a.notes|truncatechars:80 }}</td>
