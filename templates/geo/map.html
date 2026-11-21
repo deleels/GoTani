@@ -122,14 +122,24 @@
             </div>
             <div class="app-ndvi-legend" x-show="showNdvi" role="img" aria-label="{% translate 'Skala NDVI: merah jarang, kuning sedang, hijau rimbun' %}"><span>0</span><i></i><span>1</span>
               <small>{% translate "Jarang" %}</small><small>{% translate "Sedang" %}</small><small>{% translate "Rimbun" %}</small></div>
+            <div class="app-satbar">
+              <label class="app-label" for="sat-days">{% translate "Periode" %}</label>
+              <select id="sat-days" class="app-field app-field--sm" x-model.number="days" @change="loadData()">
+                <option value="30">{% translate "30 hari" %}</option><option value="60">{% translate "60 hari" %}</option>
+                <option value="90">{% translate "90 hari" %}</option><option value="180">{% translate "6 bulan" %}</option>
+                <option value="365">{% translate "1 tahun" %}</option>
+              </select>
+              <span class="app-muted" x-text="sat ? sat.pass_count + ' {% jt "lintasan" %}' : ''"></span>
+              <a class="gt-btn gt-btn--outline gt-btn--sm" :href="csvUrl()">{% translate "Ekspor CSV" %}</a>
+            </div>
             <div class="relative h-48 app-chartbox"><canvas id="ndvi-chart" role="img" aria-label="{% translate 'Riwayat NDVI rata-rata' %}"></canvas></div>
             <div class="app-table-wrap">
               <table class="gt-table">
-                <thead><tr><th>{% translate "Lintasan" %}</th><th class="num">{% translate "Awan" %}</th><th class="num">{% translate "NDVI min / rata / maks" %}</th><th class="num">{% translate "EVI" %}</th><th class="num">{% translate "NDWI" %}</th></tr></thead>
+                <thead><tr><th>{% translate "Lintasan" %}</th><th class="num">{% translate "Awan" %}</th><th class="num">{% translate "NDVI min / median / rata / maks" %}</th><th class="num">{% translate "EVI" %}</th><th class="num">{% translate "NDWI" %}</th></tr></thead>
                 <tbody>
                   <template x-for="p in (sat ? sat.passes : [])" :key="p.dt + p.type">
                     <tr><td x-text="fmtDate(p.dt) + ' · ' + (p.type || '')"></td><td class="num" x-text="p.cloud != null ? Math.round(p.cloud) + '%' : '-'"></td>
-                      <td class="num" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '-'"></td>
+                      <td class="num" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.median, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '-'"></td>
                       <td class="num" x-text="p.evi ? n3(p.evi.mean) : '-'"></td><td class="num" x-text="p.ndwi ? n3(p.ndwi.mean) : '-'"></td></tr>
                   </template>
                 </tbody>
@@ -232,6 +242,7 @@ function geoPage() {
   return {
     polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
     selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false,
+    days: 60, csvUrl() { return this.selected ? `${base}${this.selected.id}/data.csv?days=${this.days}` : "#"; },
     query: "", places: [], searchMsg: "", searching: false,
     // Editor state: plain values only (Leaflet objects stay in the closure; Alpine proxies break them).
     edMode: "", edTarget: null, edCount: 0, edArea: 0, edCross: false, edCanUndo: false, draftName: "", saving: false,
@@ -416,7 +427,7 @@ function geoPage() {
       const p = this.selected; if (!p) return;
       this.loading = true; this.dataError = false; this.sat = null; this.soil = null; this.message = null; this.reason = null;
       try {
-        const r = await fetch(`${base}${p.id}/data/`);
+        const r = await fetch(`${base}${p.id}/data/?days=${this.days}`);
         if (!r.ok) throw new Error(r.status);
         const d = await r.json();
         this.sat = d.satellite; this.soil = d.soil; this.message = d.message; this.reason = d.reason; this.agroEnabled = d.agro_enabled;

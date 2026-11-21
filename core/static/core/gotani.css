@@ -982,3 +982,9 @@ html { scrollbar-gutter: stable; }
 .app-cta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .app-cta p { margin-top: .25rem; }
 .app-prewrap { white-space: pre-line; }
+
+/* D137: satellite period, pass count and CSV export */
+.app-satbar { display: flex; align-items: center; gap: .5rem .75rem; flex-wrap: wrap; }
+.app-satbar .app-label { margin: 0; }
+.app-field--sm { height: 36px; width: auto; padding-right: 2rem; }
+.app-satbar .gt-btn { margin-left: auto; }

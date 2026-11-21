@@ -206,7 +206,7 @@ class AgroTests(TestCase):
         get.side_effect = self.fake_get
         post.return_value = FakeResponse({"id": "agro-123"})
         sat = services.fetch_satellite(self.polygon)
-        self.assertEqual(sat["passes"][0]["ndvi"], {"min": 0.1, "mean": 0.55, "max": 0.8})
+        self.assertEqual(sat["passes"][0]["ndvi"], {"min": 0.1, "median": 0.56, "mean": 0.55, "max": 0.8})
         self.assertEqual([h["mean"] for h in sat["history"]], [0.4, 0.5])  # oldest first
         self.polygon.refresh_from_db()
         self.assertEqual(self.polygon.agro_polygon_id, "agro-123")
@@ -218,6 +218,28 @@ class AgroTests(TestCase):
         services.fetch_satellite(self.polygon)
         self.assertEqual(get.call_count, calls)  # cached 24 h
         self.assertEqual(post.call_count, 1)
+
+    @mock.patch("geo.services.requests.post")
+    @mock.patch("geo.services.requests.get")
+    def test_period_pass_count_and_csv(self, get, post):
+        """D137: period choice, pass count, median and the CSV export."""
+        get.side_effect = self.fake_get
+        post.return_value = FakeResponse({"id": "agro-123"})
+        self.assertEqual((services.sat_days("90"), services.sat_days("7"), services.sat_days(None)), (90, 60, 60))
+        sat = services.public_satellite(services.fetch_satellite(self.polygon, days=90))
+        self.assertEqual((sat["pass_count"], sat["days"]), (1, 90))
+        params = [c.args[1] if len(c.args) > 1 else c.kwargs.get("params") for c in get.call_args_list
+                  if c.args[0].endswith("/ndvi/history")][0]
+        self.assertEqual(params["end"] - params["start"], 90 * 86400)
+        self.client.force_login(self.owner)
+        r = self.client.get(reverse("geo:polygon_csv", args=[self.polygon.pk]), {"days": "90"})
+        self.assertEqual(r["Content-Type"], "text/csv; charset=utf-8")
+        self.assertIn("90hari.csv", r["Content-Disposition"])
+        lines = r.content.decode().strip().splitlines()
+        self.assertEqual(lines[0].split(",")[:5], ["tanggal", "satelit", "awan_pct", "cakupan_pct", "ndvi_min"])
+        self.assertIn("Sentinel-2,12.5,100,0.1,0.56,0.55,0.8", lines[1])
+        data = self.client.get(reverse("geo:polygon_data", args=[self.polygon.pk]), {"days": "90"}).json()
+        self.assertEqual(data["satellite"]["days"], 90)
 
     @mock.patch("geo.services.requests.delete")
     @mock.patch("geo.services.requests.post")

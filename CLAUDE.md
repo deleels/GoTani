@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D137; D123–D137 are planned, build order in `docs/UPDATE_PLAN.md`); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D137; D123–D137 came from the FarmCloud comparison, `docs/UPDATE_PLAN.md`); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -151,7 +151,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 - **Status pills:** pending = yellow, issued/approved = blue (info), partially paid = teal (partial), overdue/void/rejected = red, paid/completed = green, draft = neutral. Every empty state explains the feature + CTA; async widgets show "Tidak dapat memuat … · Coba lagi".
 - **Login:** split screen — dark left panel (logo, headline, tagline), form right (username, password with eye toggle, "Masuk"); no sign-up, no forgot-password.
 - **Existing screens** (kept, migrated onto the shell): POS register + receipt + void; Traceability forward/backward with print-CSS PDF + CSV; Analitik dashboard (date range, Chart.js: revenue, COGS, gross margin & %, spoilage, unabsorbed cycle cost, overhead, other income, net, PPN collected, channel split, receivables; margin by variety × grade; kg/m² by element type; top products; expenses by category).
-- **Cuaca & Satelit:** Leaflet map with polygon list; draw/edit with core/static/core/polyedit.js (D118); per polygon NDVI/EVI/NDWI min/mean/max per pass, historical NDVI chart, latest NDVI image overlay, soil temperature/moisture. Weather widget: current + 7-day forecast + rain warning.
+- **Cuaca & Satelit:** Leaflet map with polygon list; draw/edit with core/static/core/polyedit.js (D118); per polygon NDVI/EVI/NDWI min/median/mean/max per pass (latest 12 passes) with the pass count, a period of 30/60/90/180/365 days (default 60) and "Ekspor CSV" (D137), historical NDVI chart over the period, latest NDVI image overlay, soil temperature/moisture. Weather widget: current + 48 h hourly forecast with spray marks + 7-day forecast + 30-day rain history + rain warning.
 - **PWA:** manifest + icons, installable; service worker caches static assets and serves an offline fallback page; HTML/data are network-only (no offline writes); "Versi baru tersedia · Muat ulang" banner on SW update.
 
 ## Architecture & Conventions

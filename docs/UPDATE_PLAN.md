@@ -118,7 +118,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - "Catat Panen" call-to-action card on the cycle page at HARVESTING.
 - Search box on the Laporan Kerja tabs (element or cycle name, input name, notes).
 
-## 15. Satellite history and export (D137)
+## 15. Satellite history and export (D137) ✅
 - Date range on the NDVI history (default 60 days).
 - "Ekspor CSV" of per-pass index statistics.
 - Median and pass count added to the stats.

@@ -168,4 +168,14 @@ TR = {
     "polybag": "polybag",
     "lubang": "hole",
     "Satuan tanam tidak dikenal.": "Unknown planting unit.",
+    # D137 satellite period and export
+    "Periode": "Period",
+    "30 hari": "30 days",
+    "60 hari": "60 days",
+    "90 hari": "90 days",
+    "6 bulan": "6 months",
+    "1 tahun": "1 year",
+    "lintasan": "passes",
+    "Ekspor CSV": "Export CSV",
+    "NDVI min / median / rata / maks": "NDVI min / median / mean / max",
 }

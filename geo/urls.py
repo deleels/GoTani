@@ -11,5 +11,6 @@ urlpatterns = [
     path("poligon/", views.PolygonCreateView.as_view(), name="polygon_create"),
     path("poligon/<int:pk>/", views.PolygonDetailView.as_view(), name="polygon_detail"),
     path("poligon/<int:pk>/data/", views.PolygonDataView.as_view(), name="polygon_data"),
+    path("poligon/<int:pk>/data.csv", views.PolygonCsvView.as_view(), name="polygon_csv"),
     path("poligon/<int:pk>/ndvi.png", views.NdviImageView.as_view(), name="polygon_ndvi"),
 ]

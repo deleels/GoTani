@@ -114,15 +114,40 @@ class PolygonDataView(RoleRequiredMixin, View):
     allowed_roles = FARM_ROLES
 
     def get(self, request, pk):
-        return JsonResponse(polygon_data(get_object_or_404(FieldPolygon.objects.select_related("element"), pk=pk)))
+        polygon = get_object_or_404(FieldPolygon.objects.select_related("element"), pk=pk)
+        return JsonResponse(polygon_data(polygon, services.sat_days(request.GET.get("days"))))
 
 
-def polygon_data(polygon):
+class PolygonCsvView(RoleRequiredMixin, View):
+    """D137: per-pass index statistics of one polygon over the chosen period, as CSV."""
+
+    allowed_roles = FARM_ROLES
+
+    def get(self, request, pk):
+        import csv
+
+        from django.http import HttpResponse
+        from django.utils.text import slugify
+
+        polygon = get_object_or_404(FieldPolygon.objects.select_related("element"), pk=pk)
+        days = services.sat_days(request.GET.get("days"))
+        sat = None
+        if services.satellite_block_reason(polygon) is None:
+            sat = services.public_satellite(services.fetch_satellite(polygon, days=days))
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="satelit-{slugify(polygon.name) or polygon.pk}-{days}hari.csv"'
+        writer = csv.writer(response)
+        writer.writerow(services.SAT_CSV_HEADER)
+        writer.writerows(services.satellite_csv_rows(sat))
+        return response
+
+
+def polygon_data(polygon, days=None):
     """Vegetation indices (Agromonitoring, open fields ≥ 1 ha) + model soil data (Open-Meteo, any polygon) — D90."""
     sat = None
     reason = services.satellite_block_reason(polygon)  # covered / no key / < 1 ha → no Agromonitoring call
     if reason is None:
-        sat = services.public_satellite(services.fetch_satellite(polygon))
+        sat = services.public_satellite(services.fetch_satellite(polygon, days=days or services.SAT_DEFAULT_DAYS))
         reason = services.satellite_block_reason(polygon)  # registration may have just been rejected
         if reason is None and not (sat and sat["passes"]):
             reason = services.SAT_NO_IMAGERY if sat is not None else services.SAT_API_ERROR

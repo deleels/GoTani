@@ -3339,14 +3339,6 @@ msgid "Laporan"
 msgstr "Reports"
 
 #: reports\views.py
-msgid "30 hari"
-msgstr "30 days"
-
-#: reports\views.py
-msgid "90 hari"
-msgstr "90 days"
-
-#: reports\views.py
 msgid "Akun Anda belum memiliki peran."
 msgstr "Your account has no role yet."
 
@@ -5175,8 +5167,28 @@ msgid "%(n)s titik"
 msgstr "%(n)s corners"
 
 #: templates\geo\map.html
+msgid "1 tahun"
+msgstr "1 year"
+
+#: templates\geo\map.html
+msgid "30 hari"
+msgstr "30 days"
+
+#: templates\geo\map.html
 msgid "48 jam ke depan"
 msgstr "Next 48 hours"
+
+#: templates\geo\map.html
+msgid "6 bulan"
+msgstr "6 months"
+
+#: templates\geo\map.html
+msgid "60 hari"
+msgstr "60 days"
+
+#: templates\geo\map.html
+msgid "90 hari"
+msgstr "90 days"
 
 #: templates\geo\map.html
 msgid "Agromonitoring memerlukan poligon 1–3.000 ha"
@@ -5261,6 +5273,10 @@ msgstr "EVI"
 #: templates\geo\map.html
 msgid "EVI rata-rata"
 msgstr "Average EVI"
+
+#: templates\geo\map.html
+msgid "Ekspor CSV"
+msgstr "Export CSV"
 
 #: templates\geo\map.html
 msgid "Elemen tertaut"
@@ -5395,8 +5411,8 @@ msgid "Minta OWNER mengisinya di Pengaturan"
 msgstr "Ask the OWNER to set it in Settings"
 
 #: templates\geo\map.html
-msgid "NDVI min / rata / maks"
-msgstr "NDVI min / avg / max"
+msgid "NDVI min / median / rata / maks"
+msgstr "NDVI min / median / mean / max"
 
 #: templates\geo\map.html
 msgid "NDVI rata-rata"
@@ -5429,6 +5445,10 @@ msgstr "Use map area"
 #: templates\geo\map.html
 msgid "Pakai luas terpetakan sebagai luas elemen"
 msgstr "Use the mapped area as the plot area"
+
+#: templates\geo\map.html
+msgid "Periode"
+msgstr "Period"
 
 #: templates\geo\map.html
 msgid "Peta (OpenStreetMap)"
@@ -5517,6 +5537,10 @@ msgstr "so the forecast is accurate."
 #: templates\geo\map.html
 msgid "beratap · tanpa NDVI"
 msgstr "covered · no NDVI"
+
+#: templates\geo\map.html
+msgid "lintasan"
+msgstr "passes"
 
 #: templates\geo\map.html
 msgid "m² · tercatat"
@@ -7150,6 +7174,9 @@ msgstr "Can't get your location — allow location access in the browser."
 
 msgid "Lot #%(pk)s — %(product)s — panen %(date)s — sisa %(left)s kg"
 msgstr "Lot #%(pk)s — %(product)s — harvested %(date)s — %(left)s kg left"
+
+msgid "NDVI min / rata / maks"
+msgstr "NDVI min / avg / max"
 
 msgid "Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur."
 msgstr "Name, address, coordinates and logo are used for weather, the map, receipts and invoices. Coordinates: open Google Maps, right-click the farm, copy the latitude, longitude."

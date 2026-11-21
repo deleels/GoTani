@@ -493,11 +493,27 @@ def ensure_agro_polygon(polygon: FieldPolygon):
 def _stat(stats):
     if not isinstance(stats, dict) or "mean" not in stats:
         return None
-    return {k: stats.get(k) for k in ("min", "mean", "max")}
+    return {k: stats.get(k) for k in ("min", "median", "mean", "max")}
 
 
-def fetch_satellite(polygon: FieldPolygon, days=60, now=None):
-    """Per-pass NDVI/EVI/NDWI min/mean/max, NDVI history and latest NDVI image. Cached 24 h."""
+# D137: the period the satellite card covers. Index statistics cost three calls per pass, so only the latest
+# MAX_PASSES passes get them; `pass_count` still counts every pass in the period.
+SAT_RANGE_DAYS = (30, 60, 90, 180, 365)
+SAT_DEFAULT_DAYS = 60
+MAX_PASSES = 12
+
+
+def sat_days(value) -> int:
+    try:
+        days = int(value)
+    except (TypeError, ValueError):
+        return SAT_DEFAULT_DAYS
+    return days if days in SAT_RANGE_DAYS else SAT_DEFAULT_DAYS
+
+
+def fetch_satellite(polygon: FieldPolygon, days=SAT_DEFAULT_DAYS, now=None):
+    """Per-pass NDVI/EVI/NDWI min/median/mean/max, NDVI history over the period and latest NDVI image.
+    Cached 24 h per period."""
     pid = ensure_agro_polygon(polygon)
     if not pid:
         return None
@@ -511,7 +527,7 @@ def fetch_satellite(polygon: FieldPolygon, days=60, now=None):
         if passes is None:
             return None
         rows = []
-        for p in sorted(passes, key=lambda x: x.get("dt", 0), reverse=True)[:8]:
+        for p in sorted(passes, key=lambda x: x.get("dt", 0), reverse=True)[:MAX_PASSES]:
             stats_urls = p.get("stats") or {}
             row = {"dt": p.get("dt"), "type": p.get("type"), "cloud": p.get("cl"), "coverage": p.get("dc")}
             for index in ("ndvi", "evi", "ndwi"):
@@ -520,11 +536,12 @@ def fetch_satellite(polygon: FieldPolygon, days=60, now=None):
             row["ndvi_image"] = (p.get("image") or {}).get("ndvi")
             rows.append(row)
         history = _get_json(f"{AGRO_BASE}/ndvi/history",
-                            {"polyid": pid, "start": int((now - timedelta(days=365)).timestamp()), "end": end, "appid": key}) or []
+                            {"polyid": pid, "start": start, "end": end, "appid": key}) or []
         hist = [{"dt": h.get("dt"), "mean": (h.get("data") or {}).get("mean")} for h in history if (h.get("data") or {}).get("mean") is not None]
         hist.sort(key=lambda h: h["dt"])
         latest_image = next((r["ndvi_image"] for r in rows if r["ndvi_image"]), None)
-        return {"passes": rows, "history": hist, "latest_image": latest_image}
+        return {"passes": rows, "history": hist, "latest_image": latest_image, "pass_count": len(passes),
+                "days": days}
 
     return _cached(f"sat:{pid}:{start // 86400}", lambda v: SAT_TTL if v["passes"] else SAT_EMPTY_TTL, fetch)
 
@@ -649,4 +666,25 @@ def public_satellite(sat):
         "passes": [{k: v for k, v in p.items() if k != "ndvi_image"} for p in sat["passes"]],
         "history": sat["history"],
         "has_image": bool(sat.get("latest_image")),
+        "pass_count": sat.get("pass_count", len(sat["passes"])),
+        "days": sat.get("days", SAT_DEFAULT_DAYS),
     }
+
+
+SAT_CSV_HEADER = ["tanggal", "satelit", "awan_pct", "cakupan_pct"] + [
+    f"{index}_{stat}" for index in ("ndvi", "evi", "ndwi") for stat in ("min", "median", "mean", "max")]
+
+
+def satellite_csv_rows(sat):
+    """D137: one row per pass with index statistics, oldest first, dates in Asia/Jakarta."""
+    from datetime import datetime, timezone as dt_tz
+
+    rows = []
+    for p in sorted((sat or {}).get("passes") or [], key=lambda x: x.get("dt") or 0):
+        when = timezone.localtime(datetime.fromtimestamp(p["dt"], tz=dt_tz.utc)) if p.get("dt") else None
+        row = [when.strftime("%Y-%m-%d %H:%M") if when else "", p.get("type") or "", p.get("cloud"), p.get("coverage")]
+        for index in ("ndvi", "evi", "ndwi"):
+            stats = p.get(index) or {}
+            row += [stats.get(k) for k in ("min", "median", "mean", "max")]
+        rows.append(["" if v is None else v for v in row])
+    return rows
