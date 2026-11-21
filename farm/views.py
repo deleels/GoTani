@@ -502,7 +502,8 @@ class InputsView(FarmPage):
     def perform(self, form):
         d = form.cleaned_data
         return services.record_input_purchase(
-            d["item"], d["qty"], d["cost_per_unit_idr"], supplier=d["supplier"], user=self.request.user
+            d["item"], d["qty"], d["cost_per_unit_idr"], supplier=d["supplier"], user=self.request.user,
+            payment_method=d.get("payment_method") or "CASH", receipt=d.get("receipt"),
         )
 
     def get_context_data(self, **kwargs):
@@ -1008,7 +1009,8 @@ class InputDetailView(FarmPage):
     def perform(self, form):
         d = form.cleaned_data
         return services.record_input_purchase(self.item, d["qty"], d["cost_per_unit_idr"], supplier=d["supplier"],
-                                              user=self.request.user)
+                                              user=self.request.user, payment_method=d.get("payment_method") or "CASH",
+                                              receipt=d.get("receipt"))
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)

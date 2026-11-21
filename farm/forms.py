@@ -381,6 +381,9 @@ class PurchaseForm(StyledForm):
     qty = qty_field(_l("Jumlah"))
     cost_per_unit_idr = money_field(_l("Harga per satuan (Rp)"), kind="money2")
     supplier = forms.CharField(label=_l("Pemasok"), max_length=150, required=False)
+    payment_method = forms.ChoiceField(label=_l("Pembayaran"), choices=PaymentMethod.choices, required=False,
+                                       initial=PaymentMethod.CASH)
+    receipt = forms.FileField(label=_l("Bukti (opsional)"), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

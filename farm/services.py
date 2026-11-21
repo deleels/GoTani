@@ -408,7 +408,8 @@ def move_input_stock(
 
 @transaction.atomic
 def record_input_purchase(
-    item: InputItem, qty, cost_per_unit_idr, supplier: str = "", purchased_at=None, user=None
+    item: InputItem, qty, cost_per_unit_idr, supplier: str = "", purchased_at=None, user=None,
+    payment_method: str = "CASH", receipt=None,
 ) -> InputPurchase:
     qty, cost = q_qty(qty), q_money(cost_per_unit_idr)
     if qty <= 0:
@@ -426,6 +427,8 @@ def record_input_purchase(
         supplier=supplier,
         purchased_at=purchased_at,
         recorded_by=user,
+        payment_method=payment_method or "CASH",
+        receipt=receipt or "",
     )
     move_input_stock(
         locked.pk,

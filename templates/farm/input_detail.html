@@ -58,7 +58,7 @@
   {% if roles.finance %}
   {% blocktranslate asvar sheet_t with name=item.name %}Tambah stok {{ name }}{% endblocktranslate %}{% include "components/sheet.html" with title=sheet_t %}
       {{ input_costs|json_script:"input-costs" }}
-      <form method="post" class="app-sheet__form" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
+      <form method="post" enctype="multipart/form-data" class="app-sheet__form" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <p class="app-row__meta">{% translate "Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah." %}</p>
         <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>

@@ -94,7 +94,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
   scouting finding/severity/observation, Lainnya task name. Quantity, input item and cycle still need
   delete and re-enter. Every edit goes to the audit log.
 
-## 11. Payment details on input purchases (D133)
+## 11. Payment details on input purchases (D133) ✅
 - Purchase form gets payment method (Tunai / QRIS / Transfer) and an optional receipt file, like Biaya.
   No link to the cash drawer.
 

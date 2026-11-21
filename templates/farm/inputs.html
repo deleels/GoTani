@@ -32,10 +32,10 @@
     <div class="gt-card app-tablecard">
       <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Pembelian terbaru" %} {% info_tip _("Aset persediaan: kas keluar, bukan beban laba rugi.") %}</h2></div>
       <table class="gt-table">
-        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Input" %}</th><th class="num">{% translate "Jumlah" %}</th><th class="num">{% translate "Harga/satuan" %}</th><th class="num">{% translate "Total" %}</th><th>{% translate "Pemasok" %}</th></tr></thead>
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Input" %}</th><th class="num">{% translate "Jumlah" %}</th><th class="num">{% translate "Harga/satuan" %}</th><th class="num">{% translate "Total" %}</th><th>{% translate "Pemasok" %}</th><th>{% translate "Pembayaran" %}</th></tr></thead>
         <tbody>
         {% for p in purchases %}
-          <tr><td>{{ p.purchased_at|date:"SHORT_DATE_FORMAT" }}</td><td>{{ p.item.name }}</td><td class="num">{{ p.qty|kg }} {{ p.item.unit }}</td><td class="num">{{ p.cost_per_unit_idr|rupiah }}</td><td class="num">{{ p.total_cost_idr|rupiah }}</td><td>{{ p.supplier|default:"-" }}</td></tr>
+          <tr><td>{{ p.purchased_at|date:"SHORT_DATE_FORMAT" }}</td><td>{{ p.item.name }}</td><td class="num">{{ p.qty|kg }} {{ p.item.unit }}</td><td class="num">{{ p.cost_per_unit_idr|rupiah }}</td><td class="num">{{ p.total_cost_idr|rupiah }}</td><td>{{ p.supplier|default:"-" }}</td><td>{{ p.get_payment_method_display }}{% if p.receipt %} · <a class="app-link" href="{{ p.receipt.url }}" target="_blank">{% translate "bukti" %}</a>{% endif %}</td></tr>
         {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">{% translate "Belum ada pembelian." %}</td></tr>{% endfor %}
         </tbody>
       </table>
@@ -47,7 +47,7 @@
   <aside class="gt-card app-split__sticky">
     <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat pembelian" %}</h2></div>
     {{ input_costs|json_script:"input-costs" }}
-    <form method="post" class="app-stackform" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
+    <form method="post" enctype="multipart/form-data" class="app-stackform" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
       <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan pembelian" %}</button>
     </form>

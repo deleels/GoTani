@@ -49,3 +49,24 @@ class ActivityEditTests(TestCase):
         self.assertRedirects(r, reverse("farm:activities") + "?tab=lainnya", fetch_redirect_response=False)
         a.refresh_from_db()
         self.assertEqual(a.task_name, "Penyiangan")
+
+
+class PurchasePaymentTests(TestCase):
+    """D133: payment method and receipt on input purchases."""
+
+    def test_purchase_form_saves_method_and_receipt(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from farm.models import InputPurchase
+
+        item = InputItem.objects.create(name="NPK", item_type="FERTILIZER", unit="KG")
+        self.client.force_login(make_user("o", ROLE_OWNER))
+        r = self.client.post(reverse("farm:inputs"), {
+            "item": item.pk, "qty": "5", "cost_per_unit_idr": "1000", "supplier": "Toko Tani",
+            "payment_method": "QRIS", "receipt": SimpleUploadedFile("nota.pdf", b"%PDF-1.4", "application/pdf")})
+        self.assertEqual(r.status_code, 302)
+        p = InputPurchase.objects.get()
+        self.assertEqual(p.payment_method, "QRIS")
+        self.assertTrue(p.receipt.name.endswith(".pdf"))
+        self.assertContains(self.client.get(reverse("farm:inputs")), "QRIS")
+        p.receipt.delete(save=False)

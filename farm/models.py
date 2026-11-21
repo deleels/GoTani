@@ -200,6 +200,10 @@ class InputPurchase(models.Model):
     qty = models.DecimalField(_l("jumlah"), **QTY)
     cost_per_unit_idr = models.DecimalField(_l("harga per satuan"), **MONEY)
     supplier = models.CharField(_l("pemasok"), max_length=150, blank=True)
+    # D133: how it was paid and the receipt, like Biaya. Not linked to the cash drawer.
+    payment_method = models.CharField(_l("metode pembayaran"), max_length=10, choices=PaymentMethod.choices,
+                                      default=PaymentMethod.CASH)
+    receipt = models.FileField(_l("bukti"), upload_to="receipts/%Y/%m/", blank=True)
     purchased_at = models.DateTimeField(_l("dibeli pada"), default=timezone.now)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
