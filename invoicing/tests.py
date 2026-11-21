@@ -127,6 +127,8 @@ class IssueTests(InvoiceFixtures):
             self.issue(a)
 
     def test_tax_snapshot_at_issue(self):
+        from core.models import FarmProfile
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
         self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
         self.high.save()
         invoice = self.issue(self.draft([(self.high, 10, None)], discount_type="PERCENT", discount_value=10,
@@ -148,7 +150,7 @@ class VoidTests(InvoiceFixtures):
         inv.record_payment(self.manager, self.buyer, amount_idr=1000000, method="TRANSFER", paid_on=TODAY,
                            allocations=[(invoice, 1000000)])
         self.assertEqual(inv.buyer_credit(self.buyer), D("0"))
-        inv.void_invoice(invoice, self.owner, now=NOON + timedelta(days=40))
+        inv.void_invoice(invoice, self.owner, now=NOON + timedelta(days=40), reason="WRONG_ENTRY")
         self.reload(self.lot_h1, self.lot_h2, self.lot_l1)
         self.assertEqual((self.lot_h1.qty_remaining_kg, self.lot_h2.qty_remaining_kg, self.lot_l1.qty_remaining_kg),
                          (D("100"), D("50"), D("50")))
@@ -159,12 +161,12 @@ class VoidTests(InvoiceFixtures):
         self.assertIsNone(invoice.payment_status())
         self.assertEqual(check_mass_balance(), [])
         with self.assertRaises(ValidationError):
-            inv.void_invoice(invoice, self.owner)
+            inv.void_invoice(invoice, self.owner, reason="WRONG_ENTRY")
 
     def test_void_requires_finance_role(self):
         invoice = self.issue()
         with self.assertRaises(PermissionDenied):
-            inv.void_invoice(invoice, self.cashier)
+            inv.void_invoice(invoice, self.cashier, reason="WRONG_ENTRY")
 
 
 class PaymentTests(InvoiceFixtures):
@@ -208,16 +210,40 @@ class PaymentTests(InvoiceFixtures):
         summary = inv.receivables_summary(TODAY + timedelta(days=15))
         self.assertEqual(summary, {"outstanding": D("280000.00"), "overdue": D("280000.00")})
 
-    def test_delete_payment_rules(self):
+    def test_void_payment_rules(self):
         p = inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="CASH", paid_on=TODAY,
                                allocations=[(self.a, 500)])
         with self.assertRaises(PermissionDenied):
-            inv.delete_payment(self.manager, p)
-        with self.assertRaises(ValidationError):
-            inv.delete_payment(self.owner, p)
+            inv.void_payment(self.manager, p, "salah")
+        with self.assertRaises(ValidationError):  # still allocated
+            inv.void_payment(self.owner, p, "salah")
         free = inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="CASH", paid_on=TODAY)
-        inv.delete_payment(self.owner, free)
+        with self.assertRaises(ValidationError):  # reason required (D100)
+            inv.void_payment(self.owner, free, " ")
+        inv.void_payment(self.owner, free, "dobel input")
         self.assertEqual(inv.buyer_credit(self.buyer), D("500.00"))
+        free.refresh_from_db()
+        self.assertEqual((free.unallocated_idr, free.void_reason), (D("0"), "dobel input"))  # kept, not deleted
+        with self.assertRaises(ValidationError):
+            inv.allocate_payment(self.manager, free, self.a, 1)
+
+    def test_pph_withheld_needs_slip(self):
+        with self.assertRaisesMessage(ValidationError, "tidak ditandai memotong PPh"):  # D114: opt-in per buyer
+            inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="PPH_WITHHELD", paid_on=TODAY,
+                               withholding_slip_no="BP-0")
+        self.buyer.withholds_tax = True
+        self.buyer.save()
+        with self.assertRaises(ValidationError):
+            inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="PPH_WITHHELD", paid_on=TODAY)
+        with self.assertRaises(ValidationError):
+            inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="PPH_WITHHELD", paid_on=TODAY,
+                               withholding_slip_no="BP-1", into_drawer=True)
+        p = inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="PPH_WITHHELD", paid_on=TODAY,
+                               withholding_slip_no=" BP-001 ", allocations=[(self.a, 1000)])
+        self.assertEqual(p.withholding_slip_no, "BP-001")
+        cash = inv.record_payment(self.manager, self.buyer, amount_idr=10, method="CASH", paid_on=TODAY,
+                                  withholding_slip_no="ignored")
+        self.assertEqual(cash.withholding_slip_no, "")
 
     def test_invalid_payment(self):
         with self.assertRaises(ValidationError):
@@ -252,3 +278,69 @@ class CreditTests(InvoiceFixtures):
         self.assertEqual((self.buyer.phone, self.buyer.payment_terms_days), ("0812", 30))
         with self.assertRaises(PermissionDenied):
             inv.update_buyer(self.cashier, self.buyer, phone="x")
+
+
+class AgeingAndSplitTests(InvoiceFixtures):
+    """D97: receivables ageing buckets and money received per payment method."""
+
+    def test_ageing_buckets(self):
+        invoice = self.issue(self.draft([(self.high, 1, None)]))  # due = issue + 14 days
+        due = invoice.due_date
+        for days_late, key in ((-1, "current"), (0, "current"), (1, "d1_30"), (45, "d31_60"), (75, "d61_90"), (91, "d90p")):
+            ageing = inv.receivables_ageing(today=due + timedelta(days=days_late))
+            self.assertEqual(ageing["rows"][0][key], invoice.total_idr, (days_late, key))
+            self.assertEqual(ageing["totals"]["total"], invoice.total_idr)
+        inv.record_payment(self.manager, self.buyer, amount_idr=invoice.total_idr, method="QRIS", paid_on=due,
+                           allocations=[(invoice, invoice.total_idr)])
+        self.assertEqual(inv.receivables_ageing(today=due)["rows"], [])
+
+    def test_payment_split(self):
+        from reports.services import payment_split
+
+        invoice = self.issue(self.draft([(self.high, 1, None)]))
+        inv.record_payment(self.manager, self.buyer, amount_idr=1000, method="TRANSFER", paid_on=invoice.issue_date)
+        rows = {r["method"]: r for r in payment_split(invoice.issue_date, invoice.issue_date)}
+        self.assertEqual(rows["Transfer"]["invoice"], D("1000"))
+        self.assertEqual(rows["Transfer"]["total"], D("1000"))
+
+
+class TaxExtrasTests(InvoiceFixtures):
+    """D102–D103: meterai reminder; Omzet & PPh Final 0,5% with the Rp500 jt yearly exemption."""
+
+    def test_meterai_threshold(self):
+        small = self.issue(self.draft([(self.high, 1, None)]))
+        self.assertFalse(small.needs_meterai)
+        big = self.issue(self.draft([(self.high, 100, D("60000"))]))  # Rp6 jt
+        self.assertTrue(big.needs_meterai)
+        self.client.force_login(self.manager)
+        from django.urls import reverse
+
+        self.assertContains(self.client.get(reverse("invoicing:invoice_detail", args=[big.pk])), "Bea meterai")
+        self.assertContains(self.client.get(reverse("invoicing:invoice_print", args=[big.pk])), "Meterai Rp10.000")
+
+    def test_omzet_and_pph(self):
+        from unittest import mock
+
+        from reports import services as rs
+
+        invoice = self.issue(self.draft([(self.high, 10, D("30000"))], discount_type="PERCENT", discount_value=10,
+                                        shipping_idr=50000))
+        voided = self.issue(self.draft([(self.high, 1, None)]))
+        inv.void_invoice(voided, self.owner, reason="WRONG_ENTRY")
+        year, month = invoice.issue_date.year, invoice.issue_date.month
+        data = rs.omzet_pph(year)
+        row = data["rows"][month - 1]
+        self.assertEqual(row["invoice"], D("350000"))  # 300.000 before discount + 50.000 shipping; void excluded
+        self.assertEqual(row["pph"], D("0"))  # under the Rp500 jt exemption
+        with mock.patch.object(rs, "PPH_EXEMPT_IDR", D("100000")):
+            row = rs.omzet_pph(year)["rows"][month - 1]
+            self.assertEqual(row["taxable"], row["cumulative"] - D("100000"))
+            self.assertEqual(row["pph"], (row["taxable"] * D("0.005")).quantize(D("1")))
+        self.client.force_login(self.manager)
+        from django.urls import reverse
+
+        csv = self.client.get(reverse("omzet_pph"), {"year": year, "format": "csv"}).content.decode()
+        self.assertIn(f"{year}-{month:02d},", csv)
+        self.assertContains(self.client.get(reverse("omzet_pph")), "konsultan pajak")
+        self.client.force_login(self.cashier)
+        self.assertEqual(self.client.get(reverse("omzet_pph")).status_code, 403)

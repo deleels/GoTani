@@ -1,93 +1,93 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}Laporan Kerja{% endblock %}
+{% block title %}{% translate "Laporan Kerja" %}{% endblock %}
 {% block content %}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }}, picker: false }">
-  <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">Laporan Kerja</h1>
-      <p class="mt-1 text-sm text-stone-500">{% subtitle "Semua pekerjaan lapangan per jenis. Pemakaian input otomatis memotong stok dan dibukukan ke biaya siklus." worker="Catat pekerjaan lapangan hari ini: pemupukan, penyemprotan, irigasi, pengamatan, panen, dan susut." %}</p>
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text">
+      {% subtitle "Semua pekerjaan lapangan per jenis. Pemakaian input otomatis memotong stok dan dibukukan ke biaya siklus." worker="Catat pekerjaan lapangan hari ini: pemupukan, penyemprotan, irigasi, pengamatan, panen, dan susut." as sub %}
+      <h1 class="app-pagehead__title">{% translate "Laporan Kerja" %} {% info_tip sub %}</h1>
     </div>
-    <div class="relative" @click.outside="picker=false">
-      <button type="button" @click="picker=!picker" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">{% icon "plus" 16 %} Laporan Baru {% icon "chevron" 14 %}</button>
-      <div x-show="picker" x-cloak class="absolute right-0 z-20 mt-1 w-56 rounded-xl border border-stone-200 bg-white p-1 text-sm shadow-lg">
+    <div class="gt-pagehead__actions relative" @click.outside="picker=false" @keydown.escape="picker=false">
+      <button type="button" @click="picker=!picker" :aria-expanded="picker" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Laporan baru" %} {% icon "chevron" 16 %}</button>
+      <div x-show="picker" x-cloak class="app-menu app-menu--sm">
         {% for key, label, t in report_tabs %}
-          {% if key == 'panen' %}<a href="{% url 'farm:harvests' %}" class="block rounded-md px-3 py-2 hover:bg-stone-100">{{ label }}</a>
-          {% elif key == 'susut' %}<a href="{% url 'farm:spoilage' %}" class="block rounded-md px-3 py-2 hover:bg-stone-100">{{ label }}</a>
-          {% elif key == 'prapanen' %}<a href="{% url 'farm:preharvest_new' %}" class="block rounded-md px-3 py-2 hover:bg-stone-100">Cek {{ label }}</a>
-          {% else %}<a href="?tab={{ key }}&new=1" class="block rounded-md px-3 py-2 hover:bg-stone-100">{{ label }}</a>{% endif %}
+          {% if key == 'panen' %}<a href="{% url 'farm:harvests' %}" class="app-menu__item">{{ label }}</a>
+          {% elif key == 'susut' %}<a href="{% url 'farm:spoilage' %}" class="app-menu__item">{{ label }}</a>
+          {% elif key == 'prapanen' %}<a href="{% url 'farm:preharvest_new' %}" class="app-menu__item">{% translate "Cek" %} {{ label }}</a>
+          {% else %}<a href="?tab={{ key }}&new=1" class="app-menu__item">{{ label }}</a>{% endif %}
         {% endfor %}
       </div>
     </div>
   </div>
 
   {# Weekly strip by report type (Ringkasan uses the same numbers) #}
-  <div class="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+  <div class="app-weekstrip" aria-label="{% translate 'Jumlah laporan 7 hari terakhir' %}">
     {% for key, label, t in report_tabs %}
-    <a href="?tab={{ key }}" class="rounded-xl border bg-white p-3 {% if report_tab == key %}border-emerald-400 ring-1 ring-emerald-400{% else %}border-stone-200 hover:bg-stone-50{% endif %}">
-      <p class="text-xs text-stone-500">{{ label }}</p>
-      <p class="text-xl font-semibold">{% for k, n in week_counts.items %}{% if k == key %}{{ n }}{% endif %}{% endfor %}</p>
-      <p class="text-[11px] text-stone-400">7 hari terakhir</p>
+    <a href="?tab={{ key }}" class="app-weektile{% if report_tab == key %} is-on{% endif %}"{% if report_tab == key %} aria-current="page"{% endif %}>
+      <span class="app-weektile__label">{{ label }}</span>
+      <span class="app-weektile__value">{% for k, n in week_counts.items %}{% if k == key %}{{ n }}{% endif %}{% endfor %}<small>{% translate "7 hari" %}</small></span>
     </a>
     {% endfor %}
   </div>
 
-  <div class="rounded-xl border border-stone-200 bg-white">
-    <div class="flex flex-wrap items-center gap-3 border-b border-stone-200 p-3">
+  <div class="gt-card">
+    <div class="app-toolbar">
       {% include "components/tabs.html" with tab=report_tab %}
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+    <div class="app-table-wrap">
+      <table class="gt-table">
       {% if report_tab == 'prapanen' %}
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200"><th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Siklus</th><th class="px-4 py-3">Kelengkapan</th><th class="px-4 py-3">Butir terpenuhi</th><th class="px-4 py-3">Oleh</th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+        <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th>{% translate "Kelengkapan" %}</th><th>{% translate "Butir terpenuhi" %}</th><th>{% translate "Oleh" %}</th></tr></thead>
+        <tbody>
         {% for c in activities %}
-          <tr class="align-top"><td class="whitespace-nowrap px-4 py-3">{{ c.recorded_at|date:"d M Y H:i" }}</td>
-            <td class="px-4 py-3"><a class="hover:underline" href="{% url 'farm:cycle_detail' c.cycle_id %}">{{ c.cycle.variety }} @ {{ c.cycle.element }}</a></td>
-            <td class="px-4 py-3">{% if c.completed_pct == 100 %}{% pill "100%" tone="green" %}{% else %}{% pill c.completed_pct|pct:0 tone="yellow" %}{% endif %}</td>
-            <td class="px-4 py-3 text-stone-600">{% for i in c.checked_items.all %}{{ i.text }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}{% if c.notes %}<p class="text-xs text-stone-400">{{ c.notes }}</p>{% endif %}</td>
-            <td class="px-4 py-3">{{ c.recorded_by|default:"—" }}</td></tr>
+          <tr><td class="whitespace-nowrap">{{ c.recorded_at|date:"d M Y H:i" }}</td>
+            <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.cycle_id %}">{{ c.cycle.variety }} @ {{ c.cycle.element }}</a></td>
+            <td>{% if c.completed_pct == 100 %}{% pill _("100%") tone="green" %}{% else %}{% pill c.completed_pct|pct:0 tone="yellow" %}{% endif %}</td>
+            <td class="app-muted">{% for i in c.checked_items.all %}{{ i.text }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}{% if c.notes %}<p class="app-row__meta">{{ c.notes }}</p>{% endif %}</td>
+            <td>{{ c.recorded_by|default:"—" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=5 msg="Belum ada cek pra-panen. Lakukan sebelum memajukan siklus ke tahap Panen agar tidak muncul peringatan." %}{% endfor %}
         </tbody>
       {% elif report_tab == 'panen' %}
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200"><th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Siklus</th><th class="px-4 py-3 text-right">HIGH</th><th class="px-4 py-3 text-right">LOW</th><th class="px-4 py-3 text-right">Susut panen</th><th class="px-4 py-3">Karung</th><th class="px-4 py-3">Oleh</th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+        <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th class="num">HIGH</th><th class="num">LOW</th><th class="num">{% translate "Susut panen" %}</th><th>{% translate "Karung" %}</th><th>{% translate "Oleh" %}</th></tr></thead>
+        <tbody>
         {% for b in activities %}
-          <tr><td class="whitespace-nowrap px-4 py-3">{{ b.harvested_at|date:"d M Y H:i" }}</td>
-            <td class="px-4 py-3"><a class="hover:underline" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
-            <td class="px-4 py-3 text-right">{{ b.high_quality_kg|kg }} kg</td><td class="px-4 py-3 text-right">{{ b.low_quality_kg|kg }} kg</td>
-            <td class="px-4 py-3 text-right">{{ b.harvest_loss_kg|kg }} kg</td>
-            <td class="px-4 py-3">{% if b.number_of_bags %}{{ b.number_of_bags }} × {{ b.weight_per_bag_kg|kg }} kg{% else %}—{% endif %}</td>
-            <td class="px-4 py-3">{{ b.recorded_by|default:"—" }}</td></tr>
+          <tr><td class="whitespace-nowrap">{{ b.harvested_at|date:"d M Y H:i" }}</td>
+            <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
+            <td class="num">{{ b.high_quality_kg|kg }} kg</td><td class="num">{{ b.low_quality_kg|kg }} kg</td>
+            <td class="num">{{ b.harvest_loss_kg|kg }} kg</td>
+            <td>{% if b.number_of_bags %}{{ b.number_of_bags }} × {{ b.weight_per_bag_kg|kg }} kg{% else %}—{% endif %}</td>
+            <td>{{ b.recorded_by|default:"—" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=7 msg="Belum ada panen. Panen hanya bisa dicatat saat siklus di tahap Panen; tiap grade menjadi lot stok." %}{% endfor %}
         </tbody>
       {% elif report_tab == 'susut' %}
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200"><th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Lot</th><th class="px-4 py-3 text-right">Kg</th><th class="px-4 py-3">Alasan</th><th class="px-4 py-3">Catatan</th><th class="px-4 py-3">Oleh</th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+        <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Lot" %}</th><th class="num">{% translate "Kg" %}</th><th>{% translate "Alasan" %}</th><th>{% translate "Catatan" %}</th><th>{% translate "Oleh" %}</th></tr></thead>
+        <tbody>
         {% for r in activities %}
-          <tr><td class="whitespace-nowrap px-4 py-3">{{ r.recorded_at|date:"d M Y H:i" }}</td><td class="px-4 py-3">Lot #{{ r.lot_id }} · {{ r.lot.product }}</td>
-            <td class="px-4 py-3 text-right">{{ r.qty_kg|kg }}</td><td class="px-4 py-3">{{ r.get_reason_display }}</td><td class="px-4 py-3 text-stone-600">{{ r.notes|default:"—" }}</td><td class="px-4 py-3">{{ r.recorded_by|default:"—" }}</td></tr>
+          <tr><td class="whitespace-nowrap">{{ r.recorded_at|date:"d M Y H:i" }}</td><td>{% translate "Lot #" %}{{ r.lot_id }} · {{ r.lot.product }}</td>
+            <td class="num">{{ r.qty_kg|kg }}</td><td>{{ r.get_reason_display }}</td><td class="app-muted">{{ r.notes|default:"—" }}</td><td>{{ r.recorded_by|default:"—" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=6 msg="Belum ada susut tercatat. Catat produk busuk, rusak, atau menyusut dari lot tertentu." %}{% endfor %}
         </tbody>
       {% else %}
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-          <th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Siklus</th><th class="px-4 py-3">Tahap</th>
-          {% if report_tab == 'irigasi' %}<th class="px-4 py-3 text-right">Volume</th><th class="px-4 py-3 text-right">Durasi</th>
-          {% elif report_tab == 'scouting' %}<th class="px-4 py-3">Foto</th>
-          {% else %}<th class="px-4 py-3">Input</th><th class="px-4 py-3 text-right">Jumlah</th>{% endif %}
-          <th class="px-4 py-3">Metode / catatan</th><th class="px-4 py-3">Oleh</th>{% if roles.finance %}<th></th>{% endif %}</tr></thead>
-        <tbody class="divide-y divide-stone-100">
+        <thead><tr>
+          <th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th>{% translate "Tahap" %}</th>
+          {% if report_tab == 'irigasi' %}<th class="num">{% translate "Volume" %}</th><th class="num">{% translate "Durasi" %}</th>
+          {% elif report_tab == 'scouting' %}<th>{% translate "Foto" %}</th>
+          {% else %}<th>{% translate "Input" %}</th><th class="num">{% translate "Jumlah" %}</th>{% endif %}
+          <th>{% translate "Metode / catatan" %}</th><th>{% translate "Oleh" %}</th>{% if roles.finance %}<th></th>{% endif %}</tr></thead>
+        <tbody>
         {% for a in activities %}
-          <tr class="align-top">
-            <td class="whitespace-nowrap px-4 py-3">{{ a.logged_at|date:"d M Y H:i" }}</td>
-            <td class="px-4 py-3"><a class="hover:underline" href="{% url 'farm:cycle_detail' a.cycle_id %}">{{ a.cycle.variety }} @ {{ a.cycle.element }}</a></td>
-            <td class="px-4 py-3">{{ a.get_stage_at_activity_display }}</td>
-            {% if report_tab == 'irigasi' %}<td class="px-4 py-3 text-right">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td><td class="px-4 py-3 text-right">{% if a.duration_minutes %}{{ a.duration_minutes }} mnt{% else %}—{% endif %}</td>
-            {% elif report_tab == 'scouting' %}<td class="px-4 py-3">{% if a.photo %}<a href="{{ a.photo.url }}" target="_blank"><img src="{{ a.photo.url }}" alt="Foto pengamatan" class="h-12 w-16 rounded object-cover"></a>{% else %}—{% endif %}</td>
-            {% else %}<td class="px-4 py-3">{% if a.input_item %}<a class="hover:underline" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}—{% endif %}</td><td class="px-4 py-3 text-right">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td>{% endif %}
-            <td class="px-4 py-3 text-stone-600">{{ a.application_method }}{% if a.application_method and a.notes %} · {% endif %}{{ a.notes|truncatechars:80 }}</td>
-            <td class="px-4 py-3">{{ a.recorded_by|default:"—" }}</td>
-            {% if roles.finance %}<td class="px-4 py-3 text-right"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" onsubmit="return confirm('Hapus kegiatan ini? Stok input dikembalikan.')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="text-xs text-red-600 underline">Hapus</button></form></td>{% endif %}
+          <tr>
+            <td class="whitespace-nowrap">{{ a.logged_at|date:"d M Y H:i" }}</td>
+            <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' a.cycle_id %}">{{ a.cycle.variety }} @ {{ a.cycle.element }}</a></td>
+            <td>{{ a.get_stage_at_activity_display }}</td>
+            {% if report_tab == 'irigasi' %}<td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}—{% endif %}</td>
+            {% elif report_tab == 'scouting' %}<td>{% if a.photo %}<a href="{{ a.photo.url }}" target="_blank"><img src="{{ a.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-thumb"></a>{% else %}—{% endif %}</td>
+            {% else %}<td>{% if a.input_item %}<a class="app-link--plain" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}—{% endif %}</td><td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td>{% endif %}
+            <td class="app-muted">{{ a.application_method }}{% if a.application_method and a.notes %} · {% endif %}{{ a.notes|truncatechars:80 }}</td>
+            <td>{{ a.recorded_by|default:"—" }}</td>
+            {% if roles.finance %}<td class="num"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" data-confirm-title="{% translate 'Hapus kegiatan?' %}" data-confirm="{% translate 'Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen).' %}" data-confirm-action="{% translate 'Hapus kegiatan' %}" data-confirm-danger>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form></td>{% endif %}
           </tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=8 msg="Belum ada laporan jenis ini. Klik “Laporan Baru” untuk mencatat pekerjaan lapangan." %}{% endfor %}
         </tbody>
@@ -98,24 +98,18 @@
   </div>
 
   {% if report_tab != 'prapanen' and report_tab != 'panen' and report_tab != 'susut' %}
-  <div x-show="sheet" x-cloak class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
-    <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
-      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-        <h2 class="text-lg font-semibold">Laporan {% for k, l, t in report_tabs %}{% if k == report_tab %}{{ l }}{% endif %}{% endfor %}</h2>
-        <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button>
-      </div>
-      <form method="post" enctype="multipart/form-data" action="?tab={{ report_tab }}" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+  {% blocktranslate asvar sheet_t %}Laporan {{ report_label }}{% endblocktranslate %}{% include "components/sheet.html" with title=sheet_t %}
+      <form method="post" enctype="multipart/form-data" action="?tab={{ report_tab }}" class="app-sheet__form">{% csrf_token %}
         <input type="hidden" name="tab" value="{{ report_tab }}">
+        {% if report_tab == 'pestisida' %}{% include "geo/_spray_hint.html" %}{% endif %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        {% if report_tab == 'pemupukan' or report_tab == 'pestisida' or report_tab == 'penanaman' %}<p class="mt-2 text-xs text-stone-400">Memilih input akan memotong stok input dengan satuannya sendiri.</p>{% endif %}
-        <div class="mt-auto flex justify-end gap-2 pt-6">
-          <button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Batal</button>
-          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">Simpan</button>
+        {% if report_tab == 'pemupukan' or report_tab == 'pestisida' or report_tab == 'penanaman' %}<p class="app-row__meta">{% translate "Memilih input memotong stok input dengan satuannya sendiri." %}</p>{% endif %}
+        <div class="app-sheet__foot">
+          <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button>
         </div>
       </form>
-    </div>
-  </div>
+  {% include "components/sheet.html" with end=True %}
   {% endif %}
 </div>
 {% endblock %}

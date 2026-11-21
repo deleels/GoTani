@@ -1,5 +1,6 @@
 """Traceability (D29) and analytics dashboard (D28) — OWNER/MANAGER only."""
 
+from django.utils.translation import gettext as _, gettext_lazy as _l
 import csv
 from datetime import timedelta
 
@@ -44,13 +45,13 @@ class HomeView(View):
             return render(request, "core/home.html", ctx)
         target = landing_url_name(roles)
         if target is None:
-            raise PermissionDenied("Akun Anda belum memiliki peran.")
+            raise PermissionDenied(_("Akun Anda belum memiliki peran."))
         return redirect(target)
 
 
 class DateRangeForm(forms.Form):
-    start = forms.DateField(label="Dari", required=False, widget=forms.DateInput(attrs={"type": "date"}))
-    end = forms.DateField(label="Sampai", required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    start = forms.DateField(label=_l("Dari"), required=False, widget=forms.DateInput(attrs={"type": "date"}))
+    end = forms.DateField(label=_l("Sampai"), required=False, widget=forms.DateInput(attrs={"type": "date"}))
 
     def clean(self):
         data = super().clean()
@@ -58,9 +59,9 @@ class DateRangeForm(forms.Form):
         end = data.get("end") or today
         start = data.get("start") or end - timedelta(days=29)
         if start > end:
-            raise forms.ValidationError("Tanggal awal harus sebelum tanggal akhir.")
+            raise forms.ValidationError(_("Tanggal awal harus sebelum tanggal akhir."))
         if (end - start).days > 731:
-            raise forms.ValidationError("Rentang maksimal 2 tahun.")
+            raise forms.ValidationError(_("Rentang maksimal 2 tahun."))
         data["start"], data["end"] = start, end
         return data
 
@@ -80,8 +81,19 @@ class DashboardView(RoleRequiredMixin, TemplateView):
             if not form.is_bound:
                 form = DateRangeForm(initial={"start": start, "end": end})
         metrics = services.dashboard_metrics(start, end)
-        ctx.update(nav="dashboard", form=form, m=metrics, k=metrics["kpis"], charts=self._chart_data(metrics))
+        ctx.update(nav="dashboard", form=form, m=metrics, k=metrics["kpis"], charts=self._chart_data(metrics),
+                   channel_parts=[(_("Kasir (POS)"), metrics["kpis"]["revenue_pos"]), (_("Invoice"), metrics["kpis"]["revenue_invoice"])],
+                   presets=self._presets(start, end))
         return ctx
+
+    @staticmethod
+    def _presets(start, end):
+        """Quick ranges for the boxed range switch; the active one matches the shown range exactly."""
+        today = timezone.localdate()
+        ranges = [(_("7 hari"), today - timedelta(days=6), today), (_("30 hari"), today - timedelta(days=29), today),
+                  (_("90 hari"), today - timedelta(days=89), today), (_("Tahun ini"), today.replace(month=1, day=1), today)]
+        return [{"label": label, "start": a.isoformat(), "end": b.isoformat(), "active": (a, b) == (start, end)}
+                for label, a, b in ranges]
 
     @staticmethod
     def _chart_data(m):
@@ -107,7 +119,7 @@ class DashboardView(RoleRequiredMixin, TemplateView):
                 "values": [f(r["revenue"]) for r in m["top_products"]],
             },
             "channel": {
-                "labels": ["Kasir (POS)", "Invoice"],
+                "labels": [_("Kasir (POS)"), _("Invoice")],
                 "values": [f(m["kpis"]["revenue_pos"]), f(m["kpis"]["revenue_invoice"])],
             },
             "expenses": {
@@ -115,6 +127,26 @@ class DashboardView(RoleRequiredMixin, TemplateView):
                 "values": [f(r["amount"]) for r in m["expenses_by_category"]],
             },
         }
+
+
+class OmzetPphView(RoleRequiredMixin, TemplateView):
+    """Omzet & PPh Final 0,5% per month (D103), with CSV."""
+
+    allowed_roles = FINANCE_ROLES
+    template_name = "reports/omzet_pph.html"
+
+    def get(self, request, *args, **kwargs):
+        try:
+            year = int(request.GET.get("year") or timezone.localdate().year)
+        except ValueError:
+            year = timezone.localdate().year
+        data = services.omzet_pph(year)
+        if request.GET.get("format") == "csv":
+            rows = [["bulan", "omzet_pos", "omzet_invoice", "omzet", "kumulatif", "dasar_pengenaan", "pph_final", "setor_paling_lambat"]]
+            rows += [[f"{year}-{r['month']:02d}", r["pos"], r["invoice"], r["omzet"], r["cumulative"], r["taxable"], r["pph"],
+                      r["due"].isoformat()] for r in data["rows"]]
+            return csv_response(f"omzet-pph-{year}.csv", rows)
+        return render(request, self.template_name, {"nav": "finance", "d": data, "years": range(year - 2, year + 2)})
 
 
 class TraceIndexView(RoleRequiredMixin, TemplateView):

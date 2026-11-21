@@ -1,0 +1,49 @@
+{% load i18n %}{% load ui %}{# "Satelit & Tanah" on the element detail page (D90): the same data as the map side panel, for the linked polygon. #}
+<section class="gt-card app-section" x-data="elementSat('{% url 'geo:polygon_data' poly.pk %}')" x-init="load()">
+  <div class="gt-card__head">
+    <h2 class="gt-card__title">{% translate "Satelit &amp; Tanah" %} <span class="gt-chip gt-chip--sm">{{ poly.name }}</span></h2>
+    <a href="{% url 'geo:map' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Buka peta" %}</a>
+  </div>
+  <div class="app-geo__parts">
+    <template x-if="state === 'loading'"><p class="app-muted">{% translate "Memuat data…" %}</p></template>
+    <template x-if="state === 'error'"><p class="app-muted">{% translate "Tidak dapat memuat data satelit ·" %} <button type="button" class="app-link" @click="load()">{% translate "Coba lagi" %}</button></p></template>
+    <template x-if="state === 'ok'">
+      <div class="app-geo__parts">
+        <div x-show="d.message" class="gt-callout gt-callout--warning">{% icon "info" 18 %}<span class="gt-callout__title" x-text="d.message"></span></div>
+        <template x-if="d.satellite && d.satellite.passes.length">
+          <div class="gt-metrics app-metrics3">
+            <template x-for="k in ['ndvi', 'evi', 'ndwi']" :key="k">
+              <div class="gt-metric"><span class="gt-metric__label" x-text="gtT('{% jt "%(index)s rata-rata" %}', { index: k.toUpperCase() })"></span>
+                <span class="gt-metric__value" x-text="d.satellite.passes[0][k] ? Number(d.satellite.passes[0][k].mean).toFixed(3) : '—'"></span></div>
+            </template>
+          </div>
+        </template>
+        <template x-if="d.soil">
+          <div>
+            <h3 class="app-subtitle">{% translate "Tanah" %} {% info_tip _("Perkiraan model Open-Meteo, bukan sensor.") %}</h3>
+            <div class="app-soil">
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "Suhu tanah" %}</span>
+                <dl class="gt-kv gt-kv--compact"><template x-for="t in d.soil.temperature" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? num(t.value, 1) + ' °C' : '—'"></dd></div></template></dl></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "Kelembapan tanah" %} {% info_tip _("Persentase volume air di tanah.") %}</span>
+                <dl class="gt-kv gt-kv--compact"><template x-for="m in d.soil.moisture" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? num(m.value * 100, 1) + '%' : '—'"></dd></div></template></dl></div>
+            </div>
+          </div>
+        </template>
+        <p x-show="!d.soil" class="app-row__meta">{% translate "Data tanah tidak tersedia saat ini." %}</p>
+      </div>
+    </template>
+  </div>
+</section>
+<script>
+  function elementSat(url) {
+    return {
+      state: "loading", d: null,
+      async load() {
+        this.state = "loading";
+        try { const r = await fetch(url); if (!r.ok) throw new Error(r.status); this.d = await r.json(); this.state = "ok"; }
+        catch (e) { this.state = "error"; }
+      },
+      num(v, p) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: p }); },
+    };
+  }
+</script>

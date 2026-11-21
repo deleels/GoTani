@@ -1,0 +1,6387 @@
+# GoTani English UI (Phase 7). Source text (msgid) is Indonesian.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: core\forms.py
+msgid "Kata sandi sementara baru"
+msgstr "New temporary password"
+
+#: core\forms.py
+msgid "Nama belakang"
+msgstr "Last name"
+
+#: core\forms.py
+msgid "Nama depan"
+msgstr "First name"
+
+#: core\forms.py
+msgid "Nama lengkap"
+msgstr "Full name"
+
+#: core\forms.py
+msgid "Pengguna wajib menggantinya saat pertama masuk."
+msgstr "The user must change it at first login."
+
+#: core\home.py
+msgid "Agustus"
+msgstr "August"
+
+#: core\home.py
+msgid "April"
+msgstr "April"
+
+#: core\home.py
+msgid "Desember"
+msgstr "December"
+
+#: core\home.py
+msgid "Februari"
+msgstr "February"
+
+#: core\home.py
+msgid "Irigasi"
+msgstr "Irrigation"
+
+#: core\home.py
+msgid "Januari"
+msgstr "January"
+
+#: core\home.py
+msgid "Juli"
+msgstr "July"
+
+#: core\home.py
+msgid "Jumat"
+msgstr "Friday"
+
+#: core\home.py
+msgid "Juni"
+msgstr "June"
+
+#: core\home.py
+msgid "Kamis"
+msgstr "Thursday"
+
+#: core\home.py
+msgid "Maret"
+msgstr "March"
+
+#: core\home.py
+msgid "Mei"
+msgstr "May"
+
+#: core\home.py
+msgid "Minggu"
+msgstr "Sunday"
+
+#: core\home.py
+msgid "November"
+msgstr "November"
+
+#: core\home.py
+msgid "Oktober"
+msgstr "October"
+
+#: core\home.py
+msgid "Pemupukan"
+msgstr "Fertilising"
+
+#: core\home.py
+msgid "Penanaman"
+msgstr "Planting"
+
+#: core\home.py
+msgid "Pestisida"
+msgstr "Pesticide"
+
+#: core\home.py
+msgid "Pra-panen"
+msgstr "Pre-harvest"
+
+#: core\home.py
+msgid "Rabu"
+msgstr "Wednesday"
+
+#: core\home.py
+msgid "Sabtu"
+msgstr "Saturday"
+
+#: core\home.py
+msgid "Scouting"
+msgstr "Scouting"
+
+#: core\home.py
+msgid "Selamat malam"
+msgstr "Good evening"
+
+#: core\home.py
+msgid "Selamat pagi"
+msgstr "Good morning"
+
+#: core\home.py
+msgid "Selamat siang"
+msgstr "Good afternoon"
+
+#: core\home.py
+msgid "Selamat sore"
+msgstr "Good afternoon"
+
+#: core\home.py
+msgid "Selasa"
+msgstr "Tuesday"
+
+#: core\home.py
+msgid "Senin"
+msgstr "Monday"
+
+#: core\home.py
+msgid "September"
+msgstr "September"
+
+#: core\models.py
+msgid "Aktifkan hanya bila kebun terdaftar sebagai PKP dan wajib memungut PPN."
+msgstr "Turn on only if the farm is VAT-registered (PKP) and must charge VAT."
+
+#: core\models.py
+msgid "Pengusaha Kena Pajak (PKP)"
+msgstr "VAT-registered business (PKP)"
+
+#: core\models.py
+msgid "aksi"
+msgstr "action"
+
+#: core\models.py
+msgid "alamat"
+msgstr "address"
+
+#: core\models.py
+msgid "alasan"
+msgstr "reason"
+
+#: core\models.py
+msgid "bahasa"
+msgstr "language"
+
+#: core\models.py
+msgid "bujur"
+msgstr "longitude"
+
+#: core\models.py
+msgid "id objek"
+msgstr "object id"
+
+#: core\models.py
+msgid "jenis objek"
+msgstr "object type"
+
+#: core\models.py
+msgid "lintang"
+msgstr "latitude"
+
+#: core\models.py
+msgid "log aktivitas"
+msgstr "activity log"
+
+#: core\models.py
+msgid "logo"
+msgstr "logo"
+
+#: core\models.py
+msgid "nama kebun"
+msgstr "farm name"
+
+#: core\models.py
+msgid "profil kebun"
+msgstr "farm profile"
+
+#: core\models.py
+msgid "profil pengguna"
+msgstr "user profile"
+
+#: core\models.py
+msgid "ringkasan"
+msgstr "summary"
+
+#: core\models.py
+msgid "sebelum"
+msgstr "before"
+
+#: core\models.py
+msgid "sesudah"
+msgstr "after"
+
+#: core\models.py
+msgid "telepon"
+msgstr "phone"
+
+#: core\models.py
+msgid "waktu"
+msgstr "time"
+
+#: core\nav.py
+msgid "ALAT"
+msgstr "TOOLS"
+
+#: core\nav.py
+msgid "Aset Kebun"
+msgstr "Farm assets"
+
+#: core\nav.py
+msgid "DASBOR"
+msgstr "DASHBOARD"
+
+#: core\nav.py
+msgid "KEUANGAN"
+msgstr "FINANCE"
+
+#: core\nav.py
+msgid "Omzet & PPh"
+msgstr "Revenue & tax"
+
+#: core\nav.py
+msgid "PENJUALAN"
+msgstr "SALES"
+
+#: core\notifications.py
+msgid "%(buyer)s · sisa %(left)s"
+msgstr "%(buyer)s · %(left)s due"
+
+#: core\notifications.py
+msgid "%(n)s biaya menunggu persetujuan"
+msgstr "%(n)s expenses waiting for approval"
+
+#: core\notifications.py
+msgid "Belum berharga: %(p)s"
+msgstr "Not priced yet: %(p)s"
+
+#: core\notifications.py
+msgid "Invoice jatuh tempo: %(number)s"
+msgstr "Invoice overdue: %(number)s"
+
+#: core\notifications.py
+msgid "Panen terlewat: %(variety)s @ %(element)s"
+msgstr "Harvest overdue: %(variety)s @ %(element)s"
+
+#: core\notifications.py
+msgid "Perkiraan %(expected_harvest_date)s, tahap masih %(stage)s"
+msgstr "Expected %(expected_harvest_date)s, still at %(stage)s"
+
+#: core\notifications.py
+msgid "Produk tersembunyi dari Kasir sampai diberi harga"
+msgstr "Hidden from the POS until it has a price"
+
+#: core\notifications.py
+msgid "Setujui atau tolak di halaman Biaya"
+msgstr "Approve or reject them on the Expenses page"
+
+#: core\notifications.py
+msgid "Sisa %(stock)s kg (batas %(min_alert_kg)s kg)"
+msgstr "%(stock)s kg left (alert at %(min_alert_kg)s kg)"
+
+#: core\notifications.py
+msgid "Sisa %(stock_qty)s %(unit)s (batas %(min_alert_qty)s)"
+msgstr "%(stock_qty)s %(unit)s left (alert at %(min_alert_qty)s)"
+
+#: core\notifications.py
+msgid "Stok menipis: %(name)s"
+msgstr "Low stock: %(name)s"
+
+#: core\notifications.py
+msgid "Stok produk menipis: %(product)s"
+msgstr "Product running low: %(product)s"
+
+#: core\services.py
+msgid "Anda tidak dapat menonaktifkan akun Anda sendiri."
+msgstr "You can't deactivate your own account."
+
+#: core\services.py
+msgid "Bahasa tidak dikenal."
+msgstr "Unknown language."
+
+#: core\services.py
+msgid "Hanya OWNER yang dapat melakukan ini."
+msgstr "Only the OWNER can do this."
+
+#: core\services.py
+msgid "Koordinat di luar jangkauan."
+msgstr "Coordinates out of range."
+
+#: core\services.py
+msgid "Lintang dan bujur harus diisi keduanya atau dikosongkan keduanya."
+msgstr "Fill in both latitude and longitude, or leave both blank."
+
+#: core\services.py
+msgid "Nama depan wajib diisi."
+msgstr "First name is required."
+
+#: core\services.py
+msgid "Nama pengguna sudah dipakai."
+msgstr "That username is taken."
+
+#: core\services.py
+msgid "Nama pengguna wajib diisi."
+msgstr "Username is required."
+
+#: core\services.py
+msgid "Peran superuser diatur lewat admin Django."
+msgstr "Superuser roles are managed in Django admin."
+
+#: core\services.py
+msgid "Peran tidak dikenal."
+msgstr "Unknown role."
+
+#: core\services.py
+msgid "Tidak dapat mengubah peran OWNER aktif terakhir."
+msgstr "You can't change the role of the last active OWNER."
+
+#: core\services.py
+msgid "Tidak dapat menonaktifkan OWNER aktif terakhir."
+msgstr "You can't deactivate the last active OWNER."
+
+#: core\templatetags\ui.py
+msgid "%(amount)s melebihi semua tagihan terbuka %(buyer)s sebesar %(left)s."
+msgstr "%(amount)s is %(left)s more than everything %(buyer)s owes."
+
+#: core\templatetags\ui.py
+msgid "%(invoice)s hanya bersisa %(balance)s."
+msgstr "%(invoice)s only has %(balance)s left."
+
+#: core\templatetags\ui.py
+msgid "%(item)s: %(cost)s per %(unit)s, %(pct)s lebih mahal dari rata-rata %(avg)s."
+msgstr "%(item)s: %(cost)s per %(unit)s, %(pct)s more than the %(avg)s average."
+
+#: core\templatetags\ui.py
+msgid "%(item)s: %(cost)s per %(unit)s, %(pct)s lebih murah dari rata-rata %(avg)s."
+msgstr "%(item)s: %(cost)s per %(unit)s, %(pct)s less than the %(avg)s average."
+
+#: core\templatetags\ui.py
+msgid "Angka tidak valid."
+msgstr "Not a valid number."
+
+#: core\templatetags\ui.py
+msgid "Biaya belum terserap %(amount)s dicatat sebagai biaya siklus tak terserap (write-off)."
+msgstr "Unabsorbed cost %(amount)s is recorded as an unabsorbed cycle cost (write-off)."
+
+#: core\templatetags\ui.py
+msgid "Cek pra-panen terakhir: %(pct)s%% lengkap (belum lengkap)."
+msgstr "Last pre-harvest check: %(pct)s%% complete (incomplete)."
+
+#: core\templatetags\ui.py
+msgid "Cek pra-panen terakhir: %(pct)s%% lengkap."
+msgstr "Last pre-harvest check: %(pct)s%% complete."
+
+#: core\templatetags\ui.py
+msgid "Dari %(amount)s yang diterima, %(applied)s masuk ke invoice."
+msgstr "Of the %(amount)s received, %(applied)s goes to invoices."
+
+#: core\templatetags\ui.py
+msgid "Email tidak valid."
+msgstr "Not a valid email."
+
+#: core\templatetags\ui.py
+msgid "Format tidak sesuai."
+msgstr "Wrong format."
+
+#: core\templatetags\ui.py
+msgid "Harga beli tidak biasa"
+msgstr "Unusual purchase price"
+
+#: core\templatetags\ui.py
+msgid "Harga di bawah HPP rata-rata lot yang masih ada (%(cogs)s/kg); setiap kg terjual merugi."
+msgstr "Price is below the average COGS of the open lots (%(cogs)s/kg); every kg sold loses money."
+
+#: core\templatetags\ui.py
+msgid "Harga ini mengubah biaya rata-rata input dan biaya pemakaian berikutnya. Periksa satuan dan angkanya."
+msgstr "This price changes the input's average cost and future usage costs. Check the unit and the number."
+
+#: core\templatetags\ui.py
+msgid "Harga naik %(pct)s: %(old)s → %(new)s per kg."
+msgstr "Price up %(pct)s: %(old)s → %(new)s per kg."
+
+#: core\templatetags\ui.py
+msgid "Harga turun %(pct)s: %(old)s → %(new)s per kg."
+msgstr "Price down %(pct)s: %(old)s → %(new)s per kg."
+
+#: core\templatetags\ui.py
+msgid "Invoice mendapat %(applied)s, tetapi uang yang diterima hanya %(amount)s."
+msgstr "Invoices get %(applied)s, but only %(amount)s was received."
+
+#: core\templatetags\ui.py
+msgid "Konfirmasi"
+msgstr "Confirm"
+
+#: core\templatetags\ui.py
+msgid "Lanjutkan"
+msgstr "Continue"
+
+#: core\templatetags\ui.py
+msgid "Majukan ke %(stage)s"
+msgstr "Move to %(stage)s"
+
+#: core\templatetags\ui.py
+msgid "Majukan tahap?"
+msgstr "Move to the next stage?"
+
+#: core\templatetags\ui.py
+msgid "Maksimal %(max)s."
+msgstr "At most %(max)s."
+
+#: core\templatetags\ui.py
+msgid "Maksimal %(n)s karakter."
+msgstr "At most %(n)s characters."
+
+#: core\templatetags\ui.py
+msgid "Minimal %(min)s."
+msgstr "At least %(min)s."
+
+#: core\templatetags\ui.py
+msgid "Minimal %(n)s karakter."
+msgstr "At least %(n)s characters."
+
+#: core\templatetags\ui.py
+msgid "Pakai untuk %(invoices)s (jatuh tempo paling awal dulu)"
+msgstr "Apply to %(invoices)s (earliest due first)"
+
+#: core\templatetags\ui.py
+msgid "Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru."
+msgstr "Only an OWNER/MANAGER can undo this, on the same day, while nothing new has been logged."
+
+#: core\templatetags\ui.py
+msgid "Pembersihan menutup siklus; tidak ada panen lagi setelah ini."
+msgstr "Clean-up closes the cycle; no more harvests after this."
+
+#: core\templatetags\ui.py
+msgid "Penjelasan"
+msgstr "More info"
+
+#: core\templatetags\ui.py
+msgid "Periksa harga baru"
+msgstr "Check the new price"
+
+#: core\templatetags\ui.py
+msgid "Periksa kolom yang ditandai."
+msgstr "Check the highlighted fields."
+
+#: core\templatetags\ui.py
+msgid "Peringatan: belum ada cek pra-panen."
+msgstr "Warning: no pre-harvest check yet."
+
+#: core\templatetags\ui.py
+msgid "Saya sudah memeriksa data ini"
+msgstr "I have checked this"
+
+#: core\templatetags\ui.py
+msgid "Simpan %(left)s sebagai kredit?"
+msgstr "Keep %(left)s as credit?"
+
+#: core\templatetags\ui.py
+msgid "Simpan dengan kredit"
+msgstr "Save with credit"
+
+#: core\templatetags\ui.py
+msgid "Simpan harga"
+msgstr "Save price"
+
+#: core\templatetags\ui.py
+msgid "Simpan pembayaran"
+msgstr "Save payment"
+
+#: core\templatetags\ui.py
+msgid "Simpan sebagai kredit %(buyer)s"
+msgstr "Keep as credit for %(buyer)s"
+
+#: core\templatetags\ui.py
+msgid "Sisa %(left)s belum dialokasikan"
+msgstr "%(left)s not applied yet"
+
+#: core\templatetags\ui.py
+msgid "Sisanya disimpan sebagai kredit %(buyer)s dan bisa dipakai untuk invoice berikutnya; tidak bisa dicairkan."
+msgstr "The rest is kept as credit for %(buyer)s and can be applied to their next invoice; it can't be paid out."
+
+#: core\templatetags\ui.py
+msgid "Tahap yang dilewati: %(list)s."
+msgstr "Skipped stages: %(list)s."
+
+#: core\templatetags\ui.py
+msgid "Tidak ada biaya yang belum terserap."
+msgstr "No unabsorbed costs."
+
+#: core\templatetags\ui.py
+msgid "Wajib diisi."
+msgstr "Required."
+
+#: core\views.py
+msgid "Aksi tidak dikenal."
+msgstr "Unknown action."
+
+#: core\views.py
+msgid "Akun %(user)s diaktifkan."
+msgstr "Account %(user)s activated."
+
+#: core\views.py
+msgid "Akun %(user)s dinonaktifkan."
+msgstr "Account %(user)s deactivated."
+
+#: core\views.py
+msgid "Akun %(username)s dibuat. Berikan kata sandi sementara kepadanya."
+msgstr "Account %(username)s created. Give them the temporary password."
+
+#: core\views.py
+msgid "Alokasi dilepas"
+msgstr "Payment unapplied"
+
+#: core\views.py
+msgid "Harga"
+msgstr "Price"
+
+#: core\views.py
+msgid "Kata sandi berhasil diganti."
+msgstr "Password changed."
+
+#: core\views.py
+msgid "Kata sandi sementara %(user)s diatur ulang."
+msgstr "Temporary password for %(user)s reset."
+
+#: core\views.py
+msgid "Kata sandi sementara wajib diisi."
+msgstr "Temporary password is required."
+
+#: core\views.py
+msgid "Langkah kasir"
+msgstr "Cashier step"
+
+#: core\views.py
+msgid "Minimal 8 karakter, tidak mirip nama pengguna, tidak umum, dan tidak hanya angka."
+msgstr "At least 8 characters, not like your username, not a common password and not only numbers."
+
+#: core\views.py
+msgid "Opname disetujui"
+msgstr "Count approved"
+
+#: core\views.py
+msgid "Opname ditolak"
+msgstr "Count rejected"
+
+#: core\views.py
+msgid "Pembayaran dibatalkan"
+msgstr "Payment cancelled"
+
+#: core\views.py
+msgid "Peran %(user)s diperbarui."
+msgstr "Role of %(user)s updated."
+
+#: core\views.py
+msgid "Produk (admin)"
+msgstr "Product (admin)"
+
+#: core\views.py
+msgid "Profil disimpan."
+msgstr "Profile saved."
+
+#: core\views.py
+msgid "Profil kebun disimpan."
+msgstr "Farm profile saved."
+
+#: core\views.py
+msgid "Sandi baru"
+msgstr "New password"
+
+#: core\views.py
+msgid "Sandi lama"
+msgstr "Current password"
+
+#: core\views.py
+msgid "Status PKP"
+msgstr "VAT status"
+
+#: core\views.py
+msgid "Susut dibatalkan"
+msgstr "Spoilage reversed"
+
+#: core\views.py
+msgid "Tahap dibatalkan"
+msgstr "Stage undone"
+
+#: core\views.py
+msgid "Tahap maju"
+msgstr "Stage advanced"
+
+#: core\views.py
+msgid "Tidak"
+msgstr "No"
+
+#: core\views.py
+msgid "Tinjau selisih kas"
+msgstr "Cash difference review"
+
+#: core\views.py
+msgid "Ulangi sandi baru"
+msgstr "Repeat new password"
+
+#: core\views.py
+msgid "Ya"
+msgstr "Yes"
+
+#: core\views.py
+msgid "dihapus (kg)"
+msgstr "written off (kg)"
+
+#: core\views.py
+msgid "dihitung (Rp)"
+msgstr "counted (Rp)"
+
+#: core\views.py
+msgid "harga/kg"
+msgstr "price/kg"
+
+#: core\views.py
+msgid "jumlah (Rp)"
+msgstr "amount (Rp)"
+
+#: core\views.py
+msgid "langkah (kg)"
+msgstr "step (kg)"
+
+#: core\views.py
+msgid "pajak"
+msgstr "tax"
+
+#: core\views.py
+msgid "pembayaran #"
+msgstr "payment #"
+
+#: core\views.py
+msgid "seharusnya (Rp)"
+msgstr "expected (Rp)"
+
+#: core\views.py
+msgid "selisih (Rp)"
+msgstr "difference (Rp)"
+
+#: core\views.py
+msgid "stok fisik (kg)"
+msgstr "counted stock (kg)"
+
+#: core\views.py
+msgid "stok sistem (kg)"
+msgstr "system stock (kg)"
+
+#: core\views.py
+msgid "tahap"
+msgstr "stage"
+
+#: farm\access.py
+msgid "Anda tidak memiliki akses ke halaman ini."
+msgstr "You don't have access to this page."
+
+#: farm\forms.py
+msgid "Berat per karung (kg)"
+msgstr "Weight per sack (kg)"
+
+#: farm\forms.py
+msgid "Bukti (opsional)"
+msgstr "Receipt (optional)"
+
+#: farm\forms.py
+msgid "Butir yang sudah dipenuhi"
+msgstr "Items completed"
+
+#: farm\forms.py
+msgid "Durasi (menit)"
+msgstr "Duration (minutes)"
+
+#: farm\forms.py
+msgid "Grade A / HIGH (kg)"
+msgstr "Grade A / HIGH (kg)"
+
+#: farm\forms.py
+msgid "Grade B / LOW (kg)"
+msgstr "Grade B / LOW (kg)"
+
+#: farm\forms.py
+msgid "Harga jual per kg (Rp)"
+msgstr "Selling price per kg (Rp)"
+
+#: farm\forms.py
+msgid "Harga per satuan (Rp)"
+msgstr "Price per unit (Rp)"
+
+#: farm\forms.py
+msgid "Input (opsional)"
+msgstr "Input (optional)"
+
+#: farm\forms.py
+msgid "Jenis kegiatan"
+msgstr "Activity type"
+
+#: farm\forms.py
+msgid "Jumlah (kg)"
+msgstr "Quantity (kg)"
+
+#: farm\forms.py
+msgid "Jumlah karung"
+msgstr "Number of sacks"
+
+#: farm\forms.py
+msgid "Kosongkan untuk memakai umur panen varietas."
+msgstr "Leave blank to use the variety's days to harvest."
+
+#: farm\forms.py
+msgid "Kosongkan untuk waktu sekarang."
+msgstr "Leave blank for now."
+
+#: farm\forms.py
+msgid "Lot #%(pk)s — %(product)s — panen %(date)s — sisa %(left)s kg"
+msgstr "Lot #%(pk)s — %(product)s — harvested %(date)s — %(left)s kg left"
+
+#: farm\forms.py
+msgid "Luas (m²)"
+msgstr "Area (m²)"
+
+#: farm\forms.py
+msgid "Metode aplikasi"
+msgstr "Application method"
+
+#: farm\forms.py
+msgid "Nama elemen"
+msgstr "Plot name"
+
+#: farm\forms.py
+msgid "Nama elemen sudah dipakai."
+msgstr "That plot name is taken."
+
+#: farm\forms.py
+msgid "Perkiraan hasil (kg)"
+msgstr "Expected yield (kg)"
+
+#: farm\forms.py
+msgid "Satuan"
+msgstr "Unit"
+
+#: farm\forms.py
+msgid "Siklus (opsional)"
+msgstr "Cycle (optional)"
+
+#: farm\forms.py
+msgid "Siklus (tahap Panen)"
+msgstr "Cycle (Harvest stage)"
+
+#: farm\forms.py
+msgid "Susut panen (kg)"
+msgstr "Harvest loss (kg)"
+
+#: farm\forms.py
+msgid "Tanggal mulai tanam"
+msgstr "Planting date"
+
+#: farm\forms.py
+msgid "Vendor"
+msgstr "Vendor"
+
+#: farm\forms.py
+msgid "Waktu panen"
+msgstr "Harvest time"
+
+#: farm\models.py
+msgid "Benih"
+msgstr "Seed"
+
+#: farm\models.py
+msgid "Cek pra-panen %(cycle)s %(pct)s%%"
+msgstr "Pre-harvest check %(cycle)s %(pct)s%%"
+
+#: farm\models.py
+msgid "Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."
+msgstr "E.g. chilli 1.05 · melon 1.0 · cocoa 1.0 (FAO-56, mid-season)."
+
+#: farm\models.py
+msgid "Gram"
+msgstr "Gram"
+
+#: farm\models.py
+msgid "Greenhouse"
+msgstr "Greenhouse"
+
+#: farm\models.py
+msgid "HPP/kg HIGH"
+msgstr "COGS/kg HIGH"
+
+#: farm\models.py
+msgid "HPP/kg LOW"
+msgstr "COGS/kg LOW"
+
+#: farm\models.py
+msgid "Hidroponik"
+msgstr "Hydroponic"
+
+#: farm\models.py
+msgid "Kilogram"
+msgstr "Kilogram"
+
+#: farm\models.py
+msgid "Lahan Terbuka"
+msgstr "Open field"
+
+#: farm\models.py
+msgid "Lainnya"
+msgstr "Other"
+
+#: farm\models.py
+msgid "Manual"
+msgstr "Manual"
+
+#: farm\models.py
+msgid "Mililiter"
+msgstr "Millilitre"
+
+#: farm\models.py
+msgid "Panen #%(pk)s — %(cycle)s (%(date)s)"
+msgstr "Harvest #%(pk)s — %(cycle)s (%(date)s)"
+
+#: farm\models.py
+msgid "Pemakaian"
+msgstr "Usage"
+
+#: farm\models.py
+msgid "Pemakaian Input"
+msgstr "Input usage"
+
+#: farm\models.py
+msgid "Pembatalan Pemakaian"
+msgstr "Usage reversal"
+
+#: farm\models.py
+msgid "Pembayaran gagal"
+msgstr "Payment failed"
+
+#: farm\models.py
+msgid "Pembeli batal"
+msgstr "Customer cancelled"
+
+#: farm\models.py
+msgid "Pembersihan"
+msgstr "Clean-up"
+
+#: farm\models.py
+msgid "Pembuahan"
+msgstr "Fruiting"
+
+#: farm\models.py
+msgid "Pembungaan"
+msgstr "Flowering"
+
+#: farm\models.py
+msgid "Penanaman Benih"
+msgstr "Seeding"
+
+#: farm\models.py
+msgid "Pengamatan"
+msgstr "Scouting"
+
+#: farm\models.py
+msgid "Penyemprotan Pestisida"
+msgstr "Pesticide spraying"
+
+#: farm\models.py
+msgid "Perkecambahan"
+msgstr "Germination"
+
+#: farm\models.py
+msgid "Pindah Tanam"
+msgstr "Transplanting"
+
+#: farm\models.py
+msgid "Pupuk"
+msgstr "Fertiliser"
+
+#: farm\models.py
+msgid "QRIS"
+msgstr "QRIS"
+
+#: farm\models.py
+msgid "Salah harga / produk"
+msgstr "Wrong price / product"
+
+#: farm\models.py
+msgid "Salah input"
+msgstr "Entry error"
+
+#: farm\models.py
+msgid "Screen House"
+msgstr "Screen house"
+
+#: farm\models.py
+msgid "Shadenet"
+msgstr "Shade net"
+
+#: farm\models.py
+msgid "Transfer"
+msgstr "Bank transfer"
+
+#: farm\models.py
+msgid "Vegetatif"
+msgstr "Vegetative"
+
+#: farm\models.py
+msgid "batas peringatan stok"
+msgstr "stock alert level"
+
+#: farm\models.py
+msgid "batch panen"
+msgstr "harvest batch"
+
+#: farm\models.py
+msgid "berat per karung (kg)"
+msgstr "weight per sack (kg)"
+
+#: farm\models.py
+msgid "biaya"
+msgstr "expense"
+
+#: farm\models.py
+msgid "biaya rata-rata per satuan"
+msgstr "average cost per unit"
+
+#: farm\models.py
+msgid "biaya terserap"
+msgstr "absorbed cost"
+
+#: farm\models.py
+msgid "buku besar input"
+msgstr "input ledger"
+
+#: farm\models.py
+msgid "butir"
+msgstr "item"
+
+#: farm\models.py
+msgid "butir cek pra-panen"
+msgstr "pre-harvest check item"
+
+#: farm\models.py
+msgid "butir tercentang"
+msgstr "checked items"
+
+#: farm\models.py
+msgid "cakupan"
+msgstr "scope"
+
+#: farm\models.py
+msgid "catatan"
+msgstr "notes"
+
+#: farm\models.py
+msgid "cek pra-panen"
+msgstr "pre-harvest check"
+
+#: farm\models.py
+msgid "dibeli pada"
+msgstr "purchased at"
+
+#: farm\models.py
+msgid "dibuat pada"
+msgstr "created at"
+
+#: farm\models.py
+msgid "dicatat oleh"
+msgstr "logged by"
+
+#: farm\models.py
+msgid "dipanen pada"
+msgstr "harvested at"
+
+#: farm\models.py
+msgid "diserap oleh panen"
+msgstr "absorbed by harvest"
+
+#: farm\models.py
+msgid "disetujui oleh"
+msgstr "approved by"
+
+#: farm\models.py
+msgid "disetujui pada"
+msgstr "approved at"
+
+#: farm\models.py
+msgid "ditutup pada"
+msgstr "closed at"
+
+#: farm\models.py
+msgid "durasi (menit)"
+msgstr "duration (minutes)"
+
+#: farm\models.py
+msgid "elemen"
+msgstr "plot"
+
+#: farm\models.py
+msgid "elemen kebun"
+msgstr "plot"
+
+#: farm\models.py
+msgid "foto"
+msgstr "photo"
+
+#: farm\models.py
+msgid "grade HIGH (kg)"
+msgstr "grade HIGH (kg)"
+
+#: farm\models.py
+msgid "grade LOW (kg)"
+msgstr "grade LOW (kg)"
+
+#: farm\models.py
+msgid "harga per satuan"
+msgstr "price per unit"
+
+#: farm\models.py
+msgid "input"
+msgstr "input"
+
+#: farm\models.py
+msgid "input produksi"
+msgstr "input"
+
+#: farm\models.py
+msgid "jenis"
+msgstr "type"
+
+#: farm\models.py
+msgid "jenis kegiatan"
+msgstr "activity type"
+
+#: farm\models.py
+msgid "jenis mutasi"
+msgstr "movement type"
+
+#: farm\models.py
+msgid "jumlah"
+msgstr "quantity"
+
+#: farm\models.py
+msgid "jumlah (bertanda)"
+msgstr "quantity (signed)"
+
+#: farm\models.py
+msgid "jumlah karung"
+msgstr "number of sacks"
+
+#: farm\models.py
+msgid "jumlah tanaman"
+msgstr "plant count"
+
+#: farm\models.py
+msgid "kategori"
+msgstr "category"
+
+#: farm\models.py
+msgid "kategori biaya"
+msgstr "expense category"
+
+#: farm\models.py
+msgid "kegiatan sumber"
+msgstr "source activity"
+
+#: farm\models.py
+msgid "keterangan"
+msgstr "description"
+
+#: farm\models.py
+msgid "kode"
+msgstr "code"
+
+#: farm\models.py
+msgid "koefisien tanaman (Kc)"
+msgstr "crop coefficient (Kc)"
+
+#: farm\models.py
+msgid "log kegiatan"
+msgstr "activity log entry"
+
+#: farm\models.py
+msgid "luas (m²)"
+msgstr "area (m²)"
+
+#: farm\models.py
+msgid "metode aplikasi"
+msgstr "application method"
+
+#: farm\models.py
+msgid "metode pembayaran"
+msgstr "payment method"
+
+#: farm\models.py
+msgid "nama"
+msgstr "name"
+
+#: farm\models.py
+msgid "pemasok"
+msgstr "supplier"
+
+#: farm\models.py
+msgid "pembelian input"
+msgstr "input purchase"
+
+#: farm\models.py
+msgid "perkiraan hasil (kg)"
+msgstr "expected yield (kg)"
+
+#: farm\models.py
+msgid "perkiraan panen"
+msgstr "expected harvest"
+
+#: farm\models.py
+msgid "persen selesai"
+msgstr "percent complete"
+
+#: farm\models.py
+msgid "referensi"
+msgstr "reference"
+
+#: farm\models.py
+msgid "satuan"
+msgstr "unit"
+
+#: farm\models.py
+msgid "siklus"
+msgstr "cycle"
+
+#: farm\models.py
+msgid "siklus tanam"
+msgstr "crop cycle"
+
+#: farm\models.py
+msgid "status"
+msgstr "status"
+
+#: farm\models.py
+msgid "stok"
+msgstr "stock"
+
+#: farm\models.py
+msgid "sumber"
+msgstr "source"
+
+#: farm\models.py
+msgid "susut panen (kg)"
+msgstr "harvest loss (kg)"
+
+#: farm\models.py
+msgid "tahap saat kegiatan"
+msgstr "stage at activity"
+
+#: farm\models.py
+msgid "tanaman"
+msgstr "crop"
+
+#: farm\models.py
+msgid "tanggal biaya"
+msgstr "expense date"
+
+#: farm\models.py
+msgid "tanggal mulai tanam"
+msgstr "planting date"
+
+#: farm\models.py
+msgid "umur panen (hari)"
+msgstr "days to harvest"
+
+#: farm\models.py
+msgid "urutan"
+msgstr "order"
+
+#: farm\models.py
+msgid "varietas"
+msgstr "variety"
+
+#: farm\models.py
+msgid "vendor"
+msgstr "vendor"
+
+#: farm\services.py
+msgid "%(name)s bukan input jenis %(label)s."
+msgstr "%(name)s isn't a %(label)s input."
+
+#: farm\services.py
+msgid "Alasan pembatalan wajib diisi."
+msgstr "A reason is required."
+
+#: farm\services.py
+msgid "Batch ini %(kg)s kg, lebih dari 3× rata-rata batch sebelumnya (%(avg)s kg)."
+msgstr "This batch is %(kg)s kg, more than 3× the previous batch average (%(avg)s kg)."
+
+#: farm\services.py
+msgid "Batch panen tidak dapat dihapus: stoknya sudah terjual, rusak, atau dimutasi."
+msgstr "This harvest batch can't be deleted: its stock was sold, spoiled or moved."
+
+#: farm\services.py
+msgid "Belum ada butir cek pra-panen yang aktif."
+msgstr "No active pre-harvest check items yet."
+
+#: farm\services.py
+msgid "Berat grade HIGH harus lebih dari 0 kg."
+msgstr "Grade HIGH weight must be more than 0 kg."
+
+#: farm\services.py
+msgid "Berat grade LOW dan susut panen tidak boleh negatif."
+msgstr "Grade LOW weight and harvest loss can't be negative."
+
+#: farm\services.py
+msgid "Berat per karung harus lebih dari 0 kg."
+msgstr "Weight per sack must be more than 0 kg."
+
+#: farm\services.py
+msgid "Biaya elemen harus memilih elemen."
+msgstr "A plot expense needs a plot."
+
+#: farm\services.py
+msgid "Biaya pemakaian input dihapus melalui log kegiatan."
+msgstr "Input usage costs are deleted through the work log."
+
+#: farm\services.py
+msgid "Biaya pemakaian input dikelola melalui log kegiatan."
+msgstr "Input usage costs are managed through the work log."
+
+#: farm\services.py
+msgid "Biaya pemakaian input tidak dapat diubah dari menu biaya."
+msgstr "Input usage costs can't be edited from Expenses."
+
+#: farm\services.py
+msgid "Biaya sudah diserap oleh panen dan tidak dapat diubah."
+msgstr "This expense was absorbed by a harvest and can't change."
+
+#: farm\services.py
+msgid "Biaya umum tidak boleh terkait elemen atau siklus."
+msgstr "Overhead can't be linked to a plot or cycle."
+
+#: farm\services.py
+msgid "Biaya yang sudah disetujui tidak dapat dihapus."
+msgstr "An approved expense can't be deleted."
+
+#: farm\services.py
+msgid "Biaya yang sudah disetujui tidak dapat diubah; kembalikan ke Menunggu dulu."
+msgstr "An approved expense can't be edited; move it back to Pending first."
+
+#: farm\services.py
+msgid "Butir cek tidak dikenal atau tidak aktif."
+msgstr "Unknown or inactive check item."
+
+#: farm\services.py
+msgid "Cakupan biaya tidak dikenal: %(scope)s."
+msgstr "Unknown expense scope: %(scope)s."
+
+#: farm\services.py
+msgid "Durasi hanya untuk kegiatan irigasi."
+msgstr "Duration is only for irrigation."
+
+#: farm\services.py
+msgid "Durasi irigasi harus lebih dari 0 menit."
+msgstr "Irrigation duration must be more than 0 minutes."
+
+#: farm\services.py
+msgid "Elemen %(name)s masih memiliki siklus tanam aktif; tutup siklusnya terlebih dahulu."
+msgstr "Plot %(name)s still has an active crop cycle; close it first."
+
+#: farm\services.py
+msgid "Elemen %(name)s sudah memiliki siklus tanam aktif."
+msgstr "Plot %(name)s already has an active crop cycle."
+
+#: farm\services.py
+msgid "Elemen %(name)s tidak aktif."
+msgstr "Plot %(name)s is inactive."
+
+#: farm\services.py
+msgid "Elemen ini sudah punya siklus baru, jadi siklus lama tidak bisa dibuka kembali."
+msgstr "This plot already has a new cycle, so the old one can't be reopened."
+
+#: farm\services.py
+msgid "Field tidak dapat diubah: %(join)s."
+msgstr "These fields can't change: %(join)s."
+
+#: farm\services.py
+msgid "Foto hanya untuk kegiatan pengamatan (scouting)."
+msgstr "Photos are only for scouting entries."
+
+#: farm\services.py
+msgid "Hanya OWNER atau MANAGER yang dapat melakukan tindakan ini."
+msgstr "Only an OWNER or MANAGER can do this."
+
+#: farm\services.py
+msgid "Hanya OWNER atau MANAGER yang dapat membatalkan perpindahan tahap."
+msgstr "Only an OWNER or MANAGER can undo a stage change."
+
+#: farm\services.py
+msgid "Hanya biaya berstatus Menunggu yang dapat disetujui."
+msgstr "Only pending expenses can be approved."
+
+#: farm\services.py
+msgid "Hanya biaya berstatus Menunggu yang dapat ditolak."
+msgstr "Only pending expenses can be rejected."
+
+#: farm\services.py
+msgid "Hanya biaya yang disetujui yang dapat dikembalikan ke Menunggu."
+msgstr "Only approved expenses can be moved back to Pending."
+
+#: farm\services.py
+msgid "Harga per satuan harus lebih dari 0."
+msgstr "Price per unit must be more than 0."
+
+#: farm\services.py
+msgid "Jenis mutasi input tidak dikenal: %(movement_type)s."
+msgstr "Unknown input movement type: %(movement_type)s."
+
+#: farm\services.py
+msgid "Jumlah %(qty)s tidak valid untuk mutasi %(movement_type)s."
+msgstr "Quantity %(qty)s isn't valid for movement %(movement_type)s."
+
+#: farm\services.py
+msgid "Jumlah biaya harus lebih dari 0."
+msgstr "Amount must be more than 0."
+
+#: farm\services.py
+msgid "Jumlah karung harus lebih dari 0."
+msgstr "Number of sacks must be more than 0."
+
+#: farm\services.py
+msgid "Jumlah pemakaian input harus lebih dari 0."
+msgstr "Input quantity must be more than 0."
+
+#: farm\services.py
+msgid "Jumlah pembelian harus lebih dari 0."
+msgstr "Purchase quantity must be more than 0."
+
+#: farm\services.py
+msgid "Jumlah tanaman harus lebih dari 0."
+msgstr "Plant count must be more than 0."
+
+#: farm\services.py
+msgid "Jumlah tidak boleh negatif."
+msgstr "Quantity can't be negative."
+
+#: farm\services.py
+msgid "Kegiatan ini tidak menggunakan input produksi."
+msgstr "This activity doesn't use an input."
+
+#: farm\services.py
+msgid "Kegiatan tidak dapat dicatat pada siklus yang sudah ditutup."
+msgstr "You can't log work on a closed cycle."
+
+#: farm\services.py
+msgid "Kegiatan tidak dapat dihapus: biaya pemakaian inputnya sudah diserap oleh panen."
+msgstr "This entry can't be deleted: its input cost has already been absorbed by a harvest."
+
+#: farm\services.py
+msgid "Melewati tahap harus dikonfirmasi dengan mencentang \"Lewati tahap\"."
+msgstr "To skip a stage, tick \"Skip stage\"."
+
+#: farm\services.py
+msgid "Panen hanya dapat dicatat saat siklus berada pada tahap Panen."
+msgstr "Harvests can only be logged while the cycle is in the Harvest stage."
+
+#: farm\services.py
+msgid "Pembatalan hanya bisa di hari yang sama dengan perpindahan tahap."
+msgstr "A stage change can only be undone on the same day."
+
+#: farm\services.py
+msgid "Pembelian tidak dapat dihapus karena input ini sudah dipakai setelah pembelian tersebut."
+msgstr "This purchase can't be deleted because the input was used after it."
+
+#: farm\services.py
+msgid "Penanaman benih harus memilih input benih."
+msgstr "Seeding needs a seed input."
+
+#: farm\services.py
+msgid "Peringatan: belum ada cek pra-panen untuk siklus ini."
+msgstr "Warning: this cycle has no pre-harvest check yet."
+
+#: farm\services.py
+msgid "Peringatan: cek pra-panen terakhir baru %(pct)s%% lengkap."
+msgstr "Warning: the last pre-harvest check is only %(pct)s%% complete."
+
+#: farm\services.py
+msgid "Perkiraan hasil tidak boleh negatif."
+msgstr "Expected yield can't be negative."
+
+#: farm\services.py
+msgid "Perkiraan panen tidak boleh sebelum tanggal mulai tanam."
+msgstr "Expected harvest can't be before the planting date."
+
+#: farm\services.py
+msgid "Satuan kegiatan (%(v)s) harus sama dengan satuan input (%(unit)s)."
+msgstr "The activity unit (%(v)s) must match the input unit (%(unit)s)."
+
+#: farm\services.py
+msgid "Siklus sudah ditutup."
+msgstr "This cycle is already closed."
+
+#: farm\services.py
+msgid "Siklus sudah ditutup; tahap tidak dapat diubah."
+msgstr "This cycle is closed; its stage can't change."
+
+#: farm\services.py
+msgid "Siklus tidak berada pada elemen yang dipilih."
+msgstr "That cycle isn't on the selected plot."
+
+#: farm\services.py
+msgid "Stok %(name)s tidak cukup untuk membatalkan pembelian ini."
+msgstr "Not enough %(name)s in stock to reverse this purchase."
+
+#: farm\services.py
+msgid "Stok %(name)s tidak cukup: tersedia %(stock_qty)s %(unit)s, dibutuhkan %(v)s %(unit2)s."
+msgstr "Not enough %(name)s: %(stock_qty)s %(unit)s available, %(v)s %(unit2)s needed."
+
+#: farm\services.py
+msgid "Sudah ada catatan baru (kegiatan, panen, cek pra-panen, atau biaya) sejak tahap dimajukan."
+msgstr "Something new was logged (work, harvest, pre-harvest check or expense) since the stage moved."
+
+#: farm\services.py
+msgid "Tahap hanya boleh maju: %(stage)s → %(label)s ditolak."
+msgstr "Stages only move forward: %(stage)s → %(label)s rejected."
+
+#: farm\services.py
+msgid "Tahap tidak dikenal: %(new_stage)s."
+msgstr "Unknown stage: %(new_stage)s."
+
+#: farm\services.py
+msgid "Tidak ada perpindahan tahap yang bisa dibatalkan."
+msgstr "There's no stage change to undo."
+
+#: farm\services.py
+msgid "Total panen siklus menjadi %(after)s kg, lebih dari 150%% perkiraan (%(expected)s kg). Periksa angka atau satuan."
+msgstr "The cycle total becomes %(after)s kg, more than 150%% of the estimate (%(expected)s kg). Check the number or the unit."
+
+#: farm\views.py
+msgid "%(completed_pct)s%% lengkap"
+msgstr "%(completed_pct)s%% complete"
+
+#: farm\views.py
+msgid "%(qty_kg)s kg · %(reason)s"
+msgstr "%(qty_kg)s kg · %(reason)s"
+
+#: farm\views.py
+msgid "Batch panen dihapus; biayanya kembali ke pool siklus."
+msgstr "Harvest batch deleted; its costs returned to the cycle pool."
+
+#: farm\views.py
+msgid "Biaya dicatat dan menunggu persetujuan."
+msgstr "Expense logged and waiting for approval."
+
+#: farm\views.py
+msgid "Biaya dihapus."
+msgstr "Expense deleted."
+
+#: farm\views.py
+msgid "Biaya dikembalikan ke Menunggu."
+msgstr "Expense moved back to Pending."
+
+#: farm\views.py
+msgid "Biaya disetujui."
+msgstr "Expense approved."
+
+#: farm\views.py
+msgid "Biaya ditolak."
+msgstr "Expense rejected."
+
+#: farm\views.py
+msgid "Catatan susut dibatalkan; stok dikembalikan ke lot."
+msgstr "Spoilage reversed; stock returned to the lot."
+
+#: farm\views.py
+msgid "Cek pra-panen dicatat (%(pct)s%% lengkap)."
+msgstr "Pre-harvest check logged (%(pct)s%% complete)."
+
+#: farm\views.py
+msgid "Cek pra-panen dicatat."
+msgstr "Pre-harvest check logged."
+
+#: farm\views.py
+msgid "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya."
+msgstr "Tick the checks done before harvest. The completion percentage is saved with the cycle."
+
+#: farm\views.py
+msgid "Elemen adalah satu bedengan, bak hidroponik atau area tanam. Luasnya dipakai untuk hasil per m² dan untuk membagi biaya."
+msgstr "A plot is one bed, hydroponic tank or growing area. Its area is used for yield per m² and to split costs."
+
+#: farm\views.py
+msgid "Elemen kebun ditambahkan."
+msgstr "Plot added."
+
+#: farm\views.py
+msgid "HIGH %(high)s kg · LOW %(low)s kg · susut %(loss)s kg"
+msgstr "HIGH %(high)s kg · LOW %(low)s kg · loss %(loss)s kg"
+
+#: farm\views.py
+msgid "Harga %(product)s dihapus; produk disembunyikan dari POS."
+msgstr "Price of %(product)s removed; the product is hidden from the POS."
+
+#: farm\views.py
+msgid "Harga %(product)s disimpan."
+msgstr "Price of %(product)s saved."
+
+#: farm\views.py
+msgid "Harga tidak valid."
+msgstr "Invalid price."
+
+#: farm\views.py
+msgid "Kegiatan dihapus; stok input dikembalikan."
+msgstr "Entry deleted; input stock returned."
+
+#: farm\views.py
+msgid "Laporan kerja dicatat."
+msgstr "Work logged."
+
+#: farm\views.py
+msgid "Mulai tanam %(variety)s"
+msgstr "Planted %(variety)s"
+
+#: farm\views.py
+msgid "Opname dicatat; menunggu persetujuan OWNER/MANAGER."
+msgstr "Count logged; waiting for OWNER/MANAGER approval."
+
+#: farm\views.py
+msgid "Opname disetujui; %(written_off_kg)s kg dihapusbukukan."
+msgstr "Count approved; %(written_off_kg)s kg written off."
+
+#: farm\views.py
+msgid "Opname ditolak; stok tidak berubah."
+msgstr "Count rejected; stock unchanged."
+
+#: farm\views.py
+msgid "Panen #%(pk)s"
+msgstr "Harvest #%(pk)s"
+
+#: farm\views.py
+msgid "Panen dicatat; lot stok dibuat."
+msgstr "Harvest logged; stock lots created."
+
+#: farm\views.py
+msgid "Pembelian input dicatat."
+msgstr "Input purchase logged."
+
+#: farm\views.py
+msgid "Perkiraan siklus disimpan."
+msgstr "Cycle estimates saved."
+
+#: farm\views.py
+msgid "Perpindahan tahap dibatalkan."
+msgstr "Stage change undone."
+
+#: farm\views.py
+msgid "Semua"
+msgstr "All"
+
+#: farm\views.py
+msgid "Siklus ditutup"
+msgstr "Cycle closed"
+
+#: farm\views.py
+msgid "Siklus tanam dimulai."
+msgstr "Crop cycle started."
+
+#: farm\views.py
+msgid "Status elemen diperbarui."
+msgstr "Plot status updated."
+
+#: farm\views.py
+msgid "Stok fisik tidak valid."
+msgstr "Invalid counted stock."
+
+#: farm\views.py
+msgid "Stok input ditambah."
+msgstr "Input stock added."
+
+#: farm\views.py
+msgid "Susut %(product)s"
+msgstr "Spoilage %(product)s"
+
+#: farm\views.py
+msgid "Susut/rusak dicatat."
+msgstr "Spoilage logged."
+
+#: farm\views.py
+msgid "Tahap siklus diperbarui."
+msgstr "Cycle stage updated."
+
+#: farm\views.py
+msgid "Tahap tidak valid."
+msgstr "Invalid stage."
+
+#: farm\views.py
+msgid "Tambah elemen kebun"
+msgstr "Add plot"
+
+#: farm\views.py
+msgid "di %(element)s"
+msgstr "in %(element)s"
+
+#: farm\views_common.py
+msgid "Berhasil."
+msgstr "Done."
+
+#: farm\views_common.py
+msgid "Tersimpan."
+msgstr "Saved."
+
+#: geo\models.py
+msgid "geometri (GeoJSON Polygon)"
+msgstr "geometry (GeoJSON Polygon)"
+
+#: geo\models.py
+msgid "id Agromonitoring"
+msgstr "Agromonitoring id"
+
+#: geo\models.py
+msgid "luas (ha)"
+msgstr "area (ha)"
+
+#: geo\models.py
+msgid "poligon lahan"
+msgstr "field boundary"
+
+#: geo\services.py
+msgid "%(ALERT_DRY_DAYS)s hari tanpa hujan"
+msgstr "%(ALERT_DRY_DAYS)s days without rain"
+
+#: geo\services.py
+msgid "Angin kencang besok (%(when)s)"
+msgstr "Strong wind tomorrow (%(when)s)"
+
+#: geo\services.py
+msgid "Badai petir"
+msgstr "Thunderstorm"
+
+#: geo\services.py
+msgid "Belum ada citra satelit untuk poligon ini. Citra pertama bisa butuh beberapa hari setelah poligon didaftarkan."
+msgstr "No satellite image for this boundary yet. The first image can take a few days after the boundary is registered."
+
+#: geo\services.py
+msgid "Berawan"
+msgstr "Cloudy"
+
+#: geo\services.py
+msgid "Berawan sebagian"
+msgstr "Partly cloudy"
+
+#: geo\services.py
+msgid "Berkabut"
+msgstr "Fog"
+
+#: geo\services.py
+msgid "Cerah"
+msgstr "Clear"
+
+#: geo\services.py
+msgid "Cerah berawan"
+msgstr "Mostly clear"
+
+#: geo\services.py
+msgid "Data satelit tidak tersedia: poligon ini %(ha)s ha, sedangkan Agromonitoring memerlukan 1–3.000 ha. Gambar poligon yang lebih luas (mis. seluruh lahan terbuka) untuk NDVI."
+msgstr "Satellite data not available: this boundary is %(ha)s ha and Agromonitoring needs 1–3,000 ha. Draw a larger boundary (e.g. the whole open field) for NDVI."
+
+#: geo\services.py
+msgid "Data tidak tersedia."
+msgstr "Data not available."
+
+#: geo\services.py
+msgid "Data tidak tersedia: Agromonitoring menolak poligon ini (periksa luas dan bentuknya)."
+msgstr "Data not available: Agromonitoring rejected this boundary (check its area and shape)."
+
+#: geo\services.py
+msgid "Data tidak tersedia: kunci Agromonitoring (AGRO_API_KEY) belum dipasang di server."
+msgstr "Data not available: the Agromonitoring key (AGRO_API_KEY) isn't set on the server."
+
+#: geo\services.py
+msgid "Data tidak tersedia: kunci Agromonitoring ditolak. Periksa AGRO_API_KEY; kunci baru bisa butuh beberapa jam sampai aktif."
+msgstr "Data not available: the Agromonitoring key was rejected. Check AGRO_API_KEY; a new key can take a few hours to activate."
+
+#: geo\services.py
+msgid "Data tidak tersedia: layanan Agromonitoring tidak merespons. Coba lagi nanti."
+msgstr "Data not available: Agromonitoring isn't responding. Try again later."
+
+#: geo\services.py
+msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
+msgstr "About %(round)s mm expected — hold off spraying and check drainage."
+
+#: geo\services.py
+msgid "Geometri harus berupa satu poligon."
+msgstr "The shape must be a single polygon."
+
+#: geo\services.py
+msgid "Gerimis"
+msgstr "Drizzle"
+
+#: geo\services.py
+msgid "Gerimis lebat"
+msgstr "Heavy drizzle"
+
+#: geo\services.py
+msgid "Gerimis ringan"
+msgstr "Light drizzle"
+
+#: geo\services.py
+msgid "Hanya OWNER/MANAGER yang dapat mengubah poligon."
+msgstr "Only an OWNER/MANAGER can change boundaries."
+
+#: geo\services.py
+msgid "Hembusan hingga %(round)s km/j — periksa penyangga dan atap."
+msgstr "Gusts up to %(round)s km/h — check supports and roofs."
+
+#: geo\services.py
+msgid "Hujan beku"
+msgstr "Freezing rain"
+
+#: geo\services.py
+msgid "Hujan deras"
+msgstr "Heavy showers"
+
+#: geo\services.py
+msgid "Hujan lebat"
+msgstr "Heavy rain"
+
+#: geo\services.py
+msgid "Hujan lebat besok (%(when)s)"
+msgstr "Heavy rain tomorrow (%(when)s)"
+
+#: geo\services.py
+msgid "Hujan lebat diperkirakan %(date)s (%(mm)s mm) — tunda penyemprotan & siapkan drainase."
+msgstr "Heavy rain expected %(date)s (%(mm)s mm) — hold off spraying and get drainage ready."
+
+#: geo\services.py
+msgid "Hujan lokal"
+msgstr "Showers"
+
+#: geo\services.py
+msgid "Hujan ringan"
+msgstr "Light rain"
+
+#: geo\services.py
+msgid "Indeks vegetasi tidak ditampilkan: %(type)s beratap, jadi satelit melihat atapnya, bukan tanaman. Data tanah dan cuaca tetap tersedia."
+msgstr "Vegetation index hidden: a %(type)s is covered, so the satellite sees the roof, not the crop. Soil and weather data are still available."
+
+#: geo\services.py
+msgid "Koordinat di luar jangkauan bujur/lintang."
+msgstr "Coordinates out of longitude/latitude range."
+
+#: geo\services.py
+msgid "Koordinat poligon tidak valid."
+msgstr "Invalid boundary coordinates."
+
+#: geo\services.py
+msgid "Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit."
+msgstr "Open fields may need extra irrigation — check water needs in Weather & satellite."
+
+#: geo\services.py
+msgid "Luas poligon %(area)s ha di luar batas %(MIN_HA)s–%(MAX_HA)s ha."
+msgstr "Boundary area %(area)s ha is outside %(MIN_HA)s–%(MAX_HA)s ha."
+
+#: geo\services.py
+msgid "Nama poligon wajib diisi."
+msgstr "Boundary name is required."
+
+#: geo\services.py
+msgid "Poligon belum ditautkan ke elemen."
+msgstr "This boundary isn't linked to a plot."
+
+#: geo\services.py
+msgid "Poligon minimal memiliki 3 titik."
+msgstr "A boundary needs at least 3 points."
+
+#: geo\services.py
+msgid "Poligon tidak valid (berpotongan sendiri?): %(explain_validity)s."
+msgstr "Invalid boundary (does it cross itself?): %(explain_validity)s."
+
+#: geo\services.py
+msgid "Salju"
+msgstr "Snow"
+
+#: geo\services.py
+msgid "Tidak direkomendasikan"
+msgstr "Not recommended"
+
+#: geo\services.py
+msgid "Total luas semua poligon (%(total)s ha) melebihi batas %(TOTAL_MAX_HA)s ha."
+msgstr "The total area of all boundaries (%(total)s ha) is over the %(TOTAL_MAX_HA)s ha limit."
+
+#: geo\services.py
+msgid "angin %(wind)s km/j"
+msgstr "wind %(wind)s km/h"
+
+#: geo\services.py
+msgid "panas %(temp)s °C (semprot pagi/sore)"
+msgstr "hot %(temp)s °C (spray morning/evening)"
+
+#: geo\services.py
+msgid "peluang hujan %(pct)s%% dalam %(hours)s jam"
+msgstr "%(pct)s%% chance of rain within %(hours)s hours"
+
+#: geo\services.py
+msgid "sedang hujan"
+msgstr "raining now"
+
+#: geo\views.py
+msgid "Data JSON tidak valid."
+msgstr "Invalid JSON data."
+
+#: geo\views.py
+msgid "Lokasi kebun belum diatur di Pengaturan"
+msgstr "Farm location isn't set in Settings"
+
+#: geo\views.py
+msgid "Lokasi tidak ditemukan."
+msgstr "Location not found."
+
+#: geo\views.py
+msgid "Pencarian lokasi tidak tersedia, coba lagi sebentar."
+msgstr "Location search is unavailable; try again shortly."
+
+#: geo\views.py
+msgid "data tidak tersedia"
+msgstr "data not available"
+
+#: inventory\models.py
+msgid "Busuk"
+msgstr "Rotten"
+
+#: inventory\models.py
+msgid "Grade A (HIGH)"
+msgstr "Grade A (HIGH)"
+
+#: inventory\models.py
+msgid "Grade B (LOW)"
+msgstr "Grade B (LOW)"
+
+#: inventory\models.py
+msgid "HPP per kg"
+msgstr "COGS per kg"
+
+#: inventory\models.py
+msgid "Hama"
+msgstr "Pests"
+
+#: inventory\models.py
+msgid "Masuk Panen"
+msgstr "Harvest in"
+
+#: inventory\models.py
+msgid "Menunggu persetujuan"
+msgstr "Pending approval"
+
+#: inventory\models.py
+msgid "Pembatalan Invoice"
+msgstr "Invoice void"
+
+#: inventory\models.py
+msgid "Pembatalan POS"
+msgstr "POS void"
+
+#: inventory\models.py
+msgid "Pembatalan Susut"
+msgstr "Spoilage reversal"
+
+#: inventory\models.py
+msgid "Penjualan Invoice"
+msgstr "Invoice sale"
+
+#: inventory\models.py
+msgid "Penjualan POS"
+msgstr "POS sale"
+
+#: inventory\models.py
+msgid "Penyusutan"
+msgstr "Shrinkage"
+
+#: inventory\models.py
+msgid "Rusak Fisik"
+msgstr "Damaged"
+
+#: inventory\models.py
+msgid "alasan pembatalan"
+msgstr "reversal reason"
+
+#: inventory\models.py
+msgid "batas stok menipis (kg)"
+msgstr "low-stock level (kg)"
+
+#: inventory\models.py
+msgid "buku besar stok"
+msgstr "stock ledger"
+
+#: inventory\models.py
+msgid "catatan susut/rusak"
+msgstr "spoilage record"
+
+#: inventory\models.py
+msgid "dibatalkan oleh"
+msgstr "reversed by"
+
+#: inventory\models.py
+msgid "dibatalkan pada"
+msgstr "reversed at"
+
+#: inventory\models.py
+msgid "dicatat pada"
+msgstr "logged at"
+
+#: inventory\models.py
+msgid "dihitung oleh"
+msgstr "counted by"
+
+#: inventory\models.py
+msgid "dihitung pada"
+msgstr "counted at"
+
+#: inventory\models.py
+msgid "diputuskan oleh"
+msgstr "decided by"
+
+#: inventory\models.py
+msgid "diputuskan pada"
+msgstr "decided at"
+
+#: inventory\models.py
+msgid "grade"
+msgstr "grade"
+
+#: inventory\models.py
+msgid "harga jual per kg"
+msgstr "selling price per kg"
+
+#: inventory\models.py
+msgid "kerugian (Rp)"
+msgstr "loss (Rp)"
+
+#: inventory\models.py
+msgid "kg"
+msgstr "kg"
+
+#: inventory\models.py
+msgid "kg (bertanda)"
+msgstr "kg (signed)"
+
+#: inventory\models.py
+msgid "kg awal"
+msgstr "initial kg"
+
+#: inventory\models.py
+msgid "kg dihapusbukukan"
+msgstr "kg written off"
+
+#: inventory\models.py
+msgid "kg tersisa"
+msgstr "kg left"
+
+#: inventory\models.py
+msgid "lot"
+msgstr "lot"
+
+#: inventory\models.py
+msgid "lot stok"
+msgstr "stock lot"
+
+#: inventory\models.py
+msgid "opname stok"
+msgstr "stock count"
+
+#: inventory\models.py
+msgid "produk"
+msgstr "product"
+
+#: inventory\models.py
+msgid "stok fisik"
+msgstr "counted stock"
+
+#: inventory\models.py
+msgid "stok sistem saat dihitung"
+msgstr "system stock at count"
+
+#: inventory\models.py
+msgid "tarif (%)"
+msgstr "rate (%)"
+
+#: inventory\services.py
+msgid "Alasan susut tidak dikenal: %(reason)s."
+msgstr "Unknown spoilage reason: %(reason)s."
+
+#: inventory\services.py
+msgid "Batas stok tidak boleh negatif."
+msgstr "The stock level can't be negative."
+
+#: inventory\services.py
+msgid "Catatan susut hanya bisa dibatalkan di hari yang sama."
+msgstr "Spoilage can only be reversed on the same day."
+
+#: inventory\services.py
+msgid "Catatan susut ini sudah dibatalkan."
+msgstr "This spoilage record is already reversed."
+
+#: inventory\services.py
+msgid "Hanya OWNER atau MANAGER yang dapat membatalkan catatan susut."
+msgstr "Only an OWNER or MANAGER can reverse spoilage."
+
+#: inventory\services.py
+msgid "Hanya OWNER atau MANAGER yang dapat menyetujui opname."
+msgstr "Only an OWNER or MANAGER can approve stock counts."
+
+#: inventory\services.py
+msgid "Harga jual harus lebih dari 0."
+msgstr "Selling price must be more than 0."
+
+#: inventory\services.py
+msgid "Jenis mutasi stok tidak dikenal: %(movement_type)s."
+msgstr "Unknown stock movement type: %(movement_type)s."
+
+#: inventory\services.py
+msgid "Jumlah mutasi stok tidak boleh nol."
+msgstr "A stock movement can't be zero."
+
+#: inventory\services.py
+msgid "Jumlah susut/rusak harus lebih dari 0 kg."
+msgstr "Spoilage must be more than 0 kg."
+
+#: inventory\services.py
+msgid "Masih ada opname %(product)s yang menunggu persetujuan."
+msgstr "A count for %(product)s is still waiting for approval."
+
+#: inventory\services.py
+msgid "Opname ini sudah diputuskan."
+msgstr "This count has already been decided."
+
+#: inventory\services.py
+msgid "Stok fisik tidak boleh negatif."
+msgstr "Counted stock can't be negative."
+
+#: inventory\services.py
+msgid "Stok lot #%(pk)s (%(product)s) tidak cukup: tersedia %(qty_remaining_kg)s kg, diminta %(v)s kg."
+msgstr "Not enough stock in lot #%(pk)s (%(product)s): %(qty_remaining_kg)s kg available, %(v)s kg requested."
+
+#: inventory\services.py
+msgid "Stok lot #%(pk)s akan melebihi jumlah awal %(qty_initial_kg)s kg."
+msgstr "Lot #%(pk)s would exceed its initial %(qty_initial_kg)s kg."
+
+#: inventory\services.py
+msgid "Tanda jumlah tidak sesuai untuk mutasi %(movement_type)s."
+msgstr "Wrong sign for movement %(movement_type)s."
+
+#: inventory\services.py
+msgid "Tarif pajak harus 0–100%."
+msgstr "Tax rate must be 0–100%."
+
+#: invoicing\forms.py
+msgid "Angka tidak valid pada baris %(product)s."
+msgstr "Invalid number on the %(product)s line."
+
+#: invoicing\forms.py
+msgid "Baris invoice tidak valid."
+msgstr "Invalid invoice lines."
+
+#: invoicing\forms.py
+msgid "Isi nomor bukti potong dari pembeli."
+msgstr "Enter the tax slip number from the customer."
+
+#: invoicing\forms.py
+msgid "Jumlah diterima (Rp)"
+msgstr "Amount received (Rp)"
+
+#: invoicing\forms.py
+msgid "Kosongkan untuk memakai termin pembeli."
+msgstr "Leave blank to use the customer's terms."
+
+#: invoicing\forms.py
+msgid "Masuk laci kasir"
+msgstr "Into the cash drawer"
+
+#: invoicing\forms.py
+msgid "Nomor bukti potong"
+msgstr "Tax slip number"
+
+#: invoicing\forms.py
+msgid "Pilih produk untuk setiap baris."
+msgstr "Choose a product for every line."
+
+#: invoicing\forms.py
+msgid "Tanggal bayar"
+msgstr "Payment date"
+
+#: invoicing\forms.py
+msgid "Tanggal terbit"
+msgstr "Issue date"
+
+#: invoicing\forms.py
+msgid "Tunai yang disimpan di laci shift yang sedang buka (D96)."
+msgstr "Cash kept in the open shift's drawer."
+
+#: invoicing\forms.py
+msgid "Wajib untuk metode Potongan PPh (PPh yang dipotong pembeli)."
+msgstr "Required for the tax-withheld method (income tax withheld by the customer)."
+
+#: invoicing\models.py
+msgid "0 = jatuh tempo saat diterima"
+msgstr "0 = due on receipt"
+
+#: invoicing\models.py
+msgid "Bahasa invoice yang dicetak untuk pembeli ini."
+msgstr "Language of the invoices printed for this customer."
+
+#: invoicing\models.py
+msgid "Bayar %(buyer)s %(amount)s"
+msgstr "Payment %(buyer)s %(amount)s"
+
+#: invoicing\models.py
+msgid "Belum dibayar"
+msgstr "Unpaid"
+
+#: invoicing\models.py
+msgid "Centang untuk pembeli besar (BUMN, pabrik, distributor) yang memotong PPh dari pembayaran dan memberi bukti potong."
+msgstr "Tick for large customers (state companies, factories, distributors) that withhold income tax from payments and give you a tax slip."
+
+#: invoicing\models.py
+msgid "Dibayar sebagian"
+msgstr "Partly paid"
+
+#: invoicing\models.py
+msgid "Draf #%(pk)s"
+msgstr "Draft #%(pk)s"
+
+#: invoicing\models.py
+msgid "Nominal"
+msgstr "Amount"
+
+#: invoicing\models.py
+msgid "Persen"
+msgstr "Percent"
+
+#: invoicing\models.py
+msgid "Potongan PPh"
+msgstr "Tax withheld"
+
+#: invoicing\models.py
+msgid "Tanpa diskon"
+msgstr "No discount"
+
+#: invoicing\models.py
+msgid "alasan batal"
+msgstr "void reason"
+
+#: invoicing\models.py
+msgid "bagian diskon"
+msgstr "discount share"
+
+#: invoicing\models.py
+msgid "bahasa dokumen"
+msgstr "document language"
+
+#: invoicing\models.py
+msgid "catatan batal"
+msgstr "void note"
+
+#: invoicing\models.py
+msgid "diskon"
+msgstr "discount"
+
+#: invoicing\models.py
+msgid "email"
+msgstr "email"
+
+#: invoicing\models.py
+msgid "harga per kg"
+msgstr "price per kg"
+
+#: invoicing\models.py
+msgid "invoice"
+msgstr "invoices"
+
+#: invoicing\models.py
+msgid "jatuh tempo"
+msgstr "due date"
+
+#: invoicing\models.py
+msgid "jenis diskon"
+msgstr "discount type"
+
+#: invoicing\models.py
+msgid "memotong PPh"
+msgstr "withholds tax"
+
+#: invoicing\models.py
+msgid "metode"
+msgstr "method"
+
+#: invoicing\models.py
+msgid "nilai diskon"
+msgstr "discount value"
+
+#: invoicing\models.py
+msgid "nomor"
+msgstr "number"
+
+#: invoicing\models.py
+msgid "nomor bukti potong"
+msgstr "tax slip number"
+
+#: invoicing\models.py
+msgid "ongkos kirim"
+msgstr "shipping"
+
+#: invoicing\models.py
+msgid "pembayaran"
+msgstr "payment"
+
+#: invoicing\models.py
+msgid "pembeli"
+msgstr "customer"
+
+#: invoicing\models.py
+msgid "pendapatan bersih"
+msgstr "net revenue"
+
+#: invoicing\models.py
+msgid "perusahaan"
+msgstr "company"
+
+#: invoicing\models.py
+msgid "subtotal"
+msgstr "subtotal"
+
+#: invoicing\models.py
+msgid "tanggal bayar"
+msgstr "payment date"
+
+#: invoicing\models.py
+msgid "tanggal terbit"
+msgstr "issue date"
+
+#: invoicing\models.py
+msgid "tarif pajak (%)"
+msgstr "tax rate (%)"
+
+#: invoicing\models.py
+msgid "termin (hari)"
+msgstr "terms (days)"
+
+#: invoicing\models.py
+msgid "total"
+msgstr "total"
+
+#: invoicing\models.py
+msgid "total HPP"
+msgstr "total COGS"
+
+#: invoicing\services.py
+msgid "%(buyer)s tidak ditandai memotong PPh."
+msgstr "%(buyer)s is not marked as withholding tax."
+
+#: invoicing\services.py
+msgid "%(invoice)s belum terbit atau sudah dibatalkan."
+msgstr "%(invoice)s isn't issued or is voided."
+
+#: invoicing\services.py
+msgid "%(invoice)s hanya bersisa %(outstanding)s; yang diisi %(amount)s."
+msgstr "%(invoice)s only has %(outstanding)s left; %(amount)s was entered."
+
+#: invoicing\services.py
+msgid "%(invoice)s: %(amount)s lebih dari sisa pembayaran %(unallocated)s."
+msgstr "%(invoice)s: %(amount)s is more than the %(unallocated)s left of this payment."
+
+#: invoicing\services.py
+msgid "%(product)s belum memiliki harga; isi harga per kg."
+msgstr "%(product)s has no price yet; enter a price per kg."
+
+#: invoicing\services.py
+msgid "1–30 hari"
+msgstr "1–30 days"
+
+#: invoicing\services.py
+msgid "31–60 hari"
+msgstr "31–60 days"
+
+#: invoicing\services.py
+msgid "61–90 hari"
+msgstr "61–90 days"
+
+#: invoicing\services.py
+msgid "> 90 hari"
+msgstr "> 90 days"
+
+#: invoicing\services.py
+msgid "Alasan wajib diisi."
+msgstr "A reason is required."
+
+#: invoicing\services.py
+msgid "Alokasi ke %(invoices)s berjumlah %(applied)s, lebih dari uang yang diterima %(amount)s."
+msgstr "Amounts for %(invoices)s add up to %(applied)s, more than the %(amount)s received."
+
+#: invoicing\services.py
+msgid "Belum jatuh tempo"
+msgstr "Not yet due"
+
+#: invoicing\services.py
+msgid "Diskon nominal harus antara 0 dan subtotal."
+msgstr "The discount must be between 0 and the subtotal."
+
+#: invoicing\services.py
+msgid "Diskon persen harus 0–100."
+msgstr "A percent discount must be 0–100."
+
+#: invoicing\services.py
+msgid "Hanya OWNER yang dapat membatalkan pembayaran."
+msgstr "Only the OWNER can cancel payments."
+
+#: invoicing\services.py
+msgid "Hanya OWNER/MANAGER yang dapat mengelola invoice dan pembayaran."
+msgstr "Only an OWNER/MANAGER can manage invoices and payments."
+
+#: invoicing\services.py
+msgid "Hanya invoice draf yang dapat dihapus; invoice terbit harus dibatalkan."
+msgstr "Only drafts can be deleted; issued invoices must be voided."
+
+#: invoicing\services.py
+msgid "Hanya invoice draf yang dapat diubah."
+msgstr "Only drafts can be edited."
+
+#: invoicing\services.py
+msgid "Hanya invoice terbit yang dapat dibatalkan."
+msgstr "Only issued invoices can be voided."
+
+#: invoicing\services.py
+msgid "Hanya pembayaran tunai yang bisa masuk laci kasir."
+msgstr "Only cash payments can go into the cash drawer."
+
+#: invoicing\services.py
+msgid "Harga %(product)s harus lebih dari 0."
+msgstr "The price of %(product)s must be more than 0."
+
+#: invoicing\services.py
+msgid "Invoice harus memiliki minimal satu baris."
+msgstr "An invoice needs at least one line."
+
+#: invoicing\services.py
+msgid "Invoice ini sudah terbit atau dibatalkan."
+msgstr "This invoice is already issued or voided."
+
+#: invoicing\services.py
+msgid "Jatuh tempo tidak boleh sebelum tanggal terbit."
+msgstr "The due date can't be before the issue date."
+
+#: invoicing\services.py
+msgid "Jenis diskon tidak dikenal."
+msgstr "Unknown discount type."
+
+#: invoicing\services.py
+msgid "Jumlah %(product)s harus lebih dari 0 kg."
+msgstr "Quantity of %(product)s must be more than 0 kg."
+
+#: invoicing\services.py
+msgid "Jumlah alokasi harus lebih dari 0."
+msgstr "The amount applied must be more than 0."
+
+#: invoicing\services.py
+msgid "Jumlah kredit harus lebih dari 0."
+msgstr "The credit amount must be more than 0."
+
+#: invoicing\services.py
+msgid "Jumlah pembayaran harus lebih dari 0."
+msgstr "The payment must be more than 0."
+
+#: invoicing\services.py
+msgid "Kredit pembeli hanya %(buyer_credit)s."
+msgstr "The customer only has %(buyer_credit)s credit."
+
+#: invoicing\services.py
+msgid "Lepas dulu alokasinya dari invoice sebelum membatalkan pembayaran."
+msgstr "Unapply it from its invoices before cancelling the payment."
+
+#: invoicing\services.py
+msgid "Metode pembayaran tidak dikenal."
+msgstr "Unknown payment method."
+
+#: invoicing\services.py
+msgid "Ongkos kirim tidak boleh negatif."
+msgstr "Shipping can't be negative."
+
+#: invoicing\services.py
+msgid "Pembayaran dan invoice harus milik pembeli yang sama."
+msgstr "The payment and invoice must belong to the same customer."
+
+#: invoicing\services.py
+msgid "Pembayaran ini sudah dibatalkan."
+msgstr "This payment is already cancelled."
+
+#: invoicing\services.py
+msgid "Potongan PPh bukan uang tunai; tidak bisa masuk laci."
+msgstr "Tax withheld isn't cash; it can't go into the drawer."
+
+#: invoicing\services.py
+msgid "Potongan PPh wajib disertai nomor bukti potong."
+msgstr "Tax withheld needs a tax slip number."
+
+#: invoicing\services.py
+msgid "Stok %(product)s tidak cukup: tersedia %(available)s kg, diminta %(requested)s kg."
+msgstr "Not enough %(product)s: %(available)s kg available, %(requested)s kg requested."
+
+#: invoicing\services.py
+msgid "Tidak ada shift kasir yang terbuka; buka shift atau hilangkan centang \"Masuk laci\"."
+msgstr "No cashier shift is open; open one or untick \"Into the cash drawer\"."
+
+#: invoicing\services.py
+msgid "Uang ini masuk laci kasir; buka shift agar pengembaliannya tercatat."
+msgstr "This money went into the cash drawer; open a shift so the refund is recorded."
+
+#: invoicing\views.py
+msgid "%(left)s disimpan sebagai kredit %(buyer)s."
+msgstr "%(left)s kept as credit for %(buyer)s."
+
+#: invoicing\views.py
+msgid "Alokasi dilepas; dananya kembali menjadi kredit pembeli."
+msgstr "Payment unapplied; the money is back as customer credit."
+
+#: invoicing\views.py
+msgid "Belum lunas"
+msgstr "Unpaid"
+
+#: invoicing\views.py
+msgid "Centang \"Saya sudah memeriksa data ini\" untuk menerbitkan invoice."
+msgstr "Tick \"I have checked this\" to issue the invoice."
+
+#: invoicing\views.py
+msgid "Data kredit tidak valid."
+msgstr "Invalid credit data."
+
+#: invoicing\views.py
+msgid "Data pembeli disimpan."
+msgstr "Customer saved."
+
+#: invoicing\views.py
+msgid "Draf invoice dihapus."
+msgstr "Draft deleted."
+
+#: invoicing\views.py
+msgid "Draf invoice disimpan. Terbitkan untuk memotong stok."
+msgstr "Draft saved. Issue it to deduct stock."
+
+#: invoicing\views.py
+msgid "Invoice %(number)s dibatalkan; stok dikembalikan dan pembayaran menjadi kredit."
+msgstr "Invoice %(number)s voided; stock returned and payments became credit."
+
+#: invoicing\views.py
+msgid "Invoice %(number)s diterbitkan; stok dipotong (FIFO)."
+msgstr "Invoice %(number)s issued; stock deducted (FIFO)."
+
+#: invoicing\views.py
+msgid "Jumlah untuk %(invoices)s bukan angka."
+msgstr "The amount for %(invoices)s is not a number."
+
+#: invoicing\views.py
+msgid "Kredit diterapkan ke %(v)s."
+msgstr "Credit applied to %(v)s."
+
+#: invoicing\views.py
+msgid "Pembayaran %(amount)s dari %(buyer)s dicatat."
+msgstr "Payment of %(amount)s from %(buyer)s recorded."
+
+#: invoicing\views.py
+msgid "Pembayaran dibatalkan; catatannya tetap disimpan."
+msgstr "Payment cancelled; the record is kept."
+
+#: invoicing\views.py
+msgid "Pembeli %(buyer)s ditambahkan."
+msgstr "Customer %(buyer)s added."
+
+#: invoicing\views.py
+msgid "Pembeli diaktifkan."
+msgstr "Customer activated."
+
+#: invoicing\views.py
+msgid "Pembeli dinonaktifkan."
+msgstr "Customer deactivated."
+
+#: invoicing\views.py
+msgid "Tanggal tidak valid."
+msgstr "Invalid date."
+
+#: pos\models.py
+msgid "Batal pembayaran invoice"
+msgstr "Invoice payment cancelled"
+
+#: pos\models.py
+msgid "Bayar biaya"
+msgstr "Pay expense"
+
+#: pos\models.py
+msgid "Pembayaran invoice"
+msgstr "Invoice payment"
+
+#: pos\models.py
+msgid "Pengembalian order batal"
+msgstr "Voided order refund"
+
+#: pos\models.py
+msgid "Setor ke pemilik"
+msgstr "Hand to owner"
+
+#: pos\models.py
+msgid "Tambah modal"
+msgstr "Add float"
+
+#: pos\models.py
+msgid "alokasi lot"
+msgstr "lot allocation"
+
+#: pos\models.py
+msgid "baris"
+msgstr "line"
+
+#: pos\models.py
+msgid "baris order"
+msgstr "order line"
+
+#: pos\models.py
+msgid "catatan tinjauan"
+msgstr "review note"
+
+#: pos\models.py
+msgid "catatan tutup"
+msgstr "closing note"
+
+#: pos\models.py
+msgid "dibuka oleh"
+msgstr "opened by"
+
+#: pos\models.py
+msgid "dibuka pada"
+msgstr "opened at"
+
+#: pos\models.py
+msgid "ditinjau oleh"
+msgstr "reviewed by"
+
+#: pos\models.py
+msgid "ditinjau pada"
+msgstr "reviewed at"
+
+#: pos\models.py
+msgid "ditutup oleh"
+msgstr "closed by"
+
+#: pos\models.py
+msgid "ditutup paksa"
+msgstr "force-closed"
+
+#: pos\models.py
+msgid "hitungan pecahan"
+msgstr "denomination count"
+
+#: pos\models.py
+msgid "kasir"
+msgstr "cashier"
+
+#: pos\models.py
+msgid "kembalian"
+msgstr "change"
+
+#: pos\models.py
+msgid "modal awal"
+msgstr "starting cash"
+
+#: pos\models.py
+msgid "mutasi kas"
+msgstr "cash movement"
+
+#: pos\models.py
+msgid "nomor order"
+msgstr "order number"
+
+#: pos\models.py
+msgid "order"
+msgstr "order"
+
+#: pos\models.py
+msgid "order penjualan"
+msgstr "sales order"
+
+#: pos\models.py
+msgid "selisih"
+msgstr "difference"
+
+#: pos\models.py
+msgid "shift"
+msgstr "shift"
+
+#: pos\models.py
+msgid "shift kasir"
+msgstr "cashier shift"
+
+#: pos\models.py
+msgid "terbuka"
+msgstr "open"
+
+#: pos\models.py
+msgid "total dibayar"
+msgstr "total paid"
+
+#: pos\models.py
+msgid "total pajak"
+msgstr "total tax"
+
+#: pos\models.py
+msgid "total pendapatan"
+msgstr "total revenue"
+
+#: pos\models.py
+msgid "uang dihitung"
+msgstr "cash counted"
+
+#: pos\models.py
+msgid "uang diterima"
+msgstr "cash received"
+
+#: pos\models.py
+msgid "uang seharusnya"
+msgstr "expected cash"
+
+#: pos\services.py
+msgid "%(product)s belum memiliki harga jual dan tidak dapat dijual."
+msgstr "%(product)s has no selling price and can't be sold."
+
+#: pos\services.py
+msgid "Alasan \"Lainnya\" wajib diberi catatan."
+msgstr "\"Other\" needs a note."
+
+#: pos\services.py
+msgid "Batas nomor order harian (9999) telah tercapai."
+msgstr "The daily order-number limit (9999) has been reached."
+
+#: pos\services.py
+msgid "Buka shift kasir dulu: uang tunai order ini dikembalikan dari laci."
+msgstr "Open a cashier shift first: this order's cash is refunded from the drawer."
+
+#: pos\services.py
+msgid "Buka shift kasir terlebih dahulu sebelum berjualan."
+msgstr "Open a cashier shift before selling."
+
+#: pos\services.py
+msgid "Gagal membuat nomor order, silakan coba lagi."
+msgstr "Couldn't create an order number; please try again."
+
+#: pos\services.py
+msgid "Hanya KASIR, MANAGER, atau OWNER yang dapat melakukan penjualan."
+msgstr "Only a CASHIER, MANAGER or OWNER can sell."
+
+#: pos\services.py
+msgid "Hanya OWNER atau MANAGER yang dapat membatalkan order."
+msgstr "Only an OWNER or MANAGER can void orders."
+
+#: pos\services.py
+msgid "Hanya OWNER atau MANAGER yang dapat meninjau selisih kas."
+msgstr "Only an OWNER or MANAGER can review cash differences."
+
+#: pos\services.py
+msgid "Hanya pembuka shift, MANAGER, atau OWNER yang dapat menutup shift ini."
+msgstr "Only whoever opened the shift, a MANAGER or the OWNER can close it."
+
+#: pos\services.py
+msgid "Isi keranjang tidak valid."
+msgstr "Invalid cart."
+
+#: pos\services.py
+msgid "Jenis mutasi kas tidak dikenal."
+msgstr "Unknown cash movement type."
+
+#: pos\services.py
+msgid "Jumlah harus lebih dari 0."
+msgstr "The amount must be more than 0."
+
+#: pos\services.py
+msgid "Jumlah kg setiap produk harus lebih dari 0."
+msgstr "Each product's kg must be more than 0."
+
+#: pos\services.py
+msgid "Jumlah lembar/keping Rp%(denom)s tidak valid."
+msgstr "Invalid count for Rp%(denom)s."
+
+#: pos\services.py
+msgid "Jumlah lembar/keping tidak boleh negatif."
+msgstr "The note/coin count can't be negative."
+
+#: pos\services.py
+msgid "Jumlah melebihi uang yang seharusnya ada di laci."
+msgstr "The amount is more than the drawer should hold."
+
+#: pos\services.py
+msgid "Keranjang kosong."
+msgstr "The cart is empty."
+
+#: pos\services.py
+msgid "Masih ada shift yang terbuka."
+msgstr "A shift is still open."
+
+#: pos\services.py
+msgid "Masih ada shift yang terbuka; tutup dulu sebelum membuka shift baru."
+msgstr "A shift is still open; close it before opening a new one."
+
+#: pos\services.py
+msgid "Metode pembayaran tidak dikenal: %(payment_method)s."
+msgstr "Unknown payment method: %(payment_method)s."
+
+#: pos\services.py
+msgid "Modal awal tidak boleh negatif."
+msgstr "Starting cash can't be negative."
+
+#: pos\services.py
+msgid "Order %(order_number)s hanya dapat dibatalkan pada hari yang sama (%(jakarta_date)s)."
+msgstr "Order %(order_number)s can only be voided on the same day (%(jakarta_date)s)."
+
+#: pos\services.py
+msgid "Order %(order_number)s sudah dibatalkan."
+msgstr "Order %(order_number)s is already voided."
+
+#: pos\services.py
+msgid "Pilih alasan pembatalan."
+msgstr "Choose a reason."
+
+#: pos\services.py
+msgid "Pilih kategori biaya."
+msgstr "Choose an expense category."
+
+#: pos\services.py
+msgid "Produk #%(product_id)s tidak ditemukan."
+msgstr "Product #%(product_id)s not found."
+
+#: pos\services.py
+msgid "Shift ini sudah ditutup."
+msgstr "This shift is already closed."
+
+#: pos\services.py
+msgid "Shift masih terbuka."
+msgstr "The shift is still open."
+
+#: pos\services.py
+msgid "Tulis catatan tinjauan."
+msgstr "Write a review note."
+
+#: pos\services.py
+msgid "Tulis keperluan biaya."
+msgstr "Write what the expense is for."
+
+#: pos\services.py
+msgid "Uang diterima %(format_rp)s kurang dari total %(format_rp2)s."
+msgstr "Cash received %(format_rp)s is less than the total %(format_rp2)s."
+
+#: pos\views.py
+msgid "Catatan tinjauan disimpan."
+msgstr "Review note saved."
+
+#: pos\views.py
+msgid "Mutasi kas dicatat."
+msgstr "Cash movement logged."
+
+#: pos\views.py
+msgid "Order %(number)s dibatalkan; stok dikembalikan."
+msgstr "Order %(number)s voided; stock returned."
+
+#: pos\views.py
+msgid "Order %(order_number)s berhasil."
+msgstr "Order %(order_number)s complete."
+
+#: pos\views.py
+msgid "Selisih %(diff)s — menunggu tinjauan manajer."
+msgstr "Difference %(diff)s — waiting for a manager's review."
+
+#: pos\views.py
+msgid "Shift dibuka. Selamat berjualan!"
+msgstr "Shift opened. Happy selling!"
+
+#: pos\views.py
+msgid "Shift ditutup."
+msgstr "Shift closed."
+
+#: pos\views.py
+msgid "Tidak ada shift yang terbuka."
+msgstr "No shift is open."
+
+#: reports\views.py
+msgid "30 hari"
+msgstr "30 days"
+
+#: reports\views.py
+msgid "90 hari"
+msgstr "90 days"
+
+#: reports\views.py
+msgid "Akun Anda belum memiliki peran."
+msgstr "Your account has no role yet."
+
+#: reports\views.py
+msgid "Rentang maksimal 2 tahun."
+msgstr "The range can be at most 2 years."
+
+#: reports\views.py
+msgid "Tahun ini"
+msgstr "This year"
+
+#: reports\views.py
+msgid "Tanggal awal harus sebelum tanggal akhir."
+msgstr "The start date must be before the end date."
+
+#: templates\403.html
+msgid "Akses ditolak"
+msgstr "Access denied"
+
+#: templates\403.html
+msgid "Ke beranda"
+msgstr "Go home"
+
+#: templates\admin\base_site.html
+msgid "← Kembali ke aplikasi"
+msgstr "← Back to the app"
+
+#: templates\base.html
+msgid "Admin Django"
+msgstr "Django admin"
+
+#: templates\base.html
+msgid "Bahasa"
+msgstr "Language"
+
+#: templates\base.html
+msgid "Buka kasir dan laporan langsung dari layar utama."
+msgstr "Open the POS and reports straight from your home screen."
+
+#: templates\base.html
+msgid "Buka menu"
+msgstr "Open menu"
+
+#: templates\base.html
+msgid "Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)"
+msgstr "Collapse or expand the sidebar (Ctrl/⌘ + B)"
+
+#: templates\base.html
+msgid "Ciutkan sidebar"
+msgstr "Collapse sidebar"
+
+#: templates\base.html
+msgid "Ganti Kata Sandi"
+msgstr "Change password"
+
+#: templates\base.html
+msgid "Keluar"
+msgstr "Log out"
+
+#: templates\base.html
+msgid "Lebarkan sidebar"
+msgstr "Expand sidebar"
+
+#: templates\base.html
+msgid "Menu akun"
+msgstr "Account menu"
+
+#: templates\base.html
+msgid "Navigasi utama"
+msgstr "Main navigation"
+
+#: templates\base.html
+msgid "Navigasi utama (ringkas)"
+msgstr "Main navigation (compact)"
+
+#: templates\base.html
+msgid "Pasang"
+msgstr "Install"
+
+#: templates\base.html
+msgid "Pasang GoTani"
+msgstr "Install GoTani"
+
+#: templates\base.html
+msgid "Profil"
+msgstr "Profile"
+
+#: templates\base_bare.html
+msgid "Muat ulang"
+msgstr "Reload"
+
+#: templates\base_bare.html
+msgid "Versi baru tersedia"
+msgstr "New version available"
+
+#: templates\base_bare.html
+msgid "· GoTani"
+msgstr "· GoTani"
+
+#: templates\components\bell.html
+msgid "Coba lagi"
+msgstr "Try again"
+
+#: templates\components\bell.html
+msgid "Notifikasi"
+msgstr "Notifications"
+
+#: templates\components\bell.html
+msgid "Semua beres — tidak ada yang perlu ditindaklanjuti."
+msgstr "All clear — nothing needs your attention."
+
+#: templates\components\bell.html
+msgid "Tidak dapat memuat notifikasi ·"
+msgstr "Couldn't load notifications ·"
+
+#: templates\components\bell.html
+msgid "aktif"
+msgstr "active"
+
+#: templates\components\columns.html
+msgid "Atur kolom"
+msgstr "Columns"
+
+#: templates\components\gauge.html
+msgid "Belum ada"
+msgstr "None yet"
+
+#: templates\components\messages.html
+msgid "Tutup"
+msgstr "Close"
+
+#: templates\components\pagination.html
+msgid "Baris per halaman"
+msgstr "Rows per page"
+
+#: templates\components\pagination.html
+msgid "Berikutnya"
+msgstr "Next"
+
+#: templates\components\pagination.html
+msgid "Halaman"
+msgstr "Page"
+
+#: templates\components\pagination.html
+msgid "Halaman pertama"
+msgstr "First page"
+
+#: templates\components\pagination.html
+msgid "Halaman terakhir"
+msgstr "Last page"
+
+#: templates\components\pagination.html
+msgid "Sebelumnya"
+msgstr "Previous"
+
+#: templates\components\pagination.html
+msgid "dari"
+msgstr "of"
+
+#: templates\core\audit_log.html
+msgid "Alasan"
+msgstr "Reason"
+
+#: templates\core\audit_log.html
+msgid "Belum ada aktivitas tercatat."
+msgstr "No activity recorded yet."
+
+#: templates\core\audit_log.html
+msgid "Cari log"
+msgstr "Search log"
+
+#: templates\core\audit_log.html
+msgid "Cari ringkasan, alasan, pengguna…"
+msgstr "Search summary, reason, user…"
+
+#: templates\core\audit_log.html
+msgid "Jejak perubahan penting: siapa, kapan, sebelum → sesudah, dan alasannya. Tidak dapat diubah atau dihapus."
+msgstr "Trail of important changes: who, when, before → after, and why. It can't be edited or deleted."
+
+#: templates\core\audit_log.html
+msgid "Jenis perubahan"
+msgstr "Change type"
+
+#: templates\core\audit_log.html
+msgid "Log Aktivitas"
+msgstr "Activity log"
+
+#: templates\core\audit_log.html
+msgid "Log aktivitas"
+msgstr "Activity log"
+
+#: templates\core\audit_log.html
+msgid "Oleh"
+msgstr "By"
+
+#: templates\core\audit_log.html
+msgid "Perubahan"
+msgstr "Change"
+
+#: templates\core\audit_log.html
+msgid "Perubahan harga dan status PKP akan muncul di sini secara otomatis."
+msgstr "Price and VAT-status changes will appear here automatically."
+
+#: templates\core\audit_log.html
+msgid "Sebelum → sesudah"
+msgstr "Before → after"
+
+#: templates\core\audit_log.html
+msgid "Semua perubahan"
+msgstr "All changes"
+
+#: templates\core\audit_log.html
+msgid "Tidak ada catatan yang cocok."
+msgstr "No matching entries."
+
+#: templates\core\audit_log.html
+msgid "Waktu"
+msgstr "Time"
+
+#: templates\core\home.html
+msgid " siklus"
+msgstr " cycles"
+
+#: templates\core\home.html
+msgid "7 hari"
+msgstr "7 days"
+
+#: templates\core\home.html
+msgid "Analitik"
+msgstr "Analytics"
+
+#: templates\core\home.html
+msgid "Belum ada elemen aktif."
+msgstr "No active plots yet."
+
+#: templates\core\home.html
+msgid "Belum ada siklus aktif."
+msgstr "No active cycles yet."
+
+#: templates\core\home.html
+msgid "Biaya per elemen"
+msgstr "Expenses by plot"
+
+#: templates\core\home.html
+msgid "Biaya umum"
+msgstr "Overhead"
+
+#: templates\core\home.html
+msgid "Catat kerja"
+msgstr "Log work"
+
+#: templates\core\home.html
+msgid "Elemen"
+msgstr "Plot"
+
+#: templates\core\home.html
+msgid "Jumlah siklus aktif di tiap tahap tanam."
+msgstr "Number of active cycles in each growth stage."
+
+#: templates\core\home.html
+msgid "Jumlah siklus aktif per tahap"
+msgstr "Active cycles per stage"
+
+#: templates\core\home.html
+msgid "Kebun"
+msgstr "Farm"
+
+#: templates\core\home.html
+msgid "Kelola"
+msgstr "Manage"
+
+#: templates\core\home.html
+msgid "Mulai siklus dari halaman elemen untuk mulai mencatat."
+msgstr "Start a cycle from a plot page to begin logging."
+
+#: templates\core\home.html
+msgid "POS + invoice, sepanjang waktu."
+msgstr "POS + invoices, all time."
+
+#: templates\core\home.html
+msgid "Pekerjaan lapangan"
+msgstr "Field work"
+
+#: templates\core\home.html
+msgid "Perkiraan panen terlewat, tahap belum Panen"
+msgstr "Expected harvest passed, stage not yet Harvest"
+
+#: templates\core\home.html
+msgid "Ringkasan"
+msgstr "Overview"
+
+#: templates\core\home.html
+msgid "Semua elemen"
+msgstr "All plots"
+
+#: templates\core\home.html
+msgid "Siklus"
+msgstr "Cycle"
+
+#: templates\core\home.html
+msgid "Siklus aktif"
+msgstr "Active cycles"
+
+#: templates\core\home.html
+msgid "Staf"
+msgstr "Team"
+
+#: templates\core\home.html
+msgid "Staf aktif"
+msgstr "Active team"
+
+#: templates\core\home.html
+msgid "Stok input menipis"
+msgstr "Inputs running low"
+
+#: templates\core\home.html
+msgid "Tanaman per Tahap"
+msgstr "Crops by stage"
+
+#: templates\core\home.html
+msgid "Tidak dapat memuat grafik."
+msgstr "Couldn't load the chart."
+
+#: templates\core\home.html
+msgid "Total biaya disetujui"
+msgstr "Total approved expenses"
+
+#: templates\core\home.html
+msgid "Total penjualan"
+msgstr "Total revenue"
+
+#: templates\core\home.html
+msgid "· hari ke-"
+msgstr "· day"
+
+#: templates\core\home.html
+msgid "· panen"
+msgstr "· harvest"
+
+#: templates\core\offline.html
+msgid "Anda sedang offline"
+msgstr "You're offline"
+
+#: templates\core\offline.html
+msgid "Offline · GoTani"
+msgstr "Offline · GoTani"
+
+#: templates\core\offline.html
+msgid "membutuhkan koneksi internet. Data tidak disimpan saat offline agar stok dan kas tetap akurat — sambungkan kembali lalu coba lagi."
+msgstr "needs an internet connection. Nothing is saved offline so stock and cash stay accurate — reconnect and try again."
+
+#: templates\core\password_change.html
+msgid "Akun Anda memakai kata sandi sementara. Ganti dulu sebelum melanjutkan."
+msgstr "Your account uses a temporary password. Change it before you continue."
+
+#: templates\core\password_change.html
+msgid "Batal"
+msgstr "Cancel"
+
+#: templates\core\password_change.html
+msgid "Ganti sekarang"
+msgstr "Change now"
+
+#: templates\core\password_change.html
+msgid "Kata sandi sementara"
+msgstr "Temporary password"
+
+#: templates\core\password_change.html
+msgid "Simpan"
+msgstr "Save"
+
+#: templates\core\profile.html
+msgid "Akun Anda. Peran dan status akun diatur oleh OWNER di halaman Staf."
+msgstr "Your account. Role and account status are managed by the OWNER on the Team page."
+
+#: templates\core\profile.html
+msgid "Bergabung"
+msgstr "Joined"
+
+#: templates\core\profile.html
+msgid "Data diri"
+msgstr "Personal details"
+
+#: templates\core\profile.html
+msgid "Ganti sandi"
+msgstr "Change password"
+
+#: templates\core\profile.html
+msgid "Kembali"
+msgstr "Back"
+
+#: templates\core\profile.html
+msgid "Peran"
+msgstr "Role"
+
+#: templates\core\settings.html
+msgid "Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur."
+msgstr "Name, address, coordinates and logo are used for weather, the map, receipts and invoices. Coordinates: open Google Maps, right-click the farm, copy the latitude, longitude."
+
+#: templates\core\settings.html
+msgid "Pengaturan"
+msgstr "Settings"
+
+#: templates\core\settings.html
+msgid "Pengaturan Kebun"
+msgstr "Farm settings"
+
+#: templates\core\settings.html
+msgid "Profil kebun"
+msgstr "Farm profile"
+
+#: templates\core\staff.html
+msgid "Aksi"
+msgstr "Actions"
+
+#: templates\core\staff.html
+msgid "Aksi untuk %(v1)s"
+msgstr "Actions for %(v1)s"
+
+#: templates\core\staff.html
+msgid "Aktif"
+msgstr "Active"
+
+#: templates\core\staff.html
+msgid "Aktifkan kembali"
+msgstr "Reactivate"
+
+#: templates\core\staff.html
+msgid "Akun aktif"
+msgstr "Active accounts"
+
+#: templates\core\staff.html
+msgid "Akun baru atau yang sandinya diatur ulang memakai sandi sementara sampai pemiliknya menggantinya."
+msgstr "New accounts and reset passwords use a temporary password until the user changes it."
+
+#: templates\core\staff.html
+msgid "Atur ulang sandi"
+msgstr "Reset password"
+
+#: templates\core\staff.html
+msgid "Belum ada akun nonaktif."
+msgstr "No inactive accounts."
+
+#: templates\core\staff.html
+msgid "Belum ada staf."
+msgstr "No team members yet."
+
+#: templates\core\staff.html
+msgid "Buat akun"
+msgstr "Create account"
+
+#: templates\core\staff.html
+msgid "Buat akun, atur peran, dan nonaktifkan akses. Akun tidak pernah dihapus karena tercatat di penjualan dan log."
+msgstr "Create accounts, set roles and turn off access. Accounts are never deleted because they appear in sales and logs."
+
+#: templates\core\staff.html
+msgid "Cari nama / pengguna…"
+msgstr "Search name / username…"
+
+#: templates\core\staff.html
+msgid "Cari staf"
+msgstr "Search team"
+
+#: templates\core\staff.html
+msgid "Daftar staf"
+msgstr "Team list"
+
+#: templates\core\staff.html
+msgid "Nonaktif"
+msgstr "Inactive"
+
+#: templates\core\staff.html
+msgid "Nonaktifkan"
+msgstr "Deactivate"
+
+#: templates\core\staff.html
+msgid "Nonaktifkan %(v1)s?"
+msgstr "Deactivate %(v1)s?"
+
+#: templates\core\staff.html
+msgid "Pengguna"
+msgstr "User"
+
+#: templates\core\staff.html
+msgid "Pengguna tidak bisa masuk lagi sampai diaktifkan kembali. Riwayat penjualan dan laporannya tetap tersimpan."
+msgstr "The user can't log in until reactivated. Their sales history and reports are kept."
+
+#: templates\core\staff.html
+msgid "Sandi sementara"
+msgstr "Temporary password"
+
+#: templates\core\staff.html
+msgid "Staf Kebun"
+msgstr "Team"
+
+#: templates\core\staff.html
+msgid "Status"
+msgstr "Status"
+
+#: templates\core\staff.html
+msgid "Tambah staf"
+msgstr "Add member"
+
+#: templates\core\staff.html
+msgid "Tambahkan pekerja, kasir, atau manajer agar mereka bisa mencatat kegiatan dan penjualan."
+msgstr "Add workers, cashiers or managers so they can log work and sales."
+
+#: templates\core\staff.html
+msgid "Tidak ada staf yang cocok dengan “"
+msgstr "No team member matches “"
+
+#: templates\core\staff.html
+msgid "Ubah"
+msgstr "Change"
+
+#: templates\core\staff.html
+msgid "superuser"
+msgstr "superuser"
+
+#: templates\core\staff.html
+msgid "· Anda"
+msgstr "· You"
+
+#: templates\farm\_empty_row.html
+msgid "Belum ada data."
+msgstr "No data yet."
+
+#: templates\farm\_stage_form.html
+msgid "%(u_cycle)s kembali dari %(u_from)s ke %(u_to)s."
+msgstr "%(u_cycle)s goes back from %(u_from)s to %(u_to)s."
+
+#: templates\farm\_stage_form.html
+msgid "Alasan pembatalan"
+msgstr "Reason for undoing"
+
+#: templates\farm\_stage_form.html
+msgid "Batalkan perpindahan"
+msgstr "Undo stage change"
+
+#: templates\farm\_stage_form.html
+msgid "Batalkan perpindahan tahap?"
+msgstr "Undo stage change?"
+
+#: templates\farm\_stage_form.html
+msgid "Batalkan perpindahan terakhir: %(u_from)s → %(u_to)s"
+msgstr "Undo the last change: %(u_from)s → %(u_to)s"
+
+#: templates\farm\_stage_form.html
+msgid "Hanya bisa hari ini dan selama belum ada catatan baru."
+msgstr "Only possible today and while nothing new has been recorded."
+
+#: templates\farm\_stage_form.html
+msgid "Lewati tahap"
+msgstr "Skip stage"
+
+#: templates\farm\_stage_form.html
+msgid "Majukan tahap"
+msgstr "Next stage"
+
+#: templates\farm\_stage_form.html
+msgid "Siklus dibuka kembali."
+msgstr "The cycle is reopened."
+
+#: templates\farm\_stage_form.html
+msgid "Tahap tujuan"
+msgstr "Target stage"
+
+#: templates\farm\_stage_form.html
+msgid "Urungkan"
+msgstr "Undo"
+
+#: templates\farm\activities.html
+msgid "100%"
+msgstr "100%"
+
+#: templates\farm\activities.html
+msgid "Butir terpenuhi"
+msgstr "Items met"
+
+#: templates\farm\activities.html
+msgid "Catatan"
+msgstr "Notes"
+
+#: templates\farm\activities.html
+msgid "Cek"
+msgstr "Check"
+
+#: templates\farm\activities.html
+msgid "Durasi"
+msgstr "Duration"
+
+#: templates\farm\activities.html
+msgid "Foto"
+msgstr "Photo"
+
+#: templates\farm\activities.html
+msgid "Foto pengamatan"
+msgstr "Observation photo"
+
+#: templates\farm\activities.html
+msgid "Hapus"
+msgstr "Delete"
+
+#: templates\farm\activities.html
+msgid "Hapus kegiatan"
+msgstr "Delete entry"
+
+#: templates\farm\activities.html
+msgid "Hapus kegiatan?"
+msgstr "Delete this entry?"
+
+#: templates\farm\activities.html
+msgid "Input"
+msgstr "Input"
+
+#: templates\farm\activities.html
+msgid "Jumlah"
+msgstr "Amount"
+
+#: templates\farm\activities.html
+msgid "Jumlah laporan 7 hari terakhir"
+msgstr "Entries in the last 7 days"
+
+#: templates\farm\activities.html
+msgid "Karung"
+msgstr "Sacks"
+
+#: templates\farm\activities.html
+msgid "Kelengkapan"
+msgstr "Completeness"
+
+#: templates\farm\activities.html
+msgid "Kg"
+msgstr "Kg"
+
+#: templates\farm\activities.html
+msgid "Laporan %(report_label)s"
+msgstr "%(report_label)s entry"
+
+#: templates\farm\activities.html
+msgid "Laporan Kerja"
+msgstr "Work log"
+
+#: templates\farm\activities.html
+msgid "Laporan baru"
+msgstr "New entry"
+
+#: templates\farm\activities.html
+msgid "Lot"
+msgstr "Lot"
+
+#: templates\farm\activities.html
+msgid "Lot #"
+msgstr "Lot #"
+
+#: templates\farm\activities.html
+msgid "Memilih input memotong stok input dengan satuannya sendiri."
+msgstr "Choosing an input deducts it from input stock in its own unit."
+
+#: templates\farm\activities.html
+msgid "Metode / catatan"
+msgstr "Method / notes"
+
+#: templates\farm\activities.html
+msgid "Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen)."
+msgstr "The input stock used is returned and its usage cost removed (as long as no harvest has absorbed it)."
+
+#: templates\farm\activities.html
+msgid "Susut panen"
+msgstr "Harvest loss"
+
+#: templates\farm\activities.html
+msgid "Tahap"
+msgstr "Stage"
+
+#: templates\farm\activities.html
+msgid "Volume"
+msgstr "Volume"
+
+#: templates\farm\activities.html
+msgid "mnt"
+msgstr "min"
+
+#: templates\farm\cycle_detail.html
+msgid "Belum terserap"
+msgstr "Not absorbed"
+
+#: templates\farm\cycle_detail.html
+msgid "Biaya terserap"
+msgstr "Absorbed cost"
+
+#: templates\farm\cycle_detail.html
+msgid "Biaya yang sudah masuk ke HPP panen."
+msgstr "Costs already included in harvest COGS."
+
+#: templates\farm\cycle_detail.html
+msgid "Cek pra-panen"
+msgstr "Pre-harvest check"
+
+#: templates\farm\cycle_detail.html
+msgid "Dihapusbukukan bila siklus ditutup."
+msgstr "Written off when the cycle closes."
+
+#: templates\farm\cycle_detail.html
+msgid "Ditutup"
+msgstr "Closed"
+
+#: templates\farm\cycle_detail.html
+msgid "Hasil layak jual"
+msgstr "Sellable yield"
+
+#: templates\farm\cycle_detail.html
+msgid "Jumlah tanaman"
+msgstr "Plant count"
+
+#: templates\farm\cycle_detail.html
+msgid "Linimasa"
+msgstr "Timeline"
+
+#: templates\farm\cycle_detail.html
+msgid "POS + invoice dari panen siklus ini."
+msgstr "POS + invoices from this cycle's harvests."
+
+#: templates\farm\cycle_detail.html
+msgid "Panen terlewat"
+msgstr "Harvest overdue"
+
+#: templates\farm\cycle_detail.html
+msgid "Pendapatan"
+msgstr "Revenue"
+
+#: templates\farm\cycle_detail.html
+msgid "Perkiraan"
+msgstr "Estimates"
+
+#: templates\farm\cycle_detail.html
+msgid "Perkiraan panen"
+msgstr "Expected harvest"
+
+#: templates\farm\cycle_detail.html
+msgid "Perkiraan siklus"
+msgstr "Cycle estimates"
+
+#: templates\farm\cycle_detail.html
+msgid "Ringkas"
+msgstr "Summary"
+
+#: templates\farm\cycle_detail.html
+msgid "Tahap sekarang"
+msgstr "Current stage"
+
+#: templates\farm\cycle_detail.html
+msgid "Telusuri"
+msgstr "Trace"
+
+#: templates\farm\cycle_detail.html
+msgid "Ubah perkiraan siklus"
+msgstr "Edit cycle estimates"
+
+#: templates\farm\cycle_detail.html
+msgid "Umur panen varietas %(t)s hari."
+msgstr "Variety matures in %(t)s days."
+
+#: templates\farm\cycle_detail.html
+msgid "hari"
+msgstr "days"
+
+#: templates\farm\cycle_detail.html
+msgid "kg per tanaman"
+msgstr "kg per plant"
+
+#: templates\farm\cycle_detail.html
+msgid "· ditutup"
+msgstr "· closed"
+
+#: templates\farm\cycle_detail.html
+msgid "· mulai"
+msgstr "· started"
+
+#: templates\farm\cycles.html
+msgid "Aktifkan"
+msgstr "Activate"
+
+#: templates\farm\cycles.html
+msgid "Belum ada siklus selesai."
+msgstr "No finished cycles yet."
+
+#: templates\farm\cycles.html
+msgid "Biaya tak terserap"
+msgstr "Unabsorbed cost"
+
+#: templates\farm\cycles.html
+msgid "Elemen & Siklus"
+msgstr "Plots & cycles"
+
+#: templates\farm\cycles.html
+msgid "Elemen kebun"
+msgstr "Plots"
+
+#: templates\farm\cycles.html
+msgid "Greenhouse, lahan dan shadenet beserta siklus tanam aktifnya. Klik elemen atau varietas untuk detail dan linimasa."
+msgstr "Greenhouses, open fields and shade nets with their active crop cycles. Click a plot or variety for details and the timeline."
+
+#: templates\farm\cycles.html
+msgid "Mulai siklus"
+msgstr "Start cycle"
+
+#: templates\farm\cycles.html
+msgid "Panen"
+msgstr "Harvest"
+
+#: templates\farm\cycles.html
+msgid "Siklus selesai"
+msgstr "Finished cycles"
+
+#: templates\farm\cycles.html
+msgid "Stok menipis:"
+msgstr "Low stock:"
+
+#: templates\farm\cycles.html
+msgid "Tidak ada siklus aktif."
+msgstr "No active cycles."
+
+#: templates\farm\cycles.html
+msgid "biaya menunggu"
+msgstr "pending expenses"
+
+#: templates\farm\cycles.html
+msgid "mulai"
+msgstr "started"
+
+#: templates\farm\cycles.html
+msgid "produk tanpa harga"
+msgstr "unpriced products"
+
+#: templates\farm\element_detail.html
+msgid "Belum ada kegiatan."
+msgstr "No entries yet."
+
+#: templates\farm\element_detail.html
+msgid "Elemen &amp; Siklus"
+msgstr "Plots &amp; cycles"
+
+#: templates\farm\element_detail.html
+msgid "Elemen sedang kosong"
+msgstr "Plot is empty"
+
+#: templates\farm\element_detail.html
+msgid "Gambar poligon di Cuaca & Satelit."
+msgstr "Draw the boundary in Weather & satellite."
+
+#: templates\farm\element_detail.html
+msgid "Hari"
+msgstr "Days"
+
+#: templates\farm\element_detail.html
+msgid "Hasil (kg)"
+msgstr "Yield (kg)"
+
+#: templates\farm\element_detail.html
+msgid "Jumlah siklus"
+msgstr "Cycles"
+
+#: templates\farm\element_detail.html
+msgid "Kegiatan terbaru"
+msgstr "Recent entries"
+
+#: templates\farm\element_detail.html
+msgid "Luas terpetakan"
+msgstr "Mapped area"
+
+#: templates\farm\element_detail.html
+msgid "Mulai"
+msgstr "Start"
+
+#: templates\farm\element_detail.html
+msgid "Riwayat siklus"
+msgstr "Cycle history"
+
+#: templates\farm\element_detail.html
+msgid "Varietas"
+msgstr "Variety"
+
+#: templates\farm\element_detail.html
+msgid "m² tercatat"
+msgstr "m² on record"
+
+#: templates\farm\expenses.html
+msgid "%(n)s biaya menunggu"
+msgstr "%(n)s pending"
+
+#: templates\farm\expenses.html
+msgid "(pemakaian input)"
+msgstr "(input usage)"
+
+#: templates\farm\expenses.html
+msgid "Ajukan biaya"
+msgstr "Submit"
+
+#: templates\farm\expenses.html
+msgid "Antrian persetujuan"
+msgstr "Approval queue"
+
+#: templates\farm\expenses.html
+msgid "Belum ada biaya."
+msgstr "No expenses yet."
+
+#: templates\farm\expenses.html
+msgid "Biaya"
+msgstr "Expenses"
+
+#: templates\farm\expenses.html
+msgid "Biaya & Persetujuan"
+msgstr "Expenses & approvals"
+
+#: templates\farm\expenses.html
+msgid "Biaya ini dihapus permanen."
+msgstr "This expense will be deleted permanently."
+
+#: templates\farm\expenses.html
+msgid "Biaya umum ditambah biaya elemen tanpa siklus."
+msgstr "Overhead plus plot costs without a cycle."
+
+#: templates\farm\expenses.html
+msgid "Biaya umum menjadi overhead operasional dan tidak masuk HPP."
+msgstr "Overhead becomes an operating cost and is not part of COGS."
+
+#: templates\farm\expenses.html
+msgid "Bukti"
+msgstr "Receipt"
+
+#: templates\farm\expenses.html
+msgid "Cakupan"
+msgstr "Scope"
+
+#: templates\farm\expenses.html
+msgid "Cari biaya"
+msgstr "Search expenses"
+
+#: templates\farm\expenses.html
+msgid "Cari keterangan / vendor…"
+msgstr "Search description / vendor…"
+
+#: templates\farm\expenses.html
+msgid "Catat biaya"
+msgstr "Log expense"
+
+#: templates\farm\expenses.html
+msgid "Catat biaya kebun, setujui atau tolak. Biaya elemen yang disetujui masuk ke pool HPP siklus; biaya umum menjadi overhead."
+msgstr "Log farm expenses, then approve or reject them. Approved plot costs go into the cycle's COGS pool; overhead stays an operating cost."
+
+#: templates\farm\expenses.html
+msgid "Disetujui bulan ini"
+msgstr "Approved this month"
+
+#: templates\farm\expenses.html
+msgid "Hapus biaya"
+msgstr "Delete expense"
+
+#: templates\farm\expenses.html
+msgid "Hapus biaya?"
+msgstr "Delete expense?"
+
+#: templates\farm\expenses.html
+msgid "Kategori"
+msgstr "Category"
+
+#: templates\farm\expenses.html
+msgid "Kembalikan"
+msgstr "Reopen"
+
+#: templates\farm\expenses.html
+msgid "Kembalikan ke Menunggu"
+msgstr "Move back to Pending"
+
+#: templates\farm\expenses.html
+msgid "Keterangan"
+msgstr "Description"
+
+#: templates\farm\expenses.html
+msgid "Menunggu"
+msgstr "Pending"
+
+#: templates\farm\expenses.html
+msgid "Overhead bulan ini"
+msgstr "Overhead this month"
+
+#: templates\farm\expenses.html
+msgid "Riwayat biaya"
+msgstr "Expense history"
+
+#: templates\farm\expenses.html
+msgid "Setujui"
+msgstr "Approve"
+
+#: templates\farm\expenses.html
+msgid "Tanggal"
+msgstr "Date"
+
+#: templates\farm\expenses.html
+msgid "Tanpa siklus, biaya elemen menempel ke siklus aktif elemen saat disetujui."
+msgstr "Without a cycle, a plot cost attaches to the plot's active cycle when approved."
+
+#: templates\farm\expenses.html
+msgid "Tidak ada biaya yang menunggu."
+msgstr "Nothing waiting for approval."
+
+#: templates\farm\expenses.html
+msgid "Tolak"
+msgstr "Reject"
+
+#: templates\farm\expenses.html
+msgid "Umum"
+msgstr "Overhead"
+
+#: templates\farm\expenses.html
+msgid "Umum (overhead)"
+msgstr "Overhead"
+
+#: templates\farm\expenses.html
+msgid "terserap panen #"
+msgstr "absorbed by harvest #"
+
+#: templates\farm\expenses.html
+msgid "· overhead"
+msgstr "· overhead"
+
+#: templates\farm\harvests.html
+msgid "%(loss)s kg susut panen"
+msgstr "%(loss)s kg harvest loss"
+
+#: templates\farm\harvests.html
+msgid "(tanpa perkiraan)"
+msgstr "(no estimate)"
+
+#: templates\farm\harvests.html
+msgid "Batch"
+msgstr "Batch"
+
+#: templates\farm\harvests.html
+msgid "Batch panen"
+msgstr "Harvest batches"
+
+#: templates\farm\harvests.html
+msgid "Batch tidak bisa diubah setelah disimpan; hapus dan catat ulang selama belum ada penjualan atau susut."
+msgstr "A batch can't be edited once saved; delete and log it again while nothing has been sold or spoiled."
+
+#: templates\farm\harvests.html
+msgid "Belum ada panen."
+msgstr "No harvests yet."
+
+#: templates\farm\harvests.html
+msgid "Biaya yang diserap"
+msgstr "Absorbed costs"
+
+#: templates\farm\harvests.html
+msgid "Catat panen"
+msgstr "Log harvest"
+
+#: templates\farm\harvests.html
+msgid "Grade HIGH"
+msgstr "Grade HIGH"
+
+#: templates\farm\harvests.html
+msgid "Grade LOW"
+msgstr "Grade LOW"
+
+#: templates\farm\harvests.html
+msgid "HPP/kg HIGH · LOW"
+msgstr "COGS/kg HIGH · LOW"
+
+#: templates\farm\harvests.html
+msgid "Hapus batch"
+msgstr "Delete batch"
+
+#: templates\farm\harvests.html
+msgid "Hapus batch panen #%(v1)s?"
+msgstr "Delete harvest batch #%(v1)s?"
+
+#: templates\farm\harvests.html
+msgid "Hasil"
+msgstr "Yield"
+
+#: templates\farm\harvests.html
+msgid "Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut."
+msgstr "The lots and their stock are deleted and the absorbed costs return to the cycle's cost pool. Only possible while nothing has been sold or spoiled."
+
+#: templates\farm\harvests.html
+msgid "Mengubah angka di atas memerlukan tinjauan ulang."
+msgstr "Changing the numbers above needs a new review."
+
+#: templates\farm\harvests.html
+msgid "Panen bulan ini"
+msgstr "Harvests this month"
+
+#: templates\farm\harvests.html
+msgid "Rata-rata batch sebelumnya"
+msgstr "Previous batch average"
+
+#: templates\farm\harvests.html
+msgid "Setiap panen dipilah menjadi grade HIGH dan LOW; tiap grade menjadi lot stok dengan HPP-nya sendiri."
+msgstr "Every harvest is sorted into HIGH and LOW grade; each grade becomes a stock lot with its own COGS."
+
+#: templates\farm\harvests.html
+msgid "Siap jual (HIGH + LOW)"
+msgstr "Sellable (HIGH + LOW)"
+
+#: templates\farm\harvests.html
+msgid "Siap panen"
+msgstr "Ready to harvest"
+
+#: templates\farm\harvests.html
+msgid "Siklus yang sedang di tahap Panen."
+msgstr "Cycles currently in the Harvest stage."
+
+#: templates\farm\harvests.html
+msgid "Simpan panen"
+msgstr "Save harvest"
+
+#: templates\farm\harvests.html
+msgid "Simpan panen dengan peringatan?"
+msgstr "Save harvest with warnings?"
+
+#: templates\farm\harvests.html
+msgid "Susut"
+msgstr "Spoilage"
+
+#: templates\farm\harvests.html
+msgid "Tidak ada siklus di tahap Panen. Majukan tahap siklus terlebih dahulu."
+msgstr "No cycle is in the Harvest stage. Move a cycle to Harvest first."
+
+#: templates\farm\harvests.html
+msgid "Tinjau panen"
+msgstr "Review"
+
+#: templates\farm\harvests.html
+msgid "Tinjau sebelum menyimpan"
+msgstr "Review before saving"
+
+#: templates\farm\harvests.html
+msgid "Total siklus setelah ini"
+msgstr "Cycle total after this"
+
+#: templates\farm\harvests.html
+msgid "biaya)"
+msgstr "expenses)"
+
+#: templates\farm\harvests.html
+msgid "kg ("
+msgstr "kg ("
+
+#: templates\farm\input_detail.html
+msgid "Batas peringatan "
+msgstr "Alert level "
+
+#: templates\farm\input_detail.html
+msgid "Belum dipakai."
+msgstr "Not used yet."
+
+#: templates\farm\input_detail.html
+msgid "Biaya rata-rata"
+msgstr "Average cost"
+
+#: templates\farm\input_detail.html
+msgid "Biaya rata-rata per satuan."
+msgstr "Average cost per unit."
+
+#: templates\farm\input_detail.html
+msgid "Dipakai di"
+msgstr "Used in"
+
+#: templates\farm\input_detail.html
+msgid "Inventaris Input"
+msgstr "Input inventory"
+
+#: templates\farm\input_detail.html
+msgid "Jenis"
+msgstr "Type"
+
+#: templates\farm\input_detail.html
+msgid "Pemakaian per siklus"
+msgstr "Usage per cycle"
+
+#: templates\farm\input_detail.html
+msgid "Pembelian"
+msgstr "Purchase"
+
+#: templates\farm\input_detail.html
+msgid "Pembelian adalah aset persediaan: biaya rata-rata diperbarui, laba rugi tidak berubah."
+msgstr "A purchase is an inventory asset: the average cost updates and profit doesn't change."
+
+#: templates\farm\input_detail.html
+msgid "Riwayat mutasi"
+msgstr "Movement history"
+
+#: templates\farm\input_detail.html
+msgid "Saldo"
+msgstr "Balance"
+
+#: templates\farm\input_detail.html
+msgid "Stok menipis"
+msgstr "Low stock"
+
+#: templates\farm\input_detail.html
+msgid "Stok saat ini"
+msgstr "Current stock"
+
+#: templates\farm\input_detail.html
+msgid "Tambah stok"
+msgstr "Add stock"
+
+#: templates\farm\input_detail.html
+msgid "Total terpakai"
+msgstr "Total used"
+
+#: templates\farm\input_detail.html
+msgid "· satuan"
+msgstr "· unit"
+
+#: templates\farm\inputs.html
+msgid "Aset persediaan: kas keluar, bukan beban laba rugi."
+msgstr "Inventory asset: cash out, not an expense."
+
+#: templates\farm\inputs.html
+msgid "Batas peringatan"
+msgstr "Alert level"
+
+#: templates\farm\inputs.html
+msgid "Belum ada input. Tambahkan lewat Admin."
+msgstr "No inputs yet. Add them in Admin."
+
+#: templates\farm\inputs.html
+msgid "Belum ada pembelian."
+msgstr "No purchases yet."
+
+#: templates\farm\inputs.html
+msgid "Catat pembelian"
+msgstr "Log purchase"
+
+#: templates\farm\inputs.html
+msgid "Harga/satuan"
+msgstr "Price/unit"
+
+#: templates\farm\inputs.html
+msgid "Input Produksi"
+msgstr "Inputs"
+
+#: templates\farm\inputs.html
+msgid "Jenis input"
+msgstr "Input type"
+
+#: templates\farm\inputs.html
+msgid "Pemasok"
+msgstr "Supplier"
+
+#: templates\farm\inputs.html
+msgid "Pembelian terbaru"
+msgstr "Recent purchases"
+
+#: templates\farm\inputs.html
+msgid "Pupuk, pestisida dan benih. Pemakaian di Laporan Kerja memotong stok; klik input untuk melihat ke mana saja ia dipakai."
+msgstr "Fertiliser, pesticide and seed. Usage logged in the Work log deducts stock; click an input to see where it was used."
+
+#: templates\farm\inputs.html
+msgid "Simpan pembelian"
+msgstr "Save purchase"
+
+#: templates\farm\inputs.html
+msgid "Stok"
+msgstr "Stock"
+
+#: templates\farm\inputs.html
+msgid "Stok input"
+msgstr "Input stock"
+
+#: templates\farm\inputs.html
+msgid "Total"
+msgstr "Total"
+
+#: templates\farm\opname.html
+msgid "Aman"
+msgstr "OK"
+
+#: templates\farm\opname.html
+msgid "Atur batas di Harga Produk"
+msgstr "Set the level in Product prices"
+
+#: templates\farm\opname.html
+msgid "Batas menipis"
+msgstr "Low-stock level"
+
+#: templates\farm\opname.html
+msgid "Belum ada opname. Hitung stok fisik secara berkala untuk menemukan susut yang tidak tercatat."
+msgstr "No stock counts yet. Count physical stock regularly to catch unrecorded spoilage."
+
+#: templates\farm\opname.html
+msgid "Belum ada produk dengan lot. Catat panen dulu."
+msgstr "No products with lots yet. Log a harvest first."
+
+#: templates\farm\opname.html
+msgid "Belum ada produk."
+msgstr "No products yet."
+
+#: templates\farm\opname.html
+msgid "Catat hitungan"
+msgstr "Log count"
+
+#: templates\farm\opname.html
+msgid "Disetujui"
+msgstr "Approved"
+
+#: templates\farm\opname.html
+msgid "Ditolak"
+msgstr "Rejected"
+
+#: templates\farm\opname.html
+msgid "Fisik"
+msgstr "Counted"
+
+#: templates\farm\opname.html
+msgid "Hitung stok fisik per produk. Hanya kekurangan yang dihapusbukukan (FIFO dari lot tertua, dicatat sebagai susut) setelah disetujui OWNER/MANAGER; kelebihan hanya dicatat."
+msgstr "Count physical stock per product. Only shortfalls are written off (FIFO from the oldest lot, recorded as spoilage) after OWNER/MANAGER approval; surpluses are only noted."
+
+#: templates\farm\opname.html
+msgid "Hitungan ini tidak dipakai; stok tidak berubah."
+msgstr "This count won't be used; stock stays the same."
+
+#: templates\farm\opname.html
+msgid "Kerugian"
+msgstr "Loss"
+
+#: templates\farm\opname.html
+msgid "Menipis"
+msgstr "Low"
+
+#: templates\farm\opname.html
+msgid "Opname Stok"
+msgstr "Stock count"
+
+#: templates\farm\opname.html
+msgid "Produk"
+msgstr "Product"
+
+#: templates\farm\opname.html
+msgid "Riwayat opname"
+msgstr "Count history"
+
+#: templates\farm\opname.html
+msgid "Selisih"
+msgstr "Difference"
+
+#: templates\farm\opname.html
+msgid "Setujui opname %(v1)s?"
+msgstr "Approve count for %(v1)s?"
+
+#: templates\farm\opname.html
+msgid "Simpan hitungan"
+msgstr "Save count"
+
+#: templates\farm\opname.html
+msgid "Sistem"
+msgstr "System"
+
+#: templates\farm\opname.html
+msgid "Stok fisik (kg)"
+msgstr "Counted stock (kg)"
+
+#: templates\farm\opname.html
+msgid "Stok per produk"
+msgstr "Stock by product"
+
+#: templates\farm\opname.html
+msgid "Stok sistem"
+msgstr "System stock"
+
+#: templates\farm\opname.html
+msgid "Tolak opname?"
+msgstr "Reject count?"
+
+#: templates\farm\opname.html
+msgid "kg dihapus"
+msgstr "kg written off"
+
+#: templates\farm\opname.html
+msgid "— sistem"
+msgstr "— system"
+
+#: templates\farm\prices.html
+msgid "Batas menipis (kg)"
+msgstr "Low-stock alert (kg)"
+
+#: templates\farm\prices.html
+msgid "Batas stok menipis (kg)"
+msgstr "Low-stock level (kg)"
+
+#: templates\farm\prices.html
+msgid "Belum ada produk yang diberi harga."
+msgstr "No product has a price yet."
+
+#: templates\farm\prices.html
+msgid "Belum diberi harga"
+msgstr "Not priced yet"
+
+#: templates\farm\prices.html
+msgid "Hapus harga"
+msgstr "Remove price"
+
+#: templates\farm\prices.html
+msgid "Hapus harga %(v1)s?"
+msgstr "Remove the price of %(v1)s?"
+
+#: templates\farm\prices.html
+msgid "Harga / kg"
+msgstr "Price / kg"
+
+#: templates\farm\prices.html
+msgid "Harga Produk"
+msgstr "Product prices"
+
+#: templates\farm\prices.html
+msgid "Harga jual per kg (kebun bukan PKP: PPN tidak dipungut). Harga katalog juga dipakai untuk membagi HPP antar grade."
+msgstr "Selling price per kg (the farm isn't VAT-registered, so no VAT is charged). List prices are also used to split COGS between grades."
+
+#: templates\farm\prices.html
+msgid "Harga jual per kg, sudah termasuk PPN bila produk dikenai pajak. Harga katalog juga dipakai untuk membagi HPP antar grade."
+msgstr "Selling price per kg, including VAT where the product is taxed. List prices are also used to split COGS between grades."
+
+#: templates\farm\prices.html
+msgid "Harga per kg"
+msgstr "Price per kg"
+
+#: templates\farm\prices.html
+msgid "Notifikasi bila stok di bawah angka ini; kosongkan untuk mematikan."
+msgstr "Notify when stock falls below this; leave empty to turn it off."
+
+#: templates\farm\prices.html
+msgid "Produk akan disembunyikan dari kasir sampai diberi harga lagi."
+msgstr "The product is hidden from the POS until it's priced again."
+
+#: templates\farm\prices.html
+msgid "Produk baru dari panen dibuat tanpa harga dan disembunyikan dari kasir sampai harga ditetapkan."
+msgstr "New products from harvests start without a price and stay hidden from the POS until priced."
+
+#: templates\farm\prices.html
+msgid "Semua produk sudah diberi harga."
+msgstr "Every product has a price."
+
+#: templates\farm\prices.html
+msgid "Sudah diberi harga"
+msgstr "Priced"
+
+#: templates\farm\prices.html
+msgid "Tetapkan harga / kg"
+msgstr "Set price / kg"
+
+#: templates\farm\prices.html
+msgid "mis. 25.000"
+msgstr "e.g. 25,000"
+
+#: templates\farm\spoilage.html
+msgid " (sisa "
+msgstr " ("
+
+#: templates\farm\spoilage.html
+msgid " kg dari lot #"
+msgstr " kg from lot #"
+
+#: templates\farm\spoilage.html
+msgid " kg) dicatat sebagai kerugian dan stoknya berkurang."
+msgstr " kg left) is recorded as a loss and its stock goes down."
+
+#: templates\farm\spoilage.html
+msgid "%(v1)s kg dikembalikan ke lot #%(v2)s (%(v3)s) sebagai mutasi pembatalan. Catatan aslinya tetap tersimpan."
+msgstr "%(v1)s kg goes back to lot #%(v2)s (%(v3)s) as a reversing entry. The original record is kept."
+
+#: templates\farm\spoilage.html
+msgid "Batalkan"
+msgstr "Reverse"
+
+#: templates\farm\spoilage.html
+msgid "Batalkan susut"
+msgstr "Reverse spoilage"
+
+#: templates\farm\spoilage.html
+msgid "Batalkan susut #%(v1)s?"
+msgstr "Reverse spoilage #%(v1)s?"
+
+#: templates\farm\spoilage.html
+msgid "Belum ada susut tercatat."
+msgstr "No spoilage recorded."
+
+#: templates\farm\spoilage.html
+msgid "Catat produk busuk, rusak, atau menyusut dari lot tertentu; kerugiannya dihitung dari HPP lot."
+msgstr "Log produce that rotted, was damaged or shrank from a specific lot; the loss is valued at the lot's COGS."
+
+#: templates\farm\spoilage.html
+msgid "Catat susut"
+msgstr "Log spoilage"
+
+#: templates\farm\spoilage.html
+msgid "Catat susut/rusak?"
+msgstr "Log spoilage?"
+
+#: templates\farm\spoilage.html
+msgid "Catatan susut"
+msgstr "Spoilage log"
+
+#: templates\farm\spoilage.html
+msgid "Dibatalkan"
+msgstr "Reversed"
+
+#: templates\farm\spoilage.html
+msgid "Dibatalkan:"
+msgstr "Reversed:"
+
+#: templates\farm\spoilage.html
+msgid "Lot tertua dipilih otomatis; ubah bila yang rusak lot lain."
+msgstr "The oldest lot is picked automatically; change it if another lot spoiled."
+
+#: templates\farm\spoilage.html
+msgid "Susut "
+msgstr "Spoilage of "
+
+#: templates\farm\spoilage.html
+msgid "Susut / Rusak"
+msgstr "Spoilage"
+
+#: templates\farm\spoilage.html
+msgid "Susut/Rusak"
+msgstr "Spoilage"
+
+#: templates\farm\spoilage.html
+msgid "Tidak ada lot dengan stok."
+msgstr "No lots with stock."
+
+#: templates\geo\_element_satellite.html
+msgid "%(index)s rata-rata"
+msgstr "Average %(index)s"
+
+#: templates\geo\_element_satellite.html
+msgid "Buka peta"
+msgstr "Open map"
+
+#: templates\geo\_element_satellite.html
+msgid "Data tanah tidak tersedia saat ini."
+msgstr "Soil data isn't available right now."
+
+#: templates\geo\_element_satellite.html
+msgid "Kelembapan tanah"
+msgstr "Soil moisture"
+
+#: templates\geo\_element_satellite.html
+msgid "Memuat data…"
+msgstr "Loading data…"
+
+#: templates\geo\_element_satellite.html
+msgid "Perkiraan model Open-Meteo, bukan sensor."
+msgstr "Open-Meteo model estimate, not a sensor."
+
+#: templates\geo\_element_satellite.html
+msgid "Persentase volume air di tanah."
+msgstr "Share of water by volume in the soil."
+
+#: templates\geo\_element_satellite.html
+msgid "Satelit &amp; Tanah"
+msgstr "Satellite &amp; soil"
+
+#: templates\geo\_element_satellite.html
+msgid "Suhu tanah"
+msgstr "Soil temperature"
+
+#: templates\geo\_element_satellite.html
+msgid "Tanah"
+msgstr "Soil"
+
+#: templates\geo\_element_satellite.html
+msgid "Tidak dapat memuat data satelit ·"
+msgstr "Couldn't load satellite data ·"
+
+#: templates\geo\_spray_hint.html
+msgid "Angin tenang dan tidak ada hujan dalam 4 jam."
+msgstr "Calm wind and no rain within 4 hours."
+
+#: templates\geo\_spray_hint.html
+msgid "Saran saja; laporan tetap bisa disimpan."
+msgstr "Advice only; you can still save the entry."
+
+#: templates\geo\_spray_hint.html
+msgid "Waktu baik berikutnya:"
+msgstr "Next good window:"
+
+#: templates\geo\_spray_hint.html
+msgid "Waktu semprot saat ini:"
+msgstr "Spray window now:"
+
+#: templates\geo\_weather_widget.html
+msgid "Belum ada waktu baik dalam 48 jam."
+msgstr "No good window in the next 48 hours."
+
+#: templates\geo\_weather_widget.html
+msgid "Cuaca"
+msgstr "Weather"
+
+#: templates\geo\_weather_widget.html
+msgid "Cuaca: "
+msgstr "Weather: "
+
+#: templates\geo\_weather_widget.html
+msgid "Lembap %(hum)s%% · angin %(wind)s km/j"
+msgstr "Humidity %(hum)s%% · wind %(wind)s km/h"
+
+#: templates\geo\_weather_widget.html
+msgid "Memuat prakiraan…"
+msgstr "Loading forecast…"
+
+#: templates\geo\_weather_widget.html
+msgid "Prakiraan 7 hari"
+msgstr "7-day forecast"
+
+#: templates\geo\_weather_widget.html
+msgid "Prakiraan dari Open-Meteo, diperbarui tiap jam."
+msgstr "Forecast from Open-Meteo, updated hourly."
+
+#: templates\geo\_weather_widget.html
+msgid "Semprot:"
+msgstr "Spraying:"
+
+#: templates\geo\_weather_widget.html
+msgid "Tidak dapat memuat cuaca ·"
+msgstr "Couldn't load the weather ·"
+
+#: templates\geo\_weather_widget.html
+msgid "angin tenang, tidak ada hujan dalam 4 jam"
+msgstr "calm wind, no rain within 4 hours"
+
+#: templates\geo\map.html
+msgid "%(n)s titik"
+msgstr "%(n)s corners"
+
+#: templates\geo\map.html
+msgid "48 jam ke depan"
+msgstr "Next 48 hours"
+
+#: templates\geo\map.html
+msgid "Agromonitoring memerlukan poligon 1–3.000 ha"
+msgstr "Agromonitoring needs a polygon of 1–3,000 ha"
+
+#: templates\geo\map.html
+msgid "Awan"
+msgstr "Cloud"
+
+#: templates\geo\map.html
+msgid "Baik"
+msgstr "Good"
+
+#: templates\geo\map.html
+msgid "Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, oranye cukup, merah buruk."
+msgstr "Rows: hour · temperature · chance of rain · wind km/h. The underline is the spray window: green good, orange fair, red not recommended."
+
+#: templates\geo\map.html
+msgid "Batas di peta dan riwayat data satelitnya dihapus. Elemen kebun tidak terpengaruh."
+msgstr "The boundary and its satellite history are deleted. The plot itself isn't affected."
+
+#: templates\geo\map.html
+msgid "Belum ada poligon."
+msgstr "No boundaries yet."
+
+#: templates\geo\map.html
+msgid "Buruk"
+msgstr "Not recommended"
+
+#: templates\geo\map.html
+msgid "Butuh"
+msgstr "Needed"
+
+#: templates\geo\map.html
+msgid "Butuh = ET₀ × Kc; hujan tidak dihitung untuk elemen beratap. Isi Kc varietas di admin bila kosong."
+msgstr "Needed = ET₀ × Kc; rain isn't counted for covered plots. Fill in the variety's Kc in admin if it's blank."
+
+#: templates\geo\map.html
+msgid "Cari"
+msgstr "Search"
+
+#: templates\geo\map.html
+msgid "Cari desa, kecamatan, atau kabupaten…"
+msgstr "Search village, district or regency…"
+
+#: templates\geo\map.html
+msgid "Cari lokasi"
+msgstr "Search location"
+
+#: templates\geo\map.html
+msgid "Citra NDVI"
+msgstr "NDVI image"
+
+#: templates\geo\map.html
+msgid "Cuaca & Satelit"
+msgstr "Weather & satellite"
+
+#: templates\geo\map.html
+msgid "Cuaca &amp; Satelit"
+msgstr "Weather &amp; satellite"
+
+#: templates\geo\map.html
+msgid "Cukup"
+msgstr "Fair"
+
+#: templates\geo\map.html
+msgid "Curah hujan harian 30 hari terakhir"
+msgstr "Daily rainfall, last 30 days"
+
+#: templates\geo\map.html
+msgid "Data satelit poligon"
+msgstr "Boundary satellite data"
+
+#: templates\geo\map.html
+msgid "ET₀ %(et0)s mm · hujan %(rain)s mm"
+msgstr "ET₀ %(et0)s mm · rain %(rain)s mm"
+
+#: templates\geo\map.html
+msgid "ET₀ tidak tersedia"
+msgstr "ET₀ not available"
+
+#: templates\geo\map.html
+msgid "EVI"
+msgstr "EVI"
+
+#: templates\geo\map.html
+msgid "EVI rata-rata"
+msgstr "Average EVI"
+
+#: templates\geo\map.html
+msgid "Elemen tertaut"
+msgstr "Linked plot"
+
+#: templates\geo\map.html
+msgid "Gagal menyimpan."
+msgstr "Couldn't save."
+
+#: templates\geo\map.html
+msgid "Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI."
+msgstr "Draw field boundaries on the map to measure area and track NDVI."
+
+#: templates\geo\map.html
+msgid "Gambar lahan"
+msgstr "Draw field"
+
+#: templates\geo\map.html
+msgid "Ganti nama"
+msgstr "Rename"
+
+#: templates\geo\map.html
+msgid "Hapus poligon"
+msgstr "Delete boundary"
+
+#: templates\geo\map.html
+msgid "Hujan"
+msgstr "Rain"
+
+#: templates\geo\map.html
+msgid "Hujan %(pct)s%% · angin %(wind)s km/j"
+msgstr "Rain %(pct)s%% · wind %(wind)s km/h"
+
+#: templates\geo\map.html
+msgid "Hujan 30 hari terakhir"
+msgstr "Rain, last 30 days"
+
+#: templates\geo\map.html
+msgid "Isi lintang/bujur di Pengaturan"
+msgstr "Set latitude/longitude in Settings"
+
+#: templates\geo\map.html
+msgid "Isi nama poligon."
+msgstr "Enter a field name."
+
+#: templates\geo\map.html
+msgid "Jarang"
+msgstr "Sparse"
+
+#: templates\geo\map.html
+msgid "Kandungan air daun. Negatif = lebih kering."
+msgstr "Leaf water content. Negative = drier."
+
+#: templates\geo\map.html
+msgid "Kc"
+msgstr "Kc"
+
+#: templates\geo\map.html
+msgid "Kebutuhan air hari ini"
+msgstr "Water needed today"
+
+#: templates\geo\map.html
+msgid "Kehijauan tanaman, 0–1. Makin tinggi makin rimbun."
+msgstr "Crop greenness, 0–1. Higher means denser foliage."
+
+#: templates\geo\map.html
+msgid "Klik ikon ⬠ di kiri peta untuk menggambar lahan."
+msgstr "Click the ⬠ button on the left of the map to draw a field."
+
+#: templates\geo\map.html
+msgid "Klik peta untuk menaruh titik sudut. Klik titik pertama atau Selesai untuk menutup. Titik bisa ditarik, klik kanan untuk menghapus."
+msgstr "Click the map to place corners. Click the first corner or Done to close the shape. Drag a corner to move it, right-click to remove it."
+
+#: templates\geo\map.html
+msgid "Kurang"
+msgstr "Low"
+
+#: templates\geo\map.html
+msgid "Lahan "
+msgstr "Field "
+
+#: templates\geo\map.html
+msgid "Lintasan"
+msgstr "Passes"
+
+#: templates\geo\map.html
+msgid "Liter"
+msgstr "Litres"
+
+#: templates\geo\map.html
+msgid "Lokasi kebun belum diatur"
+msgstr "Farm location not set"
+
+#: templates\geo\map.html
+msgid "Lokasi saya"
+msgstr "My location"
+
+#: templates\geo\map.html
+msgid "Lokasi tidak dapat diakses — izinkan akses lokasi di browser."
+msgstr "Can't get your location — allow location access in the browser."
+
+#: templates\geo\map.html
+msgid "Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon."
+msgstr "Area is calculated on the server (0.02–1,000 ha). NDVI is only for open fields ≥ 1 ha; soil data is available for every boundary."
+
+#: templates\geo\map.html
+msgid "Memuat data satelit…"
+msgstr "Loading satellite data…"
+
+#: templates\geo\map.html
+msgid "Mencari…"
+msgstr "Searching…"
+
+#: templates\geo\map.html
+msgid "Menggambar lahan baru"
+msgstr "Drawing a new field"
+
+#: templates\geo\map.html
+msgid "Minta OWNER mengisinya di Pengaturan"
+msgstr "Ask the OWNER to set it in Settings"
+
+#: templates\geo\map.html
+msgid "NDVI min / rata / maks"
+msgstr "NDVI min / avg / max"
+
+#: templates\geo\map.html
+msgid "NDVI rata-rata"
+msgstr "Average NDVI"
+
+#: templates\geo\map.html
+msgid "NDWI"
+msgstr "NDWI"
+
+#: templates\geo\map.html
+msgid "NDWI rata-rata"
+msgstr "Average NDWI"
+
+#: templates\geo\map.html
+msgid "Nama poligon"
+msgstr "Boundary name"
+
+#: templates\geo\map.html
+msgid "Pakai luas"
+msgstr "Use area"
+
+#: templates\geo\map.html
+msgid "Pakai luas dari peta?"
+msgstr "Use the area from the map?"
+
+#: templates\geo\map.html
+msgid "Pakai luas peta"
+msgstr "Use map area"
+
+#: templates\geo\map.html
+msgid "Pakai luas terpetakan sebagai luas elemen"
+msgstr "Use the mapped area as the plot area"
+
+#: templates\geo\map.html
+msgid "Pencarian lokasi tidak tersedia."
+msgstr "Location search isn't available."
+
+#: templates\geo\map.html
+msgid "Peta (OpenStreetMap)"
+msgstr "Map (OpenStreetMap)"
+
+#: templates\geo\map.html
+msgid "Peta lahan"
+msgstr "Field map"
+
+#: templates\geo\map.html
+msgid "Poligon lahan"
+msgstr "Field boundaries"
+
+#: templates\geo\map.html
+msgid "Rimbun"
+msgstr "Dense"
+
+#: templates\geo\map.html
+msgid "Riwayat NDVI rata-rata"
+msgstr "Average NDVI history"
+
+#: templates\geo\map.html
+msgid "Satelit"
+msgstr "Satellite"
+
+#: templates\geo\map.html
+msgid "Satelit + label"
+msgstr "Satellite + labels"
+
+#: templates\geo\map.html
+msgid "Satelit melihat atap, bukan tanaman"
+msgstr "The satellite sees the roof, not the crop"
+
+#: templates\geo\map.html
+msgid "Sedang"
+msgstr "Moderate"
+
+#: templates\geo\map.html
+msgid "Selesai"
+msgstr "Completed"
+
+#: templates\geo\map.html
+msgid "Seperti NDVI, lebih peka pada tajuk yang rapat."
+msgstr "Like NDVI, more sensitive in dense canopy."
+
+#: templates\geo\map.html
+msgid "Sisi poligon bersilangan. Pindahkan titik agar sisinya tidak saling memotong."
+msgstr "The edges cross each other. Move a corner so no edges intersect."
+
+#: templates\geo\map.html
+msgid "Skala NDVI: merah jarang, kuning sedang, hijau rimbun"
+msgstr "NDVI scale: red sparse, yellow moderate, green dense"
+
+#: templates\geo\map.html
+msgid "Tarik titik untuk memindahkan · klik + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus."
+msgstr "Drag a corner to move it · click a + on an edge to add a corner · right-click (or long-press) a corner to remove it."
+
+#: templates\geo\map.html
+msgid "Terpetakan"
+msgstr "Mapped"
+
+#: templates\geo\map.html
+msgid "Tidak dapat memuat peta · muat ulang halaman."
+msgstr "Couldn't load the map · reload the page."
+
+#: templates\geo\map.html
+msgid "Tidak dapat terhubung ke server."
+msgstr "Can't reach the server."
+
+#: templates\geo\map.html
+msgid "Tidak ditautkan"
+msgstr "Not linked"
+
+#: templates\geo\map.html
+msgid "Ubah batas"
+msgstr "Edit boundary"
+
+#: templates\geo\map.html
+msgid "Ubah batas poligon"
+msgstr "Edit field boundary"
+
+#: templates\geo\map.html
+msgid "agar prakiraan cuaca tepat."
+msgstr "so the forecast is accurate."
+
+#: templates\geo\map.html
+msgid "beratap · tanpa NDVI"
+msgstr "covered · no NDVI"
+
+#: templates\geo\map.html
+msgid "m² · tercatat"
+msgstr "m² · on record"
+
+#: templates\geo\map.html
+msgid "tanpa NDVI"
+msgstr "no NDVI"
+
+#: templates\geo\map.html
+msgid "tanpa NDVI · &lt; 1 ha"
+msgstr "no NDVI · &lt; 1 ha"
+
+#: templates\geo\map.html
+msgid "· beratap"
+msgstr "· covered"
+
+#: templates\invoicing\buyer_detail.html
+msgid "%(d)s hari"
+msgstr "%(d)s days"
+
+#: templates\invoicing\buyer_detail.html
+msgid "%(n)s hari lalu"
+msgstr "%(n)s days ago"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Alamat"
+msgstr "Address"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Batalkan pembayaran"
+msgstr "Cancel payment"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Batalkan pembayaran?"
+msgstr "Cancel this payment?"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Belum ada invoice untuk pembeli ini."
+msgstr "No invoices for this customer yet."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Belum ada pembayaran."
+msgstr "No payments yet."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Berisiko"
+msgstr "At risk"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Berisiko: belum order lebih dari 2× jeda biasanya. Saatnya menghubungi pembeli ini."
+msgstr "At risk: no order for more than 2× their usual gap. Time to get in touch."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Bukti potong"
+msgstr "Tax slip"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Catat bayar"
+msgstr "Record payment"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Catat uang yang diterima lalu bagi ke satu atau beberapa invoice; sisanya menjadi kredit."
+msgstr "Record money received and split it across one or more invoices; the rest becomes credit."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Dialokasikan ke"
+msgstr "Applied to"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Email"
+msgstr "Email"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Invoice"
+msgstr "Invoice"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Jatuh tempo"
+msgstr "Due"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Jeda antar order"
+msgstr "Days between orders"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Jumlah invoice yang sudah terbit (draf dan batal tidak dihitung)."
+msgstr "Number of issued invoices (drafts and voided ones don't count)."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Kontak"
+msgstr "Contact"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Kredit tersedia"
+msgstr "Available credit"
+
+#: templates\invoicing\buyer_detail.html
+msgid "LTGP"
+msgstr "LTGP"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Lifetime gross profit: laba kotor dari semua invoice terbit pembeli ini. Rumus: Pendapatan − HPP, sepanjang waktu."
+msgstr "Lifetime gross profit: the gross profit from every issued invoice of this customer. Formula: Revenue − COGS, all time."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Metode"
+msgstr "Method"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Nilai pelanggan"
+msgstr "Customer value"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Nomor"
+msgstr "Number"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Order"
+msgstr "Orders"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Order terakhir"
+msgstr "Last order"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Pakai kredit"
+msgstr "Use credit"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Pembayaran"
+msgstr "Payments"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Pembayaran yang belum dialokasikan ini dibatalkan dan tidak dihitung lagi sebagai kredit. Catatannya tetap disimpan (arsip 10 tahun)."
+msgstr "This unapplied payment is cancelled and no longer counts as credit. The record is kept (10-year archive)."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Pembeli"
+msgstr "Customers"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Pembeli nonaktif tidak muncul saat membuat invoice baru; invoice lamanya tetap ada."
+msgstr "Inactive customers don't appear when creating a new invoice; their old invoices stay."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Piutang"
+msgstr "Receivables"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Posisi tagihan"
+msgstr "Account balance"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Rata-rata hari di antara dua invoice. Rumus: (order terakhir − order pertama) ÷ (jumlah order − 1). Perlu minimal dua order."
+msgstr "Average days between two invoices. Formula: (last order − first order) ÷ (orders − 1). Needs at least two orders."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Referensi"
+msgstr "Reference"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Riwayat"
+msgstr "History"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Riwayat pembeli"
+msgstr "Customer history"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Sisa (kredit)"
+msgstr "Unapplied (credit)"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Sisa pembayaran yang belum dialokasikan. Tidak bisa dicairkan, hanya untuk invoice berikutnya."
+msgstr "Unapplied payments. They can't be cashed out, only used on future invoices."
+
+#: templates\invoicing\buyer_detail.html
+msgid "Telepon"
+msgstr "Phone"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Terapkan"
+msgstr "Apply"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Terbit"
+msgstr "Issued"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Ubah pembeli"
+msgstr "Edit customer"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Ubah status"
+msgstr "Change status"
+
+#: templates\invoicing\buyer_detail.html
+msgid "Ubah status pembeli?"
+msgstr "Change customer status?"
+
+#: templates\invoicing\buyer_detail.html
+msgid "bukti"
+msgstr "receipt"
+
+#: templates\invoicing\buyer_detail.html
+msgid "saat diterima"
+msgstr "on receipt"
+
+#: templates\invoicing\buyer_detail.html
+msgid "· sisa"
+msgstr "· balance"
+
+#: templates\invoicing\buyer_detail.html
+msgid "· termin"
+msgstr "· terms"
+
+#: templates\invoicing\buyer_detail.html
+msgid "—"
+msgstr "—"
+
+#: templates\invoicing\buyers.html
+msgid "%(n)s order"
+msgstr "%(n)s orders"
+
+#: templates\invoicing\buyers.html
+msgid "Belum ada pembeli."
+msgstr "No customers yet."
+
+#: templates\invoicing\buyers.html
+msgid "Cari nama / perusahaan…"
+msgstr "Search name / company…"
+
+#: templates\invoicing\buyers.html
+msgid "Cari pembeli"
+msgstr "Search customers"
+
+#: templates\invoicing\buyers.html
+msgid "Daftar pembeli"
+msgstr "Customer list"
+
+#: templates\invoicing\buyers.html
+msgid "Direktori pelanggan grosir, termin pembayaran, piutang dan kredit masing-masing."
+msgstr "Wholesale customers with their payment terms, receivables and credit."
+
+#: templates\invoicing\buyers.html
+msgid "Kredit"
+msgstr "Credit"
+
+#: templates\invoicing\buyers.html
+msgid "Pembeli aktif"
+msgstr "Active customers"
+
+#: templates\invoicing\buyers.html
+msgid "Piutang berjalan"
+msgstr "Open receivables"
+
+#: templates\invoicing\buyers.html
+msgid "Saat diterima"
+msgstr "On receipt"
+
+#: templates\invoicing\buyers.html
+msgid "Sisa tagihan per pembeli menurut lama lewat jatuh tempo."
+msgstr "Balance per customer by days past due."
+
+#: templates\invoicing\buyers.html
+msgid "Tambah pembeli"
+msgstr "Add customer"
+
+#: templates\invoicing\buyers.html
+msgid "Tambahkan restoran, pasar, atau pengepul yang membeli dalam jumlah besar agar bisa dibuatkan invoice."
+msgstr "Add restaurants, markets or collectors who buy in bulk so you can invoice them."
+
+#: templates\invoicing\buyers.html
+msgid "Termin"
+msgstr "Terms"
+
+#: templates\invoicing\buyers.html
+msgid "Tidak ada pembeli yang cocok."
+msgstr "No matching customers."
+
+#: templates\invoicing\buyers.html
+msgid "Umur piutang"
+msgstr "Receivables ageing"
+
+#: templates\invoicing\invoice_detail.html
+msgid "%(v1)s dilepas dari %(v2)s dan kembali menjadi kredit %(v3)s. Status pembayaran invoice ikut berubah."
+msgstr "%(v1)s is removed from %(v2)s and goes back to %(v3)s's credit. The invoice's payment status updates."
+
+#: templates\invoicing\invoice_detail.html
+msgid "/kg ·"
+msgstr "/kg ·"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Baris produk"
+msgstr "Line items"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Batalkan invoice"
+msgstr "Void invoice"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Batalkan invoice?"
+msgstr "Void this invoice?"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Bea meterai Rp10.000"
+msgstr "Rp10,000 stamp duty"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Cetak"
+msgstr "Print"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Dibayar"
+msgstr "Paid"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Dibuat"
+msgstr "Created"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Diskon"
+msgstr "Discount"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Draf ini belum memotong stok dan akan dihapus permanen."
+msgstr "This draft hasn't touched stock and will be deleted permanently."
+
+#: templates\invoicing\invoice_detail.html
+msgid "HPP"
+msgstr "COGS"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Hapus draf"
+msgstr "Delete draft"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Hapus draf?"
+msgstr "Delete this draft?"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Harga pokok dari lot yang dipotong saat terbit."
+msgstr "Cost of goods from the lots deducted at issue."
+
+#: templates\invoicing\invoice_detail.html
+msgid "Harga/kg"
+msgstr "Price/kg"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Lepas"
+msgstr "Unapply"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Lepas pembayaran"
+msgstr "Unapply payment"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Lepas pembayaran ini?"
+msgstr "Unapply this payment?"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Menerbitkan memberi nomor, memotong stok FIFO dari lot terlama, dan mengunci harga & pajak."
+msgstr "Issuing assigns a number, deducts stock FIFO from the oldest lots and locks prices & tax."
+
+#: templates\invoicing\invoice_detail.html
+msgid "Ongkos kirim"
+msgstr "Shipping"
+
+#: templates\invoicing\invoice_detail.html
+msgid "PPN"
+msgstr "VAT"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Siap diterbitkan?"
+msgstr "Ready to issue?"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Sisa tagihan"
+msgstr "Balance due"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Stok dikembalikan ke lot asal dan pembayaran yang sudah dialokasikan menjadi kredit pembeli. Tidak bisa dibatalkan."
+msgstr "Stock goes back to its original lots and applied payments become customer credit. This can't be undone."
+
+#: templates\invoicing\invoice_detail.html
+msgid "Subtotal"
+msgstr "Subtotal"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Terbitkan"
+msgstr "Issue"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Terbitkan invoice untuk %(v1)s?"
+msgstr "Issue the invoice to %(v1)s?"
+
+#: templates\invoicing\invoice_detail.html
+msgid "Termin pembeli: %(t)s hari."
+msgstr "Customer terms: %(t)s days."
+
+#: templates\invoicing\invoice_detail.html
+msgid "Total %(v1)s untuk %(v2)s baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah — hanya dibatalkan."
+msgstr "Total %(v1)s for %(v2)s line items. Stock is deducted FIFO from the oldest lots and the invoice gets its number. Once issued, it can't be edited — only voided."
+
+#: templates\invoicing\invoice_detail.html
+msgid "Total di atas Rp5.000.000: tempel meterai (atau e-meterai) pada invoice yang diserahkan ke pembeli."
+msgstr "Total above Rp5,000,000: put a stamp-duty stamp (or e-meterai) on the invoice you give the customer."
+
+#: templates\invoicing\invoice_detail.html
+msgid "kg dari LOT-"
+msgstr "kg from LOT-"
+
+#: templates\invoicing\invoice_detail.html
+msgid "telusuri"
+msgstr "trace"
+
+#: templates\invoicing\invoice_detail.html
+msgid "tersedia"
+msgstr "available"
+
+#: templates\invoicing\invoice_detail.html
+msgid "· HPP"
+msgstr "· COGS"
+
+#: templates\invoicing\invoice_detail.html
+msgid "· terbit"
+msgstr "· issued"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Baris"
+msgstr "Line"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Belum ada baris. Ketuk “+ Baris”."
+msgstr "No lines yet. Tap “+ Line”."
+
+#: templates\invoicing\invoice_editor.html
+msgid "Diskon &amp; ongkir"
+msgstr "Discount &amp; shipping"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server."
+msgstr "Drafts don't touch stock; stock is deducted FIFO when issued. These numbers are a preview; the server does the final calculation."
+
+#: templates\invoicing\invoice_editor.html
+msgid "Hapus baris"
+msgstr "Remove line"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Harga belum termasuk PPN. Draf tidak memotong stok; stok dipotong FIFO saat diterbitkan. Angka di sini pratinjau, perhitungan final dilakukan server."
+msgstr "Prices exclude VAT. Drafts don't touch stock; stock is deducted FIFO when issued. These numbers are a preview; the server does the final calculation."
+
+#: templates\invoicing\invoice_editor.html
+msgid "Invoice Baru"
+msgstr "New invoice"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Invoice baru"
+msgstr "New invoice"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Melebihi stok saat ini."
+msgstr "More than current stock."
+
+#: templates\invoicing\invoice_editor.html
+msgid "Nilai diskon"
+msgstr "Discount value"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Ongkos kirim tanpa PPN."
+msgstr "Shipping, no VAT."
+
+#: templates\invoicing\invoice_editor.html
+msgid "PPN %(rate)s%%"
+msgstr "VAT %(rate)s%%"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Setelah disimpan, terbitkan dari halaman invoice. Stok baru dipotong saat terbit."
+msgstr "After saving, issue it from the invoice page. Stock is only deducted when issued."
+
+#: templates\invoicing\invoice_editor.html
+msgid "Simpan draf"
+msgstr "Save draft"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Stok %(kg)s kg"
+msgstr "Stock %(kg)s kg"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Stok belum bergerak"
+msgstr "Stock not moved yet"
+
+#: templates\invoicing\invoice_editor.html
+msgid "Total di atas Rp5.000.000."
+msgstr "Total above Rp5,000,000."
+
+#: templates\invoicing\invoice_editor.html
+msgid "wajib"
+msgstr "required"
+
+#: templates\invoicing\invoice_editor.html
+msgid "— pilih —"
+msgstr "Select"
+
+#: templates\invoicing\invoice_print.html
+msgid "Cetak atau simpan sebagai PDF"
+msgstr "Print or save as PDF"
+
+#: templates\invoicing\invoice_print.html
+msgid "DIBATALKAN"
+msgstr "VOID"
+
+#: templates\invoicing\invoice_print.html
+msgid "Ditagihkan kepada"
+msgstr "Bill to"
+
+#: templates\invoicing\invoice_print.html
+msgid "GoTani"
+msgstr "GoTani"
+
+#: templates\invoicing\invoice_print.html
+msgid "INVOICE"
+msgstr "INVOICE"
+
+#: templates\invoicing\invoice_print.html
+msgid "Meterai Rp10.000"
+msgstr "Rp10,000 stamp"
+
+#: templates\invoicing\invoice_print.html
+msgid "Telp."
+msgstr "Tel."
+
+#: templates\invoicing\invoice_print.html
+msgid "Terima kasih atas kerja samanya."
+msgstr "Thank you for your business."
+
+#: templates\invoicing\invoice_print.html
+msgid "Termin pembayaran"
+msgstr "Payment terms"
+
+#: templates\invoicing\invoice_print.html
+msgid "hari sejak tanggal invoice."
+msgstr "days from the invoice date."
+
+#: templates\invoicing\invoices.html
+msgid "%(n)s invoice terbit"
+msgstr "%(n)s issued"
+
+#: templates\invoicing\invoices.html
+msgid "Aksi %(v1)s"
+msgstr "Actions for %(v1)s"
+
+#: templates\invoicing\invoices.html
+msgid "Belum ada invoice di tab ini."
+msgstr "No invoices in this tab."
+
+#: templates\invoicing\invoices.html
+msgid "Cari invoice"
+msgstr "Search invoices"
+
+#: templates\invoicing\invoices.html
+msgid "Cari nomor / pembeli…"
+msgstr "Search number / customer…"
+
+#: templates\invoicing\invoices.html
+msgid "Daftar invoice"
+msgstr "Invoice list"
+
+#: templates\invoicing\invoices.html
+msgid "Draf"
+msgstr "Draft"
+
+#: templates\invoicing\invoices.html
+msgid "Invoice dipakai untuk penjualan grosir: stok baru terpotong saat invoice diterbitkan, dan pembayaran bisa dicicil."
+msgstr "Invoices are for wholesale: stock is deducted only when an invoice is issued, and payments can come in instalments."
+
+#: templates\invoicing\invoices.html
+msgid "Lihat"
+msgstr "View"
+
+#: templates\invoicing\invoices.html
+msgid "Terbit bulan ini"
+msgstr "Issued this month"
+
+#: templates\invoicing\invoices.html
+msgid "Tidak ada invoice yang cocok dengan “"
+msgstr "No invoice matches “"
+
+#: templates\invoicing\invoices.html
+msgid "Ubah draf"
+msgstr "Edit draft"
+
+#: templates\invoicing\payment_form.html
+msgid "Alokasi ke invoice"
+msgstr "Apply to invoices"
+
+#: templates\invoicing\payment_form.html
+msgid "Bagi otomatis"
+msgstr "Split automatically"
+
+#: templates\invoicing\payment_form.html
+msgid "Bagi uang ke invoice yang masih terbuka. Sisa yang tidak dialokasikan menjadi kredit pembeli (tidak bisa dicairkan, hanya untuk invoice berikutnya)."
+msgstr "Split the money across open invoices. Anything left over becomes customer credit (it can't be cashed out, only used on future invoices)."
+
+#: templates\invoicing\payment_form.html
+msgid "Catat Pembayaran"
+msgstr "Record payment"
+
+#: templates\invoicing\payment_form.html
+msgid "Catat pembayaran"
+msgstr "Record payment"
+
+#: templates\invoicing\payment_form.html
+msgid "Detail pembayaran"
+msgstr "Payment details"
+
+#: templates\invoicing\payment_form.html
+msgid "Dialokasikan"
+msgstr "Applied"
+
+#: templates\invoicing\payment_form.html
+msgid "Dibayar untuk %(v1)s"
+msgstr "Paid on %(v1)s"
+
+#: templates\invoicing\payment_form.html
+msgid "Diterima"
+msgstr "Received"
+
+#: templates\invoicing\payment_form.html
+msgid "Kekurangan"
+msgstr "Short by"
+
+#: templates\invoicing\payment_form.html
+msgid "Kredit yang sudah ada:"
+msgstr "Existing credit:"
+
+#: templates\invoicing\payment_form.html
+msgid "Lunas"
+msgstr "Paid"
+
+#: templates\invoicing\payment_form.html
+msgid "Menjadi kredit"
+msgstr "Becomes credit"
+
+#: templates\invoicing\payment_form.html
+msgid "Seluruh pembayaran akan menjadi kredit."
+msgstr "The whole payment becomes credit."
+
+#: templates\invoicing\payment_form.html
+msgid "Sisa"
+msgstr "Balance"
+
+#: templates\invoicing\payment_form.html
+msgid "Tidak ada invoice terbuka."
+msgstr "No open invoices."
+
+#: templates\invoicing\payment_form.html
+msgid "Uang dari"
+msgstr "Money from"
+
+#: templates\pos\orders.html
+msgid "Batalkan order"
+msgstr "Void order"
+
+#: templates\pos\orders.html
+msgid "Batalkan order %(num)s?"
+msgstr "Void order %(num)s?"
+
+#: templates\pos\orders.html
+msgid "Bayar"
+msgstr "Payment"
+
+#: templates\pos\orders.html
+msgid "Belum ada order pada tanggal ini."
+msgstr "No orders on this date."
+
+#: templates\pos\orders.html
+msgid "Daftar order"
+msgstr "Order list"
+
+#: templates\pos\orders.html
+msgid "Hari ini"
+msgstr "Today"
+
+#: templates\pos\orders.html
+msgid "Kasir"
+msgstr "Cashier"
+
+#: templates\pos\orders.html
+msgid "Order selesai"
+msgstr "Completed orders"
+
+#: templates\pos\orders.html
+msgid "Penjualan dari Kasir (POS) muncul di sini lengkap dengan struknya."
+msgstr "Sales from the POS show up here with their receipts."
+
+#: templates\pos\orders.html
+msgid "Pesanan"
+msgstr "Orders"
+
+#: templates\pos\orders.html
+msgid "Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka."
+msgstr "The whole order is voided and stock goes back to its original lots. Cash orders are refunded from the open shift's drawer."
+
+#: templates\pos\orders.html
+msgid "Struk"
+msgstr "Receipt"
+
+#: templates\pos\orders.html
+msgid "Struk kasir per hari. Pembatalan hanya untuk seluruh order, pada hari yang sama, oleh OWNER/MANAGER."
+msgstr "POS receipts by day. Only whole orders can be voided, on the same day, by an OWNER/MANAGER."
+
+#: templates\pos\orders.html
+msgid "Total dibayar"
+msgstr "Total paid"
+
+#: templates\pos\orders.html
+msgid "Transaksi baru"
+msgstr "New sale"
+
+#: templates\pos\receipt.html
+msgid "A4"
+msgstr "A4"
+
+#: templates\pos\receipt.html
+msgid "Hasil kebun segar"
+msgstr "Fresh farm produce"
+
+#: templates\pos\receipt.html
+msgid "No"
+msgstr "No"
+
+#: templates\pos\receipt.html
+msgid "STRUK"
+msgstr "RECEIPT"
+
+#: templates\pos\receipt.html
+msgid "TOTAL"
+msgstr "TOTAL"
+
+#: templates\pos\receipt.html
+msgid "Terima kasih!"
+msgstr "Thank you!"
+
+#: templates\pos\receipt.html
+msgid "Tgl"
+msgstr "Date"
+
+#: templates\pos\receipt.html
+msgid "Thermal 58 mm"
+msgstr "Thermal 58 mm"
+
+#: templates\pos\receipt.html
+msgid "Tunai"
+msgstr "Cash"
+
+#: templates\pos\receipt.html
+msgid "Ukuran struk"
+msgstr "Receipt size"
+
+#: templates\pos\receipt.html
+msgid "kg x"
+msgstr "kg x"
+
+#: templates\pos\receipt.html
+msgid "termasuk PPN"
+msgstr "incl. VAT"
+
+#: templates\pos\register.html
+msgid " kg (biasanya di bawah "
+msgstr " kg (usually under "
+
+#: templates\pos\register.html
+msgid "%(kg)s kg di keranjang"
+msgstr "%(kg)s kg in cart"
+
+#: templates\pos\register.html
+msgid "%(kg)s kg tersedia"
+msgstr "%(kg)s kg available"
+
+#: templates\pos\register.html
+msgid "%(n)s produk"
+msgstr "%(n)s products"
+
+#: templates\pos\register.html
+msgid "Bayar %(amount)s"
+msgstr "Pay %(amount)s"
+
+#: templates\pos\register.html
+msgid "Belum ada produk berharga."
+msgstr "No priced products yet."
+
+#: templates\pos\register.html
+msgid "Buka shift"
+msgstr "Open shift"
+
+#: templates\pos\register.html
+msgid "Buka shift dengan modal awal di laci sebelum berjualan."
+msgstr "Open a shift with the starting cash in the drawer before selling."
+
+#: templates\pos\register.html
+msgid "Buka shift untuk mulai berjualan."
+msgstr "Open a shift to start selling."
+
+#: templates\pos\register.html
+msgid "Cari produk"
+msgstr "Search products"
+
+#: templates\pos\register.html
+msgid "Cari produk…"
+msgstr "Search products…"
+
+#: templates\pos\register.html
+msgid "Hapus dari keranjang"
+msgstr "Remove from cart"
+
+#: templates\pos\register.html
+msgid "Jumlah kg"
+msgstr "Quantity (kg)"
+
+#: templates\pos\register.html
+msgid "Jumlah tidak biasa"
+msgstr "Unusual quantity"
+
+#: templates\pos\register.html
+msgid "Kasir (POS)"
+msgstr "POS"
+
+#: templates\pos\register.html
+msgid "Kembalian"
+msgstr "Change"
+
+#: templates\pos\register.html
+msgid "Keranjang"
+msgstr "Cart"
+
+#: templates\pos\register.html
+msgid "Keranjang kosong. Ketuk produk untuk menambah."
+msgstr "Cart is empty. Tap a product to add it."
+
+#: templates\pos\register.html
+msgid "Kosongkan"
+msgstr "Clear"
+
+#: templates\pos\register.html
+msgid "Kosongkan bila pembeli membayar uang pas."
+msgstr "Leave blank if the customer pays the exact amount."
+
+#: templates\pos\register.html
+msgid "Kurang %(amount)s"
+msgstr "Short by %(amount)s"
+
+#: templates\pos\register.html
+msgid "Kurangi"
+msgstr "Less"
+
+#: templates\pos\register.html
+msgid "Lihat keranjang"
+msgstr "View cart"
+
+#: templates\pos\register.html
+msgid "Melebihi stok tersedia ("
+msgstr "More than available stock ("
+
+#: templates\pos\register.html
+msgid "Modal awal (Rp)"
+msgstr "Starting cash (Rp)"
+
+#: templates\pos\register.html
+msgid "Perkiraan dari harga di layar. Total final, termasuk PPN bila ada, dihitung server dengan harga resmi."
+msgstr "Estimate from the prices on screen. The final total, including any VAT, is calculated by the server with the official prices."
+
+#: templates\pos\register.html
+msgid "Riwayat penjualan"
+msgstr "Sales history"
+
+#: templates\pos\register.html
+msgid "Shift belum dibuka"
+msgstr "Shift not open"
+
+#: templates\pos\register.html
+msgid "Shift dibuka"
+msgstr "Shift opened"
+
+#: templates\pos\register.html
+msgid "Shift kasir belum dibuka"
+msgstr "No cashier shift open"
+
+#: templates\pos\register.html
+msgid "Stok %(time)s"
+msgstr "Stock %(time)s"
+
+#: templates\pos\register.html
+msgid "Stok diperbarui otomatis tiap 15 detik. Total final dihitung server dengan harga resmi."
+msgstr "Stock refreshes every 15 seconds. The final total is calculated by the server with the official prices."
+
+#: templates\pos\register.html
+msgid "Tambah"
+msgstr "Add"
+
+#: templates\pos\register.html
+msgid "Tetap bayar"
+msgstr "Pay anyway"
+
+#: templates\pos\register.html
+msgid "Tetapkan harga di menu Harga Produk."
+msgstr "Set prices in Product prices."
+
+#: templates\pos\register.html
+msgid "Tutup keranjang"
+msgstr "Close cart"
+
+#: templates\pos\register.html
+msgid "Uang diterima"
+msgstr "Cash received"
+
+#: templates\pos\register.html
+msgid "Uang pas"
+msgstr "Exact amount"
+
+#: templates\pos\register.html
+msgid "kg)"
+msgstr "kg)"
+
+#: templates\pos\shift.html
+msgid "Belum ada mutasi selain penjualan."
+msgstr "No cash movements besides sales."
+
+#: templates\pos\shift.html
+msgid "Belum ada shift terbuka. Isi modal awal di laci."
+msgstr "No open shift. Enter the starting cash in the drawer."
+
+#: templates\pos\shift.html
+msgid "Belum ada shift yang ditutup."
+msgstr "No closed shifts yet."
+
+#: templates\pos\shift.html
+msgid "Catat mutasi kas"
+msgstr "Log cash movement"
+
+#: templates\pos\shift.html
+msgid "Catatan (opsional)"
+msgstr "Notes (optional)"
+
+#: templates\pos\shift.html
+msgid "Dibuka"
+msgstr "Opened"
+
+#: templates\pos\shift.html
+msgid "Dihitung"
+msgstr "Counted"
+
+#: templates\pos\shift.html
+msgid "Disembunyikan sampai hitungan selesai (hitung buta)."
+msgstr "Hidden until the count is done (blind count)."
+
+#: templates\pos\shift.html
+msgid "Ditinjau"
+msgstr "Reviewed"
+
+#: templates\pos\shift.html
+msgid "Hitungan dikunci dan shift ditutup. Selisih dengan uang seharusnya akan ditinjau manajer."
+msgstr "The count is locked and the shift closes. Any difference from expected cash is reviewed by a manager."
+
+#: templates\pos\shift.html
+msgid "Isi jumlah lembar atau keping per pecahan. Uang seharusnya baru terlihat setelah hitungan dikunci."
+msgstr "Enter the number of notes or coins per denomination. Expected cash only shows after the count is locked."
+
+#: templates\pos\shift.html
+msgid "Jumlah (Rp)"
+msgstr "Amount (Rp)"
+
+#: templates\pos\shift.html
+msgid "Kategori biaya"
+msgstr "Expense category"
+
+#: templates\pos\shift.html
+msgid "Membuat biaya tunai berstatus Menunggu persetujuan."
+msgstr "Creates a cash expense pending approval."
+
+#: templates\pos\shift.html
+msgid "Modal awal"
+msgstr "Starting cash"
+
+#: templates\pos\shift.html
+msgid "Modal awal diisi dari hitungan terakhir."
+msgstr "Starting cash is taken from the last count."
+
+#: templates\pos\shift.html
+msgid "Mutasi kas shift ini"
+msgstr "This shift's cash movements"
+
+#: templates\pos\shift.html
+msgid "Pecahan"
+msgstr "Denomination"
+
+#: templates\pos\shift.html
+msgid "Penutupan dicatat sebagai tutup paksa."
+msgstr "The close is recorded as a forced close."
+
+#: templates\pos\shift.html
+msgid "Perlu ditinjau"
+msgstr "Needs review"
+
+#: templates\pos\shift.html
+msgid "Riwayat shift"
+msgstr "Shift history"
+
+#: templates\pos\shift.html
+msgid "Rp0"
+msgstr "Rp0"
+
+#: templates\pos\shift.html
+msgid "Satu laci kasir, satu shift terbuka. Penjualan hanya bisa saat shift terbuka; uang dihitung per pecahan saat tutup."
+msgstr "One cash drawer, one open shift. Sales only work while a shift is open; cash is counted by denomination at close."
+
+#: templates\pos\shift.html
+msgid "Seharusnya"
+msgstr "Expected"
+
+#: templates\pos\shift.html
+msgid "Selisih %(v1)s. Catatan tinjauan disimpan di log aktivitas."
+msgstr "Difference %(v1)s. The review note is saved to the activity log."
+
+#: templates\pos\shift.html
+msgid "Sesuai"
+msgstr "Matches"
+
+#: templates\pos\shift.html
+msgid "Shift"
+msgstr "Shift"
+
+#: templates\pos\shift.html
+msgid "Shift & Kas"
+msgstr "Shift & cash"
+
+#: templates\pos\shift.html
+msgid "Shift ini dibuka orang lain"
+msgstr "Someone else opened this shift"
+
+#: templates\pos\shift.html
+msgid "Simpan mutasi"
+msgstr "Save"
+
+#: templates\pos\shift.html
+msgid "Simpan tinjauan"
+msgstr "Save review"
+
+#: templates\pos\shift.html
+msgid "Terbuka"
+msgstr "Open"
+
+#: templates\pos\shift.html
+msgid "Tinjau"
+msgstr "Review"
+
+#: templates\pos\shift.html
+msgid "Tinjau selisih %(v1)s"
+msgstr "Review difference %(v1)s"
+
+#: templates\pos\shift.html
+msgid "Total dihitung"
+msgstr "Total counted"
+
+#: templates\pos\shift.html
+msgid "Tutup shift"
+msgstr "Close shift"
+
+#: templates\pos\shift.html
+msgid "Tutup shift?"
+msgstr "Close the shift?"
+
+#: templates\pos\shift.html
+msgid "Uang seharusnya"
+msgstr "Expected cash"
+
+#: templates\pos\shift.html
+msgid "Uang seharusnya di laci"
+msgstr "Expected cash in drawer"
+
+#: templates\pos\shift.html
+msgid "batal"
+msgstr "void"
+
+#: templates\pos\shift.html
+msgid "· tutup paksa oleh"
+msgstr "· force-closed by"
+
+#: templates\registration\login.html
+msgid "Kata sandi"
+msgstr "Password"
+
+#: templates\registration\login.html
+msgid "Lupa kata sandi? Minta pemilik kebun mengatur ulang di halaman Staf."
+msgstr "Forgot your password? Ask the farm owner to reset it on the Team page."
+
+#: templates\registration\login.html
+msgid "Masuk"
+msgstr "Log in"
+
+#: templates\registration\login.html
+msgid "Masuk dengan akun yang diberikan pemilik kebun."
+msgstr "Log in with the account the farm owner gave you."
+
+#: templates\registration\login.html
+msgid "Nama pengguna"
+msgstr "Username"
+
+#: templates\registration\login.html
+msgid "Nama pengguna atau kata sandi salah."
+msgstr "Wrong username or password."
+
+#: templates\registration\login.html
+msgid "Selamat datang kembali"
+msgstr "Welcome back"
+
+#: templates\registration\login.html
+msgid "Sembunyikan kata sandi"
+msgstr "Hide password"
+
+#: templates\registration\login.html
+msgid "Tampilkan kata sandi"
+msgstr "Show password"
+
+#: templates\reports\dashboard.html
+msgid "AOV"
+msgstr "AOV"
+
+#: templates\reports\dashboard.html
+msgid "Aset persediaan, bukan beban: baru menjadi biaya saat dipakai."
+msgstr "Inventory asset, not an expense: it becomes a cost only when used."
+
+#: templates\reports\dashboard.html
+msgid "Average order value: rata-rata nilai satu transaksi. Rumus: Pendapatan ÷ jumlah transaksi (order kasir + invoice)."
+msgstr "Average order value: what one sale is worth on average. Formula: Revenue ÷ transactions (POS orders + invoices)."
+
+#: templates\reports\dashboard.html
+msgid "Bagian pendapatan periode ini dari kasir (POS) dan dari invoice."
+msgstr "Share of this period's revenue from the POS and from invoices."
+
+#: templates\reports\dashboard.html
+msgid "Batang = pendapatan hari itu, garis putus-putus = HPP. Jarak antara puncak batang dan garis adalah laba kotor."
+msgstr "Bars = that day's revenue, dashed line = COGS. The gap between a bar's top and the line is gross profit."
+
+#: templates\reports\dashboard.html
+msgid "Belum ada uang masuk pada periode ini."
+msgstr "No cash in during this period."
+
+#: templates\reports\dashboard.html
+msgid "Berjalan"
+msgstr "Running"
+
+#: templates\reports\dashboard.html
+msgid "Biaya disetujui per kategori"
+msgstr "Approved expenses by category"
+
+#: templates\reports\dashboard.html
+msgid "Biaya per kategori"
+msgstr "Expenses by category"
+
+#: templates\reports\dashboard.html
+msgid "Biaya siklus tak terserap"
+msgstr "Unabsorbed cycle cost"
+
+#: templates\reports\dashboard.html
+msgid "Biaya siklus yang ditutup dalam periode ini tanpa panen yang menyerapnya."
+msgstr "Costs of cycles closed this period with no harvest to absorb them."
+
+#: templates\reports\dashboard.html
+msgid "Biaya umum ditambah biaya elemen yang tidak sedang punya siklus."
+msgstr "Overhead plus costs of plots without a running cycle."
+
+#: templates\reports\dashboard.html
+msgid "Dari"
+msgstr "From"
+
+#: templates\reports\dashboard.html
+msgid "Grade"
+msgstr "Grade"
+
+#: templates\reports\dashboard.html
+msgid "HPP "
+msgstr "COGS "
+
+#: templates\reports\dashboard.html
+msgid "Hanya biaya yang sudah disetujui."
+msgstr "Approved expenses only."
+
+#: templates\reports\dashboard.html
+msgid "Hasil jual per jenis elemen"
+msgstr "Yield by plot type"
+
+#: templates\reports\dashboard.html
+msgid "Hasil per jenis elemen"
+msgstr "Yield by plot type"
+
+#: templates\reports\dashboard.html
+msgid "Kerugian susut/rusak"
+msgstr "Spoilage loss"
+
+#: templates\reports\dashboard.html
+msgid "Kewajiban pajak, bukan pendapatan."
+msgstr "A tax liability, not revenue."
+
+#: templates\reports\dashboard.html
+msgid "Kg layak jual per meter persegi per jenis elemen"
+msgstr "Sellable kg per square metre by plot type"
+
+#: templates\reports\dashboard.html
+msgid "Kg layak jual per meter persegi, per jenis elemen."
+msgstr "Sellable kg per square metre, by plot type."
+
+#: templates\reports\dashboard.html
+msgid "Kg terjual"
+msgstr "Kg sold"
+
+#: templates\reports\dashboard.html
+msgid "Laba bersih"
+msgstr "Net profit"
+
+#: templates\reports\dashboard.html
+msgid "Laba kotor"
+msgstr "Gross profit"
+
+#: templates\reports\dashboard.html
+msgid "Laba kotor "
+msgstr "Gross profit "
+
+#: templates\reports\dashboard.html
+msgid "Laba kotor dari setiap Rp100 penjualan; makin tinggi, makin sehat harga jual. Rumus: Laba kotor ÷ Pendapatan × 100."
+msgstr "Gross profit from every Rp100 of sales; the higher, the healthier your prices. Formula: Gross profit ÷ Revenue × 100."
+
+#: templates\reports\dashboard.html
+msgid "Laba setelah semua biaya. Rumus: Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead."
+msgstr "Profit after every cost. Formula: Gross profit + other income − spoilage − unabsorbed cycle cost − overhead."
+
+#: templates\reports\dashboard.html
+msgid "Lima produk dengan pendapatan tertinggi"
+msgstr "Top five products by revenue"
+
+#: templates\reports\dashboard.html
+msgid "Lima varietas × grade dengan pendapatan tertinggi pada periode ini."
+msgstr "The five variety × grade combinations with the highest revenue this period."
+
+#: templates\reports\dashboard.html
+msgid "Luas"
+msgstr "Area"
+
+#: templates\reports\dashboard.html
+msgid "Margin"
+msgstr "Margin"
+
+#: templates\reports\dashboard.html
+msgid "Margin kotor"
+msgstr "Gross margin"
+
+#: templates\reports\dashboard.html
+msgid "Margin per varietas × grade"
+msgstr "Margin by variety × grade"
+
+#: templates\reports\dashboard.html
+msgid "Menampilkan 30 hari terakhir."
+msgstr "Showing the last 30 days."
+
+#: templates\reports\dashboard.html
+msgid "Overhead umum"
+msgstr "Overhead"
+
+#: templates\reports\dashboard.html
+msgid "POS"
+msgstr "POS"
+
+#: templates\reports\dashboard.html
+msgid "POS per tanggal jual · pembayaran invoice per tanggal bayar (basis kas)."
+msgstr "POS by sale date · invoice payments by payment date (cash basis)."
+
+#: templates\reports\dashboard.html
+msgid "PPN terkumpul"
+msgstr "VAT collected"
+
+#: templates\reports\dashboard.html
+msgid "Pembagian kanal"
+msgstr "Channel mix"
+
+#: templates\reports\dashboard.html
+msgid "Pembelian input (kas keluar)"
+msgstr "Input purchases (cash out)"
+
+#: templates\reports\dashboard.html
+msgid "Pendapatan "
+msgstr "Revenue "
+
+#: templates\reports\dashboard.html
+msgid "Pendapatan &amp; HPP harian"
+msgstr "Daily revenue &amp; COGS"
+
+#: templates\reports\dashboard.html
+msgid "Pendapatan dan HPP harian"
+msgstr "Daily revenue and COGS"
+
+#: templates\reports\dashboard.html
+msgid "Pendapatan lain (ongkos kirim)"
+msgstr "Other income (shipping)"
+
+#: templates\reports\dashboard.html
+msgid "Pendapatan, HPP dan margin per varietas dan grade"
+msgstr "Revenue, COGS and margin by variety and grade"
+
+#: templates\reports\dashboard.html
+msgid "Produk terlaris"
+msgstr "Best sellers"
+
+#: templates\reports\dashboard.html
+msgid "Rentang cepat"
+msgstr "Quick range"
+
+#: templates\reports\dashboard.html
+msgid "Rincian laba"
+msgstr "Profit breakdown"
+
+#: templates\reports\dashboard.html
+msgid "Rugi pada periode ini"
+msgstr "Loss this period"
+
+#: templates\reports\dashboard.html
+msgid "Sampai"
+msgstr "To"
+
+#: templates\reports\dashboard.html
+msgid "Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual)."
+msgstr "All figures exclude VAT and invoice discounts. Invoices count on their issue date (accrual)."
+
+#: templates\reports\dashboard.html
+msgid "Semua angka bersih dari diskon invoice. Invoice dihitung pada tanggal terbit (akrual)."
+msgstr "All figures exclude invoice discounts. Invoices count on their issue date (accrual)."
+
+#: templates\reports\dashboard.html
+msgid "Tidak ada data pada periode ini."
+msgstr "No data for this period."
+
+#: templates\reports\dashboard.html
+msgid "Tidak ada penjualan pada periode ini."
+msgstr "No sales this period."
+
+#: templates\reports\dashboard.html
+msgid "Total sisa tagihan invoice per hari ini, tidak terikat rentang tanggal."
+msgstr "Total unpaid invoice balance as of today, regardless of the date range."
+
+#: templates\reports\dashboard.html
+msgid "Uang dari penjualan kasir dan invoice, setelah diskon dan tanpa PPN. Rumus: total penjualan − diskon."
+msgstr "Money from POS sales and invoices, after discounts and without VAT. Formula: total sales − discounts."
+
+#: templates\reports\dashboard.html
+msgid "Uang masuk per metode"
+msgstr "Cash in by method"
+
+#: templates\reports\dashboard.html
+msgid "Untung pada periode ini"
+msgstr "Profit this period"
+
+#: templates\reports\dashboard.html
+msgid "Yang tersisa setelah membayar biaya barang yang terjual. Rumus: Pendapatan − HPP."
+msgstr "What is left after paying for the goods sold. Formula: Revenue − COGS."
+
+#: templates\reports\dashboard.html
+msgid "transaksi"
+msgstr "transactions"
+
+#: templates\reports\omzet_pph.html
+msgid "Bebas pajak"
+msgstr "Tax-free left"
+
+#: templates\reports\omzet_pph.html
+msgid "Bulan"
+msgstr "Month"
+
+#: templates\reports\omzet_pph.html
+msgid "Dasar pengenaan"
+msgstr "Taxable base"
+
+#: templates\reports\omzet_pph.html
+msgid "Disetor paling lambat tanggal 15 bulan berikutnya."
+msgstr "Due by the 15th of the following month."
+
+#: templates\reports\omzet_pph.html
+msgid "Kumulatif"
+msgstr "Cumulative"
+
+#: templates\reports\omzet_pph.html
+msgid "Omzet"
+msgstr "Revenue"
+
+#: templates\reports\omzet_pph.html
+msgid "Omzet & PPh Final"
+msgstr "Revenue & final tax"
+
+#: templates\reports\omzet_pph.html
+msgid "Omzet &amp; PPh Final"
+msgstr "Revenue &amp; final tax"
+
+#: templates\reports\omzet_pph.html
+msgid "Omzet bulanan untuk PPh Final UMKM (PP 55/2022): penjualan kasir per tanggal jual ditambah invoice terbit per tanggal terbit (nilai sebelum diskon + ongkos kirim, tanpa PPN); penjualan dan invoice yang dibatalkan tidak dihitung."
+msgstr "Monthly revenue for the SME final income tax (PP 55/2022): POS sales by sale date plus issued invoices by issue date (value before discount + shipping, excluding VAT); voided sales and invoices don't count."
+
+#: templates\reports\omzet_pph.html
+msgid "PPh Final"
+msgstr "Final tax"
+
+#: templates\reports\omzet_pph.html
+msgid "Per bulan ·"
+msgstr "By month ·"
+
+#: templates\reports\omzet_pph.html
+msgid "Perkiraan, bukan nasihat pajak"
+msgstr "An estimate, not tax advice"
+
+#: templates\reports\omzet_pph.html
+msgid "Setor paling lambat"
+msgstr "Pay by"
+
+#: templates\reports\omzet_pph.html
+msgid "Sisa batas bebas pajak tahun ini. Omzet pertama %(ex)s setiap tahun tidak dikenai pajak (wajib pajak orang pribadi)."
+msgstr "Tax-free allowance left this year. The first %(ex)s of revenue each year is tax-free (individual taxpayers)."
+
+#: templates\reports\omzet_pph.html
+msgid "Tahun"
+msgstr "Year"
+
+#: templates\reports\omzet_pph.html
+msgid "Unduh CSV"
+msgstr "Export CSV"
+
+#: templates\reports\omzet_pph.html
+msgid "Waktu pengakuan omzet invoice (tanggal terbit atau tanggal dibayar) dan status wajib pajak Anda sebaiknya dikonfirmasi ke konsultan pajak."
+msgstr "When invoice revenue is recognised (issue date or payment date) and your taxpayer status should be confirmed with a tax adviser."
+
+#: templates\reports\trace_cycle.html
+msgid ") · kerugian"
+msgstr ") · loss"
+
+#: templates\reports\trace_cycle.html
+msgid "Aliran lot"
+msgstr "Lot flow"
+
+#: templates\reports\trace_cycle.html
+msgid "Awal"
+msgstr "Start"
+
+#: templates\reports\trace_cycle.html
+msgid "Batch #"
+msgstr "Batch #"
+
+#: templates\reports\trace_cycle.html
+msgid "Biaya belum terserap"
+msgstr "Unabsorbed costs"
+
+#: templates\reports\trace_cycle.html
+msgid "Biaya input"
+msgstr "Input cost"
+
+#: templates\reports\trace_cycle.html
+msgid "Biaya siklus yang belum masuk HPP panen mana pun."
+msgstr "Cycle costs not yet in any harvest's COGS."
+
+#: templates\reports\trace_cycle.html
+msgid "Dihapusbukukan"
+msgstr "Written off"
+
+#: templates\reports\trace_cycle.html
+msgid "Dipanen"
+msgstr "Harvested"
+
+#: templates\reports\trace_cycle.html
+msgid "Ditutup %(d)s"
+msgstr "Closed %(d)s"
+
+#: templates\reports\trace_cycle.html
+msgid "HPP/kg"
+msgstr "COGS/kg"
+
+#: templates\reports\trace_cycle.html
+msgid "Kegiatan"
+msgstr "Activities"
+
+#: templates\reports\trace_cycle.html
+msgid "Panen, lot, susut &amp; penjualan"
+msgstr "Harvests, lots, spoilage &amp; sales"
+
+#: templates\reports\trace_cycle.html
+msgid "Ringkasan siklus"
+msgstr "Cycle summary"
+
+#: templates\reports\trace_cycle.html
+msgid "Siklus ditutup: biaya yang belum terserap dihapusbukukan."
+msgstr "Cycle closed: unabsorbed costs were written off."
+
+#: templates\reports\trace_cycle.html
+msgid "Sisa stok"
+msgstr "Stock left"
+
+#: templates\reports\trace_cycle.html
+msgid "Tak terserap"
+msgstr "Unabsorbed"
+
+#: templates\reports\trace_cycle.html
+msgid "Telusur siklus"
+msgstr "Trace cycle"
+
+#: templates\reports\trace_cycle.html
+msgid "Terjual"
+msgstr "Sold"
+
+#: templates\reports\trace_cycle.html
+msgid "Tidak ada kegiatan."
+msgstr "No activities."
+
+#: templates\reports\trace_cycle.html
+msgid "Tidak ada."
+msgstr "None."
+
+#: templates\reports\trace_cycle.html
+msgid "susut panen"
+msgstr "harvest loss"
+
+#: templates\reports\trace_index.html
+msgid "Belum ada order."
+msgstr "No orders yet."
+
+#: templates\reports\trace_index.html
+msgid "Belum ada siklus."
+msgstr "No cycles yet."
+
+#: templates\reports\trace_index.html
+msgid "GT-20261119-0001 atau INV-202611-0001"
+msgstr "GT-20261119-0001 or INV-202611-0001"
+
+#: templates\reports\trace_index.html
+msgid "Ketertelusuran"
+msgstr "Traceability"
+
+#: templates\reports\trace_index.html
+msgid "Maju dari siklus"
+msgstr "Forward from a cycle"
+
+#: templates\reports\trace_index.html
+msgid "Maju: siklus → kegiatan → biaya → panen → lot → susut → penjualan dan invoice. Mundur: nomor struk (GT-…) atau invoice (INV-…) → lot → panen → siklus → elemen."
+msgstr "Forward: cycle → activities → costs → harvest → lot → spoilage → sales and invoices. Backward: receipt number (GT-…) or invoice (INV-…) → lot → harvest → cycle → plot."
+
+#: templates\reports\trace_index.html
+msgid "Mundur dari struk"
+msgstr "Back from a receipt"
+
+#: templates\reports\trace_index.html
+msgid "Nomor order → baris → lot → batch panen → siklus → elemen."
+msgstr "Order number → line → lot → harvest batch → cycle → plot."
+
+#: templates\reports\trace_index.html
+msgid "Nomor struk atau invoice"
+msgstr "Receipt or invoice number"
+
+#: templates\reports\trace_index.html
+msgid "Order terbaru"
+msgstr "Recent orders"
+
+#: templates\reports\trace_index.html
+msgid "Siklus → kegiatan → biaya terserap → panen → lot → susut → penjualan."
+msgstr "Cycle → activities → absorbed costs → harvest → lot → spoilage → sales."
+
+#: templates\reports\trace_index.html
+msgid "tidak ditemukan."
+msgstr "not found."
+
+#: templates\reports\trace_order.html
+msgid "HPP rata-rata %(u)s per kg."
+msgstr "Average COGS %(u)s per kg."
+
+#: templates\reports\trace_order.html
+msgid "Ringkasan order"
+msgstr "Order summary"
+
+#: templates\reports\trace_order.html
+msgid "Telusur"
+msgstr "Trace"
+
+#: templates\reports\trace_order.html
+msgid "kg ×"
+msgstr "kg ×"
+
+#: templates\reports\trace_order.html
+msgid "oleh"
+msgstr "by"
+
+#: templates\reports\trace_order.html
+msgid "· kasir"
+msgstr "· cashier"

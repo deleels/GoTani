@@ -23,6 +23,7 @@ SW_TEMPLATE = Path(settings.BASE_DIR) / "templates" / "core" / "sw.js"
 # Same-origin static files pre-cached at install time.
 PRECACHE = [
     "core/gotani.css",
+    "core/tailwind.css",
     "core/pwa.js",
     "core/icons/icon-192.png",
     "core/icons/icon-512.png",
@@ -32,9 +33,13 @@ PRECACHE = [
 
 @lru_cache(maxsize=1)
 def asset_version() -> str:
-    """Changes whenever a pre-cached file or the worker itself changes → triggers the update banner."""
+    """Changes whenever any app static file or the worker itself changes → new cache + update banner.
+
+    Every same-origin /static/ file is served cache-first, so all of them must feed the version,
+    not only the pre-cached ones; otherwise an edited script would never reach installed clients."""
     digest = hashlib.sha256()
-    for path in [*(STATIC_DIR.parent / p for p in PRECACHE), SW_TEMPLATE]:
+    files = sorted(p for p in STATIC_DIR.rglob("*") if p.is_file())
+    for path in [*files, SW_TEMPLATE]:
         try:
             digest.update(path.read_bytes())
         except OSError:
@@ -53,8 +58,8 @@ def manifest(request):
         "start_url": "/?source=pwa",
         "scope": "/",
         "display": "standalone",
-        "background_color": "#fafaf9",
-        "theme_color": "#059669",
+        "background_color": "#f7f7f7",
+        "theme_color": "#175738",
         "icons": [
             {"src": static("core/icons/icon-192.png"), "sizes": "192x192", "type": "image/png"},
             {"src": static("core/icons/icon-512.png"), "sizes": "512x512", "type": "image/png"},

@@ -1,11 +1,13 @@
 """POS register, checkout, receipt and void (thin views over `pos.services`)."""
 
+from django.utils.translation import gettext as _
 from datetime import date
+from decimal import Decimal
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
@@ -13,13 +15,14 @@ from django.views.generic import DetailView, TemplateView
 
 from farm.access import FINANCE_ROLES, POS_ROLES, RoleRequiredMixin
 from farm.models import PaymentMethod
-from farm.views_common import ActionView, error_text
+from farm.views_common import ActionView, error_text, safe_next
 
 from . import services
 from .models import SaleOrder
 
 
 def catalog_payload():
+    big = services.pos_big_line_thresholds()
     return [
         {
             "id": p.pk,
@@ -28,6 +31,7 @@ def catalog_payload():
             "grade_label": p.get_grade_display(),
             "price": str(p.selling_price_idr),
             "available": str(p.available_kg),
+            "warn_kg": str(big.get(p.pk, services.POS_BIG_LINE_MIN_KG).quantize(Decimal("0.001"))),
         }
         for p in services.pos_catalog()
     ]
@@ -43,6 +47,8 @@ class RegisterView(RoleRequiredMixin, TemplateView):
             nav="pos",
             products=catalog_payload(),
             payment_methods=PaymentMethod.choices,
+            shift=services.current_shift(),
+            suggested_float=services.suggested_float(),
         )
         return ctx
 
@@ -65,17 +71,79 @@ class CheckoutView(RoleRequiredMixin, View):
     def post(self, request):
         ids, qtys = request.POST.getlist("product_id"), request.POST.getlist("qty_kg")
         if len(ids) != len(qtys):
-            messages.error(request, "Isi keranjang tidak valid.")
+            messages.error(request, _("Isi keranjang tidak valid."))
             return redirect("pos:register")
         try:
             order = services.checkout(
-                list(zip(ids, qtys)), request.POST.get("payment_method", ""), request.user
+                list(zip(ids, qtys)), request.POST.get("payment_method", ""), request.user,
+                cash_received=request.POST.get("cash_received") or None,
             )
         except ValidationError as exc:
             messages.error(request, error_text(exc))
             return redirect("pos:register")
-        messages.success(request, f"Order {order.order_number} berhasil.")
+        messages.success(request, _("Order %(order_number)s berhasil.") % {"order_number": order.order_number})
         return redirect(f"{reverse('pos:receipt', args=[order.pk])}?new=1")
+
+
+class ShiftView(RoleRequiredMixin, View):
+    """Shift & cash drawer (D96): open, cash moves, blind close by denomination, manager review, history."""
+
+    allowed_roles = POS_ROLES
+
+    def get(self, request):
+        from farm.models import ExpenseCategory
+
+        from core.pagination import paginate
+        from .models import CashMovement, Shift
+
+        shift = services.current_shift()
+        manager = self.roles.finance
+        history = paginate(request, Shift.objects.filter(is_open=False).select_related("opened_by", "closed_by"))
+        return render(request, "pos/shift.html", {
+            "nav": "pos", "shift": shift, "summary": services.shift_summary(shift) if shift else None,
+            "show_expected": manager, "can_close": shift and (manager or shift.opened_by_id == request.user.pk),
+            "suggested_float": services.suggested_float(), "denominations": services.DENOMINATIONS,
+            "move_kinds": [(k, CashMovement.Kind(k).label) for k in services.MANUAL_MOVES],
+            "categories": ExpenseCategory.objects.all(), "page": history,
+        })
+
+    def post(self, request):
+        from farm.models import ExpenseCategory
+
+        from .models import Shift
+
+        action = request.POST.get("action")
+        try:
+            if action == "open":
+                services.open_shift(request.user, request.POST.get("opening_float") or "0")
+                messages.success(request, _("Shift dibuka. Selamat berjualan!"))
+                return redirect(safe_next(request, reverse("pos:shift")))
+            if action == "review":
+                shift = get_object_or_404(Shift, pk=request.POST.get("shift"))
+                services.review_shift(shift, request.user, request.POST.get("reason", ""))
+                messages.success(request, _("Catatan tinjauan disimpan."))
+                return redirect("pos:shift")
+            shift = services.current_shift()
+            if shift is None:
+                raise ValidationError(_("Tidak ada shift yang terbuka."))
+            if action == "move":
+                category = request.POST.get("category")
+                services.add_cash_movement(
+                    shift, request.user, request.POST.get("kind", ""), request.POST.get("amount") or "0",
+                    request.POST.get("note", ""),
+                    category=ExpenseCategory.objects.filter(pk=category).first() if category else None)
+                messages.success(request, _("Mutasi kas dicatat."))
+            elif action == "close":
+                counts = {d: request.POST.get(f"d{d}") for d in services.DENOMINATIONS}
+                closed = services.close_shift(shift, request.user, counts, request.POST.get("close_note", ""))
+                diff = closed.difference_idr
+                messages.success(request, _("Shift ditutup.") + ("" if not diff else
+                                 " " + _("Selisih %(diff)s — menunggu tinjauan manajer.") % {"diff": services.format_rp(diff)}))
+            else:
+                raise ValidationError(_("Aksi tidak dikenal."))
+        except ValidationError as exc:
+            messages.error(request, error_text(exc))
+        return redirect("pos:shift")
 
 
 class ReceiptView(RoleRequiredMixin, DetailView):
@@ -130,8 +198,9 @@ class VoidView(ActionView):
     success_url_name = "pos:orders"
 
     def perform(self, order):
-        order = services.void_order(order, self.request.user)
-        self.success_message = f"Order {order.order_number} dibatalkan; stok dikembalikan."
+        order = services.void_order(order, self.request.user, reason=self.request.POST.get("void_reason", ""),
+                                    note=self.request.POST.get("reason", ""))
+        self.success_message = _("Order %(number)s dibatalkan; stok dikembalikan.") % {"number": order.order_number}
         return order
 
     def get_success_url(self, obj, result):

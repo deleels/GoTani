@@ -1,169 +1,197 @@
 {% extends "base.html" %}
-{% load gotani %}
-{% block title %}Analitik{% endblock %}
+{% load i18n %}
+{% load static gotani ui %}
+{% block title %}{% translate "Analitik" %}{% endblock %}
+{% block motion %}full{% endblock %}
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<style>
-  .viz-root { --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --grid: #e7e5e4; --ink-2: #57534e; }
-</style>
+<script src="{% static 'core/charts.js' %}"></script>
 {% endblock %}
 {% block content %}
-<div class="viz-root">
-<div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">Analitik</h1>
-    <p class="mt-1 text-sm text-stone-500">Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual).</p>
+{# Analitik (D28) — Phase 4b: full page head with the range, gt-stat KPI row, charts and tables in gt-cards. Footnotes sit behind info tips. #}
+<div class="gt-pagehead app-dash__head">
+  <div class="app-pagehead__text">
+    <h1>{% translate "Analitik" %} {% if farm_is_pkp %}{% info_tip _("Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual).") "Cara menghitung" %}{% else %}{% info_tip _("Semua angka bersih dari diskon invoice. Invoice dihitung pada tanggal terbit (akrual).") "Cara menghitung" %}{% endif %}</h1>
+    <p>{{ m.start|date:"d/m/Y" }} – {{ m.end|date:"d/m/Y" }}</p>
   </div>
-  <form method="get" class="flex flex-wrap items-end gap-2 text-sm">
-    <label class="w-40">Dari<input type="date" name="start" value="{{ m.start|date:'Y-m-d' }}"></label>
-    <label class="w-40">Sampai<input type="date" name="end" value="{{ m.end|date:'Y-m-d' }}"></label>
-    <button class="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white">Terapkan</button>
-  </form>
-  {% if form.errors %}<p class="w-full text-right text-sm text-red-700">{{ form.non_field_errors|join:" " }} Menampilkan 30 hari terakhir.</p>{% endif %}
-</div>
-
-<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pendapatan</div><div class="text-xl font-semibold">{{ k.revenue|rupiah }}</div><div class="text-xs text-stone-400">{{ k.orders }} order · {{ k.invoices }} invoice</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">HPP</div><div class="text-xl font-semibold">{{ k.cogs|rupiah }}</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Laba kotor</div><div class="text-xl font-semibold">{{ k.gross_margin|rupiah }}</div><div class="text-xs text-stone-400">Margin {{ k.gross_margin_pct|pct }}</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Kerugian susut/rusak</div><div class="text-xl font-semibold">{{ k.spoilage_loss|rupiah }}</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Biaya siklus tak terserap</div><div class="text-xl font-semibold">{{ k.unabsorbed_cost|rupiah }}</div><div class="text-xs text-stone-400">Siklus ditutup dalam periode</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Overhead umum</div><div class="text-xl font-semibold">{{ k.overhead|rupiah }}</div><div class="text-xs text-stone-400">Umum {{ k.overhead_general|rupiah }} + elemen tanpa siklus</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pendapatan lain (ongkos kirim)</div><div class="text-xl font-semibold">{{ k.other_income|rupiah }}</div></div>
-  <div class="rounded-xl border-2 {% if k.net_profit < 0 %}border-red-300 bg-red-50{% else %}border-emerald-300 bg-emerald-50{% endif %} p-4">
-    <div class="text-xs text-stone-600">Laba bersih</div>
-    <div class="text-2xl font-bold">{{ k.net_profit|rupiah }}</div>
-    <div class="text-xs text-stone-500">Laba kotor + pendapatan lain − susut − tak terserap − overhead</div>
+  <div class="gt-pagehead__actions app-dash__range">
+    <nav class="gt-tabs gt-tabs--boxed" aria-label="{% translate 'Rentang cepat' %}">
+      {% for p in presets %}<a class="gt-tab app-tab{% if p.active %} gt-tab--active{% endif %}" href="?start={{ p.start }}&end={{ p.end }}"{% if p.active %} aria-current="page"{% endif %}>{{ p.label }}</a>{% endfor %}
+    </nav>
+    <form method="get" class="app-dash__dates">
+      <label class="app-dash__date"><span class="app-label">{% translate "Dari" %}</span><input class="app-field app-field--sm" type="date" name="start" value="{{ m.start|date:'Y-m-d' }}"></label>
+      <label class="app-dash__date"><span class="app-label">{% translate "Sampai" %}</span><input class="app-field app-field--sm" type="date" name="end" value="{{ m.end|date:'Y-m-d' }}"></label>
+      <button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Terapkan" %}</button>
+    </form>
   </div>
 </div>
+{% if form.errors %}<div class="gt-callout gt-callout--danger mb-3" role="alert">{% icon "alert" 18 %}<span class="gt-callout__title">{{ form.non_field_errors|join:" " }} {% translate "Menampilkan 30 hari terakhir." %}</span></div>{% endif %}
 
-<div class="mb-6 grid gap-3 md:grid-cols-4">
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">PPN terkumpul</div><div class="text-xl font-semibold">{{ k.ppn_collected|rupiah }}</div><div class="text-xs text-stone-400">Kewajiban pajak, bukan pendapatan</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Piutang berjalan</div><div class="text-xl font-semibold">{{ k.receivables_outstanding|rupiah }}</div><div class="text-xs text-stone-400">Per hari ini</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Piutang jatuh tempo</div><div class="text-xl font-semibold text-red-700">{{ k.receivables_overdue|rupiah }}</div></div>
-  <div class="rounded-xl border border-stone-200 bg-white p-4"><div class="text-xs text-stone-500">Pembelian input (kas keluar)</div><div class="text-xl font-semibold">{{ k.input_purchases|rupiah }}</div><div class="text-xs text-stone-400">Aset persediaan, bukan beban</div></div>
+{# Headline metrics (Phase 7, D115): the P&L read left to right; every tile says what it means and how it is worked out. #}
+<div class="gt-grid app-dash__stats" style="--gt-row:0">
+  {% include "components/kpi.html" with stat=True label=_("Pendapatan") value=k.revenue|rupiah tip=_("Uang dari penjualan kasir dan invoice, setelah diskon dan tanpa PPN. Rumus: total penjualan − diskon.") hint=k.transactions|stringformat:"d"|add:" "|add:_("transaksi") %}
+  {% include "components/kpi.html" with stat=True label=_("Laba kotor") value=k.gross_margin|rupiah tip=_("Yang tersisa setelah membayar biaya barang yang terjual. Rumus: Pendapatan − HPP.") %}
+  {% include "components/kpi.html" with stat=True label=_("Margin kotor") value=k.gross_margin_pct|pct tip=_("Laba kotor dari setiap Rp100 penjualan; makin tinggi, makin sehat harga jual. Rumus: Laba kotor ÷ Pendapatan × 100.") %}
+  {% include "components/kpi.html" with stat=True label=_("AOV") value=k.aov|rupiah tip=_("Average order value: rata-rata nilai satu transaksi. Rumus: Pendapatan ÷ jumlah transaksi (order kasir + invoice).") %}
+  {% if k.net_profit < 0 %}{% translate "Rugi pada periode ini" as np_hint %}{% else %}{% translate "Untung pada periode ini" as np_hint %}{% endif %}
+  {% include "components/kpi.html" with stat=True featured=True label=_("Laba bersih") value=k.net_profit|rupiah hint=np_hint tip=_("Laba setelah semua biaya. Rumus: Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead.") %}
+</div>
+
+<div class="app-dash__row">
+  <section class="gt-card" aria-labelledby="h-pl">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-pl">{% translate "Rincian laba" %}</h2></div>
+    <div class="gt-metrics app-dash__metrics">
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "HPP" %}</span><span class="gt-metric__value">{{ k.cogs|rupiah }}</span></div>
+      {% if farm_is_pkp or k.ppn_collected %}<div class="gt-metric"><span class="gt-metric__label">{% translate "PPN terkumpul" %} {% info_tip _("Kewajiban pajak, bukan pendapatan.") %}</span><span class="gt-metric__value">{{ k.ppn_collected|rupiah }}</span></div>{% endif %}
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Kerugian susut/rusak" %}</span><span class="gt-metric__value app-value--danger">{{ k.spoilage_loss|rupiah }}</span></div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Biaya siklus tak terserap" %} {% info_tip _("Biaya siklus yang ditutup dalam periode ini tanpa panen yang menyerapnya.") %}</span><span class="gt-metric__value">{{ k.unabsorbed_cost|rupiah }}</span></div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Overhead umum" %} {% info_tip _("Biaya umum ditambah biaya elemen yang tidak sedang punya siklus.") %}</span><span class="gt-metric__value">{{ k.overhead|rupiah }}</span><span class="gt-metric__note">{% translate "Umum" %} {{ k.overhead_general|rupiah }}</span></div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Pendapatan lain (ongkos kirim)" %}</span><span class="gt-metric__value">{{ k.other_income|rupiah }}</span></div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Pembelian input (kas keluar)" %} {% info_tip _("Aset persediaan, bukan beban: baru menjadi biaya saat dipakai.") %}</span><span class="gt-metric__value">{{ k.input_purchases|rupiah }}</span></div>
+    </div>
+  </section>
+  <section class="gt-card" aria-labelledby="h-ar">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-ar">{% translate "Piutang" %}</h2><a class="gt-card__hint app-link" href="{% url 'invoicing:buyers' %}">{% translate "Pembeli" %}</a></div>
+    <div class="gt-metrics app-dash__metrics--2">
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Berjalan" %} {% info_tip _("Total sisa tagihan invoice per hari ini, tidak terikat rentang tanggal.") %}</span><span class="gt-metric__value">{{ k.receivables_outstanding|rupiah }}</span></div>
+      <div class="gt-metric"><span class="gt-metric__label">{% translate "Jatuh tempo" %}</span><span class="gt-metric__value app-value--danger">{{ k.receivables_overdue|rupiah }}</span></div>
+    </div>
+  </section>
 </div>
 
 {{ charts|json_script:"chart-data" }}
-<div class="grid gap-6 lg:grid-cols-2">
-  <section class="rounded-lg border bg-white p-4 lg:col-span-2">
-    <h2 class="mb-2 font-semibold">Pendapatan &amp; HPP harian</h2>
-    <div class="h-64"><canvas id="chart-daily" role="img" aria-label="Pendapatan dan HPP harian"></canvas></div>
+<div class="app-dash__charts">
+  <section class="gt-card app-dash__wide" aria-labelledby="h-daily">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">{% translate "Pendapatan &amp; HPP harian" %}</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-400)"></i>{% translate "Pendapatan" %}</span><span><i class="app-legend__line"></i>{% translate "HPP" %}</span>{% info_tip _("Batang = pendapatan hari itu, garis putus-putus = HPP. Jarak antara puncak batang dan garis adalah laba kotor.") %}</span></div>
+    <div class="relative h-72"><canvas id="chart-daily" role="img" aria-label="{% translate 'Pendapatan dan HPP harian' %}"></canvas></div>
   </section>
-  <section class="rounded-lg border bg-white p-4">
-    <h2 class="mb-2 font-semibold">Margin per varietas × grade</h2>
-    <div class="h-64"><canvas id="chart-margin" role="img" aria-label="Pendapatan, HPP dan margin per varietas dan grade"></canvas></div>
+  <section class="gt-card" aria-labelledby="h-margin">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-margin">{% translate "Margin per varietas × grade" %}</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>{% translate "Pendapatan" %}</span><span><i class="app-legend__dot" style="background:var(--green-800)"></i>{% translate "HPP" %}</span><span><i class="app-legend__dot" style="background:var(--green-400)"></i>{% translate "Margin" %}</span></span></div>
+    <div class="relative h-64"><canvas id="chart-margin" role="img" aria-label="{% translate 'Pendapatan, HPP dan margin per varietas dan grade' %}"></canvas></div>
   </section>
-  <section class="rounded-lg border bg-white p-4">
-    <h2 class="mb-2 font-semibold">Hasil jual (kg/m²) per jenis elemen</h2>
-    <div class="h-64"><canvas id="chart-yield" role="img" aria-label="Kg layak jual per meter persegi per jenis elemen"></canvas></div>
+  <section class="gt-card" aria-labelledby="h-yield">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-yield">{% translate "Hasil jual per jenis elemen" %} {% info_tip _("Kg layak jual per meter persegi, per jenis elemen.") %}</h2></div>
+    <div class="relative h-64"><canvas id="chart-yield" role="img" aria-label="{% translate 'Kg layak jual per meter persegi per jenis elemen' %}"></canvas></div>
   </section>
-  <section class="rounded-lg border bg-white p-4">
-    <h2 class="mb-2 font-semibold">Pembagian kanal (POS vs Invoice)</h2>
-    <div class="h-64"><canvas id="chart-channel" role="img" aria-label="Pendapatan per kanal penjualan"></canvas></div>
+  <section class="gt-card" aria-labelledby="h-channel">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-channel">{% translate "Pembagian kanal" %} {% info_tip _("Bagian pendapatan periode ini dari kasir (POS) dan dari invoice.") %}</h2></div>
+    {% gauge channel_parts caption="Belum ada penjualan" uid="channel" %}
   </section>
-  <section class="rounded-lg border bg-white p-4">
-    <h2 class="mb-2 font-semibold">Produk terlaris (pendapatan)</h2>
-    <div class="h-64"><canvas id="chart-top" role="img" aria-label="Lima produk dengan pendapatan tertinggi"></canvas></div>
+  <section class="gt-card" aria-labelledby="h-pay">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-pay">{% translate "Uang masuk per metode" %} {% info_tip _("POS per tanggal jual · pembayaran invoice per tanggal bayar (basis kas).") %}</h2></div>
+    <div class="app-table-wrap">
+      <table class="gt-table">
+        <thead><tr><th>{% translate "Metode" %}</th><th class="num">{% translate "POS" %}</th><th class="num">{% translate "Invoice" %}</th><th class="num">{% translate "Total" %}</th></tr></thead>
+        <tbody>
+        {% for r in m.payment_split %}<tr><td>{{ r.method }}</td><td class="num">{{ r.pos|rupiah }}</td><td class="num">{{ r.invoice|rupiah }}</td><td class="num"><b>{{ r.total|rupiah }}</b></td></tr>
+        {% empty %}<tr><td colspan="4" class="app-muted">{% translate "Belum ada uang masuk pada periode ini." %}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
   </section>
-  <section class="rounded-lg border bg-white p-4">
-    <h2 class="mb-2 font-semibold">Biaya per kategori (disetujui)</h2>
-    <div class="h-64"><canvas id="chart-expenses" role="img" aria-label="Biaya disetujui per kategori"></canvas></div>
+  <section class="gt-card" aria-labelledby="h-top">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-top">{% translate "Produk terlaris" %} {% info_tip _("Lima varietas × grade dengan pendapatan tertinggi pada periode ini.") %}</h2></div>
+    <div class="relative h-64"><canvas id="chart-top" role="img" aria-label="{% translate 'Lima produk dengan pendapatan tertinggi' %}"></canvas></div>
+  </section>
+  <section class="gt-card" aria-labelledby="h-exp">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-exp">{% translate "Biaya per kategori" %} {% info_tip _("Hanya biaya yang sudah disetujui.") %}</h2></div>
+    <div class="relative h-64"><canvas id="chart-expenses" role="img" aria-label="{% translate 'Biaya disetujui per kategori' %}"></canvas></div>
   </section>
 </div>
 
-<section class="mt-6 rounded-lg border bg-white p-4">
-  <h2 class="mb-2 font-semibold">Tabel margin per varietas × grade</h2>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="text-left text-stone-500"><tr><th class="p-2">Varietas</th><th class="p-2">Grade</th><th class="p-2 text-right">Kg terjual</th><th class="p-2 text-right">Pendapatan</th><th class="p-2 text-right">HPP</th><th class="p-2 text-right">Margin</th><th class="p-2 text-right">%</th></tr></thead>
+<section class="gt-card app-dash__tables" aria-labelledby="h-mtable">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-mtable">{% translate "Margin per varietas × grade" %}</h2></div>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>{% translate "Varietas" %}</th><th>{% translate "Grade" %}</th><th class="num">{% translate "Kg terjual" %}</th><th class="num">{% translate "Pendapatan" %}</th><th class="num">{% translate "HPP" %}</th><th class="num">{% translate "Margin" %}</th><th class="num">%</th></tr></thead>
       <tbody>
       {% for r in m.margin_by_product %}
-        <tr class="border-t"><td class="p-2">{{ r.variety }}</td><td class="p-2">{{ r.grade }}</td><td class="p-2 text-right">{{ r.kg|kg }}</td><td class="p-2 text-right">{{ r.revenue|rupiah }}</td><td class="p-2 text-right">{{ r.cogs|rupiah }}</td><td class="p-2 text-right">{{ r.margin|rupiah }}</td><td class="p-2 text-right">{{ r.margin_pct|pct }}</td></tr>
-      {% empty %}<tr><td colspan="7" class="p-3 text-stone-400">Tidak ada penjualan pada periode ini.</td></tr>{% endfor %}
+        <tr><td>{{ r.variety }}</td><td>{{ r.grade }}</td><td class="num">{{ r.kg|kg }}</td><td class="num">{{ r.revenue|rupiah }}</td><td class="num">{{ r.cogs|rupiah }}</td><td class="num"><b>{{ r.margin|rupiah }}</b></td><td class="num">{{ r.margin_pct|pct }}</td></tr>
+      {% empty %}<tr><td colspan="7" class="app-muted">{% translate "Tidak ada penjualan pada periode ini." %}</td></tr>{% endfor %}
       </tbody>
     </table>
   </div>
   {% if m.yield_by_type %}
-  <h3 class="mb-1 mt-4 text-sm font-medium text-stone-500">Hasil per jenis elemen</h3>
-  <table class="w-full text-sm">
-    {% for r in m.yield_by_type %}<tr class="border-t"><td class="p-2">{{ r.type }}</td><td class="p-2 text-right">{{ r.kg|kg }} kg</td><td class="p-2 text-right">{{ r.area_m2|kg }} m²</td><td class="p-2 text-right font-medium">{{ r.kg_per_m2|kg }} kg/m²</td></tr>{% endfor %}
-  </table>
+  <h3 class="app-subhead">{% translate "Hasil per jenis elemen" %}</h3>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>{% translate "Jenis" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Luas" %}</th><th class="num">kg/m²</th></tr></thead>
+      <tbody>{% for r in m.yield_by_type %}<tr><td>{{ r.type }}</td><td class="num">{{ r.kg|kg }} kg</td><td class="num">{{ r.area_m2|kg }} m²</td><td class="num"><b>{{ r.kg_per_m2|kg }}</b></td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
   {% endif %}
 </section>
-</div>
 {% endblock %}
 {% block scripts %}
 <script>
 (function () {
-  if (!window.Chart) return;
+  if (!window.Chart || !window.gtCharts) return;
+  const G = window.gtCharts, T = G.token, rp = window.gtRupiah;
   const data = JSON.parse(document.getElementById('chart-data').textContent);
-  const css = getComputedStyle(document.querySelector('.viz-root'));
-  const c = (name) => css.getPropertyValue(name).trim();
-  const rp = (v) => 'Rp ' + Math.round(v).toLocaleString('id-ID');
-  Chart.defaults.font.family = 'ui-sans-serif, system-ui, sans-serif';
-  Chart.defaults.color = c('--ink-2');
+  const C1 = T('--green-600'), C2 = T('--green-800'), C3 = T('--green-400');
   Chart.defaults.maintainAspectRatio = false;
-  const grid = { color: c('--grid') };
-  const moneyAxis = { beginAtZero: true, grid, ticks: { callback: (v) => rp(v) } };
-  const bar = { borderRadius: 4, borderSkipped: 'start', maxBarThickness: 36 };
+  const noLegend = { legend: { display: false } };
+  const moneyAxis = G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 5, callback: (v) => G.rpShort(v) } });
+  const flat = { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true } };
   const moneyTip = { callbacks: { label: (ctx) => `${ctx.dataset.label ? ctx.dataset.label + ': ' : ''}${rp(ctx.parsed.y ?? ctx.parsed.x ?? ctx.parsed)}` } };
   const empty = (id, labels) => {
     if (labels.length) return false;
-    document.getElementById(id).parentElement.innerHTML = '<p class="pt-20 text-center text-sm text-stone-400">Tidak ada data pada periode ini.</p>';
+    document.getElementById(id).parentElement.innerHTML = '<p class="gt-card__hint app-chart-empty">{% jt "Tidak ada data pada periode ini." %}</p>';
     return true;
   };
 
-  new Chart(document.getElementById('chart-daily'), {
-    type: 'line',
+  // Daily revenue as solid light pill bars (latest a step darker, with its tag); HPP as a dashed line over them, so the gap
+  // between bar top and line is the day's gross profit.
+  const rev = data.daily.revenue.map((v) => v || 0), cogs = data.daily.cogs.map((v) => v || 0);
+  const last = rev.reduce((at, v, i) => (v > 0 ? i : at), rev.length - 1);
+  if (!empty('chart-daily', data.daily.labels)) new Chart(document.getElementById('chart-daily'), {
     data: { labels: data.daily.labels, datasets: [
-      { label: 'Pendapatan', data: data.daily.revenue, borderColor: c('--series-1'), backgroundColor: c('--series-1'), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
-      { label: 'HPP', data: data.daily.cogs, borderColor: c('--series-2'), backgroundColor: c('--series-2'), borderWidth: 2, pointRadius: 0, pointHoverRadius: 5 },
+      { type: 'line', label: '{% jt "HPP" %}', data: cogs, order: 0, borderColor: T('--green-900'), borderWidth: 2, borderDash: [6, 5],
+        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: T('--green-900'), pointBorderWidth: 2,
+        tension: 0.3, cubicInterpolationMode: 'monotone', fill: false },
+      { type: 'bar', label: '{% jt "Pendapatan" %}', data: rev, order: 1, backgroundColor: rev.map((_, i) => (i === last ? T('--green-600') : T('--green-400'))), minBarLength: 3,
+        ...G.BAR, categoryPercentage: 0.8 },
     ] },
-    options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: { grid: { display: false } } }, plugins: { tooltip: moneyTip } },
+    options: { interaction: { mode: 'index', intersect: false }, layout: { padding: { top: 30 } },
+               scales: { y: moneyAxis, x: { ...flat, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
+               plugins: { ...noLegend,
+                 tooltip: { callbacks: {
+                   title: (items) => data.daily.labels[items[0].dataIndex],
+                   label: (ctx) => (ctx.dataset.type === 'line' ? '{% jt "HPP " %}' : '{% jt "Pendapatan " %}') + rp(ctx.parsed.y),
+                   footer: (items) => '{% jt "Laba kotor " %}' + rp(rev[items[0].dataIndex] - cogs[items[0].dataIndex]) } },
+                 gtTag: { dataset: 1, index: last, text: G.rpShort(rev[last] || 0) } } },
   });
 
   if (!empty('chart-margin', data.margin.labels)) new Chart(document.getElementById('chart-margin'), {
     type: 'bar',
     data: { labels: data.margin.labels, datasets: [
-      { label: 'Pendapatan', data: data.margin.revenue, backgroundColor: c('--series-1'), ...bar },
-      { label: 'HPP', data: data.margin.cogs, backgroundColor: c('--series-2'), ...bar },
-      { label: 'Margin', data: data.margin.margin, backgroundColor: c('--series-3'), ...bar },
+      { label: '{% jt "Pendapatan" %}', data: data.margin.revenue, backgroundColor: C1, ...G.BAR, maxBarThickness: 22 },
+      { label: '{% jt "HPP" %}', data: data.margin.cogs, backgroundColor: C2, ...G.BAR, maxBarThickness: 22 },
+      { label: '{% jt "Margin" %}', data: data.margin.margin, backgroundColor: C3, ...G.BAR, maxBarThickness: 22 },
     ] },
-    options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: { grid: { display: false } } }, plugins: { tooltip: moneyTip } },
+    options: { interaction: { mode: 'index', intersect: false }, scales: { y: moneyAxis, x: flat }, plugins: { ...noLegend, tooltip: moneyTip } },
   });
 
   if (!empty('chart-yield', data.yield.labels)) new Chart(document.getElementById('chart-yield'), {
     type: 'bar',
-    data: { labels: data.yield.labels, datasets: [{ label: 'kg/m²', data: data.yield.values, backgroundColor: c('--series-1'), ...bar }] },
-    options: { scales: { y: { beginAtZero: true, grid }, x: { grid: { display: false } } },
-               plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => ctx.parsed.y.toLocaleString('id-ID', { maximumFractionDigits: 3 }) + ' kg/m²' } } } },
+    data: { labels: data.yield.labels, datasets: [{ label: 'kg/m²', data: data.yield.values, backgroundColor: G.vary(data.yield.values), ...G.BAR }] },
+    options: { layout: { padding: { top: 30 } }, scales: { y: G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 5, callback: (v) => G.num(v, 2) } }), x: flat },
+               plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => G.num(ctx.parsed.y, 3) + ' kg/m²' } },
+                         gtTag: { index: G.peakIndex(data.yield.values), text: G.num(Math.max(...data.yield.values), 2) + ' kg/m²' } } },
   });
 
   const hbar = (id, labels, values) => {
     if (empty(id, labels)) return;
     new Chart(document.getElementById(id), {
       type: 'bar',
-      data: { labels, datasets: [{ data: values, backgroundColor: c('--series-1'), ...bar }] },
-      options: { indexAxis: 'y', scales: { x: { beginAtZero: true, grid, ticks: { callback: (v) => rp(v) } }, y: { grid: { display: false } } },
-                 plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => rp(ctx.parsed.x) } } } },
+      data: { labels, datasets: [{ data: values, backgroundColor: G.vary(values), ...G.BAR, maxBarThickness: 22 }] },
+      options: { indexAxis: 'y', layout: { padding: { right: 72 } }, scales: { x: G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 4, callback: (v) => G.rpShort(v) } }), y: { grid: { display: false }, border: { display: false } } },
+                 plugins: { ...noLegend, tooltip: { callbacks: { label: (ctx) => rp(ctx.parsed.x) } },
+                            gtTag: { index: G.peakIndex(values), text: G.rpShort(Math.max(...values)) } } },
     });
   };
   hbar('chart-top', data.top.labels, data.top.values);
-  if (data.channel.values.some(v => v > 0)) new Chart(document.getElementById('chart-channel'), {
-    type: 'doughnut',
-    data: { labels: data.channel.labels, datasets: [{ data: data.channel.values, backgroundColor: [c('--series-1'), c('--series-3')], borderWidth: 0 }] },
-    options: { plugins: { tooltip: { callbacks: { label: (ctx) => ctx.label + ': ' + rp(ctx.parsed) } } } },
-  }); else empty('chart-channel', []);
   hbar('chart-expenses', data.expenses.labels, data.expenses.values);
-  window.addEventListener('gotani-theme', () => {
-    const st = getComputedStyle(document.querySelector('.viz-root'));
-    Chart.defaults.color = st.getPropertyValue('--ink-2').trim();
-    Object.values(Chart.instances).forEach((ch) => {
-      Object.values(ch.options.scales || {}).forEach((sc) => { if (sc.grid) sc.grid.color = st.getPropertyValue('--grid').trim(); });
-      ch.update();
-    });
-  });
 })();
 </script>
 {% endblock %}

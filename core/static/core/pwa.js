@@ -1,4 +1,18 @@
 /* Registers the service worker and shows "Versi baru tersedia · Muat ulang" when an update waits (D74). */
+/* D104: the theme toggle is gone (light only); drop the old saved choice. */
+try { localStorage.removeItem("gotani-theme"); } catch (e) {}
+
+/* "Pasang GoTani" card in the sidebar foot: keep the browser's install prompt for it. */
+window.addEventListener("beforeinstallprompt", function (e) {
+  e.preventDefault();
+  window.gtInstallPrompt = e;
+  window.dispatchEvent(new CustomEvent("gotani-installable"));
+});
+window.addEventListener("appinstalled", function () {
+  window.gtInstallPrompt = null;
+  window.dispatchEvent(new CustomEvent("gotani-installed"));
+});
+
 (function () {
   if (!("serviceWorker" in navigator)) return;
   let reloading = false;

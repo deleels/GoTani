@@ -119,10 +119,10 @@ def forward_trace(cycle: CropCycle) -> ForwardTrace:
                     totals["cogs"] += a.qty_kg * a.unit_cogs_idr
                 else:
                     lt.voided_kg += a.qty_kg
-            lt.spoiled_kg = sum((s.qty_kg for s in spoilages), ZERO)
+            lt.spoiled_kg = sum((s.qty_kg for s in spoilages if not s.reversed_at), ZERO)
             totals["sold_kg"] += lt.sold_kg
             totals["spoiled_kg"] += lt.spoiled_kg
-            totals["spoilage_loss"] += sum((s.loss_idr for s in spoilages), ZERO)
+            totals["spoilage_loss"] += sum((s.loss_idr for s in spoilages if not s.reversed_at), ZERO)
             totals["remaining_kg"] += lot.qty_remaining_kg
             lot_traces.append(lt)
         totals["harvested_kg"] += batch.high_quality_kg + batch.low_quality_kg
@@ -172,6 +172,9 @@ def forward_csv_rows(trace: ForwardTrace):
             for s in lt.spoilages:
                 yield ["SUSUT", _local(s.recorded_at).isoformat(timespec="minutes"), f"LOT-{lot.pk}",
                        f"{s.get_reason_display()} {s.notes}".strip(), -s.qty_kg, s.loss_idr]
+                if s.reversed_at:
+                    yield ["BATAL SUSUT", _local(s.reversed_at).isoformat(timespec="minutes"), f"LOT-{lot.pk}",
+                           s.reversal_reason, s.qty_kg, -s.loss_idr]
             for a in lt.invoice_allocations:
                 invoice = a.line.invoice
                 yield ["INVOICE", invoice.issue_date.isoformat() if invoice.issue_date else "", invoice.number or "",
@@ -249,6 +252,66 @@ def _sum(qs, field_name) -> Decimal:
     return qs.aggregate(s=Sum(field_name))["s"] or ZERO
 
 
+PPH_FINAL_RATE = Decimal("0.005")  # PP 55/2022 UMKM final income tax, 0,5% of monthly turnover
+PPH_EXEMPT_IDR = Decimal("500000000")  # individual taxpayer: first Rp500 jt of turnover per year untaxed
+ID_MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
+                  "Oktober", "November", "Desember"]
+
+
+def omzet_pph(year: int) -> dict:
+    """Monthly turnover and PPh Final 0,5% (D103).
+
+    Turnover = POS completed sales (gross, excluding any PPN) by sale date + ISSUED invoices by issue date at
+    their gross before discount plus shipping (excluding PPN). Voided sales/invoices are excluded. The first
+    Rp500 jt of the year is exempt; tax applies to the part of each month above the running total's
+    threshold. Whole Rupiah, ROUND_HALF_UP. An estimate to confirm with a tax consultant."""
+    from datetime import date
+
+    from invoicing.models import Invoice
+
+    rows, cumulative = [], ZERO
+    for m in range(1, 13):
+        start = date(year, m, 1)
+        end = date(year + (m == 12), m % 12 + 1, 1) - timedelta(days=1)
+        lo, hi = day_bounds(start, end)
+        orders = SaleOrder.objects.filter(status=SaleOrder.Status.COMPLETED, created_at__gte=lo, created_at__lt=hi)
+        pos = _sum(orders, "total_gross_idr") - _sum(orders, "total_tax_idr")
+        invoices = Invoice.objects.filter(status=Invoice.Status.ISSUED, issue_date__gte=start, issue_date__lte=end)
+        inv = _sum(invoices, "subtotal_idr") + _sum(invoices, "shipping_idr")
+        omzet = pos + inv
+        before = cumulative
+        cumulative += omzet
+        taxable = max(cumulative - PPH_EXEMPT_IDR, ZERO) - max(before - PPH_EXEMPT_IDR, ZERO)
+        pph = (taxable * PPH_FINAL_RATE).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        rows.append({"month": m, "label": ID_MONTH_NAMES[m - 1], "pos": pos, "invoice": inv, "omzet": omzet,
+                     "cumulative": cumulative, "taxable": taxable, "pph": pph,
+                     "due": date(year + (m == 12), m % 12 + 1, 15)})
+    totals = {k: sum((r[k] for r in rows), ZERO) for k in ("pos", "invoice", "omzet", "taxable", "pph")}
+    return {"year": year, "rows": rows, "totals": totals, "exempt": PPH_EXEMPT_IDR,
+            "exempt_left": max(PPH_EXEMPT_IDR - cumulative, ZERO), "rate_pct": PPH_FINAL_RATE * 100}
+
+
+def payment_split(start, end) -> list:
+    """Money received per method (D97): POS sales by sale date (completed orders, what the customer paid)
+    plus invoice payments by paid date. Cash basis — it answers "how much came in as QRIS this week"."""
+    from farm.models import PaymentMethod
+    from invoicing.models import InvoicePayment
+
+    lo, hi = day_bounds(start, end)
+    pos_rows = dict(SaleOrder.objects.filter(status=SaleOrder.Status.COMPLETED, created_at__gte=lo, created_at__lt=hi)
+                    .values_list("payment_method").annotate(s=Sum("total_gross_idr")))
+    inv_rows = dict(InvoicePayment.objects.filter(paid_on__gte=start, paid_on__lte=end, voided_at__isnull=True)
+                    .values_list("method").annotate(s=Sum("amount_idr")))
+    rows = []
+    from invoicing.models import InvoicePaymentMethod
+
+    for value, label in InvoicePaymentMethod.choices:  # includes "Potongan PPh" (invoice only, D101)
+        p, i = pos_rows.get(value) or ZERO, inv_rows.get(value) or ZERO
+        if p or i:
+            rows.append({"method": label, "pos": p, "invoice": i, "total": p + i})
+    return rows
+
+
 def dashboard_metrics(start, end) -> dict:
     """Rule 30: revenue/margin net of tax and invoice discount; invoices accrue on `issue_date`."""
     from invoicing.models import Invoice, InvoiceLine
@@ -266,7 +329,8 @@ def dashboard_metrics(start, end) -> dict:
     gross = revenue - cogs
     other_income = _sum(invoices, "shipping_idr")  # D54: shipping is outside gross margin
     ppn = _sum(orders, "total_tax_idr") + _sum(invoices, "tax_idr")
-    spoilage = _sum(SpoilageRecord.objects.filter(recorded_at__gte=lo, recorded_at__lt=hi), "loss_idr")
+    spoilage = _sum(SpoilageRecord.objects.filter(recorded_at__gte=lo, recorded_at__lt=hi, reversed_at__isnull=True),
+                    "loss_idr")
     approved = Expense.objects.filter(status=Expense.Status.APPROVED)
     # Rule 8: leftovers of cycles closed in the period are written off.
     unabsorbed = _sum(
@@ -296,6 +360,7 @@ def dashboard_metrics(start, end) -> dict:
         "net_profit": net,
         "orders": orders.count(),
         "invoices": invoices.count(),
+        "transactions": orders.count() + invoices.count(),
         "input_purchases": _money(purchases),
         "ppn_collected": ppn,
         "revenue_pos": pos_revenue,
@@ -361,10 +426,14 @@ def dashboard_metrics(start, end) -> dict:
         .order_by("-s")
     ]
 
+    # Phase 7 (D115): average order value over both channels — what one sale is worth.
+    kpis["aov"] = _money(revenue / kpis["transactions"]) if kpis["transactions"] else None
+
     return {
         "start": start,
         "end": end,
         "kpis": kpis,
+        "payment_split": payment_split(start, end),
         "daily": [{"date": d, "revenue": v[0], "cogs": v[1]} for d, v in sorted(daily.items())],
         "margin_by_product": margin_rows,
         "top_products": top_products,

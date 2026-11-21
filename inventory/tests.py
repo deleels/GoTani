@@ -165,7 +165,7 @@ class SpoilageTests(InventoryFixtures):
     def test_loss_rounds_half_up_to_cents(self):
         rec = services.record_spoilage(self.lot_low, D("0.001"), Reason.SHRINKAGE)
         self.assertEqual(rec.loss_idr, D("4.00"))  # 4000 × 0.001
-        # 0.1 kg × Rp 0.05 = 0.005 → rounds half-up to 0.01
+        # 0.1 kg × Rp0.05 = 0.005 → rounds half-up to 0.01
         lot = StockLot.objects.create(
             product=self.low,
             harvest_batch=farm.record_harvest(self.cycle, 1),
@@ -286,3 +286,155 @@ class MassBalanceTests(InventoryFixtures):
     def test_seed_demo_passes_mass_balance(self):
         call_command("seed_demo", stdout=StringIO())
         call_command("check_mass_balance", stdout=StringIO())
+
+
+class SpoilageReversalTests(TestCase):
+    """D86: same-day spoilage reversal by OWNER/MANAGER as a new ledger movement."""
+
+    def setUp(self):
+        from datetime import date
+
+        from farm import services as farm_services
+        from farm.models import CropCycle, FarmElement, Variety
+        from pos.tests import make_user
+        from farm.bootstrap import ROLE_MANAGER, ROLE_WORKER
+
+        self.manager, self.worker = make_user("m", ROLE_MANAGER), make_user("w", ROLE_WORKER)
+        cycle = CropCycle.objects.create(element=FarmElement.objects.create(name="E", element_type="OPEN_FIELD", area_m2=1),
+                                         variety=Variety.objects.create(name="V", crop="C"),
+                                         planting_start_date=date(2026, 8, 1), stage=CropCycle.Stage.HARVESTING)
+        self.lot = farm_services.record_harvest(cycle, 10, 0).lots.get()
+
+    def test_reverse_restores_lot_and_keeps_balance(self):
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        from core.models import AuditLog
+        from inventory.services import check_mass_balance, record_spoilage, reverse_spoilage
+
+        rec = record_spoilage(self.lot, 4, "ROT")
+        with self.assertRaises(PermissionDenied):
+            reverse_spoilage(rec, self.worker, "salah")
+        with self.assertRaises(ValidationError):
+            reverse_spoilage(rec, self.manager, "")
+        reverse_spoilage(rec, self.manager, "salah lot")
+        self.lot.refresh_from_db()
+        self.assertEqual(self.lot.qty_remaining_kg, Decimal("10"))
+        self.assertEqual(self.lot.ledger.filter(movement_type="SPOILAGE_REVERSAL").count(), 1)
+        self.assertEqual(check_mass_balance(), [])
+        self.assertTrue(AuditLog.objects.filter(action="SPOILAGE_REVERSAL").exists())
+        with self.assertRaises(ValidationError):
+            reverse_spoilage(rec, self.manager, "lagi")
+
+    def test_only_same_day(self):
+        from datetime import timedelta
+
+        from django.core.exceptions import ValidationError
+        from django.utils import timezone
+
+        from inventory.services import record_spoilage, reverse_spoilage
+
+        rec = record_spoilage(self.lot, 1, "ROT", recorded_at=timezone.now() - timedelta(days=1))
+        with self.assertRaises(ValidationError):
+            reverse_spoilage(rec, self.manager, "telat")
+
+    def test_view_and_analytics_exclude_reversed(self):
+        from django.urls import reverse
+
+        from inventory.services import record_spoilage
+
+        rec = record_spoilage(self.lot, 2, "ROT")
+        self.client.force_login(self.manager)
+        page = self.client.get(reverse("farm:spoilage")).content.decode()
+        self.assertIn(reverse("farm:spoilage_reverse", args=[rec.pk]), page)
+        self.client.post(reverse("farm:spoilage_reverse", args=[rec.pk]), {"reason": "salah"})
+        rec.refresh_from_db()
+        self.assertIsNotNone(rec.reversed_at)
+        from django.utils import timezone
+
+        from reports.services import dashboard_metrics
+
+        today = timezone.localdate()
+        self.assertEqual(dashboard_metrics(today, today)["kpis"]["spoilage_loss"], Decimal("0"))
+
+
+class OpnameAndLowStockTests(TestCase):
+    """D98–D99: produce low-stock alerts; opname writes off only the shortfall, FIFO, after approval."""
+
+    def setUp(self):
+        from datetime import date, timedelta
+
+        from django.utils import timezone
+
+        from farm import services as farm_services
+        from farm.bootstrap import ROLE_MANAGER, ROLE_WORKER
+        from farm.models import CropCycle, FarmElement, Variety
+        from pos.tests import make_user
+
+        self.manager, self.worker = make_user("m", ROLE_MANAGER), make_user("w", ROLE_WORKER)
+        cycle = CropCycle.objects.create(element=FarmElement.objects.create(name="E", element_type="OPEN_FIELD", area_m2=1),
+                                         variety=Variety.objects.create(name="V", crop="C"),
+                                         planting_start_date=date(2026, 8, 1), stage=CropCycle.Stage.HARVESTING)
+        now = timezone.now()
+        self.old = farm_services.record_harvest(cycle, 5, 0, harvested_at=now - timedelta(days=3)).lots.get()
+        self.new = farm_services.record_harvest(cycle, 10, 0, harvested_at=now).lots.get()
+        self.product = self.old.product
+
+    def test_low_stock_alert(self):
+        from core.notifications import build_notifications
+        from farm.access import UserRoles
+        from inventory.services import low_stock_products, set_min_alert
+
+        self.assertEqual(low_stock_products(), [])
+        set_min_alert(self.product, Decimal("15"))
+        self.assertEqual(low_stock_products()[0][1], Decimal("15"))
+        kinds = [n["kind"] for n in build_notifications(UserRoles(self.worker))]
+        self.assertIn("produce_low", kinds)
+        set_min_alert(self.product, None)
+        self.assertEqual(low_stock_products(), [])
+
+    def test_shortfall_written_off_fifo_after_approval(self):
+        from django.core.exceptions import PermissionDenied, ValidationError
+
+        from inventory.services import approve_count, check_mass_balance, record_count
+
+        count = record_count(self.product, Decimal("8"), self.worker)
+        self.assertEqual((count.system_kg, count.shortfall_kg), (Decimal("15"), Decimal("7")))
+        self.assertEqual(self.product.stock_kg, Decimal("15"))  # nothing moves before approval
+        with self.assertRaises(ValidationError):  # one pending count per product
+            record_count(self.product, Decimal("9"), self.worker)
+        with self.assertRaises(PermissionDenied):
+            approve_count(count, self.worker)
+        count = approve_count(count, self.manager)
+        self.old.refresh_from_db()
+        self.new.refresh_from_db()
+        self.assertEqual((self.old.qty_remaining_kg, self.new.qty_remaining_kg), (Decimal("0"), Decimal("8")))
+        self.assertEqual(count.written_off_kg, Decimal("7"))
+        self.assertEqual(SpoilageRecord.objects.filter(notes=f"Opname #{count.pk}", reason="SHRINKAGE").count(), 2)
+        self.assertEqual(check_mass_balance(), [])
+
+    def test_surplus_not_booked_and_reject(self):
+        from inventory.services import approve_count, record_count, reject_count
+
+        surplus = approve_count(record_count(self.product, Decimal("20"), self.worker), self.manager)
+        self.assertEqual((surplus.written_off_kg, self.product.stock_kg), (Decimal("0"), Decimal("15")))
+        rejected = reject_count(record_count(self.product, Decimal("1"), self.worker), self.manager, "salah hitung")
+        self.assertEqual((rejected.status, self.product.stock_kg), ("REJECTED", Decimal("15")))
+
+    def test_opname_page(self):
+        from django.urls import reverse
+
+        from inventory.models import StockCount
+
+        self.client.force_login(self.worker)
+        self.client.post(reverse("farm:opname"), {"product": self.product.pk, "counted_kg": "14,5"})
+        count = StockCount.objects.get()
+        self.assertEqual(count.counted_kg, Decimal("14.5"))
+        self.client.post(reverse("farm:opname"), {"action": "approve", "count": count.pk})
+        count.refresh_from_db()
+        self.assertEqual(count.status, "PENDING")  # workers cannot approve
+        self.client.force_login(self.manager)
+        page = self.client.get(reverse("farm:opname")).content.decode()
+        self.assertIn("Setujui", page)
+        self.client.post(reverse("farm:opname"), {"action": "approve", "count": count.pk})
+        count.refresh_from_db()
+        self.assertEqual(count.status, "APPROVED")

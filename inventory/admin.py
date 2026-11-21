@@ -21,6 +21,21 @@ class ProductAdmin(admin.ModelAdmin):
     def stock_kg(self, obj):
         return obj.stock_kg
 
+    AUDITED = ("selling_price_idr", "tax_id")
+
+    def save_model(self, request, obj, form, change):
+        """Admin edits land in the audit log too (D82)."""
+        from core.audit import log_event
+
+        before = dict(Product.objects.filter(pk=obj.pk).values(*self.AUDITED).first() or {}) if change else {}
+        super().save_model(request, obj, form, change)
+        obj.refresh_from_db()
+        after = {f: getattr(obj, f) for f in self.AUDITED}
+        changed = {f for f in self.AUDITED if before.get(f) != after[f]}
+        if changed:
+            log_event(request.user, "PRODUCT_ADMIN_EDIT", obj, f"Produk {obj} (admin)",
+                      before={f: before.get(f) for f in changed}, after={f: after[f] for f in changed})
+
 
 @admin.register(StockLot)
 class StockLotAdmin(admin.ModelAdmin):

@@ -1,10 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Akses ditolak{% endblock %}
+{% load i18n %}
+{% load ui %}
+{% block title %}{% translate "Akses ditolak" %}{% endblock %}
 {% block content %}
-<div class="mx-auto mt-16 max-w-md text-center">
-  <p class="text-5xl font-bold text-stone-300">403</p>
-  <h1 class="mt-2 text-xl font-semibold">Akses ditolak</h1>
-  <p class="mt-2 text-stone-600">{{ exception|default:"Peran Anda tidak memiliki akses ke halaman ini." }}</p>
-  <a href="{% url 'home' %}" class="mt-6 inline-block rounded bg-emerald-600 px-4 py-2 text-white">Kembali ke beranda</a>
+{# 403 (Phase 5b): centred card with the mark, title and one action. #}
+<div class="app-errorpage">
+  <div class="gt-card app-errorpage__card">
+    <span class="app-errorpage__mark" aria-hidden="true">{% icon "lock" 28 %}</span>
+    <span class="app-errorpage__code">403</span>
+    <h1 class="app-errorpage__title">{% translate "Akses ditolak" %}</h1>
+    <p class="app-muted">{{ exception|default:"Peran Anda tidak memiliki akses ke halaman ini." }}</p>
+    <a href="{% url 'home' %}" class="gt-btn gt-btn--solid gt-btn--md">{% translate "Ke beranda" %}</a>
+  </div>
 </div>
 {% endblock %}

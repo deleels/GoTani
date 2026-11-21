@@ -1,25 +1,25 @@
-{# Pagination footer (D68). Needs `page` from core.pagination.paginate. #}
+{% load i18n %}{% load ui %}{# Pagination footer (D68). Needs `page` from core.pagination.paginate. Sits in the table card's foot. #}
 {% if page %}
-<div class="no-print flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 px-4 py-3 text-sm text-stone-600">
-  <form method="get" class="flex items-center gap-2">
+<div class="gt-card__foot app-pager no-print">
+  <form method="get" class="app-pager__per">
     {% for key, values in request.GET.lists %}{% if key != 'per' and key != 'page' %}{% for v in values %}<input type="hidden" name="{{ key }}" value="{{ v }}">{% endfor %}{% endif %}{% endfor %}
-    <span>Baris per halaman</span>
-    <select name="per" onchange="this.form.submit()" style="width:auto">
+    <label for="pager-per">{% translate "Baris per halaman" %}</label>
+    <select id="pager-per" name="per" onchange="this.form.submit()" class="app-field app-field--sm app-field--auto">
       {% for s in page.page_sizes %}<option value="{{ s }}" {% if s == page.per %}selected{% endif %}>{{ s }}</option>{% endfor %}
     </select>
   </form>
-  <div class="flex items-center gap-3">
-    <span>Halaman {{ page.number }} dari {{ page.paginator.num_pages }}</span>
-    <div class="flex gap-1">
+  <div class="app-pager__nav">
+    <span>{% translate "Halaman" %} {{ page.number }} {% translate "dari" %} {{ page.paginator.num_pages }}</span>
+    <div class="app-pager__btns">
       {% with qs=page.querystring %}
       {% if page.has_previous %}
-        <a class="rounded-md border border-stone-200 px-2 py-1 hover:bg-stone-100" href="?{% if qs %}{{ qs }}&{% endif %}page=1" aria-label="Halaman pertama">«</a>
-        <a class="rounded-md border border-stone-200 px-2 py-1 hover:bg-stone-100" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.previous_page_number }}" aria-label="Sebelumnya">‹</a>
-      {% else %}<span class="rounded-md border border-stone-100 px-2 py-1 text-stone-300">«</span><span class="rounded-md border border-stone-100 px-2 py-1 text-stone-300">‹</span>{% endif %}
+        <a class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline" href="?{% if qs %}{{ qs }}&{% endif %}page=1" aria-label="{% translate 'Halaman pertama' %}">«</a>
+        <a class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.previous_page_number }}" aria-label="{% translate 'Sebelumnya' %}">‹</a>
+      {% else %}<span class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline app-disabled" aria-disabled="true" aria-label="{% translate 'Halaman pertama' %}">«</span><span class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline app-disabled" aria-disabled="true" aria-label="{% translate 'Sebelumnya' %}">‹</span>{% endif %}
       {% if page.has_next %}
-        <a class="rounded-md border border-stone-200 px-2 py-1 hover:bg-stone-100" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.next_page_number }}" aria-label="Berikutnya">›</a>
-        <a class="rounded-md border border-stone-200 px-2 py-1 hover:bg-stone-100" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.paginator.num_pages }}" aria-label="Halaman terakhir">»</a>
-      {% else %}<span class="rounded-md border border-stone-100 px-2 py-1 text-stone-300">›</span><span class="rounded-md border border-stone-100 px-2 py-1 text-stone-300">»</span>{% endif %}
+        <a class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.next_page_number }}" aria-label="{% translate 'Berikutnya' %}">›</a>
+        <a class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.paginator.num_pages }}" aria-label="{% translate 'Halaman terakhir' %}">»</a>
+      {% else %}<span class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline app-disabled" aria-disabled="true" aria-label="{% translate 'Berikutnya' %}">›</span><span class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--outline app-disabled" aria-disabled="true" aria-label="{% translate 'Halaman terakhir' %}">»</span>{% endif %}
       {% endwith %}
     </div>
   </div>

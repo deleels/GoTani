@@ -1,5 +1,15 @@
-<div class="rounded-xl border border-stone-200 bg-white p-4">
-  <p class="text-xs text-stone-500">{{ label }}</p>
-  <p class="mt-1 text-2xl font-semibold {{ cls }}">{{ value }}</p>
-  {% if hint %}<p class="mt-0.5 text-xs text-stone-400">{{ hint }}</p>{% endif %}
+{% load ui %}{# KPI (D68). Default: gt-metric tile. stat=True: gt-stat card (+ featured=True, + href → link with ↗). tone=danger|warning|positive|late colours the value. tip= puts an explanation behind an info chip next to the label. #}
+{% if stat %}
+<{% if href %}a href="{{ href }}"{% else %}div{% endif %} class="gt-stat{% if featured %} gt-stat--featured{% endif %} app-stat">
+  <span class="gt-stat__title">{{ label }}{% if tip %}{% info_tip tip %}{% endif %}</span>
+  {% if href %}<span class="gt-stat__arrow" aria-hidden="true">{% icon "arrow" 16 %}</span>{% endif %}
+  <span class="gt-stat__value {% if tone %}app-value--{{ tone }}{% endif %}{% if compact or "Rp" in value|stringformat:"s" %} app-stat__money{% endif %}">{{ value }}</span>
+  {% if hint %}<span class="gt-stat__trend">{{ hint }}</span>{% endif %}
+</{% if href %}a{% else %}div{% endif %}>
+{% else %}
+<div class="gt-metric gt-metric--raised">
+  <span class="gt-metric__label">{{ label }}{% if tip %}{% info_tip tip %}{% endif %}</span>
+  <span class="gt-metric__value {% if tone %}app-value--{{ tone }}{% endif %}">{{ value }}</span>
+  {% if hint %}<span class="gt-metric__note app-metric__note">{{ hint }}</span>{% endif %}
 </div>
+{% endif %}

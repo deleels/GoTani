@@ -1,6 +1,9 @@
 """Cuaca & Satelit (D73): map page + small JSON endpoints. External calls only via `geo.services`."""
 
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
 import json
+from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.http import HttpResponse, JsonResponse
@@ -15,7 +18,7 @@ from farm.views_common import error_text
 from . import services
 from .models import FieldPolygon
 
-UNAVAILABLE = "data tidak tersedia"
+UNAVAILABLE = _l("data tidak tersedia")
 
 
 def polygon_payload(p: FieldPolygon):
@@ -24,7 +27,8 @@ def polygon_payload(p: FieldPolygon):
         "id": p.pk, "name": p.name, "geojson": p.geojson, "area_ha": str(p.area_ha), "area_m2": str(p.area_m2.quantize(1)),
         "element_id": p.element_id, "element": p.element.name if p.element else None,
         "element_area_m2": str(p.element.area_m2) if p.element else None, "center": [lat, lon],
-        "registered": bool(p.agro_polygon_id),
+        "registered": bool(p.agro_polygon_id), "satellite_ok": services.satellite_ok(p),
+        "covered": services.is_covered(p), "too_small": not services.satellite_eligible(p),
     }
 
 
@@ -51,7 +55,7 @@ class JsonBodyMixin:
         try:
             return json.loads(request.body or b"{}")
         except ValueError:
-            raise ValidationError("Data JSON tidak valid.")
+            raise ValidationError(_("Data JSON tidak valid."))
 
 
 def _element(value):
@@ -110,11 +114,25 @@ class PolygonDataView(RoleRequiredMixin, View):
     allowed_roles = FARM_ROLES
 
     def get(self, request, pk):
-        polygon = get_object_or_404(FieldPolygon, pk=pk)
+        return JsonResponse(polygon_data(get_object_or_404(FieldPolygon.objects.select_related("element"), pk=pk)))
+
+
+def polygon_data(polygon):
+    """Vegetation indices (Agromonitoring, open fields ≥ 1 ha) + model soil data (Open-Meteo, any polygon) — D90."""
+    sat = None
+    reason = services.satellite_block_reason(polygon)  # covered / no key / < 1 ha → no Agromonitoring call
+    if reason is None:
         sat = services.public_satellite(services.fetch_satellite(polygon))
-        soil = services.fetch_soil(polygon)
-        return JsonResponse({"satellite": sat, "soil": soil, "message": None if (sat or soil) else UNAVAILABLE,
-                             "agro_enabled": bool(services.agro_key())})
+        reason = services.satellite_block_reason(polygon)  # registration may have just been rejected
+        if reason is None and not (sat and sat["passes"]):
+            reason = services.SAT_NO_IMAGERY if sat is not None else services.SAT_API_ERROR
+    lat, lon = services.centroid(polygon)
+    soil = services.fetch_soil_model(lat, lon)
+    return {
+        "satellite": sat if sat and sat["passes"] else None, "soil": soil, "reason": reason,
+        "message": services.satellite_message(reason, polygon) if reason else None,
+        "agro_enabled": bool(services.agro_key()),
+    }
 
 
 class NdviImageView(RoleRequiredMixin, View):
@@ -129,6 +147,18 @@ class NdviImageView(RoleRequiredMixin, View):
         return response
 
 
+class PlaceSearchView(RoleRequiredMixin, View):
+    """Map search box: proxied Nominatim lookup (D92)."""
+
+    allowed_roles = FARM_ROLES
+
+    def get(self, request):
+        places = services.search_places(request.GET.get("q", ""))
+        if places is None:
+            return JsonResponse({"places": [], "message": _("Pencarian lokasi tidak tersedia, coba lagi sebentar.")})
+        return JsonResponse({"places": places, "message": None if places else _("Lokasi tidak ditemukan.")})
+
+
 class WeatherView(RoleRequiredMixin, View):
     allowed_roles = FARM_ROLES
 
@@ -141,6 +171,8 @@ class WeatherView(RoleRequiredMixin, View):
                 lat, lon = services.centroid(first)
         weather = services.fetch_weather(lat, lon)
         if weather is None:
-            reason = UNAVAILABLE if lat is not None else "Lokasi kebun belum diatur di Pengaturan"
+            reason = str(UNAVAILABLE) if lat is not None else _("Lokasi kebun belum diatur di Pengaturan")
             return JsonResponse({"weather": None, "message": reason})
-        return JsonResponse({"weather": weather, "message": None})
+        water = services.water_needs(weather)
+        water["rows"] = [{k: (str(v) if isinstance(v, Decimal) else v) for k, v in r.items()} for r in water["rows"]]
+        return JsonResponse({"weather": weather, "water": water, "message": None})

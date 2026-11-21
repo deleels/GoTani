@@ -184,6 +184,35 @@ class StaffViewTests(Base):
                                                            "latitude": "-6.6", "longitude": "106.8"})
         self.assertRedirects(resp, reverse("core:settings"))
         self.assertEqual(services.get_farm_profile().name, "Kebun Ciawi")
+        self.assertFalse(services.farm_is_pkp())  # D80: off by default, unchecked box stays off
+
+    def test_settings_clearing_logo_does_not_crash(self):
+        """The "Clear" box on the logo input posts logo-clear; the form returns False for the file (was a 500)."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        self.client.force_login(self.owner)
+        png = __import__("base64").b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+        data = {"name": "Kebun", "address": "", "phone": "", "latitude": "", "longitude": ""}
+        with self.settings(MEDIA_ROOT=self._media()):
+            self.client.post(reverse("core:settings"), {**data, "logo": SimpleUploadedFile("l.png", png, "image/png")})
+            self.assertTrue(services.get_farm_profile().logo)
+            resp = self.client.post(reverse("core:settings"), {**data, "logo-clear": "on"})
+            self.assertRedirects(resp, reverse("core:settings"))
+            self.assertFalse(services.get_farm_profile().logo)
+
+    def _media(self):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        self.addCleanup(__import__("shutil").rmtree, d, True)
+        return d
+
+    def test_settings_toggles_pkp(self):
+        self.client.force_login(self.owner)
+        self.client.post(reverse("core:settings"), {"name": "Kebun", "address": "", "phone": "",
+                                                    "latitude": "", "longitude": "", "is_pkp": "on"})
+        self.assertTrue(services.farm_is_pkp())
 
 
 class ShellTests(Base):
@@ -228,7 +257,7 @@ class ProfilePageTests(TestCase):
         self.client.force_login(user)
         url = reverse("core:profile")
         self.assertContains(self.client.get(url), "CASHIER")
-        self.assertRedirects(self.client.post(url, {"first_name": "Siti", "last_name": "Aminah"}), url)
+        self.assertRedirects(self.client.post(url, {"first_name": "Siti", "last_name": "Aminah", "language": "id"}), url)
         user.refresh_from_db()
         self.assertEqual(user.get_full_name(), "Siti Aminah")
         self.assertEqual(self.client.post(url, {"first_name": "  "}).status_code, 400)

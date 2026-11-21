@@ -1,6 +1,7 @@
 """Thin-view building blocks shared by every app: call a service, show its
 ValidationError in Bahasa Indonesia, redirect (POST/redirect/GET)."""
 
+from django.utils.translation import gettext_lazy as _l
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404, redirect
@@ -31,7 +32,7 @@ class ActionView(RoleRequiredMixin, View):
     http_method_names = ["post"]
     model = None
     success_url_name = "home"
-    success_message = "Berhasil."
+    success_message = _l("Berhasil.")
 
     def perform(self, obj):  # pragma: no cover - abstract
         raise NotImplementedError
@@ -55,7 +56,7 @@ class ServiceFormView(RoleRequiredMixin, FormView):
     """FormView whose `perform(form)` calls a service; domain errors become form errors."""
 
     success_url_name = "home"
-    success_message = "Tersimpan."
+    success_message = _l("Tersimpan.")
     nav = ""
 
     def perform(self, form):  # pragma: no cover - abstract

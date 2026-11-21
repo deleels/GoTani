@@ -1,5 +1,7 @@
 """Farm profile and staff management (D65, D72). OWNER-only writes."""
 
+from django.utils.translation import gettext as _
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
@@ -7,26 +9,45 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q
 
-from farm.bootstrap import ROLE_OWNER, ROLES, user_has_role
+from farm.bootstrap import ROLE_MANAGER, ROLE_OWNER, ROLES, user_has_role
 
 from .models import FarmProfile, UserProfile
 
-PROFILE_FIELDS = ("name", "address", "phone", "latitude", "longitude", "logo")
+PROFILE_FIELDS = ("name", "address", "phone", "latitude", "longitude", "logo", "is_pkp")
 
 
 def get_farm_profile() -> FarmProfile:
-    profile, _ = FarmProfile.objects.get_or_create(pk=1)
+    profile, _created = FarmProfile.objects.get_or_create(pk=1)
     return profile
 
 
+def farm_is_pkp() -> bool:
+    """D80: PPN applies only when the farm is a PKP."""
+    return FarmProfile.objects.filter(pk=1, is_pkp=True).exists()
+
+
 def get_user_profile(user) -> UserProfile:
-    profile, _ = UserProfile.objects.get_or_create(user=user)
+    profile, _created = UserProfile.objects.get_or_create(user=user)
+    return profile
+
+
+def default_language_for_role(role) -> str:
+    """Phase 7: OWNER/MANAGER read the business screens in English; CASHIER/WORKER keep Indonesian."""
+    return "en" if role in (ROLE_OWNER, ROLE_MANAGER) else "id"
+
+
+def set_user_language(user, language: str) -> UserProfile:
+    if language not in {code for code, _name in settings.LANGUAGES}:
+        raise ValidationError(_("Bahasa tidak dikenal."))
+    profile = get_user_profile(user)
+    profile.language = language
+    profile.save(update_fields=["language"])
     return profile
 
 
 def require_owner(actor):
     if not user_has_role(actor, ROLE_OWNER):
-        raise PermissionDenied("Hanya OWNER yang dapat melakukan ini.")
+        raise PermissionDenied(_("Hanya OWNER yang dapat melakukan ini."))
 
 
 def update_farm_profile(actor, **fields) -> FarmProfile:
@@ -36,14 +57,23 @@ def update_farm_profile(actor, **fields) -> FarmProfile:
         raise ValueError(f"Unknown fields: {sorted(unknown)}")
     lat, lon = fields.get("latitude"), fields.get("longitude")
     if (lat is None) != (lon is None):
-        raise ValidationError("Lintang dan bujur harus diisi keduanya atau dikosongkan keduanya.")
+        raise ValidationError(_("Lintang dan bujur harus diisi keduanya atau dikosongkan keduanya."))
     if lat is not None and not (-90 <= lat <= 90 and -180 <= lon <= 180):
-        raise ValidationError("Koordinat di luar jangkauan.")
+        raise ValidationError(_("Koordinat di luar jangkauan."))
     profile = get_farm_profile()
+    was_pkp = profile.is_pkp
     for key, value in fields.items():
+        if key == "logo" and value is False:  # "Clear" ticked on the file input: remove the logo
+            value = ""
         setattr(profile, key, value)
     profile.full_clean()
-    profile.save()
+    with transaction.atomic():
+        profile.save()
+        if profile.is_pkp != was_pkp:
+            from .audit import log_event
+
+            log_event(actor, "PKP_CHANGE", profile, "Status PKP " + ("aktif" if profile.is_pkp else "nonaktif"),
+                      before={"is_pkp": was_pkp}, after={"is_pkp": profile.is_pkp})
     return profile
 
 
@@ -70,7 +100,7 @@ def _is_last_active_owner(user) -> bool:
 
 def _check_role(role):
     if role not in ROLES:
-        raise ValidationError("Peran tidak dikenal.")
+        raise ValidationError(_("Peran tidak dikenal."))
 
 
 def _set_temp_password(user, password):
@@ -88,17 +118,18 @@ def create_staff_user(actor, *, username, full_name, role, temp_password):
     User = get_user_model()
     username = (username or "").strip()
     if not username:
-        raise ValidationError("Nama pengguna wajib diisi.")
+        raise ValidationError(_("Nama pengguna wajib diisi."))
     if User.objects.filter(username__iexact=username).exists():
-        raise ValidationError("Nama pengguna sudah dipakai.")
-    first, _, last = (full_name or "").strip().partition(" ")
+        raise ValidationError(_("Nama pengguna sudah dipakai."))
+    first, _sep, last = (full_name or "").strip().partition(" ")
     user = User(username=username, first_name=first, last_name=last)
     _set_temp_password(user, temp_password)
     user.save()
     user.groups.set([Group.objects.get_or_create(name=role)[0]])
     profile = get_user_profile(user)
     profile.must_change_password = True
-    profile.save(update_fields=["must_change_password"])
+    profile.language = default_language_for_role(role)
+    profile.save(update_fields=["must_change_password", "language"])
     return user
 
 
@@ -107,9 +138,9 @@ def set_staff_role(actor, user, role):
     require_owner(actor)
     _check_role(role)
     if user.is_superuser:
-        raise ValidationError("Peran superuser diatur lewat admin Django.")
+        raise ValidationError(_("Peran superuser diatur lewat admin Django."))
     if role != ROLE_OWNER and _is_last_active_owner(user):
-        raise ValidationError("Tidak dapat mengubah peran OWNER aktif terakhir.")
+        raise ValidationError(_("Tidak dapat mengubah peran OWNER aktif terakhir."))
     user.groups.set([Group.objects.get_or_create(name=role)[0]])
     return user
 
@@ -119,9 +150,9 @@ def set_staff_active(actor, user, active: bool):
     require_owner(actor)
     if not active:
         if user.pk == actor.pk:
-            raise ValidationError("Anda tidak dapat menonaktifkan akun Anda sendiri.")
+            raise ValidationError(_("Anda tidak dapat menonaktifkan akun Anda sendiri."))
         if _is_last_active_owner(user):
-            raise ValidationError("Tidak dapat menonaktifkan OWNER aktif terakhir.")
+            raise ValidationError(_("Tidak dapat menonaktifkan OWNER aktif terakhir."))
     user.is_active = active
     user.save(update_fields=["is_active"])
     return user
@@ -146,7 +177,7 @@ def update_own_profile(user, *, first_name, last_name=""):
     """Users edit only their own display name; role and status stay with the OWNER (D65)."""
     first_name, last_name = (first_name or "").strip(), (last_name or "").strip()
     if not first_name:
-        raise ValidationError("Nama depan wajib diisi.")
+        raise ValidationError(_("Nama depan wajib diisi."))
     user.first_name, user.last_name = first_name[:150], last_name[:150]
     user.save(update_fields=["first_name", "last_name"])
     return user

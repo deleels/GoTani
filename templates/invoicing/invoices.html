@@ -1,66 +1,67 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}Invoice{% endblock %}
+{% block title %}{% translate "Invoice" %}{% endblock %}
 {% block content %}
-<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">Invoice</h1>
-    <p class="mt-1 text-sm text-stone-500">{% subtitle "Penjualan grosir ke pembeli tetap: draf, terbitkan (potong stok FIFO), catat pembayaran, pantau piutang." %}</p>
+{# Invoice list (Phase 4d): table page pattern — page head, stat cards, card with tabs + search + columns, gt-table, pager. #}
+<div class="gt-pagehead app-pagehead--sm">
+  <div class="app-pagehead__text">
+    {% subtitle "Penjualan grosir ke pembeli tetap: draf, terbitkan (potong stok FIFO), catat pembayaran, pantau piutang." as sub %}
+    <h1 class="app-pagehead__title">{% translate "Invoice" %} {% info_tip sub %}</h1>
   </div>
-  <a href="{% url 'invoicing:invoice_new' %}" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">{% icon "plus" 16 %} Invoice Baru</a>
+  <div class="gt-pagehead__actions"><a href="{% url 'invoicing:invoice_new' %}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Invoice baru" %}</a></div>
 </div>
 
-<div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-  {% include "components/kpi.html" with label="Piutang berjalan" value=stats.outstanding|rupiah %}
-  {% include "components/kpi.html" with label="Jatuh tempo" value=stats.overdue|rupiah cls="text-red-700" %}
-  {% with h=stats.month_count|stringformat:"d"|add:" invoice terbit" %}{% include "components/kpi.html" with label="Diterbitkan bulan ini" value=stats.month_total|rupiah hint=h %}{% endwith %}
-  {% include "components/kpi.html" with label="Draf" value=stats.drafts %}
+<div class="gt-grid app-kpis">
+  {% include "components/kpi.html" with stat=True featured=True label=_("Piutang berjalan") value=stats.outstanding|rupiah %}
+  {% include "components/kpi.html" with stat=True label=_("Jatuh tempo") value=stats.overdue|rupiah tone="danger" %}
+  {% with n=stats.month_count %}{% blocktranslate asvar h %}{{ n }} invoice terbit{% endblocktranslate %}{% include "components/kpi.html" with stat=True label=_("Terbit bulan ini") value=stats.month_total|rupiah hint=h %}{% endwith %}
+  {% include "components/kpi.html" with stat=True label=_("Draf") value=stats.drafts %}
 </div>
 
-<div class="rounded-xl border border-stone-200 bg-white" x-data="columns('invoices', ['Pembeli', 'Terbit', 'Jatuh tempo', 'Total'])">
-  <div class="flex flex-wrap items-center gap-3 border-b border-stone-200 p-3">
+<section class="gt-card" x-data="columns('invoices', ['Pembeli', 'Terbit', 'Jatuh tempo', 'Total'])" aria-label="{% translate 'Daftar invoice' %}">
+  <div class="app-toolbar">
     {% include "components/tabs.html" %}
-    <div class="ml-auto">{% include "components/columns.html" %}</div>
-    <form method="get" class="w-full sm:w-64"><input type="hidden" name="tab" value="{{ tab }}"><input name="q" value="{{ q }}" placeholder="Cari nomor / pembeli…"></form>
+    <form method="get" class="app-toolbar__search"><input type="hidden" name="tab" value="{{ tab }}"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari invoice" %}</span><input name="q" value="{{ q }}" placeholder="{% translate 'Cari nomor / pembeli…' %}" class="app-field app-field--sm"></label></form>
+    {% include "components/columns.html" %}
   </div>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-        <th class="px-4 py-3">Nomor</th><th class="px-4 py-3" :class="hidden('Pembeli')">Pembeli</th><th class="px-4 py-3" :class="hidden('Terbit')">Terbit</th><th class="px-4 py-3" :class="hidden('Jatuh tempo')">Jatuh tempo</th>
-        <th class="px-4 py-3 text-right" :class="hidden('Total')">Total</th><th class="px-4 py-3">Status</th><th class="px-4 py-3"></th></tr></thead>
-      <tbody class="divide-y divide-stone-100">
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr>
+        <th>{% translate "Nomor" %}</th><th :class="hidden('Pembeli')">{% translate "Pembeli" %}</th><th :class="hidden('Terbit')">{% translate "Terbit" %}</th><th :class="hidden('Jatuh tempo')">{% translate "Jatuh tempo" %}</th>
+        <th class="num" :class="hidden('Total')">{% translate "Total" %}</th><th>{% translate "Status" %}</th><th class="num"><span class="sr-only">{% translate "Aksi" %}</span></th></tr></thead>
+      <tbody>
       {% for inv in page.object_list %}
         <tr>
-          <td class="px-4 py-3 font-mono"><a class="hover:underline" href="{% url 'invoicing:invoice_detail' inv.pk %}">{{ inv }}</a></td>
-          <td class="px-4 py-3" :class="hidden('Pembeli')">{{ inv.buyer }}</td>
-          <td class="px-4 py-3 text-stone-600" :class="hidden('Terbit')">{{ inv.issue_date|date:"d M Y"|default:"—" }}</td>
-          <td class="px-4 py-3 text-stone-600" :class="hidden('Jatuh tempo')">{{ inv.due_date|date:"d M Y"|default:"—" }}</td>
-          <td class="px-4 py-3 text-right font-medium" :class="hidden('Total')">{{ inv.total_idr|rupiah }}</td>
-          <td class="px-4 py-3">{% pill inv.pay_label inv.pill_key %}</td>
-          <td class="px-4 py-3 text-right">
-            <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open=false">
-              <button type="button" @click="open=!open" class="rounded-md p-1.5 hover:bg-stone-100" aria-label="Aksi">{% icon "dots" %}</button>
-              <div x-show="open" x-cloak class="absolute right-0 z-10 mt-1 w-48 rounded-xl border border-stone-200 bg-white p-1 text-left shadow-lg">
-                <a href="{% url 'invoicing:invoice_detail' inv.pk %}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Lihat</a>
-                {% if inv.status == 'DRAFT' %}<a href="{% url 'invoicing:invoice_edit' inv.pk %}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Ubah draf</a>{% endif %}
+          <td class="app-mono"><a class="app-link--plain" href="{% url 'invoicing:invoice_detail' inv.pk %}">{{ inv }}</a></td>
+          <td :class="hidden('Pembeli')">{{ inv.buyer }}</td>
+          <td class="app-muted" :class="hidden('Terbit')">{{ inv.issue_date|date:"d M Y"|default:"—" }}</td>
+          <td class="app-muted" :class="hidden('Jatuh tempo')">{{ inv.due_date|date:"d M Y"|default:"—" }}</td>
+          <td class="num" :class="hidden('Total')"><b>{{ inv.total_idr|rupiah }}</b></td>
+          <td>{% pill inv.pay_label inv.pill_key %}</td>
+          <td class="num">
+            <div class="relative inline-block text-left" x-data="{ open: false }" @click.outside="open=false" @keydown.escape="open=false">
+              {% blocktranslate asvar t_aria_label_8 with v1=inv %}Aksi {{ v1 }}{% endblocktranslate %}<button type="button" @click="open=!open" class="gt-iconbtn gt-iconbtn--sm" aria-label="{{ t_aria_label_8 }}" :aria-expanded="open">{% icon "dots" 16 %}</button>
+              <div x-show="open" x-cloak class="app-menu app-menu--sm">
+                <a href="{% url 'invoicing:invoice_detail' inv.pk %}" class="app-menu__item">{% translate "Lihat" %}</a>
+                {% if inv.status == 'DRAFT' %}<a href="{% url 'invoicing:invoice_edit' inv.pk %}" class="app-menu__item">{% translate "Ubah draf" %}</a>{% endif %}
                 {% if inv.status == 'ISSUED' %}
-                <a href="{% url 'invoicing:invoice_print' inv.pk %}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Cetak</a>
-                {% if inv.pay_status != 'PAID' %}<a href="{% url 'invoicing:buyer_payment_new' inv.buyer_id %}?invoice={{ inv.pk }}" class="block rounded-md px-3 py-1.5 hover:bg-stone-100">Catat pembayaran</a>{% endif %}
+                <a href="{% url 'invoicing:invoice_print' inv.pk %}" class="app-menu__item">{% translate "Cetak" %}</a>
+                {% if inv.pay_status != 'PAID' %}<a href="{% url 'invoicing:buyer_payment_new' inv.buyer_id %}?invoice={{ inv.pk }}" class="app-menu__item">{% translate "Catat bayar" %}</a>{% endif %}
                 {% endif %}
               </div>
             </div>
           </td>
         </tr>
       {% empty %}
-        <tr><td colspan="7" class="px-4 py-12 text-center">
-          <p class="font-medium">{% if q %}Tidak ada invoice yang cocok dengan “{{ q }}”.{% else %}Belum ada invoice di tab ini.{% endif %}</p>
-          <p class="mt-1 text-sm text-stone-500">Invoice dipakai untuk penjualan grosir: stok baru terpotong saat invoice diterbitkan, dan pembayaran bisa dicicil.</p>
-          <a href="{% url 'invoicing:invoice_new' %}" class="mt-3 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Buat invoice</a>
-        </td></tr>
+        <tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div>
+          <span class="gt-callout__title">{% if q %}{% translate "Tidak ada invoice yang cocok dengan “" %}{{ q }}”.{% else %}{% translate "Belum ada invoice di tab ini." %}{% endif %}</span>
+          <span class="gt-callout__body">{% translate "Invoice dipakai untuk penjualan grosir: stok baru terpotong saat invoice diterbitkan, dan pembayaran bisa dicicil." %}</span>
+          <a href="{% url 'invoicing:invoice_new' %}" class="gt-btn gt-btn--outline gt-btn--sm app-empty__cta">{% icon "plus" 16 %} {% translate "Invoice" %}</a></div></div></td></tr>
       {% endfor %}
       </tbody>
     </table>
   </div>
   {% include "components/pagination.html" %}
-</div>
+</section>
 {% endblock %}

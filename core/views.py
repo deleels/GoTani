@@ -1,3 +1,7 @@
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
+from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib import messages
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth import views as auth_views
@@ -9,10 +13,11 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 
 from farm.access import RoleRequiredMixin, get_roles
-from farm.bootstrap import ROLE_OWNER, ROLES
+from farm.bootstrap import ROLE_MANAGER, ROLE_OWNER, ROLES
 from farm.views_common import error_text
 
 from . import services
+from .models import AuditLog
 from .forms import FarmProfileForm, OwnProfileForm, StaffCreateForm, StaffPasswordForm
 from .notifications import mark_seen, notifications_payload
 from .pagination import paginate
@@ -55,7 +60,7 @@ class StaffView(RoleRequiredMixin, View):
             except ValidationError as exc:
                 form.add_error(None, error_text(exc))
             else:
-                messages.success(request, f"Akun {user.username} dibuat. Berikan kata sandi sementara kepadanya.")
+                messages.success(request, _("Akun %(username)s dibuat. Berikan kata sandi sementara kepadanya.") % {"username": user.username})
                 return redirect("core:staff")
         return render(request, self.template_name, self.get_context(request, form), status=400)
 
@@ -69,18 +74,18 @@ class StaffActionView(RoleRequiredMixin, View):
         try:
             if action == "role":
                 services.set_staff_role(request.user, user, request.POST.get("role"))
-                msg = f"Peran {user.username} diperbarui."
+                msg = _("Peran %(user)s diperbarui.") % {"user": user.username}
             elif action in ("activate", "deactivate"):
                 services.set_staff_active(request.user, user, action == "activate")
-                msg = f"Akun {user.username} {'diaktifkan' if action == 'activate' else 'dinonaktifkan'}."
+                msg = (_("Akun %(user)s diaktifkan.") if action == "activate" else _("Akun %(user)s dinonaktifkan.")) % {"user": user.username}
             elif action == "password":
                 form = StaffPasswordForm(request.POST)
                 if not form.is_valid():
-                    raise ValidationError("Kata sandi sementara wajib diisi.")
+                    raise ValidationError(_("Kata sandi sementara wajib diisi."))
                 services.reset_staff_password(request.user, user, form.cleaned_data["temp_password"])
-                msg = f"Kata sandi sementara {user.username} diatur ulang."
+                msg = _("Kata sandi sementara %(user)s diatur ulang.") % {"user": user.username}
             else:
-                raise ValidationError("Aksi tidak dikenal.")
+                raise ValidationError(_("Aksi tidak dikenal."))
         except ValidationError as exc:
             messages.error(request, error_text(exc))
         else:
@@ -104,7 +109,7 @@ class SettingsView(RoleRequiredMixin, View):
             except ValidationError as exc:
                 form.add_error(None, error_text(exc))
             else:
-                messages.success(request, "Profil kebun disimpan.")
+                messages.success(request, _("Profil kebun disimpan."))
                 return redirect("core:settings")
         return render(request, self.template_name, {"form": form}, status=400)
 
@@ -117,8 +122,21 @@ class PasswordChangeView(auth_views.PasswordChangeView):
         response = super().form_valid(form)
         services.mark_password_changed(self.request.user)
         update_session_auth_hash(self.request, form.user)
-        messages.success(self.request, "Kata sandi berhasil diganti.")
+        messages.success(self.request, _("Kata sandi berhasil diganti."))
         return response
+
+    def get_form(self, form_class=None):
+        # Indonesian labels regardless of the installed Django locale files (Phase 5b).
+        form = super().get_form(form_class)
+        labels = {"old_password": _("Sandi lama"), "new_password1": _("Sandi baru"), "new_password2": _("Ulangi sandi baru")}
+        for name, label in labels.items():
+            if name in form.fields:
+                form.fields[name].label = label
+        if "new_password1" in form.fields:
+            form.fields["new_password1"].help_text = _("Minimal 8 karakter, tidak mirip nama pengguna, tidak umum, dan tidak hanya angka.")
+        if "new_password2" in form.fields:
+            form.fields["new_password2"].help_text = ""
+        return form
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -155,7 +173,9 @@ class ProfileView(View):
 
     def context(self, request, form=None):
         user = request.user
-        return {"form": form or OwnProfileForm(initial={"first_name": user.first_name, "last_name": user.last_name}),
+        lang = services.get_user_profile(user).language or settings.LANGUAGE_CODE
+        return {"form": form or OwnProfileForm(initial={"first_name": user.first_name, "last_name": user.last_name,
+                                                        "language": lang}),
                 "role": services.user_role(user) or ("OWNER" if user.is_superuser else "—")}
 
     def get(self, request):
@@ -165,10 +185,84 @@ class ProfileView(View):
         form = OwnProfileForm(request.POST)
         if form.is_valid():
             try:
-                services.update_own_profile(request.user, **form.cleaned_data)
+                data = dict(form.cleaned_data)
+                language = data.pop("language")
+                services.update_own_profile(request.user, **data)
+                services.set_user_language(request.user, language)
             except ValidationError as exc:
                 form.add_error(None, error_text(exc))
             else:
-                messages.success(request, "Profil disimpan.")
+                messages.success(request, _("Profil disimpan."))
                 return redirect("core:profile")
         return render(request, self.template_name, self.context(request, form), status=400)
+
+
+class SetLanguageView(View):
+    """POST language=en|id: saves it on the profile (signed in) and in the language cookie, then goes back."""
+
+    def post(self, request):
+        lang = request.POST.get("language", "")
+        codes = {code for code, _name in settings.LANGUAGES}
+        if lang not in codes:
+            return redirect(request.POST.get("next") or "home")
+        if request.user.is_authenticated:
+            services.set_user_language(request.user, lang)
+        nxt = request.POST.get("next") or reverse("home")
+        if not url_has_allowed_host_and_scheme(nxt, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+            nxt = reverse("home")
+        response = redirect(nxt)
+        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang, max_age=365 * 24 * 3600, samesite="Lax")
+        return response
+
+
+class AuditLogView(RoleRequiredMixin, View):
+    """"Log aktivitas" (D82): read-only, newest first, filter by kind of change and search."""
+
+    allowed_roles = (ROLE_OWNER, ROLE_MANAGER)
+    ACTIONS = {
+        "PRICE_CHANGE": _l("Harga"), "POS_STEP_CHANGE": _l("Langkah kasir"), "PKP_CHANGE": _l("Status PKP"),
+        "PRODUCT_ADMIN_EDIT": _l("Produk (admin)"), "STAGE_ADVANCE": _l("Tahap maju"), "STAGE_UNDO": _l("Tahap dibatalkan"),
+        "SPOILAGE_REVERSAL": _l("Susut dibatalkan"), "ALLOCATION_REMOVED": _l("Alokasi dilepas"),
+        "SHIFT_CLOSE": _l("Tutup shift"), "SHIFT_REVIEW": _l("Tinjau selisih kas"), "PAYMENT_VOID": _l("Pembayaran dibatalkan"),
+        "STOCK_COUNT_APPROVED": _l("Opname disetujui"), "STOCK_COUNT_REJECTED": _l("Opname ditolak"),
+    }
+
+    FIELDS = {"selling_price_idr": _l("harga/kg"), "pos_step_kg": _l("langkah (kg)"), "is_pkp": "PKP", "tax_id": _l("pajak"),
+              "stage": _l("tahap"), "qty_kg": "kg", "amount_idr": _l("jumlah (Rp)"), "payment_id": _l("pembayaran #"),
+              "expected_idr": _l("seharusnya (Rp)"), "counted_idr": _l("dihitung (Rp)"), "difference_idr": _l("selisih (Rp)"),
+              "system_kg": _l("stok sistem (kg)"), "counted_kg": _l("stok fisik (kg)"), "written_off_kg": _l("dihapus (kg)"),
+              "is_active": _l("aktif")}
+
+    def get(self, request):
+        entries = AuditLog.objects.select_related("actor")
+        action = request.GET.get("action", "")
+        if action:
+            entries = entries.filter(action=action)
+        q = request.GET.get("q", "").strip()
+        if q:
+            entries = entries.filter(Q(summary__icontains=q) | Q(reason__icontains=q) | Q(actor__username__icontains=q))
+        page = paginate(request, entries)
+        for e in page.object_list:
+            e.action_label = self.ACTIONS.get(e.action, e.action)
+            keys = list((e.after or {}).keys() or (e.before or {}).keys())
+            e.changes = [(self.FIELDS.get(k, k), _show((e.before or {}).get(k)), _show((e.after or {}).get(k)))
+                         for k in keys]
+        return render(request, "core/audit_log.html", {
+            "page": page, "q": q, "action": action, "actions": sorted(self.ACTIONS.items(), key=lambda kv: kv[1]),
+        })
+
+
+def _show(value):
+    """Audit values for display: numbers in Indonesian format, booleans as Ya/Tidak."""
+    from decimal import Decimal, InvalidOperation
+
+    from .numbers import format_id_decimal
+
+    if isinstance(value, bool):
+        return _("Ya") if value else _("Tidak")
+    if isinstance(value, str):
+        try:
+            return format_id_decimal(Decimal(value), 3)
+        except InvalidOperation:
+            return value
+    return value

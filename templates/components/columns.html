@@ -1,10 +1,9 @@
-{% load ui %}
-{# "Atur kolom" menu (D68). Parent needs x-data="columns('key', ['Label', ...])"; cells carry :class="hidden('Label')". #}
-<div class="relative" x-data="{ open: false }" @click.outside="open=false">
-  <button type="button" @click="open=!open" class="inline-flex items-center gap-1 rounded-lg border border-stone-200 px-3 py-2 text-sm hover:bg-stone-100">Atur kolom {% icon "chevron" 14 %}</button>
-  <div x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-stone-200 bg-white p-2 text-sm shadow-lg">
+{% load i18n %}{% load ui %}{# "Atur kolom" menu (D68). Parent needs x-data="columns('key', ['Label', ...])"; cells carry :class="hidden('Label')". #}
+<div class="relative" x-data="{ open: false }" @click.outside="open=false" @keydown.escape="open=false">
+  <button type="button" @click="open=!open" class="gt-btn gt-btn--outline gt-btn--sm" :aria-expanded="open">{% translate "Atur kolom" %} {% icon "chevron" 16 %}</button>
+  <div x-show="open" x-cloak class="app-menu app-menu--cols">
     <template x-for="c in cols" :key="c">
-      <label class="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-stone-100"><input type="checkbox" style="width:auto" :checked="!off.includes(c)" @change="toggle(c)"><span x-text="c"></span></label>
+      <label class="gt-check app-menu__check"><input type="checkbox" :checked="!off.includes(c)" @change="toggle(c)"><span class="gt-check__title" x-text="c"></span></label>
     </template>
   </div>
 </div>

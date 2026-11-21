@@ -76,11 +76,12 @@ class SiteFixtures(TestCase):
         )
         labour = farm.create_expense(cat["TENAGA_KERJA"], "ELEMENT", 1150000, element=cls.element, cycle=cls.cycle)
         farm.approve_expense(labour, cls.owner)
-        farm.advance_cycle_stage(cls.cycle, CropCycle.Stage.HARVESTING)
+        farm.advance_cycle_stage(cls.cycle, CropCycle.Stage.HARVESTING, allow_skip=True)
         cls.batch = farm.record_harvest(cls.cycle, 100, 50, harvested_at=timezone.now() - timedelta(days=1))
         cls.lot_high = cls.batch.lots.get(product=cls.high)
         cls.lot_low = cls.batch.lots.get(product=cls.low)
         inventory.record_spoilage(cls.lot_low, 5, "ROT")
+        pos.open_shift(cls.users[ROLE_CASHIER], 0)  # D96
         cls.order = pos.checkout({cls.high.pk: 10}, "CASH", cls.users[ROLE_CASHIER])
 
         general = farm.create_expense(cat["UTILITAS"], "GENERAL", 300000, narration="Listrik")
@@ -188,7 +189,7 @@ class RoleMatrixTests(SiteFixtures):
             self.assertEqual(response.status_code, 200)
             self.assertTemplateUsed(response, "core/home.html")  # Ringkasan (D70)
             if role == ROLE_WORKER:
-                self.assertNotContains(response, "Rp ")
+                self.assertNotRegex(response.content.decode(), r"(?<![A-Za-z0-9])Rp\d")  # not inside a random CSRF token
             else:
                 self.assertContains(response, "Total penjualan")
 
@@ -204,11 +205,11 @@ class RoleMatrixTests(SiteFixtures):
             with self.subTest(page=name):
                 response = self.client.get(reverse(name))
                 self.assertEqual(response.status_code, 200)
-                self.assertNotContains(response, "Rp ")
+                self.assertNotRegex(response.content.decode(), r"(?<![A-Za-z0-9])Rp\d")  # not inside a random CSRF token
                 self.assertNotContains(response, "Biaya")
         # The same pages do show money to a manager.
         self.login(ROLE_MANAGER)
-        self.assertContains(self.client.get(reverse("farm:harvests")), "Rp 10.000")
+        self.assertContains(self.client.get(reverse("farm:harvests")), "Rp10.000")
 
     def test_nav_reflects_role(self):
         self.login(ROLE_CASHIER)
@@ -240,9 +241,9 @@ class FarmViewTests(SiteFixtures):
         self.login(ROLE_MANAGER)
         response = self.client.get(reverse("farm:cycles"))
         self.assertContains(response, "Stok menipis: NPK")
-        self.assertContains(response, "1 biaya menunggu persetujuan")
+        self.assertContains(response, "1 biaya menunggu")
         self.assertContains(response, "Majukan tahap")
-        self.assertContains(response, "Rp 75.000")  # unabsorbed cost of the closed cycle
+        self.assertContains(response, "Rp75.000")  # unabsorbed cost of the closed cycle
 
     def test_stage_advance_and_backward_rejected(self):
         self.login(ROLE_WORKER)
@@ -317,7 +318,15 @@ class FarmViewTests(SiteFixtures):
 
     def test_harvest_entry_and_protected_delete(self):
         self.login(ROLE_WORKER)
-        response = self.client.post(reverse("farm:harvests"), {"cycle": self.cycle.pk, "high_quality_kg": "20", "low_quality_kg": "4"})
+        data = {"cycle": self.cycle.pk, "high_quality_kg": "20", "low_quality_kg": "4"}
+        review = self.client.post(reverse("farm:harvests"), data)  # D85: first submit only reviews
+        self.assertContains(review, "Tinjau sebelum menyimpan")
+        self.assertFalse(HarvestBatch.objects.filter(high_quality_kg=20).exists())
+        self.assertNotContains(review, "HPP/kg HIGH")  # workers see no money
+        tampered = self.client.post(reverse("farm:harvests"), {**data, "high_quality_kg": "200",
+                                                                "review_sig": review.context["review_sig"]})
+        self.assertContains(tampered, "Tinjau sebelum menyimpan")  # changed values need a new review
+        response = self.client.post(reverse("farm:harvests"), {**data, "review_sig": review.context["review_sig"]})
         self.assertRedirects(response, reverse("farm:harvests"))
         new_batch = HarvestBatch.objects.latest("id")
         self.assertEqual(new_batch.lots.count(), 2)
@@ -390,7 +399,7 @@ class PosViewTests(SiteFixtures):
         self.assertEqual(order.total_revenue_idr, D("58000"))
         receipt = self.client.get(reverse("pos:receipt", args=[order.pk]))
         self.assertContains(receipt, order.order_number)
-        self.assertContains(receipt, "Rp 58.000")
+        self.assertContains(receipt, "Rp58.000")
         self.assertContains(receipt, "size: 58mm")
         self.assertNotContains(receipt, "HPP")
         a4 = self.client.get(reverse("pos:receipt", args=[order.pk]), {"size": "a4"})
@@ -409,12 +418,18 @@ class PosViewTests(SiteFixtures):
 
     def test_void_via_view(self):
         self.login(ROLE_MANAGER)
-        response = self.client.post(reverse("pos:void", args=[self.order.pk]))
+        url = reverse("pos:void", args=[self.order.pk])
+        self.assertContains(self.client.post(url, follow=True), "Pilih alasan")  # D94: reason required
+        self.assertContains(self.client.post(url, {"void_reason": "OTHER"}, follow=True), "wajib diberi catatan")
+        response = self.client.post(url, {"void_reason": "OTHER", "reason": "Salah timbang"})
         self.assertRedirects(response, reverse("pos:receipt", args=[self.order.pk]))
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, SaleOrder.Status.VOIDED)
-        self.assertContains(self.client.get(reverse("pos:receipt", args=[self.order.pk])), "DIBATALKAN")
-        response = self.client.post(reverse("pos:void", args=[self.order.pk]), follow=True)
+        self.assertEqual((self.order.void_reason, self.order.void_note), ("OTHER", "Salah timbang"))
+        receipt = self.client.get(reverse("pos:receipt", args=[self.order.pk]))
+        self.assertContains(receipt, "DIBATALKAN")
+        self.assertContains(receipt, "Salah timbang")
+        response = self.client.post(url, {"void_reason": "WRONG_ENTRY"}, follow=True)
         self.assertContains(response, "sudah dibatalkan")
         self.assertEqual(inventory.check_mass_balance(), [])
 
@@ -448,7 +463,7 @@ class TraceabilityTests(SiteFixtures):
         self.assertEqual(t["unabsorbed_cost"], D("0"))
 
     def test_forward_trace_excludes_voided_sales(self):
-        pos.void_order(self.order, self.owner)
+        pos.void_order(self.order, self.owner, reason="WRONG_ENTRY")
         trace = services.forward_trace(self.cycle)
         self.assertEqual(trace.totals["sold_kg"], D("0"))
         lot = next(lt for lt in trace.batches[0].lots if lt.lot.pk == self.lot_high.pk)
@@ -464,7 +479,7 @@ class TraceabilityTests(SiteFixtures):
         page = self.client.get(url)
         self.assertContains(page, "Batch #%d" % self.batch.pk)
         self.assertContains(page, self.order.order_number)
-        self.assertContains(page, "Cetak / Simpan PDF")
+        self.assertContains(page, "Cetak atau simpan sebagai PDF")
         response = self.client.get(url, {"format": "csv"})
         self.assertEqual(response["Content-Type"], "text/csv; charset=utf-8")
         self.assertIn("attachment", response["Content-Disposition"])
@@ -527,7 +542,7 @@ class AnalyticsTests(SiteFixtures):
         self.assertEqual(k["orders"], 1)
 
     def test_voided_orders_excluded(self):
-        pos.void_order(self.order, self.owner)
+        pos.void_order(self.order, self.owner, reason="WRONG_ENTRY")
         k = self.metrics()["kpis"]
         self.assertEqual(k["revenue"], D("0"))
         self.assertIsNone(k["gross_margin_pct"])
@@ -549,6 +564,8 @@ class AnalyticsTests(SiteFixtures):
         from inventory.models import Tax
         from invoicing import services as inv
 
+        from core.models import FarmProfile
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
         self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
         self.high.save()
         manager = self.users[ROLE_MANAGER]
@@ -571,7 +588,7 @@ class AnalyticsTests(SiteFixtures):
         self.assertEqual(trace.totals["revenue"], D("425000.00"))
         csv_text = "|".join(",".join(map(str, r)) for r in services.forward_csv_rows(trace))
         self.assertIn(invoice.number, csv_text)
-        inv.void_invoice(invoice, manager)
+        inv.void_invoice(invoice, manager, reason="WRONG_ENTRY")
         self.assertEqual(self.metrics()["kpis"]["revenue_invoice"], D("0"))
         self.assertEqual(services.forward_trace(self.cycle).totals["sold_kg"], D("10"))
 
@@ -584,8 +601,8 @@ class AnalyticsTests(SiteFixtures):
     def test_dashboard_page(self):
         self.login(ROLE_MANAGER)
         response = self.client.get(reverse("dashboard"))
-        self.assertContains(response, "Rp 200.000")
-        self.assertContains(response, "-Rp 295.000")
+        self.assertContains(response, "Rp200.000")
+        self.assertContains(response, "-Rp295.000")
         self.assertContains(response, "chart.umd.min.js")
         self.assertIn("margin", response.context["charts"])
         today = timezone.localdate()
@@ -601,9 +618,9 @@ class FilterTests(TestCase):
         return Template("{% load gotani %}" + tpl).render(Context(ctx))
 
     def test_rupiah(self):
-        self.assertEqual(self.render("{{ v|rupiah }}", v=D("15000.00")), "Rp 15.000")
-        self.assertEqual(self.render("{{ v|rupiah }}", v=D("1234567.50")), "Rp 1.234.568")
-        self.assertEqual(self.render("{{ v|rupiah }}", v=D("-2500.4")), "-Rp 2.500")
+        self.assertEqual(self.render("{{ v|rupiah }}", v=D("15000.00")), "Rp15.000")
+        self.assertEqual(self.render("{{ v|rupiah }}", v=D("1234567.50")), "Rp1.234.568")
+        self.assertEqual(self.render("{{ v|rupiah }}", v=D("-2500.4")), "-Rp2.500")
         self.assertEqual(self.render("{{ v|rupiah }}", v=None), "-")
 
     def test_kg_and_pct(self):

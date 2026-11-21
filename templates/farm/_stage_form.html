@@ -1,0 +1,30 @@
+{% load i18n %}{% load ui %}{% load gotani %}{# Majukan tahap (D84): next stage by default; skipping needs "Lewati tahap"; the dialog shows from → to, the pre-harvest check and the CLEARING write-off. #}
+{{ panel|json_script:panel.dom_id }}
+<div x-data="stageForm('{{ panel.dom_id }}')" class="{{ wrap_class|default:'' }}">
+  <template x-if="p.stages.length">
+    <form method="post" action="{% url 'farm:cycle_stage' cycle.pk %}" @submit.prevent="confirmAdvance($el)" class="app-stage">{% csrf_token %}
+      {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+      <input type="hidden" name="stage" :value="stage">
+      <span class="app-row__meta">{% translate "Berikutnya" %}</span>
+      <template x-if="!skip"><span class="gt-chip gt-chip--sm" x-text="p.stages[0].label"></span></template>
+      <template x-if="skip">
+        <select x-model="stage" class="app-field app-field--sm app-field--auto" aria-label="{% translate 'Tahap tujuan' %}">
+          <template x-for="s in p.stages" :key="s.value"><option :value="s.value" x-text="s.label" :selected="s.value === stage"></option></template>
+        </select>
+      </template>
+      <button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Majukan tahap" %}</button>
+      <label class="gt-check app-check--inline" x-show="p.stages.length > 1">
+        <input type="checkbox" name="skip" x-model="skip" @change="if (!skip) stage = p.stages[0].value"><span class="gt-check__title">{% translate "Lewati tahap" %}</span>
+      </label>
+    </form>
+  </template>
+  {% if panel.undo %}
+  {% with u_cycle=panel.cycle u_from=panel.undo.from u_to=panel.undo.to %}{% blocktranslate asvar t_undo_body %}{{ u_cycle }} kembali dari {{ u_from }} ke {{ u_to }}.{% endblocktranslate %}
+  <form method="post" action="{% url 'farm:cycle_stage_undo' cycle.pk %}" class="app-stage app-stage--undo"
+        data-confirm-title="{% translate 'Batalkan perpindahan tahap?' %}" data-confirm="{{ t_undo_body }}{% if panel.undo.reopens %} {% translate 'Siklus dibuka kembali.' %}{% endif %} {% translate 'Hanya bisa hari ini dan selama belum ada catatan baru.' %}"
+        data-confirm-action="{% translate 'Batalkan perpindahan' %}" data-confirm-reason="{% translate 'Alasan pembatalan' %}">{% csrf_token %}
+    <button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Urungkan" %}</button> {% with u_from=panel.undo.from u_to=panel.undo.to %}{% blocktranslate asvar tip_undo %}Batalkan perpindahan terakhir: {{ u_from }} → {{ u_to }}{% endblocktranslate %}{% info_tip tip_undo %}{% endwith %}
+  </form>
+  {% endwith %}
+  {% endif %}
+</div>

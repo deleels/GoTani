@@ -48,6 +48,7 @@ class PosFixtures(TestCase):
         self.manager = make_user("manager", ROLE_MANAGER)
         self.cashier = make_user("cashier", ROLE_CASHIER)
         self.worker = make_user("worker", ROLE_WORKER)
+        services.open_shift(self.cashier, 0)  # D96: no sales without an open shift
 
         self.variety = Variety.objects.create(name="Melon Golden", crop="Melon")
         self.element = FarmElement.objects.create(
@@ -280,7 +281,7 @@ class OrderNumberTests(PosFixtures):
 
     def test_voided_orders_keep_their_number(self):
         first = self.sell({self.high.pk: 1})
-        services.void_order(first, self.manager, now=NOON)
+        services.void_order(first, self.manager, now=NOON, reason="WRONG_ENTRY")
         self.assertEqual(self.sell({self.high.pk: 1}).order_number, "GT-20261119-0002")
 
     def test_retries_on_duplicate_number(self):
@@ -328,7 +329,7 @@ class VoidTests(PosFixtures):
 
     def test_restores_exact_lots(self):
         record_spoilage(self.lot_h2, 5, "ROT")  # unrelated movement after the sale
-        voided = services.void_order(self.order, self.manager, now=NOON + timedelta(hours=3))
+        voided = services.void_order(self.order, self.manager, now=NOON + timedelta(hours=3), reason="WRONG_ENTRY")
         self.reload(self.lot_h1, self.lot_h2, self.lot_l1)
 
         self.assertEqual(voided.status, SaleOrder.Status.VOIDED)
@@ -345,42 +346,42 @@ class VoidTests(PosFixtures):
         self.assertBalanced()
 
     def test_keeps_lines_and_allocations_for_traceability(self):
-        services.void_order(self.order, self.owner, now=NOON)
+        services.void_order(self.order, self.owner, now=NOON, reason="WRONG_ENTRY")
         self.assertEqual(self.order.lines.count(), 2)
         self.assertEqual(LineLotAllocation.objects.filter(line__order=self.order).count(), 3)
 
     def test_restored_stock_is_sellable_again_fifo(self):
-        services.void_order(self.order, self.owner, now=NOON)
+        services.void_order(self.order, self.owner, now=NOON, reason="WRONG_ENTRY")
         again = self.sell({self.high.pk: 100})
         self.assertEqual(again.lines.get().allocations.get().lot, self.lot_h1)
 
     def test_only_owner_or_manager(self):
         for user in (self.cashier, self.worker, None):
             with self.assertRaises(PermissionDenied):
-                services.void_order(self.order, user, now=NOON)
+                services.void_order(self.order, user, now=NOON, reason="WRONG_ENTRY")
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, SaleOrder.Status.COMPLETED)
 
     def test_cannot_void_twice(self):
-        services.void_order(self.order, self.owner, now=NOON)
+        services.void_order(self.order, self.owner, now=NOON, reason="WRONG_ENTRY")
         with self.assertRaisesMessage(ValidationError, "sudah dibatalkan"):
-            services.void_order(self.order, self.owner, now=NOON)
+            services.void_order(self.order, self.owner, now=NOON, reason="WRONG_ENTRY")
         self.assertEqual(StockLedger.objects.filter(movement_type=MT.POS_VOID).count(), 3)
         self.assertBalanced()
 
     def test_same_jakarta_day_only(self):
         with self.assertRaisesMessage(ValidationError, "hari yang sama"):
-            services.void_order(self.order, self.owner, now=datetime(2026, 11, 20, 0, 1, tzinfo=WIB))
+            services.void_order(self.order, self.owner, now=datetime(2026, 11, 20, 0, 1, tzinfo=WIB), reason="WRONG_ENTRY")
         self.assertFalse(StockLedger.objects.filter(movement_type=MT.POS_VOID).exists())
         # 23:59 WIB on the same day is still allowed.
-        services.void_order(self.order, self.owner, now=datetime(2026, 11, 19, 23, 59, tzinfo=WIB))
+        services.void_order(self.order, self.owner, now=datetime(2026, 11, 19, 23, 59, tzinfo=WIB), reason="WRONG_ENTRY")
 
     def test_can_void_helper(self):
         tomorrow = NOON + timedelta(days=1)
         self.assertTrue(services.can_void(self.order, self.manager, now=NOON))
         self.assertFalse(services.can_void(self.order, self.cashier, now=NOON))
         self.assertFalse(services.can_void(self.order, self.manager, now=tomorrow))
-        services.void_order(self.order, self.manager, now=NOON)
+        services.void_order(self.order, self.manager, now=NOON, reason="WRONG_ENTRY")
         self.order.refresh_from_db()
         self.assertFalse(services.can_void(self.order, self.manager, now=NOON))
 
@@ -405,6 +406,7 @@ class ConcurrentCheckoutTests(TransactionTestCase):
 
     def setUp(self):
         self.users = [make_user(f"kasir{i}", ROLE_CASHIER) for i in range(2)]
+        services.open_shift(self.users[0], 0)
         variety = Variety.objects.create(name="Cabai Rawit", crop="Cabai")
         element = FarmElement.objects.create(
             name="OF-1", element_type=FarmElement.ElementType.OPEN_FIELD, area_m2=D("200")
@@ -496,6 +498,8 @@ class TaxTests(PosFixtures):
     def test_taxed_line_snapshot_and_totals(self):
         from inventory.models import Tax
 
+        from core.models import FarmProfile
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
         ppn = Tax.objects.create(name="PPN", rate_pct=D("11"))
         self.high.tax = ppn
         self.high.save()
@@ -512,9 +516,173 @@ class TaxTests(PosFixtures):
         line.refresh_from_db()
         self.assertEqual(line.tax_rate_pct, D("11"))  # history unchanged
 
+    def test_non_pkp_farm_ignores_product_tax(self):
+        """D80: a non-PKP farm snapshots 0% even when the product has an active tax; history is kept."""
+        from core.models import FarmProfile
+        from inventory.models import Tax
+
+        self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"))
+        self.high.save()
+        untaxed = self.sell({self.high.pk: 1})
+        self.assertEqual((untaxed.total_tax_idr, untaxed.lines.get().tax_rate_pct), (D("0.00"), D("0")))
+        FarmProfile.objects.update_or_create(pk=1, defaults={"is_pkp": True})
+        self.assertEqual(self.sell({self.high.pk: 1}).lines.get().tax_rate_pct, D("11"))
+        FarmProfile.objects.filter(pk=1).update(is_pkp=False)
+        self.assertEqual(self.sell({self.high.pk: 1}).total_tax_idr, D("0.00"))
+        untaxed.refresh_from_db()
+        self.assertEqual(untaxed.total_tax_idr, D("0.00"))
+
     def test_inactive_tax_is_not_applied(self):
         from inventory.models import Tax
 
         self.high.tax = Tax.objects.create(name="PPN", rate_pct=D("11"), is_active=False)
         self.high.save()
         self.assertEqual(self.sell({self.high.pk: 1}).total_tax_idr, D("0.00"))
+
+
+class NumberFormatAndStepTests(PosFixtures):
+    """D81: Indonesian quantities at checkout and the per-product kasir step."""
+
+    def test_checkout_accepts_indonesian_and_machine_qty(self):
+        from django.urls import reverse
+
+        self.client.force_login(self.cashier)
+        self.client.post(reverse("pos:checkout"), {"product_id": [self.high.pk, self.low.pk],
+                                                   "qty_kg": ["1,5", "2.25"], "payment_method": "CASH"})
+        order = SaleOrder.objects.get()
+        self.assertEqual(order.lines.get(product=self.high).qty_kg, D("1.5"))
+        self.assertEqual(order.lines.get(product=self.low).qty_kg, D("2.25"))
+
+    def test_price_page_sets_price_and_pos_steps_half_kg(self):
+        """Phase 7 (D113): no per-product step; the POS − / + and the first tap are always 0.5 kg."""
+        from django.urls import reverse
+
+        self.client.force_login(self.manager)
+        self.client.post(reverse("farm:prices"), {"product": self.high.pk, "selling_price_idr": "25.000"})
+        self.high.refresh_from_db()
+        self.assertEqual(self.high.selling_price_idr, D("25000"))
+        self.client.force_login(self.cashier)
+        products = self.client.get(reverse("pos:stock"), HTTP_ACCEPT="application/json").json()["products"]
+        self.assertNotIn("step", products[0])
+        page = self.client.get(reverse("pos:register")).content.decode()
+        self.assertIn('data-num="kg"', page)
+        self.assertIn("const STEP_KG = 0.5;", page)
+
+
+class BigLineWarningTests(PosFixtures):
+    """D87: the POS warns when a line is > 3x the 30-day average line, never below 20 kg."""
+
+    def test_thresholds(self):
+        from django.utils import timezone
+
+        now = timezone.now()
+        self.sell({self.high.pk: 10}, at=now)
+        self.sell({self.high.pk: 2}, at=now)
+        self.sell({self.low.pk: 1}, at=now)
+        t = services.pos_big_line_thresholds()
+        self.assertEqual(t[self.high.pk], D("20"))  # avg 6 x 3 = 18 → floor 20
+        self.sell({self.high.pk: 30}, at=now)
+        self.assertEqual(services.pos_big_line_thresholds()[self.high.pk], D("42"))  # avg 14 x 3
+        self.client.force_login(self.cashier)
+        from django.urls import reverse
+
+        products = self.client.get(reverse("pos:stock"), HTTP_ACCEPT="application/json").json()["products"]
+        self.assertEqual({p["id"]: p["warn_kg"] for p in products}[self.low.pk], "20.000")
+
+
+class ShiftAndCashTests(PosFixtures):
+    """D94–D96: void reasons, cash received/change, one open shift, drawer maths, blind close, review."""
+
+    def shift(self):
+        return services.current_shift()
+
+    def test_no_sales_without_open_shift(self):
+        services.close_shift(self.shift(), self.cashier, {})
+        with self.assertRaises(ValidationError):
+            self.sell({self.high.pk: 1})
+        with self.assertRaises(ValidationError):  # one drawer: a second open shift is refused
+            services.open_shift(self.cashier, 0)
+            services.open_shift(self.manager, 0)
+
+    def test_cash_received_and_change(self):
+        order = services.checkout({self.high.pk: D("1.5")}, "CASH", self.cashier, cash_received="50.000")
+        self.assertEqual((order.cash_received_idr, order.change_idr), (D("50000"), D("20000")))
+        exact = services.checkout({self.high.pk: 1}, "CASH", self.cashier)
+        self.assertEqual(exact.change_idr, D("0"))
+        with self.assertRaises(ValidationError):
+            services.checkout({self.high.pk: 1}, "CASH", self.cashier, cash_received=10000)
+        qris = services.checkout({self.high.pk: 1}, "QRIS", self.cashier, cash_received=99999)
+        self.assertIsNone(qris.cash_received_idr)
+
+    def test_void_reason_and_cash_refund_in_current_shift(self):
+        order = self.sell({self.high.pk: 2})  # CASH 40.000
+        with self.assertRaises(ValidationError):
+            services.void_order(order, self.manager, reason="")
+        with self.assertRaises(ValidationError):
+            services.void_order(order, self.manager, reason="OTHER")
+        first = self.shift()
+        services.close_shift(first, self.cashier, {})
+        with self.assertRaises(ValidationError):  # cash refund needs an open drawer
+            services.void_order(order, self.manager, reason="CUSTOMER_CANCELLED", now=NOON)
+        second = services.open_shift(self.cashier, 100000)
+        services.void_order(order, self.manager, reason="CUSTOMER_CANCELLED", now=NOON)
+        refund = second.movements.get()
+        self.assertEqual((refund.kind, refund.amount_idr), ("SALE_REFUND", D("40000")))
+        self.assertEqual(services.shift_summary(second)["expected"], D("60000"))
+
+    def test_expected_cash_moves_and_blind_close(self):
+        from farm.models import Expense, ExpenseCategory
+
+        shift = self.shift()
+        self.sell({self.high.pk: 1})  # cash 20.000
+        self.sell({self.low.pk: 1}, method="QRIS")  # not in the drawer
+        services.add_cash_movement(shift, self.cashier, "TOP_UP", "50.000")
+        services.add_cash_movement(shift, self.cashier, "DEPOSIT", 30000, "setor")
+        services.add_cash_movement(shift, self.cashier, "EXPENSE", 5000, "tali",
+                                   category=ExpenseCategory.objects.get(code="LAINNYA"))
+        expense = Expense.objects.get(narration="tali")
+        self.assertEqual((expense.status, expense.payment_method, expense.scope), ("PENDING", "CASH", "GENERAL"))
+        with self.assertRaises(ValidationError):  # cannot take out more than the drawer holds
+            services.add_cash_movement(shift, self.cashier, "DEPOSIT", 999999)
+        self.assertEqual(services.shift_summary(shift)["expected"], D("35000"))
+        with self.assertRaises(PermissionDenied):  # another cashier cannot close it
+            services.close_shift(shift, make_user("kasir2", ROLE_CASHIER), {})
+        closed = services.close_shift(shift, self.cashier, {20000: 1, "10000": 1, 2000: 2})
+        self.assertEqual((closed.counted_idr, closed.difference_idr), (D("34000"), D("-1000")))
+        self.assertTrue(closed.needs_review)
+        with self.assertRaises(PermissionDenied):
+            services.review_shift(closed, self.cashier, "ok")
+        services.review_shift(closed, self.manager, "Uang receh terselip")
+        closed.refresh_from_db()
+        self.assertFalse(closed.needs_review)
+        self.assertEqual(services.suggested_float(), D("34000"))
+
+    def test_manager_force_close(self):
+        closed = services.close_shift(self.shift(), self.manager, {})
+        self.assertTrue(closed.force_closed)
+
+    def test_invoice_cash_into_drawer(self):
+        from invoicing import services as inv
+
+        buyer = inv.create_buyer(self.manager, name="Resto")
+        with self.assertRaises(ValidationError):
+            inv.record_payment(self.manager, buyer, amount_idr=10000, method="QRIS", paid_on=date(2026, 11, 19),
+                               into_drawer=True)
+        inv.record_payment(self.manager, buyer, amount_idr=10000, method="CASH", paid_on=date(2026, 11, 19),
+                           into_drawer=True)
+        self.assertEqual(services.shift_summary(self.shift())["by_kind"]["INVOICE_PAYMENT"], D("10000"))
+
+    def test_shift_page_and_register(self):
+        from django.urls import reverse
+
+        self.client.force_login(self.cashier)
+        page = self.client.get(reverse("pos:shift")).content.decode()
+        self.assertIn("hitung buta", page)  # cashier does not see the expected amount
+        self.client.post(reverse("pos:shift"), {"action": "move", "kind": "TOP_UP", "amount": "10.000"})
+        self.client.post(reverse("pos:shift"), {"action": "close", "d10000": "1"})
+        self.assertIsNone(services.current_shift())
+        self.assertContains(self.client.get(reverse("pos:register")), "Shift kasir belum dibuka")
+        r = self.client.post(reverse("pos:shift"), {"action": "open", "opening_float": "10.000",
+                                                    "next": reverse("pos:register")})
+        self.assertRedirects(r, reverse("pos:register"))
+        self.assertEqual(services.current_shift().opening_float_idr, D("10000"))

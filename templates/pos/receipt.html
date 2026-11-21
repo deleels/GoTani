@@ -1,66 +1,108 @@
 {% extends "pos/_layout.html" %}
-{% load gotani %}
-{% block title %}Struk {{ order.order_number }}{% endblock %}
+{% load i18n %}
+{% load static gotani ui %}
+{% block title %}{% translate "Struk" %} {{ order.order_number }}{% endblock %}
 {% block head %}
 <style>
-  .receipt { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #fff; color: #000; }
+  /* Receipt (Phase 5c): 58 mm layout unchanged, design-system font; A4 uses the shared document styles (gotani.css "Documents"). */
+  .receipt { font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; background: #fff; color: #000; }
   .receipt.size-58 { width: 58mm; padding: 3mm; font-size: 11px; line-height: 1.35; }
-  .receipt.size-a4 { width: 100%; max-width: 180mm; padding: 10mm; font-size: 13px; }
-  .receipt .void-stamp { border: 2px solid #b91c1c; color: #b91c1c; text-align: center; font-weight: 700; padding: 2px; margin: 4px 0; }
+  .receipt .rcpt-kv { display: grid; grid-template-columns: 9mm 1fr; }
+  .receipt .void-stamp { border: 1.5px solid #000; color: #000; text-align: center; font-weight: 600; padding: 2px; margin: 4px 0; }
   @media print {
     header, .no-print { display: none !important; }
     main { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-    .receipt { box-shadow: none !important; border: 0 !important; margin: 0 !important; }
+    .receipt, .app-doc { box-shadow: none !important; border: 0 !important; margin: 0 !important; }
   }
-  {% if size == "58" %}@page { size: 58mm auto; margin: 0; }{% else %}@page { size: A4; margin: 12mm; }{% endif %}
+  {% if size == "58" %}@page { size: 58mm auto; margin: 0; }{% else %}@page { size: A4; margin: 16mm; }{% endif %}
 </style>
 {% endblock %}
 {% block content %}
-<div class="no-print mb-4 flex flex-wrap items-center gap-2 text-sm">
-  <a href="?size=58" class="rounded px-3 py-1.5 {% if size == '58' %}bg-stone-800 text-white{% else %}bg-stone-100{% endif %}">Thermal 58 mm</a>
-  <a href="?size=a4" class="rounded px-3 py-1.5 {% if size == 'a4' %}bg-stone-800 text-white{% else %}bg-stone-100{% endif %}">A4</a>
-  <button onclick="window.print()" class="rounded bg-emerald-600 px-3 py-1.5 text-white">Cetak</button>
-  <a href="{% url 'pos:register' %}" class="rounded bg-stone-100 px-3 py-1.5">Transaksi baru</a>
+<div class="no-print app-receipt__bar">
+  <div class="gt-tabs gt-tabs--boxed" role="tablist" aria-label="{% translate 'Ukuran struk' %}">
+    <a href="?size=58" class="gt-tab" role="tab" {% if size == '58' %}aria-selected="true"{% endif %}>{% translate "Thermal 58 mm" %}</a>
+    <a href="?size=a4" class="gt-tab" role="tab" {% if size == 'a4' %}aria-selected="true"{% endif %}>{% translate "A4" %}</a>
+  </div>
+  <a href="{% url 'pos:register' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Transaksi baru" %}</a>
   {% if can_void %}
-  <form method="post" action="{% url 'pos:void' order.pk %}" class="ml-auto" onsubmit="return confirm('Batalkan seluruh order {{ order.order_number }}? Stok akan dikembalikan.')">{% csrf_token %}
-    <button class="rounded border border-red-300 px-3 py-1.5 text-red-700">Batalkan order</button>
+  {% blocktranslate asvar void_title with num=order.order_number %}Batalkan order {{ num }}?{% endblocktranslate %}<form method="post" action="{% url 'pos:void' order.pk %}" {% void_confirm void_title _("Seluruh order dibatalkan dan stok dikembalikan ke lot asalnya. Order tunai dikembalikan dari laci shift yang sedang buka.") _("Batalkan order") %}>{% csrf_token %}
+    <button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Batalkan order" %}</button>
   </form>
   {% endif %}
+  <button onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--sm app-receipt__print">{% translate "Cetak" %}</button>
 </div>
 
-<div class="receipt size-{{ size }} mx-auto border shadow-sm">
-  <div style="text-align:center">
-    <div style="font-weight:700;font-size:1.2em">GoTani</div>
-    <div>Hasil kebun segar</div>
-  </div>
-  <hr style="border-top:1px dashed #000;margin:6px 0">
-  <div>No   : {{ order.order_number }}</div>
-  <div>Tgl  : {{ order.created_at|date:"d-m-Y H:i" }}</div>
-  <div>Kasir: {{ order.cashier.get_full_name|default:order.cashier.username }}</div>
-  {% if order.status == 'VOIDED' %}<div class="void-stamp">DIBATALKAN {{ order.voided_at|date:"d-m-Y H:i" }}</div>{% endif %}
-  <hr style="border-top:1px dashed #000;margin:6px 0">
-  {% if size == "a4" %}
-  <table style="width:100%;border-collapse:collapse">
-    <thead><tr style="border-bottom:1px solid #000;text-align:left"><th>Produk</th><th style="text-align:right">Kg</th><th style="text-align:right">Harga/kg</th><th style="text-align:right">Subtotal</th></tr></thead>
+{# Receipts print in Indonesian whatever the cashier's UI language (Phase 7). #}
+{% language "id" %}{% if size == "a4" %}
+<article class="app-doc app-doc--compact">
+  <header class="app-doc__head">
+    <div class="app-doc__from">
+      <img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="{% translate 'GoTani' %}" class="app-doc__lockup">
+      <div class="app-doc__muted">{% translate "Hasil kebun segar" %}</div>
+    </div>
+    <div class="app-doc__title">
+      <div class="app-doc__kind">{% translate "STRUK" %}</div>
+      <div class="app-doc__number">{{ order.order_number }}</div>
+      {% if order.status == 'VOIDED' %}<div class="app-doc__stamp">{% translate "DIBATALKAN" %}</div>{% endif %}
+    </div>
+  </header>
+  <section class="app-doc__parties">
+    <div>
+      <div class="app-doc__label">{% translate "Kasir" %}</div>
+      <div class="app-doc__strong">{{ order.cashier.get_full_name|default:order.cashier.username }}</div>
+      {% if order.status == 'VOIDED' %}<div class="app-doc__muted">{% translate "Dibatalkan" %} {{ order.voided_at|date:"d-m-Y H:i" }} · {{ order.get_void_reason_display }}{% if order.void_note %}: {{ order.void_note }}{% endif %}</div>{% endif %}
+    </div>
+    <dl class="gt-kv gt-kv--compact app-doc__dates">
+      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ order.created_at|date:"d F Y H:i" }}</dd></div>
+      <div><dt>{% translate "Bayar" %}</dt><dd>{{ order.get_payment_method_display }}</dd></div>
+    </dl>
+  </section>
+  <table class="app-doc__table">
+    <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Harga/kg" %}</th><th class="num">{% translate "Subtotal" %}</th></tr></thead>
     <tbody>
     {% for line in order.lines.all %}
-      <tr><td>{{ line.product }}</td><td style="text-align:right">{{ line.qty_kg|kg }}</td><td style="text-align:right">{{ line.unit_price_idr|rupiah }}</td><td style="text-align:right">{{ line.subtotal_idr|rupiah }}</td></tr>
+      <tr><td>{{ line.product }}</td><td class="num">{{ line.qty_kg|kg }}</td><td class="num">{{ line.unit_price_idr|rupiah }}</td><td class="num">{{ line.subtotal_idr|rupiah }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
-  {% else %}
+  <dl class="gt-kv gt-kv--compact app-doc__totals">
+    <div class="app-doc__total"><dt>{% translate "Total" %}</dt><dd>{{ order.total_gross_idr|rupiah }}</dd></div>
+    {% if order.total_tax_idr %}<div><dt>{% translate "termasuk PPN" %}</dt><dd>{{ order.total_tax_idr|rupiah }}</dd></div>{% endif %}
+    {% if order.cash_received_idr is not None %}
+    <div><dt>{% translate "Tunai" %}</dt><dd>{{ order.cash_received_idr|rupiah }}</dd></div>
+    <div class="app-doc__due"><dt>{% translate "Kembali" %}</dt><dd>{{ order.change_idr|rupiah }}</dd></div>
+    {% endif %}
+  </dl>
+  <footer class="app-doc__foot">{% translate "Terima kasih!" %}</footer>
+</article>
+{% else %}
+<div class="receipt size-58 mx-auto border shadow-sm">
+  <div style="text-align:center">
+    <div style="font-weight:700;font-size:1.2em">GoTani</div>
+    <div>{% translate "Hasil kebun segar" %}</div>
+  </div>
+  <hr style="border-top:1px dashed #000;margin:6px 0">
+  <div class="rcpt-kv"><span>{% translate "No" %}</span><span>: {{ order.order_number }}</span></div>
+  <div class="rcpt-kv"><span>{% translate "Tgl" %}</span><span>: {{ order.created_at|date:"d-m-Y H:i" }}</span></div>
+  <div class="rcpt-kv"><span>{% translate "Kasir" %}</span><span>: {{ order.cashier.get_full_name|default:order.cashier.username }}</span></div>
+  {% if order.status == 'VOIDED' %}<div class="void-stamp">{% translate "DIBATALKAN" %} {{ order.voided_at|date:"d-m-Y H:i" }}<br>{{ order.get_void_reason_display }}{% if order.void_note %}: {{ order.void_note }}{% endif %}</div>{% endif %}
+  <hr style="border-top:1px dashed #000;margin:6px 0">
   {% for line in order.lines.all %}
   <div>{{ line.product.variety.name }} ({{ line.product.grade }})</div>
-  <div style="display:flex;justify-content:space-between"><span>&nbsp;{{ line.qty_kg|kg }} kg x {{ line.unit_price_idr|rupiah }}</span><span>{{ line.subtotal_idr|rupiah }}</span></div>
+  <div style="display:flex;justify-content:space-between"><span>&nbsp;{{ line.qty_kg|kg }} {% translate "kg x" %} {{ line.unit_price_idr|rupiah }}</span><span>{{ line.subtotal_idr|rupiah }}</span></div>
   {% endfor %}
+  <hr style="border-top:1px dashed #000;margin:6px 0">
+  <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1em"><span>{% translate "TOTAL" %}</span><span>{{ order.total_gross_idr|rupiah }}</span></div>
+  {% if order.total_tax_idr %}<div style="display:flex;justify-content:space-between;font-size:.9em"><span>{% translate "termasuk PPN" %}</span><span>{{ order.total_tax_idr|rupiah }}</span></div>{% endif %}
+  <div style="display:flex;justify-content:space-between"><span>{% translate "Bayar" %}</span><span>{{ order.get_payment_method_display }}</span></div>
+  {% if order.cash_received_idr is not None %}
+  <div style="display:flex;justify-content:space-between"><span>{% translate "Tunai" %}</span><span>{{ order.cash_received_idr|rupiah }}</span></div>
+  <div style="display:flex;justify-content:space-between;font-weight:700"><span>{% translate "Kembali" %}</span><span>{{ order.change_idr|rupiah }}</span></div>
   {% endif %}
   <hr style="border-top:1px dashed #000;margin:6px 0">
-  <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1em"><span>TOTAL</span><span>{{ order.total_gross_idr|rupiah }}</span></div>
-  {% if order.total_tax_idr %}<div style="display:flex;justify-content:space-between;font-size:.9em"><span>termasuk PPN</span><span>{{ order.total_tax_idr|rupiah }}</span></div>{% endif %}
-  <div style="display:flex;justify-content:space-between"><span>Bayar</span><span>{{ order.get_payment_method_display }}</span></div>
-  <hr style="border-top:1px dashed #000;margin:6px 0">
-  <div style="text-align:center">Terima kasih!</div>
+  <div style="text-align:center">{% translate "Terima kasih!" %}</div>
 </div>
+{% endif %}{% endlanguage %}
 {% endblock %}
 {% block scripts %}
 {% if is_new %}<script>try { localStorage.removeItem('gotani-cart'); } catch (e) {}</script>{% endif %}

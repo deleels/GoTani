@@ -1,4 +1,4 @@
-"""Display filters: `Rp 15.000` (whole Rupiah, ROUND_HALF_UP), kg and percentages."""
+"""Display filters: `Rp15.000` / `Rp15,000` by active language (whole Rupiah, ROUND_HALF_UP), kg and percentages."""
 
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -16,8 +16,14 @@ def _dec(value):
         return None
 
 
+def _seps():
+    from core.numbers import separators
+
+    return separators()
+
+
 def _thousands(n: Decimal) -> str:
-    return f"{int(n):,}".replace(",", ".")
+    return f"{int(n):,}".replace(",", _seps()[0])
 
 
 @register.filter
@@ -27,7 +33,7 @@ def rupiah(value):
         return "-"
     whole = d.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
     sign = "-" if whole < 0 else ""
-    return f"{sign}Rp {_thousands(abs(whole))}"
+    return f"{sign}Rp{_thousands(abs(whole))}"
 
 
 @register.filter
@@ -41,7 +47,15 @@ def kg(value):
     d = abs(d)
     whole = int(d)
     frac = f"{d - whole:f}"[2:].rstrip("0") if d != whole else ""
-    return f"{sign}{_thousands(Decimal(whole))}" + (f",{frac}" if frac else "")
+    return f"{sign}{_thousands(Decimal(whole))}" + (f"{_seps()[1]}{frac}" if frac else "")
+
+
+@register.filter
+def idnum(value, places=3):
+    """Pre-fill for a `data-num` input: `25000.00` → `25.000`, `0.500` → `0,5` (D81)."""
+    from core.numbers import format_id_decimal
+
+    return format_id_decimal(value, int(places)) if _dec(value) is not None else ""
 
 
 @register.filter
@@ -50,4 +64,4 @@ def pct(value, places=1):
     if d is None:
         return "-"
     q = Decimal(1).scaleb(-int(places))
-    return f"{d.quantize(q, rounding=ROUND_HALF_UP)}".replace(".", ",") + "%"
+    return f"{d.quantize(q, rounding=ROUND_HALF_UP)}".replace(".", _seps()[1]) + "%"

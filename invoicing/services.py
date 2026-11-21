@@ -5,6 +5,8 @@ Invariants:
 - Payment status and buyer credit are derived from `PaymentAllocation`, never stored.
 """
 
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
 from dataclasses import dataclass
 from datetime import timedelta
 from decimal import ROUND_HALF_UP, Decimal
@@ -20,6 +22,13 @@ from inventory.models import StockLedger, StockLot
 from inventory.services import exclusive_tax, move_lot_stock
 from pos.services import format_kg
 
+
+def _rp(value) -> str:
+    from farm.templatetags.gotani import rupiah
+
+    return rupiah(value)
+
+from .models import InvoicePaymentMethod
 from .models import (
     Buyer,
     Invoice,
@@ -40,7 +49,7 @@ def q_money(value) -> Decimal:
 
 def require_finance(actor):
     if not user_has_role(actor, ROLE_OWNER, ROLE_MANAGER):
-        raise PermissionDenied("Hanya OWNER/MANAGER yang dapat mengelola invoice dan pembayaran.")
+        raise PermissionDenied(_("Hanya OWNER/MANAGER yang dapat mengelola invoice dan pembayaran."))
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +85,7 @@ def compute_totals(lines, discount_type, discount_value, shipping) -> TotalsCalc
     discount_value = Decimal(discount_value or 0)
     shipping = q_money(shipping or 0)
     if shipping < 0:
-        raise ValidationError("Ongkos kirim tidak boleh negatif.")
+        raise ValidationError(_("Ongkos kirim tidak boleh negatif."))
     subtotals = [q_money(Decimal(qty) * Decimal(price)) for qty, price, _ in lines]
     subtotal = sum(subtotals, ZERO)
 
@@ -84,14 +93,14 @@ def compute_totals(lines, discount_type, discount_value, shipping) -> TotalsCalc
         discount = ZERO
     elif discount_type == Invoice.DiscountType.PERCENT:
         if not 0 <= discount_value <= 100:
-            raise ValidationError("Diskon persen harus 0–100.")
+            raise ValidationError(_("Diskon persen harus 0–100."))
         discount = q_money(subtotal * discount_value / 100)
     elif discount_type == Invoice.DiscountType.AMOUNT:
         discount = q_money(discount_value)
         if discount < 0 or discount > subtotal:
-            raise ValidationError("Diskon nominal harus antara 0 dan subtotal.")
+            raise ValidationError(_("Diskon nominal harus antara 0 dan subtotal."))
     else:
-        raise ValidationError("Jenis diskon tidak dikenal.")
+        raise ValidationError(_("Jenis diskon tidak dikenal."))
 
     shares = []
     remaining = discount
@@ -130,17 +139,17 @@ def _normalize_lines(raw_lines):
     for product, qty, price in raw_lines:
         qty = Decimal(qty).quantize(KG, rounding=ROUND_HALF_UP)
         if qty <= 0:
-            raise ValidationError(f"Jumlah {product} harus lebih dari 0 kg.")
+            raise ValidationError(_("Jumlah %(product)s harus lebih dari 0 kg.") % {"product": product})
         if price in (None, ""):
             price = product.selling_price_idr
         if price is None:
-            raise ValidationError(f"{product} belum memiliki harga; isi harga per kg.")
+            raise ValidationError(_("%(product)s belum memiliki harga; isi harga per kg.") % {"product": product})
         price = q_money(price)
         if price <= 0:
-            raise ValidationError(f"Harga {product} harus lebih dari 0.")
+            raise ValidationError(_("Harga %(product)s harus lebih dari 0.") % {"product": product})
         out.append((product, qty, price))
     if not out:
-        raise ValidationError("Invoice harus memiliki minimal satu baris.")
+        raise ValidationError(_("Invoice harus memiliki minimal satu baris."))
     return out
 
 
@@ -169,10 +178,11 @@ def save_draft(actor, buyer, raw_lines, *, discount_type=Invoice.DiscountType.NO
     if invoice is None:
         invoice = Invoice(created_by=actor)
     elif invoice.status != Invoice.Status.DRAFT:
-        raise ValidationError("Hanya invoice draf yang dapat diubah.")
+        raise ValidationError(_("Hanya invoice draf yang dapat diubah."))
     invoice.buyer = buyer
     invoice.discount_type = discount_type
-    invoice.discount_value = Decimal(discount_value or 0)
+    # "No discount" stores no value, so a number typed before switching to it does not linger (Phase 7).
+    invoice.discount_value = ZERO if discount_type == Invoice.DiscountType.NONE else Decimal(discount_value or 0)
     invoice.shipping_idr = q_money(shipping_idr or 0)
     invoice.notes = notes
     invoice.save()
@@ -189,7 +199,7 @@ def save_draft(actor, buyer, raw_lines, *, discount_type=Invoice.DiscountType.NO
 def delete_draft(actor, invoice):
     require_finance(actor)
     if invoice.status != Invoice.Status.DRAFT:
-        raise ValidationError("Hanya invoice draf yang dapat dihapus; invoice terbit harus dibatalkan.")
+        raise ValidationError(_("Hanya invoice draf yang dapat dihapus; invoice terbit harus dibatalkan."))
     invoice.delete()
 
 
@@ -220,15 +230,15 @@ def issue_invoice(invoice, actor, *, issue_date=None, due_date=None, now=None) -
     require_finance(actor)
     invoice = Invoice.objects.select_for_update().select_related("buyer").get(pk=invoice.pk)
     if invoice.status != Invoice.Status.DRAFT:
-        raise ValidationError("Invoice ini sudah terbit atau dibatalkan.")
+        raise ValidationError(_("Invoice ini sudah terbit atau dibatalkan."))
     lines = list(invoice.lines.select_related("product__variety", "product__tax"))
     if not lines:
-        raise ValidationError("Invoice harus memiliki minimal satu baris.")
+        raise ValidationError(_("Invoice harus memiliki minimal satu baris."))
     now = now or timezone.now()
     issue_date = issue_date or timezone.localdate(now)
     due_date = due_date or issue_date + timedelta(days=invoice.buyer.payment_terms_days)
     if due_date < issue_date:
-        raise ValidationError("Jatuh tempo tidak boleh sebelum tanggal terbit.")
+        raise ValidationError(_("Jatuh tempo tidak boleh sebelum tanggal terbit."))
 
     # Re-snapshot tax at issue time (D46), then lock lots exactly like checkout (D17).
     for ln in lines:
@@ -249,8 +259,8 @@ def issue_invoice(invoice, actor, *, issue_date=None, due_date=None, now=None) -
         pid = ln.product_id
         available = sum((lot.qty_remaining_kg for lot in lots_by_product[pid]), ZERO)
         if available < requested[pid] and pid not in [s[0] for s in shortages]:
-            shortages.append((pid, f"Stok {ln.product} tidak cukup: tersedia {format_kg(available)} kg, "
-                                   f"diminta {format_kg(requested[pid])} kg."))
+            shortages.append((pid, _("Stok %(product)s tidak cukup: tersedia %(available)s kg, diminta %(requested)s kg.")
+                                   % {"product": ln.product, "available": format_kg(available), "requested": format_kg(requested[pid])}))
     if shortages:
         raise ValidationError([msg for _, msg in shortages])
 
@@ -286,12 +296,15 @@ def issue_invoice(invoice, actor, *, issue_date=None, due_date=None, now=None) -
 
 
 @transaction.atomic
-def void_invoice(invoice, actor, *, now=None) -> Invoice:
-    """Restore exact kg to exact lots; released allocations become buyer credit (D56)."""
+def void_invoice(invoice, actor, *, reason: str = "", note: str = "", now=None) -> Invoice:
+    """Restore exact kg to exact lots; released allocations become buyer credit (D56). Needs a reason (D94)."""
+    from pos.services import validate_void_reason
+
     require_finance(actor)
+    reason, note = validate_void_reason(reason, note)
     invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != Invoice.Status.ISSUED:
-        raise ValidationError("Hanya invoice terbit yang dapat dibatalkan.")
+        raise ValidationError(_("Hanya invoice terbit yang dapat dibatalkan."))
     now = now or timezone.now()
     allocations = list(
         InvoiceLineLotAllocation.objects.filter(line__invoice=invoice).order_by("lot__product_id", "lot__harvested_at", "lot_id")
@@ -302,7 +315,8 @@ def void_invoice(invoice, actor, *, now=None) -> Invoice:
     invoice.allocations.all().delete()
     invoice.status = Invoice.Status.VOID
     invoice.voided_by, invoice.voided_at = actor, now
-    invoice.save(update_fields=["status", "voided_by", "voided_at"])
+    invoice.void_reason, invoice.void_note = reason, note
+    invoice.save(update_fields=["status", "voided_by", "voided_at", "void_reason", "void_note"])
     return invoice
 
 
@@ -312,8 +326,9 @@ def void_invoice(invoice, actor, *, now=None) -> Invoice:
 
 
 def buyer_credit(buyer) -> Decimal:
-    paid = InvoicePayment.objects.filter(buyer=buyer).aggregate(s=Sum("amount_idr"))["s"] or ZERO
-    allocated = PaymentAllocation.objects.filter(payment__buyer=buyer).aggregate(s=Sum("amount_idr"))["s"] or ZERO
+    paid = InvoicePayment.objects.filter(buyer=buyer, voided_at__isnull=True).aggregate(s=Sum("amount_idr"))["s"] or ZERO
+    allocated = PaymentAllocation.objects.filter(payment__buyer=buyer, payment__voided_at__isnull=True) \
+        .aggregate(s=Sum("amount_idr"))["s"] or ZERO
     return paid - allocated
 
 
@@ -322,46 +337,127 @@ def allocate_payment(actor, payment, invoice, amount) -> PaymentAllocation:
     require_finance(actor)
     amount = q_money(amount)
     if amount <= 0:
-        raise ValidationError("Jumlah alokasi harus lebih dari 0.")
+        raise ValidationError(_("Jumlah alokasi harus lebih dari 0."))
     payment = InvoicePayment.objects.select_for_update().get(pk=payment.pk)
     invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status != Invoice.Status.ISSUED:
-        raise ValidationError(f"{invoice} belum terbit atau sudah dibatalkan.")
+        raise ValidationError(_("%(invoice)s belum terbit atau sudah dibatalkan.") % {"invoice": invoice})
     if invoice.buyer_id != payment.buyer_id:
-        raise ValidationError("Pembayaran dan invoice harus milik pembeli yang sama.")
+        raise ValidationError(_("Pembayaran dan invoice harus milik pembeli yang sama."))
+    if payment.voided_at:
+        raise ValidationError(_("Pembayaran ini sudah dibatalkan."))
     if amount > payment.unallocated_idr:
-        raise ValidationError(f"Sisa pembayaran hanya {payment.unallocated_idr}.")
+        raise ValidationError(_("%(invoice)s: %(amount)s lebih dari sisa pembayaran %(unallocated)s.") % {
+            "invoice": invoice, "amount": _rp(amount), "unallocated": _rp(payment.unallocated_idr)})
     if amount > invoice.outstanding_idr:
-        raise ValidationError(f"Sisa tagihan {invoice} hanya {invoice.outstanding_idr}.")
+        raise ValidationError(_("%(invoice)s hanya bersisa %(outstanding)s; yang diisi %(amount)s.") % {
+            "invoice": invoice, "outstanding": _rp(invoice.outstanding_idr), "amount": _rp(amount)})
     return PaymentAllocation.objects.create(payment=payment, invoice=invoice, amount_idr=amount)
 
 
 @transaction.atomic
+def remove_allocation(actor, allocation, reason: str):
+    """OWNER/MANAGER take a payment allocation off an invoice, with a reason (D88).
+
+    The money returns to the buyer's credit (it is still the same payment); the invoice's derived
+    payment status follows. Logged in the audit log."""
+    from core.audit import log_event
+
+    require_finance(actor)
+    if not (reason or "").strip():
+        raise ValidationError(_("Alasan wajib diisi."))
+    allocation = PaymentAllocation.objects.select_for_update().select_related("invoice", "payment").get(pk=allocation.pk)
+    invoice = allocation.invoice
+    summary = f"Lepas pembayaran {allocation.amount_idr} dari {invoice}"
+    log_event(actor, "ALLOCATION_REMOVED", invoice, summary,
+              before={"amount_idr": allocation.amount_idr, "payment_id": allocation.payment_id},
+              after={"amount_idr": Decimal("0")}, reason=reason.strip())
+    allocation.delete()
+    return invoice
+
+
+@transaction.atomic
 def record_payment(actor, buyer, *, amount_idr, method, paid_on, reference="", proof=None,
-                   allocations=()) -> InvoicePayment:
-    """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit."""
+                   allocations=(), into_drawer=False, withholding_slip_no="", apply_leftover=False) -> InvoicePayment:
+    """Record money received; split over `allocations` [(invoice, amount)]; the rest is credit.
+    `into_drawer` (CASH only, D96): the cash goes into the open shift's drawer.
+    `apply_leftover` (D114): money left after `allocations` goes to the buyer's other open invoices, oldest due
+    first, instead of staying as credit."""
     require_finance(actor)
     amount = q_money(amount_idr)
     if amount <= 0:
-        raise ValidationError("Jumlah pembayaran harus lebih dari 0.")
-    if method not in PaymentMethod.values:
-        raise ValidationError("Metode pembayaran tidak dikenal.")
+        raise ValidationError(_("Jumlah pembayaran harus lebih dari 0."))
+    allocations = [(inv, q_money(a)) for inv, a in allocations if a and Decimal(a) > 0]
+    applied = sum((a for _inv, a in allocations), ZERO)
+    if applied > amount:
+        raise ValidationError(_("Alokasi ke %(invoices)s berjumlah %(applied)s, lebih dari uang yang diterima %(amount)s.") % {
+            "invoices": ", ".join(str(inv) for inv, _a in allocations), "applied": _rp(applied), "amount": _rp(amount)})
+    if method == InvoicePaymentMethod.PPH_WITHHELD and not buyer.withholds_tax:
+        raise ValidationError(_("%(buyer)s tidak ditandai memotong PPh.") % {"buyer": buyer})
+    if method not in InvoicePaymentMethod.values:
+        raise ValidationError(_("Metode pembayaran tidak dikenal."))
+    slip = (withholding_slip_no or "").strip()
+    if method == InvoicePaymentMethod.PPH_WITHHELD:
+        if not slip:
+            raise ValidationError(_("Potongan PPh wajib disertai nomor bukti potong."))
+        if into_drawer:
+            raise ValidationError(_("Potongan PPh bukan uang tunai; tidak bisa masuk laci."))
+    else:
+        slip = ""
     payment = InvoicePayment.objects.create(buyer=buyer, amount_idr=amount, method=method, paid_on=paid_on,
-                                            reference=reference, proof=proof or "", recorded_by=actor)
+                                            reference=reference, proof=proof or "", recorded_by=actor,
+                                            withholding_slip_no=slip)
+    if into_drawer:
+        from pos.models import CashMovement, Shift
+
+        if method != PaymentMethod.CASH:
+            raise ValidationError(_("Hanya pembayaran tunai yang bisa masuk laci kasir."))
+        shift = Shift.objects.select_for_update().filter(is_open=True).first()
+        if shift is None:
+            raise ValidationError(_('Tidak ada shift kasir yang terbuka; buka shift atau hilangkan centang "Masuk laci".'))
+        CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.INVOICE_PAYMENT, amount_idr=amount,
+                                    payment=payment, note=f"{buyer}"[:255], created_by=actor)
     for invoice, alloc_amount in allocations:
-        if alloc_amount and Decimal(alloc_amount) > 0:
-            allocate_payment(actor, payment, invoice, alloc_amount)
+        allocate_payment(actor, payment, invoice, alloc_amount)
+    if apply_leftover:
+        left = amount - applied
+        for invoice in open_invoices(buyer):
+            if left <= 0:
+                break
+            take = min(left, invoice.outstanding)
+            allocate_payment(actor, payment, invoice, take)
+            left -= take
     return payment
 
 
 @transaction.atomic
-def delete_payment(actor, payment):
+def void_payment(actor, payment, reason: str):
+    """OWNER voids a fully unallocated payment with a reason (D100). The record is kept for the 10-year
+    bookkeeping retention; it drops out of credit and reports. Cash that went into the drawer goes back
+    out of the open shift."""
+    from core.audit import log_event
+    from pos.models import CashMovement, Shift
+
     if not user_has_role(actor, ROLE_OWNER):
-        raise PermissionDenied("Hanya OWNER yang dapat menghapus pembayaran.")
+        raise PermissionDenied(_("Hanya OWNER yang dapat membatalkan pembayaran."))
+    if not (reason or "").strip():
+        raise ValidationError(_("Alasan pembatalan wajib diisi."))
     payment = InvoicePayment.objects.select_for_update().get(pk=payment.pk)
+    if payment.voided_at:
+        raise ValidationError(_("Pembayaran ini sudah dibatalkan."))
     if payment.allocations.exists():
-        raise ValidationError("Pembayaran yang sudah dialokasikan tidak dapat dihapus.")
-    payment.delete()
+        raise ValidationError(_("Lepas dulu alokasinya dari invoice sebelum membatalkan pembayaran."))
+    if payment.cash_movements.filter(kind=CashMovement.Kind.INVOICE_PAYMENT).exists():
+        shift = Shift.objects.select_for_update().filter(is_open=True).first()
+        if shift is None:
+            raise ValidationError(_("Uang ini masuk laci kasir; buka shift agar pengembaliannya tercatat."))
+        CashMovement.objects.create(shift=shift, kind=CashMovement.Kind.PAYMENT_VOID, amount_idr=payment.amount_idr,
+                                    payment=payment, note=reason.strip()[:255], created_by=actor)
+    payment.voided_at, payment.voided_by, payment.void_reason = timezone.now(), actor, reason.strip()
+    payment.save(update_fields=["voided_at", "voided_by", "void_reason"])
+    log_event(actor, "PAYMENT_VOID", payment, f"Batal {payment}", before={"amount_idr": payment.amount_idr},
+              after={"amount_idr": Decimal("0")}, reason=payment.void_reason)
+    return payment
 
 
 def receivables_summary(today=None):
@@ -377,18 +473,50 @@ def receivables_summary(today=None):
     return {"outstanding": outstanding, "overdue": overdue}
 
 
+AGEING_BUCKETS = [("current", _l("Belum jatuh tempo")), ("d1_30", _l("1–30 hari")), ("d31_60", _l("31–60 hari")),
+                  ("d61_90", _l("61–90 hari")), ("d90p", _l("> 90 hari"))]
+
+
+def _bucket(days_late: int) -> str:
+    if days_late <= 0:
+        return "current"
+    if days_late <= 30:
+        return "d1_30"
+    if days_late <= 60:
+        return "d31_60"
+    return "d61_90" if days_late <= 90 else "d90p"
+
+
+def receivables_ageing(today=None) -> dict:
+    """Outstanding per buyer by days past due (D97): 0 / 1–30 / 31–60 / 61–90 / > 90 (Asia/Jakarta)."""
+    today = today or timezone.localdate()
+    rows, totals = {}, {k: ZERO for k, _ in AGEING_BUCKETS}
+    invoices = Invoice.objects.filter(status=Invoice.Status.ISSUED).select_related("buyer").prefetch_related("allocations")
+    for inv in invoices:
+        due = inv.total_idr - sum((a.amount_idr for a in inv.allocations.all()), ZERO)
+        if due <= 0:
+            continue
+        key = _bucket((today - inv.due_date).days if inv.due_date else 0)
+        row = rows.setdefault(inv.buyer_id, {"buyer": inv.buyer, **{k: ZERO for k, _ in AGEING_BUCKETS}, "total": ZERO})
+        row[key] += due
+        row["total"] += due
+        totals[key] += due
+    ordered = sorted(rows.values(), key=lambda r: (-r["d90p"], -r["d61_90"], -r["total"]))
+    return {"buckets": AGEING_BUCKETS, "rows": ordered, "totals": {**totals, "total": sum(totals.values(), ZERO)}}
+
+
 @transaction.atomic
 def apply_credit(actor, buyer, invoice, amount) -> list:
     """Spend the buyer's credit on `invoice`: allocate older payments' unallocated remainders, oldest first."""
     require_finance(actor)
     amount = q_money(amount)
     if amount <= 0:
-        raise ValidationError("Jumlah kredit harus lebih dari 0.")
+        raise ValidationError(_("Jumlah kredit harus lebih dari 0."))
     if amount > buyer_credit(buyer):
-        raise ValidationError(f"Kredit pembeli hanya {buyer_credit(buyer)}.")
+        raise ValidationError(_("Kredit pembeli hanya %(buyer_credit)s.") % {"buyer_credit": buyer_credit(buyer)})
     created = []
     remaining = amount
-    for payment in InvoicePayment.objects.filter(buyer=buyer).order_by("paid_on", "id"):
+    for payment in InvoicePayment.objects.filter(buyer=buyer, voided_at__isnull=True).order_by("paid_on", "id"):
         if remaining <= 0:
             break
         take = min(remaining, payment.unallocated_idr)
@@ -417,3 +545,52 @@ def open_invoices(buyer):
             inv.outstanding = inv.total_idr - paid
             out.append(inv)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Customer value (Phase 7, D115)
+# ---------------------------------------------------------------------------
+
+
+def with_customer_value(buyers):
+    """Annotate a Buyer queryset with lifetime numbers over ISSUED invoices (draft and void never count):
+    `ltgp` (lifetime gross profit = net revenue − COGS), `orders`, `first_order`, `last_order`."""
+    from django.db.models import Count, DecimalField, Max, Min, OuterRef, Subquery, Value
+    from django.db.models.functions import Coalesce
+
+    from .models import InvoiceLine
+
+    money = DecimalField(max_digits=16, decimal_places=2)
+    issued = Invoice.objects.filter(buyer=OuterRef("pk"), status=Invoice.Status.ISSUED)
+    revenue = (InvoiceLine.objects.filter(invoice__buyer=OuterRef("pk"), invoice__status=Invoice.Status.ISSUED)
+               .order_by().values("invoice__buyer").annotate(s=Sum("net_revenue_idr")).values("s"))
+    cogs = issued.order_by().values("buyer").annotate(s=Sum("total_cogs_idr")).values("s")
+    return buyers.annotate(
+        ltgp=Coalesce(Subquery(revenue, output_field=money), Value(ZERO), output_field=money)
+        - Coalesce(Subquery(cogs, output_field=money), Value(ZERO), output_field=money),
+        orders=Coalesce(Subquery(issued.order_by().values("buyer").annotate(c=Count("id")).values("c")), Value(0)),
+        first_order=Subquery(issued.order_by().values("buyer").annotate(d=Min("issue_date")).values("d")),
+        last_order=Subquery(issued.order_by().values("buyer").annotate(d=Max("issue_date")).values("d")),
+    )
+
+
+@dataclass
+class Cadence:
+    avg_gap_days: float | None  # average days between orders (needs two orders)
+    days_since_last: int | None
+    at_risk: bool  # no order for more than twice the usual gap
+
+
+AT_RISK_FACTOR = 2
+
+
+def customer_cadence(buyer, today=None) -> Cadence:
+    """Buying rhythm from an annotated buyer (`with_customer_value`)."""
+    today = today or timezone.localdate()
+    last = getattr(buyer, "last_order", None)
+    since = (today - last).days if last else None
+    gap = None
+    if getattr(buyer, "orders", 0) >= 2 and buyer.first_order and last:
+        gap = (last - buyer.first_order).days / (buyer.orders - 1)
+    at_risk = bool(gap and since is not None and since > AT_RISK_FACTOR * gap)
+    return Cadence(avg_gap_days=gap, days_since_last=since, at_risk=at_risk)

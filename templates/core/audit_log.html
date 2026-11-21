@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load ui %}
+{% block title %}{% translate "Log aktivitas" %}{% endblock %}
+{% block content %}
+{# Log aktivitas (Phase 5b): gt-table; before → after as a compact kv list. #}
+{% include "components/page_header.html" with title=_("Log Aktivitas") subtitle=_("Jejak perubahan penting: siapa, kapan, sebelum → sesudah, dan alasannya. Tidak dapat diubah atau dihapus.") actions="" %}
+<section class="gt-card" aria-label="{% translate 'Log aktivitas' %}">
+  <form method="get" class="app-toolbar">
+    <select name="action" onchange="this.form.submit()" class="app-field app-field--sm app-field--auto" aria-label="{% translate 'Jenis perubahan' %}">
+      <option value="">{% translate "Semua perubahan" %}</option>
+      {% for code, label in actions %}<option value="{{ code }}" {% if code == action %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <span class="app-toolbar__search"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari log" %}</span><input name="q" value="{{ q }}" placeholder="{% translate 'Cari ringkasan, alasan, pengguna…' %}" class="app-field app-field--sm"></label></span>
+  </form>
+  <div class="app-table-wrap">
+    <table class="gt-table app-audit">
+      <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Oleh" %}</th><th>{% translate "Perubahan" %}</th><th>{% translate "Sebelum → sesudah" %}</th><th>{% translate "Alasan" %}</th></tr></thead>
+      <tbody>
+      {% for e in page.object_list %}
+        <tr>
+          <td class="app-muted app-nowrap">{{ e.created_at|date:"d M Y" }}<span class="app-sub">{{ e.created_at|date:"H:i" }}</span></td>
+          <td>{{ e.actor.get_full_name|default:e.actor.username|default:"Sistem" }}</td>
+          <td><span class="gt-chip gt-chip--sm">{{ e.action_label }}</span><span class="app-block app-strong">{{ e.summary }}</span></td>
+          <td>{% if e.changes %}<dl class="gt-kv gt-kv--compact app-audit__kv">{% for key, old, new in e.changes %}<div><dt>{{ key }}</dt><dd>{{ old|default_if_none:"—" }} → {{ new|default_if_none:"—" }}</dd></div>{% endfor %}</dl>{% else %}<span class="app-muted">—</span>{% endif %}</td>
+          <td class="app-muted">{{ e.reason|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div>
+          <span class="gt-callout__title">{% if q or action %}{% translate "Tidak ada catatan yang cocok." %}{% else %}{% translate "Belum ada aktivitas tercatat." %}{% endif %}</span>
+          <span class="gt-callout__body">{% translate "Perubahan harga dan status PKP akan muncul di sini secara otomatis." %}</span></div></div></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "components/pagination.html" %}
+</section>
+{% endblock %}

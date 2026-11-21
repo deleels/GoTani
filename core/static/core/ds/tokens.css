@@ -1,0 +1,157 @@
+/* GoTani — generated from tokens.json */
+:root, [data-theme="light"] {
+  --green-900: #0e3e1e; /* Deepest brand green. Immersive dark cards (Time Tracker, Download app promo). White text on it. */
+  --green-800: #13452d; /* Dark brand green. Featured stat card gradient start, darkest chart bar, gauge shadow segment, count badges (white text). */
+  --green-700: #175738; /* Primary action fill (Add Project, Start Meeting, Download). White text on it. */
+  --green-600: #227d53; /* Core brand green. Logo, active-nav indicator, chart bars, gauge fill, featured stat card gradient end, accent headings (Reminders title). */
+  --green-400: #5fbd92; /* Light brand green. Highlighted/current chart bar. Decorative only: fails as text on white. */
+  --green-100: #edf6ee; /* Green tint. Completed status pill and small count chip backgrounds. */
+  --lime-400: #9fdd4f; /* Positive-trend text on dark green ("Increased from last month" on the featured stat card). Only on green-700 or darker. */
+  --canvas: #ebecee; /* Outermost page background behind the app frame. */
+  --surface: #f7f7f7; /* App panels: sidebar, top bar and main content area. */
+  --surface-raised: #ffffff; /* Cards, search field, icon buttons and the app frame sitting on surface or canvas. */
+  --divider: #e9ebea; /* DERIVED. Hairline rows in tables, key-value lists and document lists (1px). Never around cards. */
+  --scrim: rgba(14, 30, 20, 0.45); /* DERIVED. Backdrop behind dialogs and sheets. */
+  --ink: #000000; /* Primary text and numbers: page title, card titles, stat values, names. 4.5:1+ on every surface. */
+  --ink-muted: #737373; /* Secondary text: email under the user name, section labels (MENU, GENERAL), inactive nav. 4.7:1 on surface-raised, 4.3:1 on surface — use ≥18px on surface. */
+  --ink-subtle: #8c918f; /* Tertiary text: page subtitle, due dates, chart day labels, legend text. SOURCE PAIR FAILS AA: ~3.3:1 on surface-raised, ~3.0:1 on surface; keep to 18px+ or switch to ink-muted for small text. */
+  --ink-inverse: #ffffff; /* Text and icons on green-600 and darker, and on danger. */
+  --outline: #183627; /* Border of outline buttons (Import Data, + New, Add Member) and circular arrow buttons. 1.5px. */
+  --hatch: #838b88; /* Diagonal hatch stripes on white for pending / not-yet data (chart bars, gauge remainder, Pending legend). */
+  --success-ink: #759980; /* Completed status pill text, on green-100. SOURCE PAIR FAILS AA (~3.0:1) — pills are 10–11px; pair with an icon or move to green-600 for compliance. */
+  --warning-ink: #d9b753; /* In Progress status pill text, on warning-bg. SOURCE PAIR FAILS AA (~1.9:1); do not rely on it alone to convey status. */
+  --warning-bg: #fdf9e8; /* In Progress status pill background. */
+  --pending-ink: #ac5460; /* Pending status pill text, on pending-bg. ~5.0:1. */
+  --pending-bg: #fceced; /* Pending status pill background. */
+  --late-bg: #fdeedd; /* DERIVED. Orange tint: overdue / late (Jatuh tempo) pill and warning icon disc. */
+  --late-ink: #a4500f; /* DERIVED. Orange ink on late-bg, ~5.3:1. Overdue words and warning icons. */
+  --warning-text: #8a6a0f; /* DERIVED. Readable yellow for warning sentences outside pills ("Expires Wed 2 Dec", "Waiting on you, by Mon 23 Nov"). ~5.0:1 on white and surface. */
+  --highlight: #fbefc4; /* DERIVED. Marker highlight behind the selected cell in a table and yellow notice banners; ink text on it. */
+  --danger: #de3633; /* Stop / destructive control fill (Time Tracker stop button), white icon on it. A state colour: keep it small. */
+  --focus: var(--green-600); /* Focus ring (2px, 2px offset) on every interactive element; also the selected border of RadioCard and ScenarioCard. */
+  --shadow-overlay: 0 24px 64px rgba(14, 62, 30, 0.18); /* Dialogs, passkey sheets, popovers. */
+  --shadow-float: 0 8px 24px rgba(14, 62, 30, 0.10); /* Hovered offering cards and dropdown menus. */
+}
+:root {
+  --space-1: 4px; /* Icon-to-text in pills and chips. */
+  --space-2: 8px; /* Title-to-meta gap in list rows; small button icon gap. */
+  --space-3: 12px; /* Gap between cards in the dashboard grid; icon-to-label in nav. */
+  --space-4: 16px; /* Gap between list rows; button horizontal padding (small). */
+  --space-5: 20px; /* Card padding; panel padding; gap between app frame panels. */
+  --space-6: 24px; /* Button horizontal padding (large); space between header and card grid. */
+  --space-8: 32px; /* Gap between nav groups (MENU / GENERAL). */
+  --space-10: 40px; /* Outer app frame padding. */
+  --radius-xs: 4px; /* Status pills, count badges. */
+  --radius-md: 12px; /* Inner tiles and small containers. */
+  --radius-lg: 20px; /* Cards and panels. */
+  --radius-xl: 40px; /* Outer app frame. */
+  --ease-out: cubic-bezier(.22, 1, .36, 1); /* Entrances and most transitions: fast start, soft landing. */
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1); /* Small overshoot for pops: arrows, checks, badges, chart labels. */
+  --dur-fast: 150ms; /* Hover and press colour changes. */
+  --dur-base: 240ms; /* Icon nudges, card lifts, arrow turns. */
+  --dur-enter: 640ms; /* Card entrances. */
+  --stagger: 70ms; /* Delay between neighbouring cards; rows inside use 55ms, bars 70ms. */
+  --radius-pill: 9999px; /* Buttons, search field, icon buttons, avatars, chart bars. */
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-display-xl: 500 60px/1.05 var(--font-sans); /* Stat values and gauge percentage. */
+  --text-display: 500 44px/1.15 var(--font-sans); /* Page titles and the timer readout. */
+  --text-heading-lg: 500 32px/38px var(--font-sans); /* Dialog titles, mobile screen headlines, section headlines. */
+  --text-heading-accent: 500 24px/30px var(--font-sans); /* Highlighted item inside a card (reminder title), set in green-600. */
+  --text-title: 500 20px/28px var(--font-sans); /* Card titles, brand wordmark size in nav. */
+  --text-body-lg: 400 18px/26px var(--font-sans); /* Page subtitle, sidebar nav items, list item names. */
+  --text-body: 400 16px/24px var(--font-sans); /* Default body text, button labels. */
+  --text-label: 500 14px/20px var(--font-sans); /* Small buttons, trend lines, legends, section labels (MENU). */
+  --text-caption: 400 12px/16px var(--font-sans); /* Due dates, "Working on …" meta lines. */
+  --text-micro: 500 10px/14px var(--font-sans); /* Status pills and count badges only. */
+}
+.display-xl {
+  font-family: var(--font-sans);
+  font-size: 60px;
+  line-height: 1.05;
+  font-weight: 500;
+  letter-spacing: -1.5px;
+}
+.display {
+  font-family: var(--font-sans);
+  font-size: 44px;
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -1px;
+}
+.heading-lg {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  line-height: 38px;
+  font-weight: 500;
+  letter-spacing: -0.6px;
+}
+.heading-accent {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  line-height: 30px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+}
+.title {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.2px;
+}
+.body-lg {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.label {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.caption {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.micro {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("fonts/PlusJakartaSans-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("fonts/PlusJakartaSans-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("fonts/PlusJakartaSans-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}

@@ -1,58 +1,77 @@
 {% extends "base_bare.html" %}
-{% load gotani %}
+{% load i18n %}
+{% load static ui gotani %}
 {% block title %}{{ invoice }}{% endblock %}
-{% block head %}
-<style>
-  @page { size: A4; margin: 14mm; }
-  .sheet { max-width: 190mm; margin: 0 auto; background: #fff; color: #111; padding: 12mm; font-size: 13px; }
-  .sheet table { width: 100%; border-collapse: collapse; }
-  .sheet th, .sheet td { padding: 6px 4px; border-bottom: 1px solid #e5e5e5; }
-  .sheet th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #555; }
-  .r { text-align: right; }
-  @media print { .no-print { display: none !important; } .sheet { padding: 0; box-shadow: none; } body { background: #fff; } }
-</style>
-{% endblock %}
+{% block head %}<style>@page { size: A4; margin: 16mm; }</style>{% endblock %}
 {% block body %}
-<div class="no-print flex justify-center gap-2 p-4 text-sm">
-  <button onclick="window.print()" class="rounded bg-emerald-600 px-4 py-2 text-white">Cetak / Simpan PDF</button>
-  <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="rounded bg-stone-200 px-4 py-2">Kembali</a>
+{# Invoice print (Phase 5c): A4 document on design-system tokens; styles in gotani.css under "Documents". #}
+<div class="no-print app-docbar">
+  <a href="{% url 'invoicing:invoice_detail' invoice.pk %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
+  <button type="button" onclick="window.print()" class="gt-btn gt-btn--primary gt-btn--md" title="{% translate 'Cetak atau simpan sebagai PDF' %}">{% translate "Cetak" %}</button>
 </div>
-<div class="sheet shadow">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
-    <div style="display:flex;gap:12px;align-items:center">
-      {% if profile.logo %}<img src="{{ profile.logo.url }}" alt="" style="height:56px;width:56px;object-fit:cover;border-radius:8px">{% endif %}
-      <div><div style="font-size:20px;font-weight:700">{{ profile.name }}</div>
-        <div style="color:#555;white-space:pre-line">{{ profile.address }}</div>{% if profile.phone %}<div style="color:#555">Telp. {{ profile.phone }}</div>{% endif %}</div>
+{# The document itself prints in the customer's document language (Phase 7). #}
+{% language invoice.buyer.document_language|default:"id" %}<article class="app-doc">
+  <header class="app-doc__head">
+    <div class="app-doc__from">
+      {% if profile.logo %}<img src="{{ profile.logo.url }}" alt="" class="app-doc__logo">{% else %}<img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="{% translate 'GoTani' %}" class="app-doc__lockup">{% endif %}
+      <div>
+        <div class="app-doc__farm">{{ profile.name|default:"GoTani" }}</div>
+        {% if profile.address %}<div class="app-doc__muted app-doc__pre">{{ profile.address }}</div>{% endif %}
+        {% if profile.phone %}<div class="app-doc__muted">{% translate "Telp." %} {{ profile.phone }}</div>{% endif %}
+      </div>
     </div>
-    <div class="r"><div style="font-size:24px;font-weight:700;letter-spacing:.05em">INVOICE</div>
-      <div style="font-family:monospace;font-size:15px">{{ invoice }}</div>
-      {% if invoice.status == 'VOID' %}<div style="color:#b91c1c;font-weight:700;border:2px solid #b91c1c;padding:2px 8px;margin-top:4px">DIBATALKAN</div>{% endif %}
+    <div class="app-doc__title">
+      <div class="app-doc__kind">{% translate "INVOICE" %}</div>
+      <div class="app-doc__number">{{ invoice }}</div>
+      {% if invoice.status == 'VOID' %}<div class="app-doc__stamp">{% translate "DIBATALKAN" %}</div>{% endif %}
     </div>
-  </div>
-  <div style="display:flex;justify-content:space-between;margin:24px 0 16px">
-    <div><div style="color:#555;font-size:11px;text-transform:uppercase">Ditagihkan kepada</div>
-      <div style="font-weight:600">{{ invoice.buyer.name }}</div>{% if invoice.buyer.company %}<div>{{ invoice.buyer.company }}</div>{% endif %}
-      <div style="white-space:pre-line;color:#555">{{ invoice.buyer.address }}</div></div>
-    <div class="r"><div>Tanggal: {{ invoice.issue_date|date:"d F Y"|default:"—" }}</div><div>Jatuh tempo: {{ invoice.due_date|date:"d F Y"|default:"—" }}</div></div>
-  </div>
-  <table>
-    <thead><tr><th>Produk</th><th class="r">Kg</th><th class="r">Harga/kg</th><th class="r">PPN</th><th class="r">Jumlah</th></tr></thead>
+  </header>
+
+  <section class="app-doc__parties">
+    <div>
+      <div class="app-doc__label">{% translate "Ditagihkan kepada" %}</div>
+      <div class="app-doc__strong">{{ invoice.buyer.name }}</div>
+      {% if invoice.buyer.company %}<div>{{ invoice.buyer.company }}</div>{% endif %}
+      {% if invoice.buyer.address %}<div class="app-doc__muted app-doc__pre">{{ invoice.buyer.address }}</div>{% endif %}
+    </div>
+    <dl class="gt-kv gt-kv--compact app-doc__dates">
+      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ invoice.issue_date|date:"d F Y"|default:"—" }}</dd></div>
+      <div><dt>{% translate "Jatuh tempo" %}</dt><dd>{{ invoice.due_date|date:"d F Y"|default:"—" }}</dd></div>
+    </dl>
+  </section>
+
+  <table class="app-doc__table">
+    <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Harga/kg" %}</th><th class="num">{% translate "PPN" %}</th><th class="num">{% translate "Jumlah" %}</th></tr></thead>
     <tbody>
     {% for ln in invoice.lines.all %}
-      <tr><td>{{ ln.product }}</td><td class="r">{{ ln.qty_kg|kg }}</td><td class="r">{{ ln.unit_price_idr|rupiah }}</td><td class="r">{% if ln.tax_rate_pct %}{{ ln.tax_rate_pct|pct:0 }}{% else %}—{% endif %}</td><td class="r">{{ ln.line_subtotal_idr|rupiah }}</td></tr>
+      <tr><td>{{ ln.product }}</td><td class="num">{{ ln.qty_kg|kg }}</td><td class="num">{{ ln.unit_price_idr|rupiah }}</td><td class="num">{% if ln.tax_rate_pct %}{{ ln.tax_rate_pct|pct:0 }}{% else %}—{% endif %}</td><td class="num">{{ ln.line_subtotal_idr|rupiah }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
-  <table style="width:50%;margin-left:auto;margin-top:12px">
-    <tr><td>Subtotal</td><td class="r">{{ invoice.subtotal_idr|rupiah }}</td></tr>
-    {% if invoice.discount_idr %}<tr><td>Diskon</td><td class="r">− {{ invoice.discount_idr|rupiah }}</td></tr>{% endif %}
-    <tr><td>PPN</td><td class="r">{{ invoice.tax_idr|rupiah }}</td></tr>
-    {% if invoice.shipping_idr %}<tr><td>Ongkos kirim</td><td class="r">{{ invoice.shipping_idr|rupiah }}</td></tr>{% endif %}
-    <tr><td style="font-weight:700;font-size:15px">Total</td><td class="r" style="font-weight:700;font-size:15px">{{ invoice.total_idr|rupiah }}</td></tr>
-    {% if invoice.status == 'ISSUED' %}<tr><td>Dibayar</td><td class="r">{{ paid|rupiah }}</td></tr>
-    <tr><td style="font-weight:600">Sisa tagihan</td><td class="r" style="font-weight:600">{{ outstanding|rupiah }}</td></tr>{% endif %}
-  </table>
-  {% if invoice.notes %}<p style="margin-top:20px;color:#555;white-space:pre-line">{{ invoice.notes }}</p>{% endif %}
-  <p style="margin-top:32px;color:#777;font-size:11px">Terima kasih atas kerja samanya.</p>
-</div>
+
+  <dl class="gt-kv gt-kv--compact app-doc__totals">
+    <div><dt>{% translate "Subtotal" %}</dt><dd>{{ invoice.subtotal_idr|rupiah }}</dd></div>
+    {% if invoice.discount_idr %}<div><dt>{% translate "Diskon" %}</dt><dd>− {{ invoice.discount_idr|rupiah }}</dd></div>{% endif %}
+    {% if invoice.tax_idr or farm_is_pkp %}<div><dt>{% translate "PPN" %}</dt><dd>{{ invoice.tax_idr|rupiah }}</dd></div>{% endif %}
+    {% if invoice.shipping_idr %}<div><dt>{% translate "Ongkos kirim" %}</dt><dd>{{ invoice.shipping_idr|rupiah }}</dd></div>{% endif %}
+    <div class="app-doc__total"><dt>{% translate "Total" %}</dt><dd>{{ invoice.total_idr|rupiah }}</dd></div>
+    {% if invoice.status == 'ISSUED' %}
+    <div><dt>{% translate "Dibayar" %}</dt><dd>{{ paid|rupiah }}</dd></div>
+    <div class="app-doc__due"><dt>{% translate "Sisa tagihan" %}</dt><dd>{{ outstanding|rupiah }}</dd></div>
+    {% endif %}
+  </dl>
+
+  {% if invoice.notes %}<p class="app-doc__notes app-doc__pre">{{ invoice.notes }}</p>{% endif %}
+
+  {% if invoice.needs_meterai %}
+  <div class="app-doc__sign">
+    <div class="app-doc__meterai">{% translate "Meterai Rp10.000" %}</div>
+    <div class="app-doc__signline">{{ profile.name|default:"GoTani" }}</div>
+  </div>
+  {% endif %}
+
+  <footer class="app-doc__foot">
+    {% if invoice.buyer.payment_terms_days %}{% translate "Termin pembayaran" %} {{ invoice.buyer.payment_terms_days }} {% translate "hari sejak tanggal invoice." %} {% endif %}{% translate "Terima kasih atas kerja samanya." %}
+  </footer>
+</article>{% endlanguage %}
 {% endblock %}

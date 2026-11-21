@@ -5,6 +5,9 @@ database cache (weather 30 min, NDVI/soil 24 h); a missing key or any failure
 returns None so the UI can show "data tidak tersedia" — never an exception.
 """
 
+from django.utils.translation import gettext_lazy as _l
+from django.utils.translation import gettext as _
+import hashlib
 import logging
 import math
 from datetime import timedelta
@@ -37,18 +40,37 @@ MAX_HA = Decimal("1000")
 TOTAL_MAX_HA = Decimal("1000")  # Agromonitoring free-tier cap
 EARTH_R = 6371008.8  # mean Earth radius (m)
 
+# Agromonitoring only accepts polygons of 1–3000 ha (D79). Smaller polygons are still
+# mapped (greenhouses), they just get no satellite/soil data — with an explicit reason.
+AGRO_MIN_HA = Decimal("1")
+AGRO_MAX_HA = Decimal("3000")
+AGRO_FAIL_TTL = 10 * 60  # back off re-registering a rejected polygon
+SAT_EMPTY_TTL = 3 * 60 * 60  # no imagery yet → re-check sooner than 24 h
+
+# Why satellite/soil data is unavailable (D79). None = available.
+SAT_NO_KEY = "NO_KEY"
+SAT_TOO_SMALL = "TOO_SMALL"
+SAT_KEY_REJECTED = "KEY_REJECTED"
+SAT_POLYGON_REJECTED = "POLYGON_REJECTED"
+SAT_API_ERROR = "API_ERROR"
+SAT_NO_IMAGERY = "NO_IMAGERY"
+SAT_COVERED = "COVERED"
+
+# D90: a satellite sees the roof, not the crop, over these element types — no vegetation indices.
+COVERED_TYPES = {"GREENHOUSE", "SCREEN_HOUSE", "HYDROPONIC"}
+
 WEATHER_CODES = {
-    0: "Cerah", 1: "Cerah berawan", 2: "Berawan sebagian", 3: "Berawan", 45: "Berkabut", 48: "Berkabut",
-    51: "Gerimis ringan", 53: "Gerimis", 55: "Gerimis lebat", 61: "Hujan ringan", 63: "Hujan", 65: "Hujan lebat",
-    66: "Hujan beku", 67: "Hujan beku", 71: "Salju", 73: "Salju", 75: "Salju", 80: "Hujan lokal",
-    81: "Hujan lokal", 82: "Hujan deras", 95: "Badai petir", 96: "Badai petir", 99: "Badai petir",
+    0: _l("Cerah"), 1: _l("Cerah berawan"), 2: _l("Berawan sebagian"), 3: _l("Berawan"), 45: _l("Berkabut"), 48: _l("Berkabut"),
+    51: _l("Gerimis ringan"), 53: _l("Gerimis"), 55: _l("Gerimis lebat"), 61: _l("Hujan ringan"), 63: _l("Hujan"), 65: _l("Hujan lebat"),
+    66: _l("Hujan beku"), 67: _l("Hujan beku"), 71: _l("Salju"), 73: _l("Salju"), 75: _l("Salju"), 80: _l("Hujan lokal"),
+    81: _l("Hujan lokal"), 82: _l("Hujan deras"), 95: _l("Badai petir"), 96: _l("Badai petir"), 99: _l("Badai petir"),
 }
 RAIN_CODES = {61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99}
 
 
 def require_editor(actor):
     if not user_has_role(actor, ROLE_OWNER, ROLE_MANAGER):
-        raise PermissionDenied("Hanya OWNER/MANAGER yang dapat mengubah poligon.")
+        raise PermissionDenied(_("Hanya OWNER/MANAGER yang dapat mengubah poligon."))
 
 
 # ---------------------------------------------------------------------------
@@ -77,21 +99,21 @@ def clean_geometry(geojson) -> tuple[dict, Decimal]:
     if isinstance(geojson, dict) and geojson.get("type") == "Feature":
         geojson = geojson.get("geometry")
     if not isinstance(geojson, dict) or geojson.get("type") != "Polygon":
-        raise ValidationError("Geometri harus berupa satu poligon.")
+        raise ValidationError(_("Geometri harus berupa satu poligon."))
     try:
         geom = shape(geojson)
     except (ValueError, TypeError, KeyError, IndexError, AttributeError):
-        raise ValidationError("Koordinat poligon tidak valid.")
+        raise ValidationError(_("Koordinat poligon tidak valid."))
     if geom.is_empty or len(geom.exterior.coords) < 4:
-        raise ValidationError("Poligon minimal memiliki 3 titik.")
-    for lon, lat, *_ in geom.exterior.coords:
+        raise ValidationError(_("Poligon minimal memiliki 3 titik."))
+    for lon, lat, *_rest in geom.exterior.coords:
         if not (-180 <= lon <= 180 and -90 <= lat <= 90):
-            raise ValidationError("Koordinat di luar jangkauan bujur/lintang.")
+            raise ValidationError(_("Koordinat di luar jangkauan bujur/lintang."))
     if not geom.is_valid:
-        raise ValidationError(f"Poligon tidak valid (berpotongan sendiri?): {explain_validity(geom)}.")
+        raise ValidationError(_("Poligon tidak valid (berpotongan sendiri?): %(explain_validity)s.") % {"explain_validity": explain_validity(geom)})
     area = polygon_area_ha(geom)
     if area < MIN_HA or area > MAX_HA:
-        raise ValidationError(f"Luas poligon {area} ha di luar batas {MIN_HA}–{MAX_HA} ha.")
+        raise ValidationError(_("Luas poligon %(area)s ha di luar batas %(MIN_HA)s–%(MAX_HA)s ha.") % {"area": area, "MIN_HA": MIN_HA, "MAX_HA": MAX_HA})
     return {"type": "Polygon", "coordinates": geojson["coordinates"]}, area
 
 
@@ -101,14 +123,14 @@ def _check_total(area, exclude_pk=None):
         qs = qs.exclude(pk=exclude_pk)
     total = (qs.aggregate(s=Sum("area_ha"))["s"] or Decimal("0")) + area
     if total > TOTAL_MAX_HA:
-        raise ValidationError(f"Total luas semua poligon ({total} ha) melebihi batas {TOTAL_MAX_HA} ha.")
+        raise ValidationError(_("Total luas semua poligon (%(total)s ha) melebihi batas %(TOTAL_MAX_HA)s ha.") % {"total": total, "TOTAL_MAX_HA": TOTAL_MAX_HA})
 
 
 @transaction.atomic
 def create_polygon(actor, name, geojson, element=None) -> FieldPolygon:
     require_editor(actor)
     if not (name or "").strip():
-        raise ValidationError("Nama poligon wajib diisi.")
+        raise ValidationError(_("Nama poligon wajib diisi."))
     geometry, area = clean_geometry(geojson)
     _check_total(area)
     return FieldPolygon.objects.create(name=name.strip(), geojson=geometry, area_ha=area, element=element,
@@ -122,7 +144,7 @@ def update_polygon(actor, polygon, *, name=None, geojson=None, element=False) ->
     polygon = FieldPolygon.objects.select_for_update().get(pk=polygon.pk)
     if name is not None:
         if not name.strip():
-            raise ValidationError("Nama poligon wajib diisi.")
+            raise ValidationError(_("Nama poligon wajib diisi."))
         polygon.name = name.strip()
     if geojson is not None:
         geometry, area = clean_geometry(geojson)
@@ -130,6 +152,7 @@ def update_polygon(actor, polygon, *, name=None, geojson=None, element=False) ->
         if geometry != polygon.geojson:
             _agro_delete(polygon.agro_polygon_id)  # remote geometry is immutable → re-register lazily
             polygon.agro_polygon_id = None
+            cache.delete(_fail_key(polygon))  # new shape gets a fresh registration attempt
         polygon.geojson, polygon.area_ha = geometry, area
     if element is not False:
         polygon.element = element
@@ -147,7 +170,7 @@ def use_plotted_area(actor, polygon):
     """Explicit "use plotted area" action: copy the polygon area onto its element (rule 33)."""
     require_editor(actor)
     if polygon.element is None:
-        raise ValidationError("Poligon belum ditautkan ke elemen.")
+        raise ValidationError(_("Poligon belum ditautkan ke elemen."))
     element = polygon.element
     element.area_m2 = (polygon.area_ha * 10000).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     element.save(update_fields=["area_m2"])
@@ -175,12 +198,13 @@ def _get_json(url, params):
 
 
 def _cached(key, ttl, fetch):
+    """`ttl` may be a callable of the fetched value (e.g. shorter for empty results)."""
     hit = cache.get(key)
     if hit is not None:
         return hit
     value = fetch()
     if value is not None:
-        cache.set(key, value, ttl)
+        cache.set(key, value, ttl(value) if callable(ttl) else ttl)
     return value
 
 
@@ -200,48 +224,169 @@ def _id_date(iso: str) -> str:
         return iso
 
 
-def _parse_weather(data):
+# Spray window (D89): advice only, never blocks a pesticide report.
+SPRAY_BAD_WIND = 15  # km/h
+SPRAY_FAIR_WIND = 10
+SPRAY_BAD_RAIN_PCT = 50  # within the next SPRAY_LOOKAHEAD_H hours
+SPRAY_HOT_C = 32
+SPRAY_LOOKAHEAD_H = 4
+SPRAY_LABELS = {"GOOD": _l("Baik"), "FAIR": _l("Cukup"), "BAD": _l("Tidak direkomendasikan")}
+
+
+def spray_rating(now: dict, ahead: list) -> dict:
+    """GOOD / FAIR / BAD for spraying from the current hour and the next few hours (D89).
+
+    Bad: wind > 15 km/h, rain chance ≥ 50% in the next 4 h, or raining now.
+    Fair: temperature > 32 °C or wind 10–15 km/h. Otherwise good."""
+    reasons = []
+    wind = now.get("wind") or 0
+    raining = (now.get("rain_mm") or 0) > 0 or now.get("code") in RAIN_CODES
+    max_pct = max([h.get("rain_pct") or 0 for h in ahead] or [0])
+    if raining:
+        reasons.append(_("sedang hujan"))
+    if wind > SPRAY_BAD_WIND:
+        reasons.append(_("angin %(wind)s km/j") % {"wind": round(wind)})
+    if max_pct >= SPRAY_BAD_RAIN_PCT:
+        reasons.append(_("peluang hujan %(pct)s%% dalam %(hours)s jam") % {"pct": round(max_pct), "hours": SPRAY_LOOKAHEAD_H})
+    if reasons:
+        level = "BAD"
+    else:
+        if (now.get("temp") or 0) > SPRAY_HOT_C:
+            reasons.append(_("panas %(temp)s °C (semprot pagi/sore)") % {"temp": round(now['temp'])})
+        if SPRAY_FAIR_WIND <= wind <= SPRAY_BAD_WIND:
+            reasons.append(_("angin %(wind)s km/j") % {"wind": round(wind)})
+        level = "FAIR" if reasons else "GOOD"
+    return {"level": level, "label": SPRAY_LABELS[level], "reasons": reasons}
+
+
+def _hours(data):
+    """Hourly rows from now on (48 h)."""
+    h = data.get("hourly") or {}
+    times = h.get("time") or []
+    now_key = (data.get("current") or {}).get("time", "")[:13]
+
+    def col(name, i):
+        values = h.get(name) or []
+        return values[i] if i < len(values) else None
+
+    rows = [{"time": t, "temp": col("temperature_2m", i), "rain_pct": col("precipitation_probability", i),
+             "rain_mm": col("precipitation", i) or 0, "wind": col("wind_speed_10m", i), "gust": col("wind_gusts_10m", i),
+             "code": col("weather_code", i)} for i, t in enumerate(times) if t[:13] >= now_key]
+    for i, row in enumerate(rows):
+        row["spray"] = spray_rating(row, rows[i + 1:i + 1 + SPRAY_LOOKAHEAD_H])["level"]
+    return rows[:48]
+
+
+def _parse_weather(data, today=None):
     try:
         cur, daily = data["current"], data["daily"]
-        days = []
+        today = (today or timezone.localdate()).isoformat()
+        n = len(daily["time"])
+
+        def col(name):
+            return daily.get(name) or [None] * n
+
+        days, history = [], []
         for i, day in enumerate(daily["time"]):
             code = daily["weather_code"][i]
-            days.append({
+            row = {
                 "date": day, "code": code, "label": WEATHER_CODES.get(code, "—"),
                 "tmax": daily["temperature_2m_max"][i], "tmin": daily["temperature_2m_min"][i],
-                "rain_mm": daily["precipitation_sum"][i] or 0,
-                "rain_pct": (daily.get("precipitation_probability_max") or [None] * len(daily["time"]))[i],
-            })
+                "rain_mm": daily["precipitation_sum"][i] or 0, "rain_pct": col("precipitation_probability_max")[i],
+                "et0_mm": col("et0_fao_evapotranspiration")[i], "gust_max": col("wind_gusts_10m_max")[i],
+            }
+            (history if day < today else days).append(row)
         rainy = [d for d in days[:3] if d["code"] in RAIN_CODES and ((d["rain_pct"] or 0) >= 70 or d["rain_mm"] >= 20)]
+        current = {
+            "temp": cur["temperature_2m"], "humidity": cur.get("relative_humidity_2m"),
+            "wind": cur.get("wind_speed_10m"), "rain_mm": cur.get("precipitation"),
+            "code": cur["weather_code"], "label": WEATHER_CODES.get(cur["weather_code"], "—"),
+        }
+        hours = _hours(data)
         return {
-            "current": {
-                "temp": cur["temperature_2m"], "humidity": cur.get("relative_humidity_2m"),
-                "wind": cur.get("wind_speed_10m"), "rain_mm": cur.get("precipitation"),
-                "code": cur["weather_code"], "label": WEATHER_CODES.get(cur["weather_code"], "—"),
-            },
+            "current": current,
             "days": days,
-            "rain_warning": (f"Hujan lebat diperkirakan {_id_date(rainy[0]['date'])} ({rainy[0]['rain_mm']} mm) — "
-                             "tunda penyemprotan & siapkan drainase.") if rainy else None,
+            "hours": hours,
+            "history": history[-30:],
+            "rain_30d_mm": round(sum(d["rain_mm"] for d in history[-30:]), 1),
+            "spray": spray_rating(current, hours[1:1 + SPRAY_LOOKAHEAD_H]),
+            "next_good_spray": next((h["time"] for h in hours if h["spray"] == "GOOD"), None),
+            "rain_warning": (_("Hujan lebat diperkirakan %(date)s (%(mm)s mm) — tunda penyemprotan & siapkan drainase.")
+                             % {"date": _id_date(rainy[0]['date']), "mm": rainy[0]['rain_mm']}) if rainy else None,
         }
     except (KeyError, IndexError, TypeError):
         return None
 
 
+def _weather_key(lat, lon):
+    return f"weather2:{round(float(lat), 3)}:{round(float(lon), 3)}"
+
+
 def fetch_weather(lat, lon):
-    """Current + 7-day forecast, or None. Cached 30 minutes."""
+    """Current, 48 h hourly, 7-day forecast, 30 days of rain history, ET₀ and the spray window (D89).
+    One Open-Meteo call, cached 30 minutes; None on failure."""
     if lat is None or lon is None:
         return None
     lat, lon = round(float(lat), 3), round(float(lon), 3)
 
     def fetch():
         data = _get_json(OPEN_METEO_URL, {
-            "latitude": lat, "longitude": lon, "timezone": "Asia/Jakarta", "forecast_days": 7,
+            "latitude": lat, "longitude": lon, "timezone": "Asia/Jakarta", "forecast_days": 7, "past_days": 30,
             "current": "temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m",
-            "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max",
+            "hourly": "temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m",
+            "daily": ("weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,"
+                      "precipitation_probability_max,et0_fao_evapotranspiration,wind_gusts_10m_max"),
         })
         return _parse_weather(data) if data else None
 
-    return _cached(f"weather:{lat}:{lon}", WEATHER_TTL, fetch)
+    return _cached(_weather_key(lat, lon), WEATHER_TTL, fetch)
+
+
+def cached_weather(lat, lon):
+    """Weather only if already cached — for the 60 s notification poll, which must never hit the network."""
+    if lat is None or lon is None:
+        return None
+    return cache.get(_weather_key(lat, lon))
+
+
+def farm_location():
+    """(lat, lon) of the farm profile, else the first polygon's centre, else (None, None)."""
+    from core.services import get_farm_profile
+
+    profile = get_farm_profile()
+    if profile.has_location:
+        return profile.latitude, profile.longitude
+    first = FieldPolygon.objects.first()
+    return centroid(first) if first else (None, None)
+
+
+# Soil — Open-Meteo model data for any field size (D90). Labelled "perkiraan model, bukan sensor".
+SOIL_TEMPS = (("soil_temperature_0cm", "0 cm"), ("soil_temperature_6cm", "6 cm"), ("soil_temperature_18cm", "18 cm"))
+SOIL_MOISTURES = (("soil_moisture_0_to_1cm", "0–1 cm"), ("soil_moisture_1_to_3cm", "1–3 cm"),
+                  ("soil_moisture_3_to_9cm", "3–9 cm"), ("soil_moisture_9_to_27cm", "9–27 cm"))
+
+
+def fetch_soil_model(lat, lon):
+    """Soil temperature (°C) and volumetric moisture (m³/m³) at several depths for the current hour."""
+    if lat is None or lon is None:
+        return None
+    lat, lon = round(float(lat), 3), round(float(lon), 3)
+    names = [n for n, _ in SOIL_TEMPS + SOIL_MOISTURES]
+
+    def fetch():
+        data = _get_json(OPEN_METEO_URL, {"latitude": lat, "longitude": lon, "timezone": "Asia/Jakarta",
+                                          "forecast_days": 1, "hourly": ",".join(names)})
+        try:
+            hourly = data["hourly"]
+            now_key = timezone.localtime().strftime("%Y-%m-%dT%H")
+            i = next((k for k, t in enumerate(hourly["time"]) if t[:13] == now_key), 0)
+            temps = [{"depth": label, "value": hourly[n][i]} for n, label in SOIL_TEMPS if hourly.get(n)]
+            moist = [{"depth": label, "value": hourly[n][i]} for n, label in SOIL_MOISTURES if hourly.get(n)]
+        except (KeyError, IndexError, TypeError):
+            return None
+        return {"time": hourly["time"][i], "temperature": temps, "moisture": moist, "source": "Open-Meteo"}
+
+    return _cached(f"soil-model:{lat}:{lon}", WEATHER_TTL, fetch)
 
 
 # ---------------------------------------------------------------------------
@@ -262,21 +407,83 @@ def _agro_delete(polygon_id):
         log.warning("Hapus poligon Agromonitoring gagal: %s", exc)
 
 
+def satellite_eligible(polygon: FieldPolygon) -> bool:
+    return AGRO_MIN_HA <= polygon.area_ha <= AGRO_MAX_HA
+
+
+def _fail_key(polygon):
+    # Keyed by the API key too, so fixing AGRO_API_KEY retries immediately.
+    digest = hashlib.sha256(agro_key().encode()).hexdigest()[:10]
+    return f"agro-fail:{polygon.pk}:{digest}"
+
+
+def is_covered(polygon: FieldPolygon) -> bool:
+    return bool(polygon.element_id) and polygon.element.element_type in COVERED_TYPES
+
+
+def satellite_ok(polygon: FieldPolygon) -> bool:
+    """Vegetation indices make sense here: 1–3000 ha and not under a roof (D79, D90)."""
+    return satellite_eligible(polygon) and not is_covered(polygon)
+
+
+def satellite_block_reason(polygon: FieldPolygon):
+    """Why satellite data cannot be fetched right now, or None (D79, D90). Never calls the network."""
+    if is_covered(polygon):
+        return SAT_COVERED
+    if not agro_key():
+        return SAT_NO_KEY
+    if not satellite_eligible(polygon):
+        return SAT_TOO_SMALL
+    if polygon.agro_polygon_id:
+        return None
+    return cache.get(_fail_key(polygon))
+
+
+def satellite_message(reason, polygon: FieldPolygon):
+    ha = f"{polygon.area_ha.normalize():f}".replace(".", ",")
+    return {
+        SAT_NO_KEY: _("Data tidak tersedia: kunci Agromonitoring (AGRO_API_KEY) belum dipasang di server."),
+        SAT_TOO_SMALL: _("Data satelit tidak tersedia: poligon ini %(ha)s ha, sedangkan Agromonitoring memerlukan 1–3.000 ha. "
+                          "Gambar poligon yang lebih luas (mis. seluruh lahan terbuka) untuk NDVI.") % {"ha": ha},
+        SAT_COVERED: _("Indeks vegetasi tidak ditampilkan: %(type)s beratap, jadi satelit melihat atapnya, bukan tanaman. "
+                        "Data tanah dan cuaca tetap tersedia.") % {"type": polygon.element.get_element_type_display() if polygon.element_id else ""},
+        SAT_KEY_REJECTED: _("Data tidak tersedia: kunci Agromonitoring ditolak. Periksa AGRO_API_KEY; "
+                             "kunci baru bisa butuh beberapa jam sampai aktif."),
+        SAT_POLYGON_REJECTED: _("Data tidak tersedia: Agromonitoring menolak poligon ini (periksa luas dan bentuknya)."),
+        SAT_API_ERROR: _("Data tidak tersedia: layanan Agromonitoring tidak merespons. Coba lagi nanti."),
+        SAT_NO_IMAGERY: _("Belum ada citra satelit untuk poligon ini. Citra pertama bisa butuh beberapa hari "
+                           "setelah poligon didaftarkan."),
+    }.get(reason, _("Data tidak tersedia."))
+
+
 def ensure_agro_polygon(polygon: FieldPolygon):
-    """Register the polygon with Agromonitoring once; returns its id or None."""
+    """Register the polygon with Agromonitoring once; returns its id or None.
+
+    A rejected registration is remembered for AGRO_FAIL_TTL (see `satellite_block_reason`).
+    """
     if polygon.agro_polygon_id:
         return polygon.agro_polygon_id
-    if not agro_key():
+    if satellite_block_reason(polygon):
         return None
+    fail_key = _fail_key(polygon)
     try:
         r = requests.post(
             f"{AGRO_BASE}/polygons", params={"appid": agro_key(), "duplicated": "true"}, timeout=TIMEOUT,
             json={"name": polygon.name[:60], "geo_json": {"type": "Feature", "properties": {}, "geometry": polygon.geojson}},
         )
+        if r.status_code in (401, 403):
+            log.warning("Kunci Agromonitoring ditolak (%s)", r.status_code)
+            cache.set(fail_key, SAT_KEY_REJECTED, AGRO_FAIL_TTL)
+            return None
+        if 400 <= r.status_code < 500:
+            log.warning("Agromonitoring menolak poligon %s (%s)", polygon.pk, r.status_code)
+            cache.set(fail_key, SAT_POLYGON_REJECTED, AGRO_FAIL_TTL)
+            return None
         r.raise_for_status()
         pid = str(r.json()["id"])
-    except (requests.RequestException, ValueError, KeyError) as exc:
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
         log.warning("Daftar poligon Agromonitoring gagal: %s", exc)
+        cache.set(fail_key, SAT_API_ERROR, AGRO_FAIL_TTL)
         return None
     FieldPolygon.objects.filter(pk=polygon.pk).update(agro_polygon_id=pid)
     polygon.agro_polygon_id = pid
@@ -319,23 +526,98 @@ def fetch_satellite(polygon: FieldPolygon, days=60, now=None):
         latest_image = next((r["ndvi_image"] for r in rows if r["ndvi_image"]), None)
         return {"passes": rows, "history": hist, "latest_image": latest_image}
 
-    return _cached(f"sat:{pid}:{start // 86400}", SAT_TTL, fetch)
+    return _cached(f"sat:{pid}:{start // 86400}", lambda v: SAT_TTL if v["passes"] else SAT_EMPTY_TTL, fetch)
 
 
-def fetch_soil(polygon: FieldPolygon):
-    """Soil temperature (°C) at surface/10 cm and moisture (m³/m³). Cached 24 h."""
-    pid = ensure_agro_polygon(polygon)
-    if not pid:
-        return None
+# Place search — Nominatim (OpenStreetMap), free and keyless (D92). Its usage policy allows at most
+# 1 request/s with an identifying User-Agent, so calls are proxied here, cached for a week and throttled.
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_UA = "GoTani/1.0 (aplikasi manajemen kebun)"
+GEOCODE_TTL = 7 * 24 * 60 * 60
 
-    def fetch():
-        data = _get_json(f"{AGRO_BASE}/soil", {"polyid": pid, "appid": agro_key()})
-        if not data or "t10" not in data:
+
+def search_places(query: str):
+    """Desa/kecamatan/kabupaten in Indonesia → [{name, lat, lon, bbox}] or None when unavailable."""
+    import time
+
+    q = " ".join((query or "").split())[:100]
+    if len(q) < 3:
+        return []
+    key = "geocode:" + hashlib.sha256(q.lower().encode()).hexdigest()[:24]
+    hit = cache.get(key)
+    if hit is not None:
+        return hit
+    if not cache.add("nominatim-throttle", 1, 1):  # someone called within the last second
+        time.sleep(1)
+        if not cache.add("nominatim-throttle", 1, 1):
             return None
-        return {"dt": data.get("dt"), "t0_c": round(data["t0"] - 273.15, 1) if data.get("t0") is not None else None,
-                "t10_c": round(data["t10"] - 273.15, 1), "moisture": data.get("moisture")}
+    try:
+        r = requests.get(NOMINATIM_URL, timeout=TIMEOUT, headers={"User-Agent": NOMINATIM_UA},
+                         params={"q": q, "format": "jsonv2", "countrycodes": "id", "accept-language": "id", "limit": 6})
+        r.raise_for_status()
+        rows = r.json()
+        places = [{"name": p["display_name"], "lat": float(p["lat"]), "lon": float(p["lon"]),
+                   "type": p.get("addresstype") or p.get("type"),
+                   "bbox": [float(x) for x in p.get("boundingbox") or []]} for p in rows]
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+        log.warning("Pencarian lokasi gagal: %s", exc)
+        return None
+    cache.set(key, places, GEOCODE_TTL)
+    return places
 
-    return _cached(f"soil:{pid}", SAT_TTL, fetch)
+
+ALERT_RAIN_MM = 50
+ALERT_GUST_KMH = 40
+ALERT_DRY_DAYS = 7
+DRY_DAY_MM = 1
+
+
+def weather_alerts(weather, has_open_field_cycle: bool):
+    """Bell alerts for farm roles (D93): heavy rain or strong gusts tomorrow; a dry week while an
+    open-field cycle is active. [{kind, title, body, date}]"""
+    if not weather or len(weather.get("days") or []) < 2:
+        return []
+    out = []
+    tomorrow = weather["days"][1]
+    when = _id_date(tomorrow["date"])
+    if (tomorrow.get("rain_mm") or 0) >= ALERT_RAIN_MM:
+        out.append({"kind": "weather_rain", "title": _("Hujan lebat besok (%(when)s)") % {"when": when},
+                    "body": _("Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase.") % {"round": round(tomorrow['rain_mm'])},
+                    "date": weather["days"][0]["date"]})
+    if (tomorrow.get("gust_max") or 0) >= ALERT_GUST_KMH:
+        out.append({"kind": "weather_wind", "title": _("Angin kencang besok (%(when)s)") % {"when": when},
+                    "body": _("Hembusan hingga %(round)s km/j — periksa penyangga dan atap.") % {"round": round(tomorrow['gust_max'])},
+                    "date": weather["days"][0]["date"]})
+    recent = (weather.get("history") or [])[-ALERT_DRY_DAYS:]
+    if has_open_field_cycle and len(recent) == ALERT_DRY_DAYS and all((d.get("rain_mm") or 0) < DRY_DAY_MM for d in recent):
+        out.append({"kind": "weather_dry", "title": _("%(ALERT_DRY_DAYS)s hari tanpa hujan") % {"ALERT_DRY_DAYS": ALERT_DRY_DAYS},
+                    "body": _("Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit."),
+                    "date": recent[-1]["date"]})
+    return out
+
+
+def water_needs(weather, today_index: int = 0):
+    """Today's crop water need per active cycle (D91): ET₀ × Kc (mm) − rain (rain ignored under a roof),
+    litres = mm × element m². Without Kc only ET₀ is shown."""
+    from farm.models import CropCycle
+
+    if not weather or not weather.get("days"):
+        return {"et0_mm": None, "rows": []}
+    day = weather["days"][today_index]
+    et0, rain = day.get("et0_mm"), day.get("rain_mm") or 0
+    rows = []
+    for cycle in CropCycle.objects.filter(is_active=True).select_related("element", "variety").order_by("element__name"):
+        el, kc = cycle.element, cycle.variety.kc
+        covered = el.element_type in COVERED_TYPES
+        row = {"element": el.name, "variety": cycle.variety.name, "kc": kc, "covered": covered,
+               "area_m2": el.area_m2, "need_mm": None, "deficit_mm": None, "litres": None}
+        if kc is not None and et0 is not None:
+            need = Decimal(str(et0)) * kc
+            deficit = max(need - (Decimal("0") if covered else Decimal(str(rain))), Decimal("0"))
+            row.update(need_mm=need.quantize(Decimal("0.1")), deficit_mm=deficit.quantize(Decimal("0.1")),
+                       litres=(deficit * el.area_m2).quantize(Decimal("1")))
+        rows.append(row)
+    return {"et0_mm": et0, "rain_mm": rain, "rows": rows}
 
 
 def fetch_ndvi_image(polygon: FieldPolygon):
@@ -344,6 +626,8 @@ def fetch_ndvi_image(polygon: FieldPolygon):
     url = sat and sat.get("latest_image")
     if not url:
         return None
+    # Phase 7: palette 4 is Agromonitoring's continuous red-yellow-green ramp (the map legend matches it).
+    url += ("&" if "?" in url else "?") + "paletteid=4"
 
     def fetch():
         try:

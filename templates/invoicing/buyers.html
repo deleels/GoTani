@@ -1,56 +1,77 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui gotani %}
-{% block title %}Pembeli{% endblock %}
+{% block title %}{% translate "Pembeli" %}{% endblock %}
 {% block content %}
+{# Pembeli (Phase 4d): table page pattern + ageing table; add via the shared sheet. #}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
-  <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">Pembeli</h1>
-      <p class="mt-1 text-sm text-stone-500">Direktori pelanggan grosir, termin pembayaran, piutang dan kredit masing-masing.</p>
-    </div>
-    <button type="button" @click="sheet=true" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">{% icon "plus" 16 %} Tambah Pembeli</button>
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text"><h1 class="app-pagehead__title">{% translate "Pembeli" %} {% info_tip _("Direktori pelanggan grosir, termin pembayaran, piutang dan kredit masing-masing.") %}</h1></div>
+    <div class="gt-pagehead__actions"><button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Tambah pembeli" %}</button></div>
   </div>
 
-  <div class="mb-5 grid gap-3 sm:grid-cols-3">
-    {% include "components/kpi.html" with label="Pembeli aktif" value=stats.buyers %}
-    {% include "components/kpi.html" with label="Piutang berjalan" value=stats.outstanding|rupiah %}
-    {% include "components/kpi.html" with label="Jatuh tempo" value=stats.overdue|rupiah cls="text-red-700" %}
+  <div class="gt-grid app-kpis">
+    {% include "components/kpi.html" with stat=True featured=True label=_("Piutang berjalan") value=stats.outstanding|rupiah %}
+    {% include "components/kpi.html" with stat=True label=_("Jatuh tempo") value=stats.overdue|rupiah tone="danger" %}
+    {% include "components/kpi.html" with stat=True label=_("Pembeli aktif") value=stats.buyers %}
   </div>
 
-  <div class="rounded-xl border border-stone-200 bg-white">
-    <div class="flex flex-wrap items-center gap-3 border-b border-stone-200 p-3">
-      <div class="flex gap-1 rounded-lg bg-stone-100 p-1 text-sm">
-        <a href="?tab=active" class="rounded-md px-3 py-1 {% if tab != 'inactive' %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">Aktif</a>
-        <a href="?tab=inactive" class="rounded-md px-3 py-1 {% if tab == 'inactive' %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">Nonaktif</a>
-      </div>
-      <form method="get" class="ml-auto w-full sm:w-64"><input type="hidden" name="tab" value="{{ tab }}"><input name="q" value="{{ q }}" placeholder="Cari nama / perusahaan…"></form>
+  <section class="gt-card" aria-label="{% translate 'Daftar pembeli' %}">
+    <div class="app-toolbar">
+      <nav class="gt-tabs" aria-label="{% translate 'Status' %}">
+        <a href="?tab=active" class="gt-tab app-tab{% if tab != 'inactive' %} gt-tab--active{% endif %}"{% if tab != 'inactive' %} aria-current="page"{% endif %}>{% translate "Aktif" %}</a>
+        <a href="?tab=inactive" class="gt-tab app-tab{% if tab == 'inactive' %} gt-tab--active{% endif %}"{% if tab == 'inactive' %} aria-current="page"{% endif %}>{% translate "Nonaktif" %}</a>
+      </nav>
+      <form method="get" class="app-toolbar__search"><input type="hidden" name="tab" value="{{ tab }}"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari pembeli" %}</span><input name="q" value="{{ q }}" placeholder="{% translate 'Cari nama / perusahaan…' %}" class="app-field app-field--sm"></label></form>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-          <th class="px-4 py-3">Pembeli</th><th class="px-4 py-3">Kontak</th><th class="px-4 py-3">Termin</th>
-          <th class="px-4 py-3 text-right">Piutang</th><th class="px-4 py-3 text-right">Kredit</th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+    <div class="app-table-wrap">
+      <table class="gt-table">
+        <thead><tr><th{% if sort == 'name' %} aria-sort="ascending"{% endif %}><a class="app-sort{% if sort == 'name' %} is-on{% endif %}" href="?tab={{ tab }}&q={{ q|urlencode }}&sort=name">{% translate "Pembeli" %}</a></th><th>{% translate "Kontak" %}</th><th>{% translate "Termin" %}</th>
+          <th class="num"{% if sort == 'ltgp' %} aria-sort="descending"{% endif %}><span class="app-labelrow app-labelrow--end"><a class="app-sort{% if sort == 'ltgp' %} is-on{% endif %}" href="?tab={{ tab }}&q={{ q|urlencode }}&sort=ltgp">{% translate "LTGP" %}{% if sort == 'ltgp' %} ↓{% endif %}</a>{% info_tip _("Lifetime gross profit: laba kotor dari semua invoice terbit pembeli ini. Rumus: Pendapatan − HPP, sepanjang waktu.") %}</span></th>
+          <th{% if sort == 'last' %} aria-sort="descending"{% endif %}><a class="app-sort{% if sort == 'last' %} is-on{% endif %}" href="?tab={{ tab }}&q={{ q|urlencode }}&sort=last">{% translate "Order terakhir" %}{% if sort == 'last' %} ↓{% endif %}</a></th>
+          <th class="num">{% translate "Piutang" %}</th><th class="num">{% translate "Kredit" %}</th></tr></thead>
+        <tbody>
         {% for b in page.object_list %}
           <tr>
-            <td class="px-4 py-3"><a href="{% url 'invoicing:buyer_detail' b.pk %}" class="font-medium hover:underline">{{ b.name }}</a>{% if b.company %}<p class="text-xs text-stone-500">{{ b.company }}</p>{% endif %}</td>
-            <td class="px-4 py-3 text-stone-600">{{ b.phone|default:"—" }}{% if b.email %}<p class="text-xs">{{ b.email }}</p>{% endif %}</td>
-            <td class="px-4 py-3">{% if b.payment_terms_days %}{{ b.payment_terms_days }} hari{% else %}Saat diterima{% endif %}</td>
-            <td class="px-4 py-3 text-right">{{ b.outstanding|rupiah }}</td>
-            <td class="px-4 py-3 text-right {% if b.credit %}text-emerald-700{% endif %}">{{ b.credit|rupiah }}</td>
+            <td><a href="{% url 'invoicing:buyer_detail' b.pk %}" class="app-link--plain"><b>{{ b.name }}</b></a>{% if b.company %}<span class="app-sub">{{ b.company }}</span>{% endif %}</td>
+            <td class="app-muted">{{ b.phone|default:"—" }}{% if b.email %}<span class="app-sub">{{ b.email }}</span>{% endif %}</td>
+            <td>{% if b.payment_terms_days %}{{ b.payment_terms_days }} {% translate "hari" %}{% else %}{% translate "Saat diterima" %}{% endif %}</td>
+            <td class="num"><b>{{ b.ltgp|rupiah }}</b><span class="app-sub">{% blocktranslate with n=b.orders %}{{ n }} order{% endblocktranslate %}</span></td>
+            <td>{% if b.last_order %}{{ b.last_order|date:"d M Y" }}{% if b.cadence.at_risk %} {% pill _("Berisiko") tone="red" %}{% endif %}{% else %}<span class="app-muted">—</span>{% endif %}</td>
+            <td class="num">{{ b.outstanding|rupiah }}</td>
+            <td class="num {% if b.credit %}app-value--positive{% endif %}">{{ b.credit|rupiah }}</td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="px-4 py-12 text-center">
-            <p class="font-medium">{% if q %}Tidak ada pembeli yang cocok.{% else %}Belum ada pembeli.{% endif %}</p>
-            <p class="mt-1 text-sm text-stone-500">Tambahkan restoran, pasar, atau pengepul yang membeli dalam jumlah besar agar bisa dibuatkan invoice.</p>
-          </td></tr>
+          <tr><td colspan="7" class="app-empty-cell"><div class="gt-callout app-empty"><div>
+            <span class="gt-callout__title">{% if q %}{% translate "Tidak ada pembeli yang cocok." %}{% else %}{% translate "Belum ada pembeli." %}{% endif %}</span>
+            <span class="gt-callout__body">{% translate "Tambahkan restoran, pasar, atau pengepul yang membeli dalam jumlah besar agar bisa dibuatkan invoice." %}</span></div></div></td></tr>
         {% endfor %}
         </tbody>
       </table>
     </div>
     {% include "components/pagination.html" %}
-  </div>
+  </section>
 
-  {% include "invoicing/_buyer_sheet.html" with sheet_title="Tambah Pembeli" submit="Simpan" %}
+  {% if ageing.rows %}
+  <section class="gt-card app-section" aria-labelledby="h-ageing">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-ageing">{% translate "Umur piutang" %} {% info_tip _("Sisa tagihan per pembeli menurut lama lewat jatuh tempo.") %}</h2></div>
+    <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>{% translate "Pembeli" %}</th>{% for k, label in ageing.buckets %}<th class="num">{{ label }}</th>{% endfor %}<th class="num">{% translate "Total" %}</th></tr></thead>
+      <tbody>
+      {% for r in ageing.rows %}
+        <tr><td><a class="app-link--plain" href="{% url 'invoicing:buyer_detail' r.buyer.pk %}"><b>{{ r.buyer.name }}</b></a></td>
+          <td class="num">{{ r.current|rupiah }}</td><td class="num">{{ r.d1_30|rupiah }}</td><td class="num">{{ r.d31_60|rupiah }}</td>
+          <td class="num {% if r.d61_90 %}app-value--danger{% endif %}">{{ r.d61_90|rupiah }}</td><td class="num {% if r.d90p %}app-value--danger{% endif %}">{% if r.d90p %}<b>{{ r.d90p|rupiah }}</b>{% else %}{{ r.d90p|rupiah }}{% endif %}</td>
+          <td class="num"><b>{{ r.total|rupiah }}</b></td></tr>
+      {% endfor %}
+        <tr class="app-row--total"><td><b>{% translate "Total" %}</b></td><td class="num">{{ ageing.totals.current|rupiah }}</td><td class="num">{{ ageing.totals.d1_30|rupiah }}</td><td class="num">{{ ageing.totals.d31_60|rupiah }}</td><td class="num">{{ ageing.totals.d61_90|rupiah }}</td><td class="num">{{ ageing.totals.d90p|rupiah }}</td><td class="num"><b>{{ ageing.totals.total|rupiah }}</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+  {% endif %}
+
+  {% include "invoicing/_buyer_sheet.html" with sheet_title=_("Tambah pembeli") submit=_("Simpan") %}
 </div>
 {% endblock %}

@@ -111,3 +111,118 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
 - **D76 Geodesic polygon area on a sphere (no pyproj)** — spherical-excess ring area is within ~0.5% of WGS84 at farm scale and adds no dependency; shapely only validates.
 - **D77 Notification "observed at" times** — low stock = last ledger movement, overdue invoice/harvest = the day after the due date, pending expense = newest `created_at`, unpriced = first lot; unread = later than `notifications_seen_at`.
 - **D78 `/` is Ringkasan for every farm role (OWNER/MANAGER included); Analitik stays at `/dashboard/`; CASHIER still lands on the POS** — one home for everyone who works the farm (D70).
+- **D79 Polygons under 1 ha are mapped but get no satellite data, with an explicit reason** — Agromonitoring only accepts polygons of 1–3000 ha, while greenhouses are far smaller; GoTani keeps the 0.02 ha minimum (rule 33) so every element can be plotted, never calls Agromonitoring for a < 1 ha polygon, and the map says why data is missing (no key / too small / key rejected / polygon rejected / service down / no imagery yet) instead of a bare "data tidak tersedia". A rejected registration is retried after 10 min (immediately when the key changes); an empty imagery result is cached 3 h instead of 24 h.
+
+## P12 — tax status & POS polish
+- **D80 PKP switch on `FarmProfile.is_pkp` (OWNER, Pengaturan), off by default** — an individual farm below the PKP threshold may not charge PPN at all. While off, `Product.tax_rate_pct` returns 0 so every new POS line and issued invoice snapshots 0%; stored `Tax` links are kept but ignored; past sales keep their snapshot (D46). UI hides "termasuk PPN", the invoice PPN row and the "PPN terkumpul" KPI unless the farm is PKP or the record itself carries PPN. `seed_demo` defines the PPN rate but no longer attaches it to cocoa. Logging the switch in the audit log follows with D82.
+- **D81 Indonesian number input + kasir quantity step** — inputs marked `data-num` are formatted while typing (`15.000`, `1,5`; the "." key types a comma; whole Rupiah except input purchase cost, which allows `,xx`) by `core/static/core/numbers.js`, which submits plain machine numbers. The server (`core.numbers.parse_id_decimal`, `IDDecimalField`) accepts both: a comma or 2+ dot groups means Indonesian; a single dot is a decimal point except in a whole-Rupiah field. Displays stay Indonesian, CSV stays plain. POS lines get − / + buttons and quick-pick chips driven by `Product.pos_step_kg` (default 0,5 kg, set on Harga Produk; chips = step × 1, 2, 4, 10); typed values keep 3 decimals.
+- **D82 One append-only audit log (`core.AuditLog`, written only by `core.audit.log_event`) replaces a separate price history** — who, when, what, before → after (JSON), and an optional reason; save/delete of an existing row raise, the admin is read-only. Logged so far: price changes (Harga Produk and admin edits), kasir step, PKP switch. The "Log aktivitas" page (ALAT, OWNER/MANAGER) and the confirm-dialog actions (stage undo, spoilage reversal, allocation removal, voids) write to it as they are built.
+- **D83 One shared confirmation dialog replaces every `confirm()`** — `core/static/core/confirm.js`: level 1 = summary + a button named after the action; level 2 adds "Saya sudah memeriksa data ini"; optional required reason (posted as `reason`). Declarative `data-confirm*` attributes on forms/buttons, `gtConfirm()` for scripts. The service worker's cache version now hashes every app static file, not just the pre-cached ones — before, an edited script was served stale forever by the cache-first worker.
+- **D84 Majukan tahap = next stage only; skipping needs "Lewati tahap"; same-day undo of the last advance (exception to rule 1)** — the dialog shows from → to, skipped stages, the pre-harvest check result and the CLEARING write-off. OWNER/MANAGER may undo the *last* advance on the same Asia/Jakarta day, with a reason, only while nothing was recorded on the cycle since (activity, harvest, check and expense ids are snapshotted in the STAGE_ADVANCE audit entry). Undoing CLEARING reopens the cycle unless the element already has a newer cycle. Both directions are in the audit log.
+- **D85 Harvest review step** — the first "Tinjau panen" submit only previews (`farm.services.preview_harvest`): sellable kg, cycle total vs expected, previous batch average, and for OWNER/MANAGER the cost pool it would absorb and HPP/kg per grade (same RSV split as the save). Soft warnings at > 150% of expected yield or > 3× the batch average turn the save into a level-2 confirmation. Saving needs a resubmit whose values match the reviewed signature, so edited numbers are always re-reviewed.
+- **D86 Spoilage: level-2 confirmation (warns above 50% of the lot) and same-day reversal by OWNER/MANAGER** — the reversal is a new `SPOILAGE_REVERSAL` (+) ledger movement back into the same lot; the record stays, marked `reversed_at/by/reason`, and is excluded from spoilage loss in analytics and traceability (CSV shows a "BATAL SUSUT" row). Mass balance holds because the ledger still sums to the lot.
+- **D87 Soft data-entry warnings, never blocks** — price change > 30% or below the open lots' average HPP/kg (Harga Produk); a POS line > 3× the product's 30-day average completed line, never below 20 kg (catches a missing decimal comma); an input purchase unit cost > 50% away from the current average cost. All via the shared dialog's `data-confirm-if`.
+- **D88 Invoice issue is level 2 (server checks the tick); a payment allocation can be taken off by OWNER/MANAGER with a reason** — the money returns to buyer credit (same payment, now unallocated) and the invoice's derived payment status follows; logged as ALLOCATION_REMOVED.
+
+## Weather & satellite (agreed 2026-11-19)
+- **D89 Spray window from Open-Meteo hourly data** — BAD: wind > 15 km/h, rain chance ≥ 50% within 4 h, or raining now; FAIR: > 32 °C or wind 10–15 km/h; else GOOD. Shown with reasons and the next good hour on the weather widget, per hour on the 48 h strip, and as a hint on the pesticide report. Advice only, never blocks. One Open-Meteo call (current, 48 h hourly, 7 days, 30 past days, ET₀, gusts) cached 30 min.
+- **D90 Vegetation indices only where the satellite sees the crop; soil from Open-Meteo for every polygon** — polygons linked to GREENHOUSE / SCREEN_HOUSE / HYDROPONIC elements get a "beratap" reason instead of NDVI/EVI/NDWI (Sentinel-2's 10 m pixels see the roof). Agromonitoring stays for indices only (≥ 1 ha, key). Soil temperature (0/6/18 cm) and moisture (0–27 cm) come from Open-Meteo for any size: both sources are model output, Open-Meteo works without a key or size limit and is labelled "perkiraan model, bukan sensor". The element detail page shows the same data when a polygon is linked.
+- **D91 Water need = ET₀ × optional `Variety.kc`** — deficit subtracts today's forecast rain except under a roof; litres = mm × element m² (1 mm on 1 m² = 1 L). Without Kc only ET₀ is shown. Kc is edited in the admin; `seed_demo` sets FAO-56 mid-season values.
+- **D92 Map stays Leaflet + Esri (no Mapbox, D43)** — three base maps (Satelit + label, Satelit, OpenStreetMap with local names), a "Lokasi saya" GPS button, areas as "0,06 ha (614 m²)", and a desa/kecamatan/kabupaten search through Nominatim proxied in `geo/services.py` (country `id`, Indonesian names, generic User-Agent, cached 7 days, throttled to 1 request/s per its usage policy).
+- **D93 Weather alerts in the bell are computed from the cached forecast only** — heavy rain (≥ 50 mm) or gusts (≥ 40 km/h) tomorrow, and 7 dry days while an open-field cycle is active; farm roles only. The 60 s poll never calls Open-Meteo itself; alerts appear once any page has loaded the forecast.
+
+## Step 4 — counter & stock operations
+- **D94 Void reasons from a fixed list (Salah input / Salah harga atau produk / Pembeli batal / Pembayaran gagal / Lainnya), "Lainnya" needs a note** — for POS orders and invoices; picked in the shared dialog, stored on the record and printed on the voided receipt. Free text alone is unreportable; a list alone hides the odd case.
+- **D95 Cash received → change, CASH only, stored and printed** — blank means exact money; less than the whole-Rupiah total is refused. Quick chips: exact amount and the next round notes.
+- **D96 One drawer, one open shift, no sales without it** — `Shift` + `CashMovement` (Tambah modal / Setor ke pemilik / Bayar biaya → a PENDING CASH GENERAL expense / invoice cash "Masuk laci" / refund of a voided cash order). A cash void needs an open shift; its refund is a cash-out of the *current* shift, while the original sale stays in its own shift's cash-in. Blind count by denomination (cashiers don't see the expected amount until after closing); close is always allowed and any difference stays "Perlu ditinjau" until a manager notes it. The opener closes, a manager may force-close; both are audit-logged. Opening float is prefilled from the last count. The open-shift uniqueness is a partial unique index on `is_open=True` (a unique index over NULL `closed_at` would not hold on PostgreSQL).
+- **D97 Payment-method split and receivables ageing** — Analitik shows money received per method: POS completed orders by sale date plus invoice payments by paid date (cash basis, unlike accrual revenue). Pembeli shows ageing per buyer: 0 / 1–30 / 31–60 / 61–90 / > 90 days past due.
+- **D98 `Product.min_alert_kg` low-stock alert for produce** — set on Harga Produk (blank = off); bell alert for farm roles when stock ≤ threshold.
+- **D99 Stock opname: shortfall only, FIFO write-off as SHRINKAGE spoilage, after OWNER/MANAGER approval** — the count snapshots system stock; approval writes off `system − counted` (capped at current stock, since sales after the count already took their kg) lot by lot from the oldest, so loss = kg × each lot's COGS and mass balance holds. A surplus is recorded but never booked (stock cannot appear without a harvest lot).
+
+## Step 5 — tax extras
+- **D100 Payments are voided with a reason, never deleted** — Indonesian bookkeeping must be kept 10 years (UU KUP), so `delete_payment` became `void_payment` (OWNER, only while fully unallocated, reason required, audit-logged). A voided payment keeps its row, counts zero toward credit, can't be allocated, and drops out of the payment split. If its cash went into the drawer, voiding needs an open shift and records a PAYMENT_VOID cash-out there.
+- **D101 "Potongan PPh" as an invoice settlement method** — when a buyer withholds PPh (e.g. PPh 22/23) it pays less cash but hands over a bukti potong; recording it as a settlement (with the required slip number) closes the invoice without inventing a discount. It is invoice-only (`InvoicePaymentMethod`), never cash, never "Masuk laci", and shows as its own row in the payment split.
+- **D102 Bea meterai reminder above Rp5.000.000** — UU 10/2020 puts Rp10.000 duty on documents stating an amount above Rp5 jt. Invoice detail shows a reminder and the print gets a meterai box above the signature; GoTani does not buy or affix e-meterai (zero-cost rule).
+- **D103 Omzet & PPh Final 0,5% report** — monthly turnover for PP 55/2022 (individual, non-PKP farm): POS completed sales excl. PPN by sale date + issued invoices by issue date at gross before discount plus shipping excl. PPN, voids excluded; tax applies only to the part of the running yearly total above the Rp500 jt exemption, whole Rupiah, due by the 15th of the next month; CSV export. Invoice timing and taxpayer status are flagged "konfirmasi ke konsultan pajak".
+
+## Redesign onto GoTani-design-system (agreed 2026-11-19)
+- **D104 Adopt GoTani-design-system; light theme only.** The app takes its tokens, font and `gt-` components from GoTani-design-system (copied into `core/static/core/ds/`, never edited in place; app-only parts use `app-` classes in `gotani.css`). Tailwind stays for layout. Dark mode is removed (supersedes the theme part of D66/D67) because the design system defines a light theme only and maintaining a second palette doubles every UI change. Blue (info) and teal (partial) pill tones are added as app tokens to keep the D71 status mapping.
+- **D105 Money is written `Rp15.000`.** No space between the symbol and the amount, everywhere (screens, receipts, invoices, notifications). Parsing still accepts both forms. Charts may abbreviate (`Rp277,5 jt`, `Rp593rb`); documents never do.
+- **D106 Calm motion by default.** Work screens show only hover, press and focus feedback and dialog transitions; the design system's entrance and ambient animations run only on Ringkasan and Analitik. The reason is that staff open list, form and POS screens dozens of times a day, and replayed entrances slow them down. Reduced-motion users get no animation anywhere.
+- **D107 Button hierarchy, footnotes behind info chips, no native widgets (agreed 2026-11-20).** The gradient `gt-btn--primary` is only for a page's one headline action (page head, final checkout step); form, card, sheet and dialog submits use flat `gt-btn--solid`, secondary actions `gt-btn--outline`, destructive secondaries `gt-btn--outline-danger`; no grey square buttons or red text links. Every single-form page has an outline Batal/Kembali next to Simpan and sits left-aligned under its page head (the design system's CheckoutPage is left-aligned, never centred). Explanations, formulas, page subtitles and form help text go behind a `{% info_tip %}` chip (`gt-tip`). Date fields open a themed flatpickr popover (ISO value and field name unchanged) instead of the browser calendar; scrollbars are thin pills. Charts: varied pill bars with one value tag (`gtCharts.vary`, `plugins.gtTag`), and share-of-a-whole is the `{% gauge %}` half donut, never a doughnut. These rules were added to GoTani-design-system itself (Button, InfoTip, DatePicker, Gauge, ChartBar) and re-copied.
+- **D108 Uniform buttons and badges (agreed 2026-11-20).** Button labels are one or two words in sentence case (Simpan, Catat bayar, Invoice baru); any longer explanation goes in a `title` or an info tip, so a row of buttons keeps one height and never crowds. Buttons in one row share a size (page head `--md`, card/table `--sm`) and never wrap. Badges come in two kinds only: `{% pill %}` for status words and `gt-chip--sm` for facts/shortcuts (with a `gt-dot` when they need attention). Empty select options read "— pilih —". Recorded in the design system's Button and Chip guides.
+- **D109 Quiet callouts, borderless pills, honest daily bars (agreed 2026-11-20).** Status pills have no outline; overdue / Jatuh tempo / panen terlewat / stok menipis use a new orange `late` tone, red stays for cancelled and rejected. Callouts are neutral rows whose tone lives only in a round icon disc (no yellow/red/green fills). The daily Analitik chart stacks each day's revenue as one pill: hatched HPP at the bottom, solid gross profit on top, and any HPP above revenue red-hatched on top so a loss day stands out. All three added to GoTani-design-system (tokens, StatusPill, Callout) and re-copied.
+
+- **D110 English UI with a per-user Indonesian option (agreed 2026-11-20).** Every screen, message, label and
+  script string goes through Django translation; Indonesian stays the source text (msgid, so tests and the
+  existing wording are unchanged) and English is hand-written in `locale/en/tr_*.py` from one glossary
+  (`docs/GLOSSARY.md`), compiled by `python manage.py i18n` (no GNU gettext needed). The language is a profile
+  setting (EN | ID in the account menu and Profil); new OWNER/MANAGER accounts start in English,
+  CASHIER/WORKER in Indonesian; the browser's Accept-Language is ignored. Numbers follow the language
+  (Rp15,000 · 0.5 kg in English). Invoice prints follow the customer's document language (default Indonesian);
+  POS receipts stay Indonesian. `core.test_i18n` fails on any string without English.
+
+- **D111 One motion system, toasts and app-drawn validation (agreed 2026-11-20; supersedes D106).** Every page's
+  content fades in the same way (240 ms, `--ease-out`, 4 px rise); the frame (sidebar, top bar) never moves and
+  the scrollbar gutter is reserved so pages don't shift sideways. A thin green bar runs along the top while the
+  next page loads, and a second click on a link that is already loading is ignored. Ringkasan and Analitik keep
+  their one-time chart entrance. Messages are toasts (bottom right; success/info fade after 5 s, warnings and
+  errors stay); a notice that blocks work (temporary password) is a centred dialog. Forms are `novalidate`:
+  `core/static/core/forms.js` checks required/min/max/length/email on submit, writes the app's own message under
+  each field, scrolls to the first and shows a toast — no browser bubbles. Nothing animates under
+  `prefers-reduced-motion`.
+
+- **D112 Speed first: prebuilt Tailwind, warm navigation (2026-11-20; supersedes the CDN part of D33 and Phase 7 Q5).**
+  The Tailwind Play CDN compiled CSS in the browser on every page load (blocking ~250 ms) and re-scanned the DOM on
+  every Alpine change. Tailwind is now built once into `core/static/core/tailwind.css` from
+  `tailwind/tailwind.config.js` (same config; rebuild with
+  `npx tailwindcss@3.4.16 -c tailwind/tailwind.config.js -i tailwind/input.css -o core/static/core/tailwind.css --minify`
+  after adding utility classes), loaded last like the CDN's style tag was. Fonts are preloaded, `forms.js` is
+  deferred, links are prefetched on hover/touch (speculation rules, `moderate`), the service worker uses navigation
+  preload, and the page fade is 150 ms from half opacity (D111's 240 ms from zero read as lag).
+
+- **D113 One POS step: 0.5 kg (Phase 7 step 3; supersedes the per-product step of D81).** `Product.pos_step_kg` is
+  removed (migration `inventory/0007`); the POS − / +, the first tap on a product and the quick-pick chips
+  (0.5 · 1 · 2 · 5 kg) all use 0.5 kg. Harga Produk shows one price column (the editable price is the current
+  price) and the low-stock limit under its own header. Old `POS_STEP_CHANGE` audit entries keep their label.
+
+- **D114 Invoice payments that do what you type (Phase 7 step 4; refines D69, D101).** Record payment opens prefilled
+  with the balance (the invoice you came from, listed first; otherwise everything the customer owes) and spreads the
+  amount over open invoices as it is typed, earliest due first, until a row is edited by hand ("Split
+  automatically" restarts it). Every problem is named where it is: "INV-… only has Rp832,500 left", "Invoices get
+  Rp900,000 but only Rp500,000 was received" — and the server says the same with the invoice numbers. Money left
+  over asks before saving: kept as the customer's credit, or (when other invoices are still open) applied to them.
+  "Tax withheld" (PPh with a tax slip) is offered only for customers ticked "withholds tax" (off by default;
+  customers that already used it were ticked by the migration); the slip number and "into the cash drawer" show
+  only for their method. "No discount" hides and clears the discount value. Every money field shows "Rp" inside
+  the field and groups thousands as it is typed; areas group too. In development WhiteNoise serves static files
+  with `max-age=0` so edits are never hidden by the browser cache.
+
+- **D115 Hormozi-style metrics (Phase 7 step 5).** Analytics opens on five numbers read like a P&L: Revenue,
+  Gross profit, Gross margin %, AOV (revenue ÷ POS orders + invoices) and Net profit (featured); VAT collected moves
+  into the profit breakdown. Each customer shows LTGP (gross profit of every issued invoice, all time), orders,
+  average days between orders, last order and an "At risk" flag when they have not ordered for more than 2× their
+  usual gap (needs two orders). The customers list shows LTGP and last order and sorts by either. Every metric has
+  an info chip with its meaning and formula. CAC and LTGP:CAC are left out: there is no marketing-spend data.
+- **D116 Map editing, NDVI and admin look (Phase 7 step 6).** A drawn polygon stays a draft with its name field and
+  Simpan / Batal under the map; "Ubah batas" puts a saved one in the same mode. Points drag, mid-edge handles add a
+  point, right-click (long-press) removes one (a plain click no longer does), Backspace removes the last point while
+  drawing; nothing is sent until Simpan. Shapes are a green outline with a soft fill and white round handles. The
+  NDVI image uses Agromonitoring's continuous palette (paletteid=4) with a labelled red→green legend; the NDVI
+  timeline is one green line over a soft area. The daily revenue chart drops the loss series (COGS is capped at
+  revenue) and uses solid greens. The Django admin keeps its own templates, restyled by templates/admin/base_site.html
+  and core/admin.css (Django's CSS variables mapped to design tokens), light only like the app.
+- **D117 Phase 6 clean-up (Phase 7 step 7).** `components/kpi.html` takes `tone=danger|warning|positive|late`
+  instead of a colour class (the `value_tone` filter is gone). The stone/emerald alias layer is removed from the
+  Tailwind config; no template uses the old palette. Seven unused `app-` rules are deleted; every icon in `ui.py`
+  is still used. `core/static/core/ds/` (tokens, bundle, fonts, logos) is byte-identical to the design-system
+  source. Screen check: no horizontal scroll on 26 OWNER screens at 390, 768 (spot) and 1440; CASHIER reaches only
+  POS, orders, shift and profile. Analytics date fields share one row on phones with Terapkan below.
+- **D118 Own polygon editor instead of Leaflet.draw.** Leaflet.draw 1.0.4 (2017) predates Leaflet 1.9 and misbehaved:
+  taps on its midpoint handles were swallowed, its toolbar and action buttons covered the map, and the earlier
+  version kept Leaflet layers in Alpine state, whose proxies broke the shape on zoom. `core/static/core/polyedit.js`
+  (`gtPolyEditor`) replaces it: click to place corners (dashed guide to the pointer), tap the first corner or
+  Selesai to close; corners drag, a "+" on each edge adds a corner by tap or drag, right-click / long-press removes
+  one; Urungkan / Backspace / Ctrl+Z undo, Esc cancels, Enter finishes. It shows corner count and live area, and
+  blocks saving while edges cross. Every action sits in the panel under the map; on the map there is only an
+  icon button. Leaflet objects never enter Alpine state. OSM tiles send the origin as Referer (their policy).

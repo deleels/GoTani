@@ -1,95 +1,85 @@
 {% extends "base.html" %}
+{% load i18n %}
 {% load ui %}
-{% block title %}Staf{% endblock %}
+{% block title %}{% translate "Staf" %}{% endblock %}
 {% block content %}
+{# Staf (Phase 5b): table page pattern, gt-person cells, create in the shared sheet (D69). #}
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
-  <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">Staf Kebun</h1>
-      <p class="mt-1 text-sm text-stone-500">Buat akun, atur peran, dan nonaktifkan akses. Akun tidak pernah dihapus karena tercatat di penjualan dan log.</p>
-    </div>
-    <button type="button" @click="sheet=true" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">{% icon "plus" 16 %} Tambah Staf</button>
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text"><h1 class="app-pagehead__title">{% translate "Staf Kebun" %} {% info_tip _("Buat akun, atur peran, dan nonaktifkan akses. Akun tidak pernah dihapus karena tercatat di penjualan dan log.") %}</h1></div>
+    <div class="gt-pagehead__actions"><button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Tambah staf" %}</button></div>
   </div>
 
-  <div class="mb-5 grid gap-3 sm:grid-cols-3">
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Akun aktif</p><p class="mt-1 text-2xl font-semibold">{{ stats.active }}</p></div>
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Belum ganti kata sandi</p><p class="mt-1 text-2xl font-semibold">{{ stats.pending }}</p></div>
-    <div class="rounded-xl border border-stone-200 bg-white p-4"><p class="text-xs text-stone-500">Nonaktif</p><p class="mt-1 text-2xl font-semibold">{{ stats.inactive }}</p></div>
+  <div class="gt-grid app-kpis">
+    {% include "components/kpi.html" with stat=True featured=True label=_("Akun aktif") value=stats.active %}
+    {% include "components/kpi.html" with stat=True label=_("Sandi sementara") value=stats.pending tip=_("Akun baru atau yang sandinya diatur ulang memakai sandi sementara sampai pemiliknya menggantinya.") %}
+    {% include "components/kpi.html" with stat=True label=_("Nonaktif") value=stats.inactive %}
   </div>
 
-  <div class="rounded-xl border border-stone-200 bg-white">
-    <div class="flex flex-wrap items-center gap-3 border-b border-stone-200 p-3">
-      <div class="flex gap-1 rounded-lg bg-stone-100 p-1 text-sm">
-        <a href="?tab=active" class="rounded-md px-3 py-1 {% if tab != 'inactive' %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">Aktif</a>
-        <a href="?tab=inactive" class="rounded-md px-3 py-1 {% if tab == 'inactive' %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">Nonaktif</a>
-      </div>
-      <form method="get" class="ml-auto w-full sm:w-64"><input type="hidden" name="tab" value="{{ tab }}"><input name="q" value="{{ q }}" placeholder="Cari nama / pengguna…"></form>
+  <section class="gt-card" aria-label="{% translate 'Daftar staf' %}">
+    <div class="app-toolbar">
+      <nav class="gt-tabs" aria-label="{% translate 'Status' %}">
+        <a href="?tab=active" class="gt-tab app-tab{% if tab != 'inactive' %} gt-tab--active{% endif %}"{% if tab != 'inactive' %} aria-current="page"{% endif %}>{% translate "Aktif" %}</a>
+        <a href="?tab=inactive" class="gt-tab app-tab{% if tab == 'inactive' %} gt-tab--active{% endif %}"{% if tab == 'inactive' %} aria-current="page"{% endif %}>{% translate "Nonaktif" %}</a>
+      </nav>
+      <form method="get" class="app-toolbar__search"><input type="hidden" name="tab" value="{{ tab }}"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari staf" %}</span><input name="q" value="{{ q }}" placeholder="{% translate 'Cari nama / pengguna…' %}" class="app-field app-field--sm"></label></form>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="text-left text-xs uppercase tracking-wide text-stone-500"><tr class="border-b border-stone-200">
-          <th class="px-4 py-3">Pengguna</th><th class="px-4 py-3">Peran</th><th class="px-4 py-3">Bergabung</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right"></th></tr></thead>
-        <tbody class="divide-y divide-stone-100">
+    <div class="app-table-wrap">
+      <table class="gt-table">
+        <thead><tr><th>{% translate "Pengguna" %}</th><th>{% translate "Peran" %}</th><th>{% translate "Bergabung" %}</th><th>{% translate "Status" %}</th><th class="num"><span class="sr-only">{% translate "Aksi" %}</span></th></tr></thead>
+        <tbody>
         {% for u in page.object_list %}
           <tr>
-            <td class="px-4 py-3"><p class="font-medium">{{ u.get_full_name|default:u.username }}</p><p class="text-xs text-stone-500">@{{ u.username }}{% if u.pk == user.pk %} · Anda{% endif %}</p></td>
-            <td class="px-4 py-3">{{ u.role|default:"—" }}{% if u.is_superuser %} <span class="text-xs text-stone-400">(superuser)</span>{% endif %}</td>
-            <td class="px-4 py-3 text-stone-600">{{ u.date_joined|date:"d M Y" }}</td>
-            <td class="px-4 py-3">{% if not u.is_active %}{% pill "Nonaktif" "INACTIVE" %}{% elif u.profile.must_change_password %}{% pill "Menunggu ganti sandi" tone="yellow" %}{% else %}{% pill "Aktif" "ACTIVE" %}{% endif %}</td>
-            <td class="px-4 py-3 text-right">
-              <div class="relative inline-block text-left" x-data="{ open: false, pw: false }" @click.outside="open=false">
-                <button type="button" @click="open=!open" class="rounded-md p-1.5 hover:bg-stone-100" aria-label="Aksi">{% icon "dots" %}</button>
-                <div x-show="open" x-cloak class="absolute right-0 z-10 mt-1 w-64 rounded-xl border border-stone-200 bg-white p-2 text-left shadow-lg">
+            <td><div class="gt-person"><span class="gt-avatar gt-avatar--sm" aria-hidden="true">{{ u.get_full_name|default:u.username|first|upper }}</span>
+              <span class="gt-person__text"><span class="gt-person__name app-strong">{{ u.get_full_name|default:u.username }}</span><span class="gt-person__meta">@{{ u.username }}{% if u.pk == user.pk %} {% translate "· Anda" %}{% endif %}</span></span></div></td>
+            <td>{% if u.role %}<span class="gt-chip gt-chip--sm">{{ u.role }}</span>{% else %}—{% endif %}{% if u.is_superuser %} <span class="gt-chip gt-chip--sm">{% translate "superuser" %}</span>{% endif %}</td>
+            <td class="app-muted">{{ u.date_joined|date:"d M Y" }}</td>
+            <td>{% if not u.is_active %}{% pill _("Nonaktif") "INACTIVE" %}{% elif u.profile.must_change_password %}{% pill _("Ganti sandi") tone="yellow" %}{% else %}{% pill _("Aktif") "ACTIVE" %}{% endif %}</td>
+            <td class="num">
+              <div class="relative inline-block text-left" x-data="{ open: false, pw: false }" @click.outside="open=false" @keydown.escape="open=false">
+                {% blocktranslate asvar t_aria_label_1 with v1=u.username %}Aksi untuk {{ v1 }}{% endblocktranslate %}<button type="button" @click="open=!open" class="gt-iconbtn gt-iconbtn--sm" aria-label="{{ t_aria_label_1 }}" :aria-expanded="open">{% icon "dots" %}</button>
+                <div x-show="open" x-cloak class="app-menu app-menu--sm app-menu--staff">
                   {% if not u.is_superuser %}
-                  <form method="post" action="{% url 'core:staff_action' u.pk 'role' %}" class="flex gap-2 p-1">{% csrf_token %}
-                    <select name="role">{% for r in roles_list %}<option value="{{ r }}" {% if r == u.role %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
-                    <button class="rounded-md bg-stone-100 px-3 text-xs font-medium hover:bg-stone-200">Ubah</button>
+                  <form method="post" action="{% url 'core:staff_action' u.pk 'role' %}" class="app-rowform">{% csrf_token %}
+                    <select name="role" class="app-field app-field--sm" aria-label="{% translate 'Peran' %}">{% for r in roles_list %}<option value="{{ r }}" {% if r == u.role %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+                    <button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Ubah" %}</button>
                   </form>
                   {% endif %}
-                  <button type="button" @click="pw=!pw" class="block w-full rounded-md px-2 py-1.5 text-left hover:bg-stone-100">Atur ulang kata sandi</button>
-                  <form x-show="pw" x-cloak method="post" action="{% url 'core:staff_action' u.pk 'password' %}" class="flex gap-2 p-1">{% csrf_token %}
-                    <input type="password" name="temp_password" placeholder="Sandi sementara" required>
-                    <button class="rounded-md bg-stone-100 px-3 text-xs font-medium hover:bg-stone-200">Simpan</button>
+                  <button type="button" @click="pw=!pw" class="app-menu__item">{% translate "Atur ulang sandi" %}</button>
+                  <form x-show="pw" x-cloak method="post" action="{% url 'core:staff_action' u.pk 'password' %}" class="app-rowform">{% csrf_token %}
+                    <input type="password" name="temp_password" placeholder="{% translate 'Sandi sementara' %}" required class="app-field app-field--sm" aria-label="{% translate 'Sandi sementara' %}">
+                    <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Simpan" %}</button>
                   </form>
                   {% if u.is_active %}
-                  <form method="post" action="{% url 'core:staff_action' u.pk 'deactivate' %}" onsubmit="return confirm('Nonaktifkan {{ u.username|escapejs }}?')">{% csrf_token %}
-                    <button class="block w-full rounded-md px-2 py-1.5 text-left text-red-700 hover:bg-stone-100">Nonaktifkan</button></form>
+                  {% blocktranslate asvar t_data_confirm_title_2 with v1=u.username %}Nonaktifkan {{ v1 }}?{% endblocktranslate %}<form method="post" action="{% url 'core:staff_action' u.pk 'deactivate' %}" data-confirm-title="{{ t_data_confirm_title_2 }}" data-confirm="{% translate 'Pengguna tidak bisa masuk lagi sampai diaktifkan kembali. Riwayat penjualan dan laporannya tetap tersimpan.' %}" data-confirm-action="{% translate 'Nonaktifkan' %}" data-confirm-danger>{% csrf_token %}
+                    <button class="app-menu__item app-menu__item--danger">{% translate "Nonaktifkan" %}</button></form>
                   {% else %}
                   <form method="post" action="{% url 'core:staff_action' u.pk 'activate' %}">{% csrf_token %}
-                    <button class="block w-full rounded-md px-2 py-1.5 text-left hover:bg-stone-100">Aktifkan kembali</button></form>
+                    <button class="app-menu__item">{% translate "Aktifkan kembali" %}</button></form>
                   {% endif %}
                 </div>
               </div>
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="5" class="px-4 py-12 text-center">
-            <p class="font-medium">{% if q %}Tidak ada staf yang cocok dengan “{{ q }}”.{% elif tab == 'inactive' %}Belum ada akun nonaktif.{% else %}Belum ada staf.{% endif %}</p>
-            <p class="mt-1 text-sm text-stone-500">Tambahkan pekerja, kasir, atau manajer agar mereka bisa mencatat kegiatan dan penjualan.</p>
-          </td></tr>
+          <tr><td colspan="5" class="app-empty-cell"><div class="gt-callout app-empty"><div>
+            <span class="gt-callout__title">{% if q %}{% translate "Tidak ada staf yang cocok dengan “" %}{{ q }}”.{% elif tab == 'inactive' %}{% translate "Belum ada akun nonaktif." %}{% else %}{% translate "Belum ada staf." %}{% endif %}</span>
+            <span class="gt-callout__body">{% translate "Tambahkan pekerja, kasir, atau manajer agar mereka bisa mencatat kegiatan dan penjualan." %}</span></div></div></td></tr>
         {% endfor %}
         </tbody>
       </table>
     </div>
     {% include "components/pagination.html" %}
-  </div>
+  </section>
 
-  {# Right-side sheet (D69) #}
-  <div x-show="sheet" x-cloak class="fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" @click="sheet=false"></div>
-    <div class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
-      <div class="flex items-center justify-between border-b border-stone-200 px-5 py-4">
-        <h2 class="text-lg font-semibold">Tambah Staf</h2>
-        <button type="button" @click="sheet=false" class="rounded-md p-1 hover:bg-stone-100" aria-label="Tutup">{% icon "x" %}</button>
-      </div>
-      <form method="post" class="flex flex-1 flex-col overflow-y-auto px-5 py-4">{% csrf_token %}
+  {% include "components/sheet.html" with title=_("Tambah staf") %}
+      <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
-        <div class="mt-auto flex justify-end gap-2 pt-6">
-          <button type="button" @click="sheet=false" class="rounded-lg border border-stone-200 px-4 py-2 text-sm hover:bg-stone-100">Batal</button>
-          <button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">Buat Akun</button>
+        <div class="app-sheet__foot">
+          <button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>
+          <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Buat akun" %}</button>
         </div>
       </form>
-    </div>
-  </div>
+  {% include "components/sheet.html" with end=True %}
 </div>
 {% endblock %}

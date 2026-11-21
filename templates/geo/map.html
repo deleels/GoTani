@@ -1,87 +1,182 @@
 {% extends "base.html" %}
-{% load ui %}
-{% block title %}Cuaca & Satelit{% endblock %}
+{% load i18n %}
+{% load static ui %}
+{% block title %}{% translate "Cuaca & Satelit" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="{% static 'core/polyedit.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="{% static 'core/charts.js' %}"></script>
 <style>.leaflet-container { font: inherit; } #map { z-index: 0; }</style>
 {% endblock %}
 {% block content %}
 {{ map_data|json_script:"map-data" }}
 <div x-data="geoPage()">
-  <div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">Cuaca &amp; Satelit</h1>
-      <p class="mt-1 text-sm text-stone-500">{% subtitle "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kelembapan tanah, dan prakiraan cuaca 7 hari." worker="Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja." %}</p>
+  <div class="gt-pagehead app-pagehead--sm">
+    <div class="app-pagehead__text">
+      {% subtitle "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kondisi tanah, waktu semprot, kebutuhan air, dan prakiraan cuaca." worker="Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja." as sub %}
+      <h1 class="app-pagehead__title">{% translate "Cuaca &amp; Satelit" %} {% info_tip sub %}</h1>
     </div>
-    <template x-if="canEdit"><p class="text-xs text-stone-500">Gambar poligon dengan ikon ⬠ di peta. Luas dihitung di server (0,02–1.000 ha).</p></template>
   </div>
 
-  {% if not has_location %}<p class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">Lokasi kebun belum diatur — {% if roles.label == 'OWNER' %}<a class="underline" href="{% url 'core:settings' %}">isi lintang/bujur di Pengaturan</a>{% else %}minta OWNER mengisinya di Pengaturan{% endif %} agar prakiraan cuaca tepat.</p>{% endif %}
+  {% if not has_location %}<div class="gt-callout gt-callout--warning gt-callout--raised app-section-gap">{% icon "alert" 18 %}<div><span class="gt-callout__title">{% translate "Lokasi kebun belum diatur" %}</span><span class="gt-callout__body">{% if roles.label == 'OWNER' %}<a class="app-link" href="{% url 'core:settings' %}">{% translate "Isi lintang/bujur di Pengaturan" %}</a>{% else %}{% translate "Minta OWNER mengisinya di Pengaturan" %}{% endif %} {% translate "agar prakiraan cuaca tepat." %}</span></div></div>{% endif %}
 
-  <div class="grid gap-5 lg:grid-cols-3">
-    <div class="space-y-5 lg:col-span-2">
-      <div class="overflow-hidden rounded-xl border border-stone-200 bg-white"><div id="map" class="h-[60vh] min-h-[360px] w-full"></div></div>
-
-      <div class="rounded-xl border border-stone-200 bg-white" x-show="selected" x-cloak>
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3">
-          <h2 class="font-semibold" x-text="selected && selected.name"></h2>
-          <label class="flex items-center gap-2 text-sm" x-show="sat && sat.has_image"><input type="checkbox" x-model="showNdvi" @change="toggleOverlay()" style="width:auto"> Tampilkan citra NDVI</label>
+  <div class="app-split">
+    <div class="app-side">
+      <section class="gt-card app-mapcard" aria-label="{% translate 'Peta lahan' %}">
+        <form class="app-mapsearch" @submit.prevent="search()" role="search">
+          <label class="app-search">{% icon "search" 18 %}<input x-model="query" type="search" placeholder="{% translate 'Cari desa, kecamatan, atau kabupaten…' %}" aria-label="{% translate 'Cari lokasi' %}" class="app-field app-field--sm"></label>
+          <button class="gt-btn gt-btn--outline gt-btn--sm" :disabled="searching" x-text="searching ? '{% jt "Mencari…" %}' : '{% jt "Cari" %}'"></button>
+          <ul x-show="places.length || searchMsg" x-cloak @click.outside="places = []; searchMsg = ''" class="app-menu app-mapsearch__results">
+            <template x-for="pl in places" :key="pl.lat + ',' + pl.lon"><li><button type="button" class="app-menu__item" @click="goTo(pl)" x-text="pl.name"></button></li></template>
+            <li x-show="searchMsg" class="app-menu__empty" x-text="searchMsg"></li>
+          </ul>
+        </form>
+        <div id="map" class="app-map"></div>
+        {# Phase 7 polygon editor (core/polyedit.js): every action sits here under the map; saved only on Simpan. #}
+        <div class="app-mapedit" x-show="edMode" x-cloak role="region" aria-label="{% translate 'Ubah batas poligon' %}">
+          <div class="app-mapedit__head">
+            <template x-if="edMode === 'edit' && !edTarget"><input x-model="draftName" class="app-field app-field--sm app-grow" aria-label="{% translate 'Nama poligon' %}"></template>
+            <b x-show="edMode === 'draw'" class="app-grow">{% translate "Menggambar lahan baru" %}</b>
+            <b x-show="edMode === 'edit' && edTarget" x-text="edTarget && edTarget.name" class="app-grow"></b>
+            <span class="gt-chip gt-chip--sm" x-show="edCount" x-text="edStat()"></span>
+          </div>
+          <p class="app-row__meta" x-show="edMode === 'draw'">{% translate "Klik peta untuk menaruh titik sudut. Klik titik pertama atau Selesai untuk menutup. Titik bisa ditarik, klik kanan untuk menghapus." %}</p>
+          <p class="app-row__meta" x-show="edMode === 'edit'">{% translate "Tarik titik untuk memindahkan · klik + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus." %}</p>
+          <p class="app-error" x-show="edCross">{% translate "Sisi poligon bersilangan. Pindahkan titik agar sisinya tidak saling memotong." %}</p>
+          <div class="app-mapedit__actions">
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="edUndo()" :disabled="!edCanUndo">{% translate "Urungkan" %}</button>
+            <span class="app-grow"></span>
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="cancelEdit()">{% translate "Batal" %}</button>
+            <button type="button" x-show="edMode === 'draw'" class="gt-btn gt-btn--solid gt-btn--sm" @click="edFinish()" :disabled="edCount < 3 || edCross">{% translate "Selesai" %}</button>
+            <button type="button" x-show="edMode === 'edit'" class="gt-btn gt-btn--solid gt-btn--sm" @click="saveEdit()" :disabled="edCount < 3 || edCross || saving">{% translate "Simpan" %}</button>
+          </div>
         </div>
-        <div class="p-4 text-sm">
-          <template x-if="loading"><p class="text-stone-500">Memuat data satelit…</p></template>
-          <template x-if="!loading && dataError"><p class="text-stone-500">Tidak dapat memuat data satelit · <button type="button" class="underline" @click="loadData()">Coba lagi</button></p></template>
-          <template x-if="!loading && !dataError && message"><p class="text-stone-500"><span x-text="message"></span><span x-show="!agroEnabled"> — kunci Agromonitoring belum dipasang di server.</span></p></template>
-          <div x-show="!loading && sat" class="space-y-4">
-            <div class="overflow-x-auto">
-              <table class="w-full text-xs">
-                <thead class="text-left text-stone-500"><tr><th class="py-1">Lintasan</th><th>Awan</th><th class="text-right">NDVI min / rata / maks</th><th class="text-right">EVI rata</th><th class="text-right">NDWI rata</th></tr></thead>
+        <p class="app-row__meta app-maphint" x-show="canEdit && !edMode">{% translate "Klik ikon ⬠ di kiri peta untuk menggambar lahan." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
+      </section>
+
+      <section class="gt-card" x-data="forecastPanel()" @weather-loaded.window="set($event.detail)" x-show="w" x-cloak aria-labelledby="h-48">
+        <div class="gt-card__head"><h2 class="gt-card__title" id="h-48">{% translate "48 jam ke depan" %} {% info_tip _("Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, oranye cukup, merah buruk.") %}</h2>
+          <span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>{% translate "Baik" %}</span><span><i class="app-legend__dot" style="background:var(--warning-ink)"></i>{% translate "Cukup" %}</span><span><i class="app-legend__dot" style="background:var(--danger)"></i>{% translate "Buruk" %}</span></span></div>
+        <div class="app-hours">
+            <template x-for="h in (w ? w.hours : [])" :key="h.time">
+              <div class="app-hour" :title="gtT('{% jt "Hujan %(pct)s%% · angin %(wind)s km/j" %}', { pct: h.rain_pct ?? 0, wind: Math.round(h.wind || 0) })">
+                <span class="app-hour__t" x-text="hourLabel(h.time)"></span>
+                <span class="app-hour__temp" x-text="Math.round(h.temp) + '°C'"></span>
+                <span :class="(h.rain_pct || 0) >= 50 ? 'app-hour__rain is-wet' : 'app-hour__rain'" x-text="(h.rain_pct ?? 0) + '%'"></span>
+                <span class="app-hour__wind" x-text="Math.round(h.wind || 0)"></span>
+                <i class="app-hour__spray" :class="h.spray === 'GOOD' ? 'is-good' : h.spray === 'FAIR' ? 'is-fair' : 'is-bad'"></i>
+              </div>
+            </template>
+        </div>
+        {# Rain history and water need stack: side by side they shared ~330px each and squashed the chart and the table (layout bug). #}
+        <div class="app-geo__parts">
+          <div>
+            <div class="app-sectionhead">
+              <h3 class="app-subtitle">{% translate "Hujan 30 hari terakhir" %}</h3>
+              <span class="gt-chip gt-chip--sm" x-text="w ? 'Total ' + fmtNum(w.rain_30d_mm, 1) + ' mm' : ''"></span>
+            </div>
+            <div class="relative h-48 w-full min-w-0 app-chartbox"><canvas id="rain-chart" role="img" aria-label="{% translate 'Curah hujan harian 30 hari terakhir' %}"></canvas></div>
+          </div>
+          <div class="min-w-0">
+            <div class="app-sectionhead">
+              <h3 class="app-subtitle">{% translate "Kebutuhan air hari ini" %} {% info_tip _("Butuh = ET₀ × Kc; hujan tidak dihitung untuk elemen beratap. Isi Kc varietas di admin bila kosong.") %}</h3>
+              <span class="gt-chip gt-chip--sm" x-text="water && water.et0_mm != null ? gtT('{% jt "ET₀ %(et0)s mm · hujan %(rain)s mm" %}', { et0: fmtNum(water.et0_mm, 1), rain: fmtNum(water.rain_mm, 1) }) : '{% jt "ET₀ tidak tersedia" %}'"></span>
+            </div>
+            <div class="app-table-wrap">
+            <table class="gt-table">
+              <thead><tr><th>{% translate "Elemen" %}</th><th class="num">{% translate "Kc" %}</th><th class="num">{% translate "Butuh" %}</th><th class="num">{% translate "Kurang" %}</th><th class="num">{% translate "Liter" %}</th></tr></thead>
+              <tbody>
+                <template x-for="r in (water ? water.rows : [])" :key="r.element">
+                  <tr>
+                    <td><b x-text="r.element"></b> <span class="app-muted" x-text="r.variety"></span><span x-show="r.covered" class="app-muted"> {% translate "· beratap" %}</span></td>
+                    <td class="num" x-text="r.kc ? fmtNum(r.kc, 2) : '—'"></td>
+                    <td class="num" x-text="r.need_mm ? fmtNum(r.need_mm, 1) + ' mm' : '—'"></td>
+                    <td class="num" x-text="r.deficit_mm ? fmtNum(r.deficit_mm, 1) + ' mm' : '—'"></td>
+                    <td class="num"><b x-text="r.litres ? fmtNum(r.litres, 0) + ' L' : '—'"></b></td>
+                  </tr>
+                </template>
+                <tr x-show="water && !water.rows.length"><td colspan="5" class="app-empty-cell app-muted">{% translate "Tidak ada siklus aktif." %}</td></tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gt-card" x-show="selected" x-cloak aria-label="{% translate 'Data satelit poligon' %}">
+        <div class="gt-card__head">
+          <h2 class="gt-card__title" x-text="selected && selected.name"></h2>
+          <label class="gt-check app-check--inline" x-show="sat && sat.has_image"><input type="checkbox" x-model="showNdvi" @change="toggleOverlay()"><span class="gt-check__title">{% translate "Citra NDVI" %}</span></label>
+        </div>
+        <div class="app-geo__parts">
+          <template x-if="loading"><p class="app-muted">{% translate "Memuat data satelit…" %}</p></template>
+          <template x-if="!loading && dataError"><p class="app-muted">{% translate "Tidak dapat memuat data satelit ·" %} <button type="button" class="app-link" @click="loadData()">{% translate "Coba lagi" %}</button></p></template>
+          <template x-if="!loading && !dataError && message"><div class="gt-callout" :class="reason === 'NO_IMAGERY' ? '' : 'gt-callout--warning'">{% icon "info" 18 %}<span class="gt-callout__title" x-text="message"></span></div></template>
+          <div x-show="!loading && sat" class="app-geo__parts">
+            <div class="gt-metrics app-metrics3" x-show="sat && sat.passes.length">
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "NDVI rata-rata" %} {% info_tip _("Kehijauan tanaman, 0–1. Makin tinggi makin rimbun.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndvi ? n3(sat.passes[0].ndvi.mean) : '—'"></span></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "EVI rata-rata" %} {% info_tip _("Seperti NDVI, lebih peka pada tajuk yang rapat.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].evi ? n3(sat.passes[0].evi.mean) : '—'"></span></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "NDWI rata-rata" %} {% info_tip _("Kandungan air daun. Negatif = lebih kering.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndwi ? n3(sat.passes[0].ndwi.mean) : '—'"></span></div>
+            </div>
+            <div class="app-ndvi-legend" x-show="showNdvi" role="img" aria-label="{% translate 'Skala NDVI: merah jarang, kuning sedang, hijau rimbun' %}"><span>0</span><i></i><span>1</span>
+              <small>{% translate "Jarang" %}</small><small>{% translate "Sedang" %}</small><small>{% translate "Rimbun" %}</small></div>
+            <div class="relative h-48 app-chartbox"><canvas id="ndvi-chart" role="img" aria-label="{% translate 'Riwayat NDVI rata-rata' %}"></canvas></div>
+            <div class="app-table-wrap">
+              <table class="gt-table">
+                <thead><tr><th>{% translate "Lintasan" %}</th><th class="num">{% translate "Awan" %}</th><th class="num">{% translate "NDVI min / rata / maks" %}</th><th class="num">{% translate "EVI" %}</th><th class="num">{% translate "NDWI" %}</th></tr></thead>
                 <tbody>
                   <template x-for="p in (sat ? sat.passes : [])" :key="p.dt + p.type">
-                    <tr class="border-t border-stone-100"><td class="py-1" x-text="fmtDate(p.dt) + ' · ' + (p.type || '')"></td><td x-text="p.cloud != null ? Math.round(p.cloud) + '%' : '—'"></td>
-                      <td class="text-right" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '—'"></td>
-                      <td class="text-right" x-text="p.evi ? n3(p.evi.mean) : '—'"></td><td class="text-right" x-text="p.ndwi ? n3(p.ndwi.mean) : '—'"></td></tr>
+                    <tr><td x-text="fmtDate(p.dt) + ' · ' + (p.type || '')"></td><td class="num" x-text="p.cloud != null ? Math.round(p.cloud) + '%' : '—'"></td>
+                      <td class="num" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '—'"></td>
+                      <td class="num" x-text="p.evi ? n3(p.evi.mean) : '—'"></td><td class="num" x-text="p.ndwi ? n3(p.ndwi.mean) : '—'"></td></tr>
                   </template>
                 </tbody>
               </table>
             </div>
-            <div class="h-48"><canvas id="ndvi-chart" role="img" aria-label="Riwayat NDVI rata-rata"></canvas></div>
           </div>
-          <div x-show="!loading && soil" class="mt-4 grid grid-cols-3 gap-3">
-            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah 0 cm</p><p class="text-lg font-semibold" x-text="soil && soil.t0_c != null ? soil.t0_c + ' °C' : '—'"></p></div>
-            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Suhu tanah 10 cm</p><p class="text-lg font-semibold" x-text="soil ? soil.t10_c + ' °C' : '—'"></p></div>
-            <div class="rounded-lg bg-stone-50 p-3"><p class="text-xs text-stone-500">Kelembapan tanah</p><p class="text-lg font-semibold" x-text="soil && soil.moisture != null ? (soil.moisture * 100).toFixed(1) + '%' : '—'"></p></div>
+          <div x-show="!loading && soil">
+            <h3 class="app-subtitle">{% translate "Tanah" %} {% info_tip _("Perkiraan model Open-Meteo, bukan sensor.") %}</h3>
+            <div class="app-soil">
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "Suhu tanah" %}</span>
+                <dl class="gt-kv gt-kv--compact"><template x-for="t in (soil ? soil.temperature : [])" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? fmtNum(t.value, 1) + ' °C' : '—'"></dd></div></template></dl></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "Kelembapan tanah" %} {% info_tip _("Persentase volume air di tanah.") %}</span>
+                <dl class="gt-kv gt-kv--compact"><template x-for="m in (soil ? soil.moisture : [])" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? fmtNum(m.value * 100, 1) + '%' : '—'"></dd></div></template></dl></div>
+            </div>
           </div>
+          <p x-show="!loading && !dataError && !soil" class="app-row__meta">{% translate "Data tanah tidak tersedia saat ini." %}</p>
         </div>
-      </div>
+      </section>
     </div>
 
-    <aside class="space-y-5">
+    <aside class="app-side">
       {% include "geo/_weather_widget.html" %}
 
-      <div class="rounded-xl border border-stone-200 bg-white">
-        <div class="border-b border-stone-200 px-4 py-3"><h2 class="font-semibold">Poligon lahan</h2></div>
-        <template x-if="!polygons.length"><p class="px-4 py-6 text-center text-sm text-stone-500">Belum ada poligon. <span x-show="canEdit">Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI.</span></p></template>
-        <ul class="divide-y divide-stone-100 text-sm">
+      <section class="gt-card" aria-labelledby="h-poly">
+        <div class="gt-card__head"><h2 class="gt-card__title" id="h-poly">{% translate "Poligon lahan" %}</h2></div>
+        <template x-if="!polygons.length"><p class="app-muted">{% translate "Belum ada poligon." %} <span x-show="canEdit">{% translate "Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI." %}</span></p></template>
+        <ul class="gt-list gt-list--divided">
           <template x-for="p in polygons" :key="p.id">
-            <li class="px-4 py-3" :class="selected && selected.id === p.id && 'bg-emerald-50/60'">
-              <button type="button" class="w-full text-left" @click="select(p.id)">
-                <p class="font-medium" x-text="p.name"></p>
-                <p class="text-xs text-stone-500" x-text="fmtHa(p.area_ha) + ' ha terpetakan' + (p.element ? ' · ' + p.element : '')"></p>
+            <li class="app-poly" :class="selected && selected.id === p.id && 'is-on'">
+              <button type="button" class="app-poly__btn" @click="select(p.id)" :aria-expanded="(selected && selected.id === p.id) ? 'true' : 'false'">
+                <span class="app-poly__text"><span class="gt-row__title" x-text="p.name"></span>
+                <span class="app-poly__meta"><span class="app-row__meta" x-text="fmtArea(p) + (p.element ? ' · ' + p.element : '')"></span>
+                  <span x-show="p.covered" class="gt-chip gt-chip--sm" title="{% translate 'Satelit melihat atap, bukan tanaman' %}">{% translate "beratap · tanpa NDVI" %}</span>
+                  <span x-show="!p.covered && p.too_small" class="gt-chip gt-chip--sm" title="{% translate 'Agromonitoring memerlukan poligon 1–3.000 ha' %}">{% translate "tanpa NDVI · &lt; 1 ha" %}</span></span></span>
+                {% icon "chevron-right" 18 "app-poly__chev" %}
               </button>
-              <div x-show="selected && selected.id === p.id" class="mt-2 space-y-2">
-                <template x-if="p.element"><p class="rounded-lg bg-stone-50 px-2 py-1.5 text-xs">Terpetakan <b x-text="fmtM2(p.area_m2)"></b> m² · tercatat <b x-text="fmtM2(p.element_area_m2)"></b> m²</p></template>
+              <div x-show="selected && selected.id === p.id" class="app-poly__edit">
+                <template x-if="p.element"><span class="gt-chip gt-chip--sm">{% translate "Terpetakan" %} <b x-text="fmtM2(p.area_m2)"></b> {% translate "m² · tercatat" %} <b x-text="fmtM2(p.element_area_m2)"></b> m²</span></template>
                 <template x-if="canEdit">
-                  <div class="space-y-2">
-                    <div class="flex gap-1"><input x-model="p.name" class="text-xs"><button type="button" class="rounded bg-stone-100 px-2 text-xs" @click="save(p, { name: p.name })">Ganti nama</button></div>
-                    <div class="flex gap-1"><select class="text-xs" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">— tautkan ke elemen —</option>
+                  <div class="app-poly__edit">
+                    <div class="app-rowform"><input x-model="p.name" class="app-field app-field--sm app-grow" aria-label="{% translate 'Nama poligon' %}"><button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="save(p, { name: p.name })">{% translate "Ganti nama" %}</button></div>
+                    <div class="app-rowform"><select class="app-field app-field--sm" aria-label="{% translate 'Elemen tertaut' %}" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">{% translate "Tidak ditautkan" %}</option>
                       <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
-                    <div class="flex flex-wrap gap-2">
-                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="rounded bg-emerald-600 px-2 py-1 text-xs text-white" @click="useArea(p)">Pakai luas terpetakan</button>
-                      <button type="button" class="rounded px-2 py-1 text-xs text-red-700 underline" @click="remove(p)">Hapus</button>
+                    <div class="app-rowform">
+                      <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="startEdit(p)" :disabled="!!edMode">{% translate "Ubah batas" %}</button>
+                      <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--solid gt-btn--sm" @click="useArea(p)" title="{% translate 'Pakai luas terpetakan sebagai luas elemen' %}">{% translate "Pakai luas" %}</button>
+                      <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" @click="remove(p)">{% translate "Hapus" %}</button>
                     </div>
                   </div>
                 </template>
@@ -89,93 +184,242 @@
             </li>
           </template>
         </ul>
-        <p x-show="error" x-text="error" class="border-t border-red-100 bg-red-50 px-4 py-2 text-xs text-red-800"></p>
-      </div>
+        <p x-show="error" x-text="error" class="app-error"></p>
+      </section>
     </aside>
   </div>
 </div>
 {% endblock %}
 {% block scripts %}
 <script>
+function forecastPanel() {
+  let chart;
+  return {
+    w: null, water: null,
+    set(d) {
+      this.w = d && d.weather ? d.weather : null; this.water = d ? d.water : null;
+      this.$nextTick(() => this.draw());
+    },
+    draw() {
+      if (!window.Chart || !this.w) return;
+      if (chart) chart.destroy();
+      const h = this.w.history, G = window.gtCharts;
+      // Measured rain: varied solid bars (wettest day dark, today light with its value tag); hatching is only for pending values.
+      const day = (d) => new Date(d.date + "T00:00:00").toLocaleDateString(window.GT_LOCALE, { day: "numeric", month: "short" });
+      chart = new Chart(document.getElementById("rain-chart"), {
+        type: "bar",
+        data: { labels: h.map(day),
+                datasets: [{ label: "{% jt "Hujan" %}", data: h.map((d) => d.rain_mm || 0), ...(G ? G.BAR : {}), maxBarThickness: 14,
+                             backgroundColor: G ? G.vary(h.map((d) => d.rain_mm || 0), { current: h.length - 1 }) : "#227d53" }] },
+        options: { maintainAspectRatio: false, layout: { padding: { top: 30 } }, plugins: { legend: { display: false },
+                     gtTag: { index: h.length - 1, text: this.fmtNum(h.length ? h[h.length - 1].rain_mm || 0 : 0, 1) + " mm" },
+                     tooltip: { callbacks: { title: (it) => h[it[0].dataIndex] ? new Date(h[it[0].dataIndex].date + "T00:00:00").toLocaleDateString(window.GT_LOCALE, { weekday: "long", day: "numeric", month: "long" }) : "",
+                                             label: (ctx) => this.fmtNum(ctx.parsed.y, 1) + " mm" } } },
+                   scales: { x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
+                             y: G ? G.axis({ beginAtZero: true, ticks: { padding: 8, maxTicksLimit: 4, callback: (v) => this.fmtNum(v, 0) + " mm" } }) : { beginAtZero: true } } },
+      });
+    },
+    hourLabel(t) { const d = new Date(t); return d.getHours() === 0 ? d.toLocaleDateString(window.GT_LOCALE, { weekday: "short" }) : String(d.getHours()).padStart(2, "0"); },
+    fmtNum(v, d) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: d }); },
+  };
+}
+
 function geoPage() {
   const data = JSON.parse(document.getElementById("map-data").textContent);
   const csrf = "{{ csrf_token }}";
   const base = "{% url 'geo:polygon_create' %}";
-  let map, group, overlay, chart;
+  let map, group, overlay, chart, editor;
   const layers = {};
   return {
     polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
-    selected: null, sat: null, soil: null, message: null, loading: false, dataError: false, showNdvi: false, error: "",
+    selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false, error: "",
+    query: "", places: [], searchMsg: "", searching: false,
+    // Editor state: plain values only (Leaflet objects stay in the closure; Alpine proxies break them).
+    edMode: "", edTarget: null, edCount: 0, edArea: 0, edCross: false, edCanUndo: false, draftName: "", saving: false,
+    async search() {
+      if (this.query.trim().length < 3) { this.searchMsg = "Ketik minimal 3 huruf."; return; }
+      this.searching = true; this.places = []; this.searchMsg = "";
+      try {
+        const r = await fetch("{% url 'geo:search' %}?q=" + encodeURIComponent(this.query));
+        const d = await r.json();
+        this.places = d.places; this.searchMsg = d.message || "";
+      } catch (e) { this.searchMsg = "{% jt "Pencarian lokasi tidak tersedia." %}"; }
+      this.searching = false;
+    },
+    goTo(pl) {
+      this.places = []; this.searchMsg = "";
+      if (pl.bbox && pl.bbox.length === 4) map.fitBounds([[pl.bbox[0], pl.bbox[2]], [pl.bbox[1], pl.bbox[3]]], { maxZoom: 17 });
+      else map.setView([pl.lat, pl.lon], 16);
+    },
     init() {
-      if (!window.L) { document.getElementById("map").innerHTML = '<p class="p-6 text-sm text-stone-500">Tidak dapat memuat peta · muat ulang halaman.</p>'; return; }
+      if (!window.L) { document.getElementById("map").innerHTML = '<p class="app-muted app-empty-cell">{% jt "Tidak dapat memuat peta · muat ulang halaman." %}</p>'; return; }
+      // Tile credits are required by Esri / OSM terms, so they stay as one small line; the Leaflet link is optional.
       map = L.map("map").setView(data.center, 16);
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 19, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" }).addTo(map);
+      map.attributionControl.setPrefix(false);
+      const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/";
+      // D92: three base maps. OSM shows local (Indonesian) place and road names. OSM's tile policy needs a Referer, and
+      // the site default (same-origin) sends none, so its tiles ask for the origin explicitly.
+      const sat = () => L.tileLayer(esri + "World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: "© Esri, Maxar, Earthstar Geographics" });
+      const labels = L.tileLayer(esri + "Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19 });
+      const satLabel = L.layerGroup([sat(), labels]).addTo(map);
+      const streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution: "© OpenStreetMap", referrerPolicy: "strict-origin-when-cross-origin" });
+      L.control.layers({ "{% jt "Satelit + label" %}": satLabel, "{% jt "Satelit" %}": sat(), "{% jt "Peta (OpenStreetMap)" %}": streets }, null, { position: "topright" }).addTo(map);
+      L.control.scale({ imperial: false }).addTo(map);
+      this.addLocateControl();
       group = new L.FeatureGroup().addTo(map);
       this.polygons.forEach((p) => this.addLayer(p));
-      if (this.polygons.length) map.fitBounds(group.getBounds(), { padding: [30, 30] });
-      if (this.canEdit && L.Control.Draw) {
-        map.addControl(new L.Control.Draw({
-          edit: { featureGroup: group },
-          draw: { polygon: { allowIntersection: false, showArea: true }, polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false },
-        }));
-        map.on(L.Draw.Event.CREATED, async (e) => {
-          const name = prompt("Nama poligon:", "Lahan " + (this.polygons.length + 1));
-          if (!name) return;
-          const r = await this.post(base, { name, geojson: e.layer.toGeoJSON().geometry });
-          if (r) { this.polygons.push(r); this.addLayer(r); this.select(r.id); }
+      // Open on the farm: fit only the fields within 2 km of the farm location (one far-away field must not zoom the
+      // map out to a whole district); with none nearby, show the farm itself at field zoom.
+      const home = L.latLng(data.center), near = L.latLngBounds([]);
+      this.polygons.forEach((p) => { const b = layers[p.id].getBounds(); if (home.distanceTo(b.getCenter()) <= 2000) near.extend(b); });
+      if (near.isValid()) map.fitBounds(near, { padding: [30, 30], maxZoom: 18 }); else map.setView(home, 17);
+      if (this.canEdit && window.gtPolyEditor) {
+        editor = gtPolyEditor(map, {
+          style: { color: this.css("--green-600"), weight: 2.5, fillColor: this.css("--green-400"), fillOpacity: 0.22, lineJoin: "round" },
+          onChange: (st) => { this.edMode = st.mode || ""; this.edCount = st.count; this.edArea = st.areaM2; this.edCross = st.crosses; this.edCanUndo = st.canUndo;
+                              if (drawLink) drawLink.classList.toggle("is-on", st.mode === "draw"); },
         });
-        map.on(L.Draw.Event.EDITED, (e) => e.layers.eachLayer(async (layer) => {
-          const p = this.polygons.find((x) => x.id === layer.polygonId);
-          const r = await this.post(`${base}${p.id}/`, { geojson: layer.toGeoJSON().geometry });
-          if (r) Object.assign(p, r); else layer.setLatLngs(L.GeoJSON.coordsToLatLngs(p.geojson.coordinates, 1));
-        }));
-        map.on(L.Draw.Event.DELETED, (e) => e.layers.eachLayer((layer) => this.remove(this.polygons.find((x) => x.id === layer.polygonId), true)));
+        let drawLink = null;
+        const Draw = L.Control.extend({
+          options: { position: "topleft" },
+          onAdd: () => {
+            const box = L.DomUtil.create("div", "leaflet-bar"); drawLink = L.DomUtil.create("a", "app-drawbtn", box);
+            drawLink.href = "#"; drawLink.title = "{% jt "Gambar lahan" %}"; drawLink.setAttribute("role", "button"); drawLink.setAttribute("aria-label", "{% jt "Gambar lahan" %}");
+            L.DomEvent.on(drawLink, "click", (e) => { L.DomEvent.stop(e); this.startDraw(); });
+            L.DomEvent.disableClickPropagation(box);
+            return box;
+          },
+        });
+        new Draw().addTo(map);
+        // Keys while editing: Backspace / Ctrl+Z undo, Enter finishes a drawing, Esc cancels.
+        document.addEventListener("keydown", (e) => {
+          if (!this.edMode || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+          if (e.key === "Escape") { e.preventDefault(); this.cancelEdit(); }
+          else if ((e.key === "Backspace" && this.edMode === "draw") || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z")) { e.preventDefault(); this.edUndo(); }
+          else if (e.key === "Enter" && this.edMode === "draw") { e.preventDefault(); this.edFinish(); }
+        });
       }
     },
+    addLocateControl() {
+      if (!navigator.geolocation) return;
+      const Locate = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd: () => {
+          const box = L.DomUtil.create("div", "leaflet-bar"), a = L.DomUtil.create("a", "app-locate", box);
+          a.href = "#"; a.title = "{% jt "Lokasi saya" %}"; a.setAttribute("role", "button"); a.setAttribute("aria-label", "{% jt "Lokasi saya" %}");
+          L.DomEvent.on(a, "click", (e) => { L.DomEvent.stop(e); map.locate({ setView: true, maxZoom: 18, enableHighAccuracy: true }); });
+          return box;
+        },
+      });
+      new Locate().addTo(map);
+      let here;
+      map.on("locationfound", (e) => {
+        if (here) map.removeLayer(here);
+        here = L.circle(e.latlng, { radius: e.accuracy, color: "#0ea5e9", weight: 1, fillOpacity: 0.15 }).addTo(map);
+      });
+      map.on("locationerror", () => { this.error = "{% jt "Lokasi tidak dapat diakses — izinkan akses lokasi di browser." %}"; });
+    },
+    css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); },
+    // Green outline with a soft fill; the selected shape is bolder. Shapes without NDVI are dashed.
+    styleFor(p) {
+      const active = this.selected && this.selected.id === p.id;
+      return { color: active ? this.css("--green-700") : this.css("--green-600"), weight: active ? 3.5 : 2.5,
+               fillColor: this.css("--green-400"), fillOpacity: active ? 0.28 : 0.16, dashArray: p.satellite_ok ? null : "6 5", lineJoin: "round" };
+    },
+    edStat() {
+      const n = gtT("{% jt "%(n)s titik" %}", { n: this.edCount });
+      return this.edCount >= 3 ? n + " · ≈ " + this.fmtNum(this.edArea / 10000, 2) + " ha (" + this.fmtM2(this.edArea) + " m²)" : n;
+    },
+    startDraw() {
+      if (!editor || this.edMode) return;
+      this.edTarget = null; this.draftName = "{% jt "Lahan " %}" + (this.polygons.length + 1); this.error = "";
+      editor.draw();
+    },
+    edUndo() { if (editor) editor.undo(); },
+    edFinish() { if (editor && !this.edCross) editor.finish(); },
+    startEdit(p) {
+      const layer = layers[p.id]; if (!editor || !layer || this.edMode) return;
+      if (!this.selected || this.selected.id !== p.id) this.select(p.id);
+      this.edTarget = p; this.error = "";
+      group.removeLayer(layer);   // the editor draws the shape while it is being changed
+      editor.edit(L.GeoJSON.coordsToLatLngs(p.geojson.coordinates[0], 0));
+    },
+    endEdit() {
+      if (this.edTarget && layers[this.edTarget.id]) group.addLayer(layers[this.edTarget.id]);
+      this.edTarget = null; editor.cancel();
+    },
+    cancelEdit() { if (editor) this.endEdit(); },
+    async saveEdit() {
+      if (!editor || this.edCount < 3 || this.edCross || this.saving) return;
+      const target = this.edTarget, geojson = editor.geojson();
+      let r;
+      this.saving = true;
+      if (!target) {
+        const name = this.draftName.trim();
+        if (!name) { this.error = "{% jt "Isi nama poligon." %}"; this.saving = false; return; }
+        r = await this.post(base, { name, geojson });
+      } else r = await this.post(`${base}${target.id}/`, { geojson });
+      this.saving = false;
+      if (!r) return;
+      if (!target) { this.endEdit(); this.polygons.push(r); this.addLayer(r); this.select(r.id); return; }
+      Object.assign(target, r);
+      layers[target.id].setLatLngs(L.GeoJSON.coordsToLatLngs(r.geojson.coordinates, 1));
+      this.endEdit(); this.refreshLayer(target);
+      if (this.selected && this.selected.id === target.id) this.loadData();
+    },
+    restyle() { this.polygons.forEach((p) => layers[p.id] && layers[p.id].setStyle(this.styleFor(p))); },
+    tooltipFor(p) { return `${p.name} · ${this.fmtArea(p)}${p.satellite_ok ? "" : " · " + "{% jt "tanpa NDVI" %}"}`; },
     addLayer(p) {
-      const layer = L.geoJSON({ type: "Feature", geometry: p.geojson }, { style: { color: "#10b981", weight: 2, fillOpacity: 0.15 } }).getLayers()[0];
+      const layer = L.geoJSON({ type: "Feature", geometry: p.geojson }, { style: this.styleFor(p) }).getLayers()[0];
       layer.polygonId = p.id;
-      layer.bindTooltip(p.name);
-      layer.on("click", () => this.select(p.id));
+      layer.bindTooltip(this.tooltipFor(p));
+      layer.on("click", () => { if (!this.edMode) this.select(p.id); });   // while drawing, the click adds a corner
       group.addLayer(layer); layers[p.id] = layer;
+    },
+    refreshLayer(p) {
+      const layer = layers[p.id]; if (!layer) return;
+      layer.setTooltipContent(this.tooltipFor(p)); layer.setStyle(this.styleFor(p));
     },
     async post(url, body) {
       this.error = "";
       try {
         const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrf }, body: JSON.stringify(body) });
         const json = await r.json();
-        if (!r.ok) { this.error = json.error || "Gagal menyimpan."; return null; }
+        if (!r.ok) { this.error = json.error || "{% jt "Gagal menyimpan." %}"; return null; }
         return json;
-      } catch (e) { this.error = "Tidak dapat terhubung ke server."; return null; }
+      } catch (e) { this.error = "{% jt "Tidak dapat terhubung ke server." %}"; return null; }
     },
-    async save(p, body) { const r = await this.post(`${base}${p.id}/`, body); if (r) Object.assign(p, r); },
+    async save(p, body) { const r = await this.post(`${base}${p.id}/`, body); if (r) { Object.assign(p, r); this.refreshLayer(p); } },
     async useArea(p) {
-      if (!confirm(`Ganti luas tercatat ${p.element} menjadi ${this.fmtM2(p.area_m2)} m²?`)) return;
+      if (!(await gtConfirm({ title: "{% jt "Pakai luas dari peta?" %}", body: `Luas tercatat ${p.element} diganti menjadi ${this.fmtM2(p.area_m2)} m². Angka ini dipakai untuk analitik kg/m².`, action: "{% jt "Pakai luas peta" %}" }))) return;
       const r = await this.post(`${base}${p.id}/?action=use_area`, {}); if (r) Object.assign(p, r);
     },
     async remove(p, fromMap = false) {
-      if (!p || (!fromMap && !confirm(`Hapus poligon ${p.name}?`))) return;
+      if (!p || (!fromMap && !(await gtConfirm({ title: `Hapus poligon ${p.name}?`, body: "{% jt "Batas di peta dan riwayat data satelitnya dihapus. Elemen kebun tidak terpengaruh." %}", action: "{% jt "Hapus poligon" %}", danger: true })))) return;
       const r = await this.post(`${base}${p.id}/?action=delete`, {});
       if (r) {
         this.polygons = this.polygons.filter((x) => x.id !== p.id);
         if (layers[p.id]) group.removeLayer(layers[p.id]);
-        if (this.selected && this.selected.id === p.id) this.selected = null;
+        if (this.selected && this.selected.id === p.id) { this.selected = null; this.showNdvi = false; this.toggleOverlay(); }
       }
     },
     select(id) {
       this.selected = this.polygons.find((p) => p.id === id);
+      this.restyle();
       if (layers[id]) map.fitBounds(layers[id].getBounds(), { padding: [40, 40], maxZoom: 18 });
       this.showNdvi = false; this.toggleOverlay(); this.loadData();
     },
     async loadData() {
       const p = this.selected; if (!p) return;
-      this.loading = true; this.dataError = false; this.sat = null; this.soil = null; this.message = null;
+      this.loading = true; this.dataError = false; this.sat = null; this.soil = null; this.message = null; this.reason = null;
       try {
         const r = await fetch(`${base}${p.id}/data/`);
         if (!r.ok) throw new Error(r.status);
         const d = await r.json();
-        this.sat = d.satellite; this.soil = d.soil; this.message = d.message; this.agroEnabled = d.agro_enabled;
+        this.sat = d.satellite; this.soil = d.soil; this.message = d.message; this.reason = d.reason; this.agroEnabled = d.agro_enabled;
         this.$nextTick(() => this.drawChart());
       } catch (e) { this.dataError = true; }
       this.loading = false;
@@ -183,23 +427,35 @@ function geoPage() {
     toggleOverlay() {
       if (overlay) { map.removeLayer(overlay); overlay = null; }
       if (this.showNdvi && this.selected && layers[this.selected.id]) {
-        overlay = L.imageOverlay(`${base}${this.selected.id}/ndvi.png`, layers[this.selected.id].getBounds(), { opacity: 0.85 }).addTo(map);
+        overlay = L.imageOverlay(`${base}${this.selected.id}/ndvi.png`, layers[this.selected.id].getBounds(), { opacity: 0.9, className: "app-ndvi-img" }).addTo(map);
       }
     },
     drawChart() {
       if (!window.Chart || !this.sat) return;
       if (chart) chart.destroy();
-      const h = this.sat.history;
-      chart = new Chart(document.getElementById("ndvi-chart"), {
+      const h = this.sat.history, G = window.gtCharts, c = this.css("--green-600");
+      const cv = document.getElementById("ndvi-chart"), fill = cv.getContext("2d").createLinearGradient(0, 0, 0, cv.clientHeight || 190);
+      fill.addColorStop(0, c + "40"); fill.addColorStop(1, c + "00");
+      // Clean timeline: one green line over a soft area, the latest pass tagged with its value.
+      chart = new Chart(cv, {
         type: "line",
-        data: { labels: h.map((x) => this.fmtDate(x.dt)), datasets: [{ label: "NDVI rata-rata", data: h.map((x) => x.mean), borderColor: "#10b981", backgroundColor: "#10b981", pointRadius: 2, tension: 0.3 }] },
-        options: { maintainAspectRatio: false, scales: { y: { min: 0, max: 1 } }, plugins: { legend: { display: false } } },
+        data: { labels: h.map((x) => this.fmtDate(x.dt)), datasets: [{ label: "{% jt "NDVI rata-rata" %}", data: h.map((x) => x.mean),
+                borderColor: c, backgroundColor: fill, fill: true, borderWidth: 2.5, cubicInterpolationMode: "monotone",
+                pointRadius: h.map((_, i) => (i === h.length - 1 ? 4 : 0)), pointHoverRadius: 5, pointBackgroundColor: "#fff", pointBorderColor: c, pointBorderWidth: 2 }] },
+        options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 30, right: 8 } },
+                   scales: { y: G ? G.axis({ min: 0, max: 1, ticks: { padding: 8, stepSize: 0.25, callback: (v) => this.fmtNum(v, 2) } }) : { min: 0, max: 1 },
+                             x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } } },
+                   plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => "NDVI " + this.n3(ctx.parsed.y) } },
+                              gtTag: { index: h.length - 1, text: h.length ? "NDVI " + this.fmtNum(h[h.length - 1].mean, 2) : "" } } },
       });
     },
-    fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }) : "—"; },
+    fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString(window.GT_LOCALE, { day: "2-digit", month: "short" }) : "—"; },
     n3(v) { return v == null ? "—" : Number(v).toFixed(3); },
-    fmtHa(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 4 }); },
-    fmtM2(v) { return Number(v).toLocaleString("id-ID", { maximumFractionDigits: 0 }); },
+    fmtHa(v) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: 4 }); },
+    fmtNum(v, d) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: d }); },
+    // D92: "0,06 ha (614 m²)"
+    fmtArea(p) { return Number(p.area_ha).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: 2 }) + " ha (" + this.fmtM2(p.area_m2) + " m²)"; },
+    fmtM2(v) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: 0 }); },
   };
 }
 </script>

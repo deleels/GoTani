@@ -1,46 +1,42 @@
 {% extends "farm/_layout.html" %}
-{% load gotani %}
-{% block title %}Input Produksi{% endblock %}
+{% load i18n %}
+{% load gotani ui %}
+{% block title %}{% translate "Input Produksi" %}{% endblock %}
 {% block content %}
-<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">Inventaris Input</h1>
-    <p class="mt-1 text-sm text-stone-500">Pupuk, pestisida dan benih. Pemakaian di Laporan Kerja memotong stok; klik input untuk melihat ke mana saja ia dipakai.</p>
-  </div>
+{% include "components/page_header.html" with title=_("Inventaris Input") subtitle=_("Pupuk, pestisida dan benih. Pemakaian di Laporan Kerja memotong stok; klik input untuk melihat ke mana saja ia dipakai.") %}
+<div class="gt-grid app-kpis">
+  {% include "components/kpi.html" with stat=True featured=True label=_("Jenis input") value=items|length %}
+  {% include "components/kpi.html" with stat=True label=_("Stok menipis") value=low_count %}
 </div>
-<div class="mb-5 grid gap-3 sm:grid-cols-2">
-  {% include "components/kpi.html" with label="Jenis input" value=items|length %}
-  {% include "components/kpi.html" with label="Stok menipis" value=low_count cls="text-amber-700" %}
-</div>
-<div class="grid gap-6 lg:grid-cols-3">
-  <section class="{% if roles.finance %}lg:col-span-2{% else %}lg:col-span-3{% endif %}">
-    <h2 class="mb-3 font-semibold">Stok input produksi</h2>
-    <div class="overflow-x-auto rounded-lg border bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Input</th><th class="p-2">Jenis</th><th class="p-2 text-right">Stok</th><th class="p-2 text-right">Batas peringatan</th>{% if roles.finance %}<th class="p-2 text-right">Biaya rata-rata</th>{% endif %}</tr></thead>
+<div class="{% if roles.finance %}app-split{% endif %}">
+  <section class="app-side">
+    <div class="gt-card app-tablecard">
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Stok input" %}</h2></div>
+      <table class="gt-table">
+        <thead><tr><th>{% translate "Input" %}</th><th>{% translate "Jenis" %}</th><th class="num">{% translate "Stok" %}</th><th class="num">{% translate "Batas peringatan" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya rata-rata" %}</th>{% endif %}</tr></thead>
         <tbody>
         {% for item in items %}
-          <tr class="border-t">
-            <td class="p-2"><a class="font-medium hover:underline" href="{% url 'farm:input_detail' item.pk %}">{{ item.name }}</a> {% if item.is_low_stock %}<span class="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">Stok menipis</span>{% endif %}</td>
-            <td class="p-2">{{ item.get_item_type_display }}</td>
-            <td class="p-2 text-right {% if item.is_low_stock %}font-semibold text-amber-700{% endif %}">{{ item.stock_qty|kg }} {{ item.unit }}</td>
-            <td class="p-2 text-right text-stone-500">{{ item.min_alert_qty|kg }} {{ item.unit }}</td>
-            {% if roles.finance %}<td class="p-2 text-right">{{ item.avg_cost_per_unit_idr|rupiah }}/{{ item.unit }}</td>{% endif %}
+          <tr>
+            <td><a class="app-link--plain app-strong" href="{% url 'farm:input_detail' item.pk %}">{{ item.name }}</a> {% if item.is_low_stock %}{% pill _("Stok menipis") tone="yellow" %}{% endif %}</td>
+            <td>{{ item.get_item_type_display }}</td>
+            <td class="num {% if item.is_low_stock %}app-value--late app-strong{% endif %}">{{ item.stock_qty|kg }} {{ item.unit }}</td>
+            <td class="num app-muted">{{ item.min_alert_qty|kg }} {{ item.unit }}</td>
+            {% if roles.finance %}<td class="num">{{ item.avg_cost_per_unit_idr|rupiah }}/{{ item.unit }}</td>{% endif %}
           </tr>
-        {% empty %}<tr><td colspan="5" class="p-3 text-stone-400">Belum ada input. Tambahkan lewat Admin.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Belum ada input. Tambahkan lewat Admin." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
 
     {% if roles.finance %}
-    <h2 class="mb-2 mt-8 font-semibold">Pembelian terbaru <span class="text-xs font-normal text-stone-400">(aset persediaan — kas keluar, bukan beban laba rugi)</span></h2>
-    <div class="overflow-x-auto rounded-lg border bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Tanggal</th><th class="p-2">Input</th><th class="p-2 text-right">Jumlah</th><th class="p-2 text-right">Harga/satuan</th><th class="p-2 text-right">Total</th><th class="p-2">Pemasok</th></tr></thead>
+    <div class="gt-card app-tablecard">
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Pembelian terbaru" %} {% info_tip _("Aset persediaan: kas keluar, bukan beban laba rugi.") %}</h2></div>
+      <table class="gt-table">
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Input" %}</th><th class="num">{% translate "Jumlah" %}</th><th class="num">{% translate "Harga/satuan" %}</th><th class="num">{% translate "Total" %}</th><th>{% translate "Pemasok" %}</th></tr></thead>
         <tbody>
         {% for p in purchases %}
-          <tr class="border-t"><td class="p-2">{{ p.purchased_at|date:"d-m-Y" }}</td><td class="p-2">{{ p.item.name }}</td><td class="p-2 text-right">{{ p.qty|kg }} {{ p.item.unit }}</td><td class="p-2 text-right">{{ p.cost_per_unit_idr|rupiah }}</td><td class="p-2 text-right">{{ p.total_cost_idr|rupiah }}</td><td class="p-2">{{ p.supplier|default:"-" }}</td></tr>
-        {% empty %}<tr><td colspan="6" class="p-3 text-stone-400">Belum ada pembelian.</td></tr>{% endfor %}
+          <tr><td>{{ p.purchased_at|date:"d-m-Y" }}</td><td>{{ p.item.name }}</td><td class="num">{{ p.qty|kg }} {{ p.item.unit }}</td><td class="num">{{ p.cost_per_unit_idr|rupiah }}</td><td class="num">{{ p.total_cost_idr|rupiah }}</td><td>{{ p.supplier|default:"-" }}</td></tr>
+        {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">{% translate "Belum ada pembelian." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
@@ -48,11 +44,12 @@
   </section>
 
   {% if roles.finance %}
-  <aside class="rounded-lg border bg-white p-4 self-start">
-    <h2 class="mb-3 font-semibold">Catat pembelian</h2>
-    <form method="post">{% csrf_token %}
+  <aside class="gt-card app-split__sticky">
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat pembelian" %}</h2></div>
+    {{ input_costs|json_script:"input-costs" }}
+    <form method="post" class="app-stackform" data-confirm="" data-confirm-if="purchaseWarn(form)">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Simpan pembelian</button>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan pembelian" %}</button>
     </form>
   </aside>
   {% endif %}

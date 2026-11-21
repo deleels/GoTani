@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load ui gotani %}
+{% block title %}{% translate "Omzet & PPh Final" %}{% endblock %}
+{% block content %}
+{# Omzet & PPh Final (Phase 5b): year picker + CSV in the head, stat cards, quiet tax-advisor callout, gt-table. #}
+<div class="gt-pagehead app-pagehead--sm">
+  <div class="app-pagehead__text"><h1 class="app-pagehead__title">{% translate "Omzet &amp; PPh Final" %} {{ d.rate_pct|pct:1 }} {% info_tip _("Omzet bulanan untuk PPh Final UMKM (PP 55/2022): penjualan kasir per tanggal jual ditambah invoice terbit per tanggal terbit (nilai sebelum diskon + ongkos kirim, tanpa PPN); penjualan dan invoice yang dibatalkan tidak dihitung.") %}</h1></div>
+  <form method="get" class="gt-pagehead__actions">
+    <select name="year" onchange="this.form.submit()" class="app-field app-field--sm app-field--auto" aria-label="{% translate 'Tahun' %}">{% for y in years %}<option value="{{ y }}" {% if y == d.year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
+    <a href="?year={{ d.year }}&format=csv" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Unduh CSV" %}</a>
+  </form>
+</div>
+
+<div class="gt-grid app-kpis">
+  {% include "components/kpi.html" with stat=True featured=True label=_("Omzet") value=d.totals.omzet|rupiah %}
+  {% with ex=d.exempt|rupiah %}{% blocktranslate asvar t %}Sisa batas bebas pajak tahun ini. Omzet pertama {{ ex }} setiap tahun tidak dikenai pajak (wajib pajak orang pribadi).{% endblocktranslate %}{% with t=t %}
+  {% include "components/kpi.html" with stat=True label=_("Bebas pajak") value=d.exempt_left|rupiah tip=t %}
+  {% endwith %}{% endwith %}
+  {% include "components/kpi.html" with stat=True label=_("PPh Final") value=d.totals.pph|rupiah tip=_("Disetor paling lambat tanggal 15 bulan berikutnya.") %}
+</div>
+
+<div class="gt-callout app-section-gap">{% icon "info" 18 %}<div><span class="gt-callout__title">{% translate "Perkiraan, bukan nasihat pajak" %}</span><span class="gt-callout__body">{% translate "Waktu pengakuan omzet invoice (tanggal terbit atau tanggal dibayar) dan status wajib pajak Anda sebaiknya dikonfirmasi ke konsultan pajak." %}</span></div></div>
+
+<section class="gt-card app-tablecard" aria-labelledby="h-months">
+  <div class="gt-card__head"><h2 class="gt-card__title" id="h-months">{% translate "Per bulan ·" %} {{ d.year }}</h2></div>
+  <div class="app-table-wrap">
+    <table class="gt-table">
+      <thead><tr><th>{% translate "Bulan" %}</th><th class="num">{% translate "Kasir" %}</th><th class="num">{% translate "Invoice" %}</th><th class="num">{% translate "Omzet" %}</th>
+        <th class="num">{% translate "Kumulatif" %}</th><th class="num">{% translate "Dasar pengenaan" %}</th><th class="num">{% translate "PPh Final" %}</th><th>{% translate "Setor paling lambat" %}</th></tr></thead>
+      <tbody>
+      {% for r in d.rows %}
+        <tr{% if not r.omzet %} class="app-muted"{% endif %}><td>{{ r.label }}</td><td class="num">{{ r.pos|rupiah }}</td><td class="num">{{ r.invoice|rupiah }}</td>
+          <td class="num app-strong">{{ r.omzet|rupiah }}</td><td class="num">{{ r.cumulative|rupiah }}</td>
+          <td class="num">{{ r.taxable|rupiah }}</td><td class="num"><b>{{ r.pph|rupiah }}</b></td><td>{% if r.pph %}{{ r.due|date:"d M Y" }}{% else %}—{% endif %}</td></tr>
+      {% endfor %}
+        <tr class="app-row--total"><td><b>{% translate "Total" %}</b></td><td class="num">{{ d.totals.pos|rupiah }}</td><td class="num">{{ d.totals.invoice|rupiah }}</td><td class="num"><b>{{ d.totals.omzet|rupiah }}</b></td><td></td><td class="num">{{ d.totals.taxable|rupiah }}</td><td class="num"><b>{{ d.totals.pph|rupiah }}</b></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

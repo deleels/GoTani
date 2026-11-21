@@ -14,7 +14,7 @@ sales over the last 30 days:
   equal split where one is not), spoilage, priced and unpriced products;
 * completed and voided POS orders;
 * wholesale buyers with paid, partly-paid, overdue, voided and draft invoices,
-  PPN on one product, and a payment that leaves buyer credit.
+  a PPN rate defined but not charged (non-PKP farm, D80), and a payment that leaves buyer credit.
 
 Every quantity is routed through the domain services in chronological order,
 so the result always passes `check_mass_balance`. Reference data (users,
@@ -33,6 +33,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
+from core.services import default_language_for_role, get_user_profile
 from farm import services as farm
 from farm.bootstrap import (
     ROLE_CASHIER,
@@ -75,10 +76,10 @@ DEMO_USERS = [
 ]
 
 VARIETIES = [
-    # name, crop, days to harvest
-    ("Melon Golden", "Melon", 75),
-    ("Cabai Rawit", "Cabai", 90),
-    ("Kakao Forastero", "Kakao", 110),
+    # name, crop, days to harvest, FAO-56 mid-season Kc (D91)
+    ("Melon Golden", "Melon", 75, "1.00"),
+    ("Cabai Rawit", "Cabai", 90, "1.05"),
+    ("Kakao Forastero", "Kakao", 110, "1.00"),
 ]
 
 # Cycle estimates (D60): plant count and expected sellable kg.
@@ -145,6 +146,7 @@ SALE_HOURS = [(9, 15), (15, 40)]
 VOID_DAYS = {26, 19, 12, 5}  # first order of these days is voided the same day
 CART_KG = [D("0.5"), D("1"), D("1.5"), D("2"), D("2.5"), D("3"), D("4"), D("5")]
 PAYMENTS = ["CASH", "CASH", "QRIS", "QRIS", "TRANSFER"]
+FLOAT_IDR = 200000  # drawer float kept between shifts (D96)
 
 
 class Command(BaseCommand):
@@ -157,8 +159,9 @@ class Command(BaseCommand):
         ensure_role_groups(Group)
         self.users = self._seed_users()
         self.varieties = {
-            name: Variety.objects.get_or_create(name=name, defaults={"crop": crop, "days_to_harvest": days})[0]
-            for name, crop, days in VARIETIES
+            name: Variety.objects.get_or_create(name=name, defaults={"crop": crop, "days_to_harvest": days,
+                                                                     "kc": Decimal(kc)})[0]
+            for name, crop, days, kc in VARIETIES
         }
         ensure_preharvest_checklist(PreHarvestChecklistItem)
         self.elements = {
@@ -227,6 +230,9 @@ class Command(BaseCommand):
             if created:
                 user.set_password(password)
                 user.save(update_fields=["password"])
+                profile = get_user_profile(user)  # Phase 7: role default UI language
+                profile.language = default_language_for_role(role)
+                profile.save(update_fields=["language"])
             user.groups.add(Group.objects.get(name=role))
             users[role] = user
         return users
@@ -240,9 +246,12 @@ class Command(BaseCommand):
         day = timezone.localdate(self.now) - timedelta(days=days_ago)
         ts = timezone.make_aware(datetime.combine(day, time(hour, minute)))
         if ts > self.now:
-            # Squeeze today's not-yet-reached events into the minutes before now,
-            # preserving their relative order.
-            ts = self.now - timedelta(minutes=(24 * 60 - hour * 60 - minute) / 10)
+            # Squeeze today's not-yet-reached events into the gap between the start of the current
+            # minute and now, in time-of-day order. Every event that already happened today sits on a
+            # whole minute <= that start, so squeezed events always come after it (e.g. a 09:15 sale
+            # stays after the 07:00 shift opening when seeding at 07:48).
+            base = self.now.replace(second=0, microsecond=0)
+            ts = base + (self.now - base) * ((hour * 60 + minute) / (24 * 60))
         return ts
 
     def on(self, days_ago, hour, fn, minute=0):
@@ -322,7 +331,7 @@ class Command(BaseCommand):
         step = (start_days_ago - end_days_ago) / max(len(stages) - 1, 1)
         for i, stage in enumerate(stages):
             days = round(start_days_ago - i * step)
-            self.on(days, 6, lambda ts, stage=stage: farm.advance_cycle_stage(self.cycles[key], stage), 30)
+            self.on(days, 6, lambda ts, stage=stage: farm.advance_cycle_stage(self.cycles[key], stage, allow_skip=True), 30)
 
     def _activity(self, key, days_ago, activity_type, item=None, qty="0", method="", notes=""):
         def run(ts):
@@ -516,9 +525,39 @@ class Command(BaseCommand):
 
     def _plan_sales(self):
         for days in range(SALES_DAYS - 1, -1, -1):
+            # D96: every sales day has a shift; today's stays open so the demo POS works right away.
+            self.on(days, 7, lambda ts: pos.open_shift(self.users[ROLE_CASHIER], FLOAT_IDR, now=ts))
             for n, (hour, minute) in enumerate(SALE_HOURS[:ORDERS_PER_DAY]):
                 void = n == 0 and days in VOID_DAYS
                 self.on(days, hour, lambda ts, void=void: self._sell(ts, void), minute)
+            if days == 3:
+                self.on(days, 12, lambda ts: pos.add_cash_movement(
+                    pos.current_shift(), self.users[ROLE_CASHIER], "EXPENSE", 35000, "Beli tali rafia",
+                    category=ExpenseCategory.objects.get(code="LAINNYA"), now=ts))
+            if days == 2:
+                self.on(days, 17, lambda ts: pos.add_cash_movement(
+                    pos.current_shift(), self.users[ROLE_MANAGER], "DEPOSIT", 300000, "Setor harian", now=ts))
+            if days:
+                short = {6: -5000, 13: 2000}.get(days, 0)  # two demo days with a counting difference
+                self.on(days, 18, lambda ts, short=short, days=days: self._close_shift(ts, short, reviewed=days == 13))
+
+    def _close_shift(self, ts, difference, reviewed):
+        shift = pos.current_shift()
+        if shift is None:
+            return
+        surplus = pos.shift_summary(shift)["expected"] - FLOAT_IDR
+        if surplus > 0:  # owner takes the day's takings, the float stays in the drawer
+            pos.add_cash_movement(shift, self.users[ROLE_MANAGER], "DEPOSIT", surplus, "Setor harian",
+                                  now=ts - timedelta(minutes=5))
+        amount = int(pos.shift_summary(shift)["expected"]) + difference
+        counts = {}
+        for denom in pos.DENOMINATIONS:  # greedy count of the drawer
+            n, amount = divmod(amount, denom)
+            if n:
+                counts[denom] = n
+        pos.close_shift(shift, self.users[ROLE_CASHIER], counts, now=ts)
+        if reviewed:
+            pos.review_shift(shift, self.users[ROLE_MANAGER], "Selisih karena uang receh, sudah dicek bersama kasir.")
 
     def _sell(self, ts, void):
         catalog = [p for p in pos.pos_catalog() if p.available_kg >= D("0.5")]
@@ -531,7 +570,7 @@ class Command(BaseCommand):
         order = pos.checkout(cart, self.rng.choice(PAYMENTS), self.users[ROLE_CASHIER], created_at=ts)
         self.order_count += 1
         if void:
-            pos.void_order(order, self.users[ROLE_MANAGER], now=ts + timedelta(minutes=20))
+            pos.void_order(order, self.users[ROLE_MANAGER], reason="CUSTOMER_CANCELLED", now=ts + timedelta(minutes=20))
 
     # ------------------------------------------------------------------
     # Plan: wholesale invoices & payments (P8)
@@ -587,10 +626,9 @@ class Command(BaseCommand):
                     name=name, defaults={"company": company, "phone": phone, "payment_terms_days": terms})[0]
                 for key, name, company, phone, terms in self.BUYERS
             }
-            ppn = Tax.objects.get_or_create(name="PPN", defaults={"rate_pct": D("11")})[0]
-            product = self._product("Kakao Forastero", Grade.HIGH)
-            product.tax = ppn  # processed cocoa: taxable for the demo; fresh produce stays exempt
-            product.save(update_fields=["tax"])
+            # D80: the demo farm is an individual, non-PKP farm, so it charges no PPN. The PPN rate
+            # stays defined (inactive use) so switching PKP on in Pengaturan is a one-step demo.
+            Tax.objects.get_or_create(name="PPN", defaults={"rate_pct": D("11")})
 
         self.on(25, 7, setup)
         self._invoice(24, "resto_paid", "resto", [("Melon Golden", Grade.HIGH, "20", None),
@@ -601,10 +639,11 @@ class Command(BaseCommand):
         self._invoice(16, "pasar_overdue", "pasar", [("Cabai Rawit", Grade.LOW, "20", None)])
         self._invoice(10, "pasar_void", "pasar", [("Melon Golden", Grade.LOW, "8", None)])
         self.on(8, 10, lambda ts: "pasar_void" in self.invoices and invoicing.void_invoice(
-            self.invoices["pasar_void"], self.users[ROLE_MANAGER], now=ts))
+            self.invoices["pasar_void"], self.users[ROLE_MANAGER], reason="OTHER",
+            note="Pembeli mengganti pesanan dengan invoice baru.", now=ts))
         self._invoice(2, "resto_draft", "resto", [("Cabai Rawit", Grade.HIGH, "5", None)], issue=False,
                       discount_type="AMOUNT", discount_value=10000)
-        # Overpays the first invoice → Rp 100.000 buyer credit.
+        # Overpays the first invoice → Rp100.000 buyer credit.
         self._pay(12, "resto", "TRANSFER", lambda inv: (inv[0].total_idr + 100000, [(inv[0], inv[0].total_idr)])
                   if inv else (D("100000"), []), allocate_to=["resto_paid"])
         self._pay(5, "hotel", "TRANSFER", lambda inv: (D("500000"), [(inv[0], min(D("500000"), inv[0].total_idr))])

@@ -1,84 +1,79 @@
 {% extends "farm/_layout.html" %}
+{% load i18n %}
 {% load gotani ui %}
-{% block title %}Biaya & Persetujuan{% endblock %}
+{% block title %}{% translate "Biaya & Persetujuan" %}{% endblock %}
 {% block content %}
-<div class="mb-5 flex flex-wrap items-start justify-between gap-3">
-  <div>
-    <h1 class="text-2xl font-bold tracking-tight">Biaya</h1>
-    <p class="mt-1 text-sm text-stone-500">Catat biaya kebun, setujui atau tolak. Biaya elemen yang disetujui masuk ke pool HPP siklus; biaya umum menjadi overhead.</p>
-  </div>
+{% include "components/page_header.html" with title=_("Biaya") subtitle=_("Catat biaya kebun, setujui atau tolak. Biaya elemen yang disetujui masuk ke pool HPP siklus; biaya umum menjadi overhead.") %}
+<div class="gt-grid app-kpis">
+  {% with n=pending|length %}{% blocktranslate asvar h %}{{ n }} biaya menunggu{% endblocktranslate %}{% include "components/kpi.html" with stat=True featured=True label=_("Menunggu") value=kpi_pending|rupiah hint=h %}{% endwith %}
+  {% include "components/kpi.html" with stat=True label=_("Disetujui bulan ini") value=kpi_month|rupiah %}
+  {% include "components/kpi.html" with stat=True label=_("Overhead bulan ini") value=kpi_overhead|rupiah tip=_("Biaya umum ditambah biaya elemen tanpa siklus.") %}
 </div>
-<div class="mb-5 grid gap-3 sm:grid-cols-3">
-  {% with h=pending|length|stringformat:"d"|add:" biaya menunggu" %}{% include "components/kpi.html" with label="Menunggu persetujuan" value=kpi_pending|rupiah hint=h %}{% endwith %}
-  {% include "components/kpi.html" with label="Disetujui bulan ini" value=kpi_month|rupiah %}
-  {% include "components/kpi.html" with label="Overhead bulan ini" value=kpi_overhead|rupiah hint="Umum + elemen tanpa siklus" %}
-</div>
-<div class="grid gap-6 lg:grid-cols-3">
-  <section class="lg:col-span-2">
-    <h2 class="mb-3 font-semibold">Antrian persetujuan <span class="text-sm font-normal text-stone-400">({{ pending|length }})</span></h2>
-    <div class="overflow-x-auto rounded-lg border bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Tanggal</th><th class="p-2">Kategori</th><th class="p-2">Cakupan</th><th class="p-2">Keterangan</th><th class="p-2 text-right">Jumlah</th><th class="p-2"></th></tr></thead>
+<div class="app-split">
+  <section class="app-side">
+    <div class="gt-card app-tablecard">
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Antrian persetujuan" %} <span class="app-tab__count">{{ pending|length }}</span></h2></div>
+      <table class="gt-table">
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Kategori" %}</th><th>{% translate "Keterangan" %}</th><th class="num">{% translate "Jumlah" %}</th><th></th></tr></thead>
         <tbody>
         {% for e in pending %}
-          <tr class="border-t align-top">
-            <td class="whitespace-nowrap p-2">{{ e.date_incurred|date:"d-m-Y" }}</td>
-            <td class="p-2">{{ e.category }}</td>
-            <td class="p-2">{% if e.scope == 'GENERAL' %}Umum{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% endif %}{% endif %}</td>
-            <td class="p-2">{{ e.narration|default:"-" }}{% if e.vendor %}<span class="block text-xs text-stone-400">{{ e.vendor }}</span>{% endif %}{% if e.receipt %}<a class="block text-xs text-emerald-700 underline" href="{{ e.receipt.url }}">Bukti</a>{% endif %}</td>
-            <td class="p-2 text-right font-medium">{{ e.amount_idr|rupiah }}</td>
-            <td class="whitespace-nowrap p-2">
-              <form method="post" action="{% url 'farm:expense_approve' e.pk %}" class="inline">{% csrf_token %}<button class="rounded bg-emerald-600 px-2 py-1 text-xs text-white">Setujui</button></form>
-              <form method="post" action="{% url 'farm:expense_reject' e.pk %}" class="inline">{% csrf_token %}<button class="rounded bg-stone-200 px-2 py-1 text-xs">Tolak</button></form>
-              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" class="inline" onsubmit="return confirm('Hapus biaya ini?')">{% csrf_token %}<button class="px-1 text-xs text-red-600 underline">Hapus</button></form>
-            </td>
+          <tr>
+            <td class="whitespace-nowrap">{{ e.date_incurred|date:"d-m-Y" }}</td>
+            <td>{{ e.category }}<span class="app-sub">{% if e.scope == 'GENERAL' %}{% translate "Umum" %}{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% endif %}{% endif %}</span></td>
+            <td>{{ e.narration|default:"-" }}{% if e.vendor %}<span class="app-sub">{{ e.vendor }}</span>{% endif %}{% if e.receipt %}<a class="app-sub app-link" href="{{ e.receipt.url }}">{% translate "Bukti" %}</a>{% endif %}</td>
+            <td class="num">{{ e.amount_idr|rupiah }}</td>
+            <td class="num"><span class="app-actions app-actions--equal">
+              <form method="post" action="{% url 'farm:expense_approve' e.pk %}">{% csrf_token %}<button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Setujui" %}</button></form>
+              <form method="post" action="{% url 'farm:expense_reject' e.pk %}">{% csrf_token %}<button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Tolak" %}</button></form>
+              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" data-confirm-title="{% translate 'Hapus biaya?' %}" data-confirm="{% translate 'Biaya ini dihapus permanen.' %}" data-confirm-action="{% translate 'Hapus biaya' %}" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form>
+            </span></td>
           </tr>
-        {% empty %}<tr><td colspan="6" class="p-3 text-stone-400">Tidak ada biaya yang menunggu.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Tidak ada biaya yang menunggu." %}</td></tr>{% endfor %}
         </tbody>
       </table>
     </div>
 
-    <div class="mb-2 mt-8 flex flex-wrap items-center gap-3">
-      <h2 class="font-semibold">Riwayat biaya</h2>
-      <div class="flex gap-1 rounded-lg bg-stone-100 p-1 text-sm">{% for key, label in tabs %}<a href="?status={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="rounded-md px-3 py-1 {% if status == key %}bg-white font-medium shadow-sm{% else %}text-stone-600{% endif %}">{{ label }}</a>{% endfor %}</div>
-      <form method="get" class="ml-auto w-full sm:w-56"><input type="hidden" name="status" value="{{ status }}"><input name="q" value="{{ q }}" placeholder="Cari keterangan / vendor…"></form>
-    </div>
-    <div class="overflow-x-auto rounded-lg border bg-white">
-      <table class="w-full text-sm">
-        <thead class="bg-stone-50 text-left text-stone-500"><tr><th class="p-2">Tanggal</th><th class="p-2">Kategori</th><th class="p-2">Cakupan</th><th class="p-2">Status</th><th class="p-2 text-right">Jumlah</th><th class="p-2"></th></tr></thead>
+    <div class="gt-card app-tablecard">
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Riwayat biaya" %}</h2></div>
+      <div class="app-toolbar">
+        <nav class="gt-tabs" aria-label="{% translate 'Status' %}">{% for key, label in tabs %}<a href="?status={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="gt-tab app-tab{% if status == key %} gt-tab--active{% endif %}"{% if status == key %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+        <form method="get" class="app-toolbar__search"><input type="hidden" name="status" value="{{ status }}"><label class="app-search">{% icon "search" 18 %}<span class="sr-only">{% translate "Cari biaya" %}</span><input name="q" value="{{ q }}" placeholder="{% translate 'Cari keterangan / vendor…' %}" class="app-field app-field--sm"></label></form>
+      </div>
+      <table class="gt-table">
+        <thead><tr><th>{% translate "Tanggal" %}</th><th>{% translate "Kategori" %}</th><th>{% translate "Cakupan" %}</th><th>{% translate "Status" %}</th><th class="num">{% translate "Jumlah" %}</th><th></th></tr></thead>
         <tbody>
         {% for e in recent %}
-          <tr class="border-t">
-            <td class="whitespace-nowrap p-2">{{ e.date_incurred|date:"d-m-Y" }}</td>
-            <td class="p-2">{{ e.category }}{% if e.source == 'INPUT_USAGE' %} <span class="text-xs text-stone-400">(pemakaian input)</span>{% endif %}</td>
-            <td class="p-2">{% if e.scope == 'GENERAL' %}Umum (overhead){% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% else %} · overhead{% endif %}{% endif %}</td>
-            <td class="p-2">
+          <tr>
+            <td class="whitespace-nowrap">{{ e.date_incurred|date:"d-m-Y" }}</td>
+            <td>{{ e.category }}{% if e.source == 'INPUT_USAGE' %} <span class="app-row__meta">{% translate "(pemakaian input)" %}</span>{% endif %}</td>
+            <td>{% if e.scope == 'GENERAL' %}{% translate "Umum (overhead)" %}{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% else %} {% translate "· overhead" %}{% endif %}{% endif %}</td>
+            <td>
               {% pill e.get_status_display e.status %}
-              {% if e.absorbed_by %}<span class="text-xs text-stone-500">· terserap panen #{{ e.absorbed_by_id }}</span>{% endif %}
+              {% if e.absorbed_by %}<span class="app-sub">{% translate "terserap panen #" %}{{ e.absorbed_by_id }}</span>{% endif %}
             </td>
-            <td class="p-2 text-right">{{ e.amount_idr|rupiah }}</td>
-            <td class="p-2">
+            <td class="num">{{ e.amount_idr|rupiah }}</td>
+            <td class="num">
               {% if e.status == 'APPROVED' and not e.absorbed_by and e.source == 'MANUAL' %}
-              <form method="post" action="{% url 'farm:expense_revert' e.pk %}">{% csrf_token %}<button class="text-xs text-stone-600 underline">Kembalikan ke Menunggu</button></form>
+              <form method="post" action="{% url 'farm:expense_revert' e.pk %}">{% csrf_token %}<button class="gt-btn gt-btn--outline gt-btn--sm" title="{% translate 'Kembalikan ke Menunggu' %}">{% translate "Kembalikan" %}</button></form>
               {% elif e.status == 'REJECTED' %}
-              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" onsubmit="return confirm('Hapus biaya ini?')">{% csrf_token %}<button class="text-xs text-red-600 underline">Hapus</button></form>
+              <form method="post" action="{% url 'farm:expense_delete' e.pk %}" data-confirm-title="{% translate 'Hapus biaya?' %}" data-confirm="{% translate 'Biaya ini dihapus permanen.' %}" data-confirm-action="{% translate 'Hapus biaya' %}" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form>
               {% endif %}
             </td>
           </tr>
-        {% empty %}<tr><td colspan="6" class="p-3 text-stone-400">Belum ada.</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="6" class="app-empty-cell app-muted">{% translate "Belum ada biaya." %}</td></tr>{% endfor %}
         </tbody>
       </table>
       {% include "components/pagination.html" %}
     </div>
   </section>
 
-  <aside class="self-start rounded-lg border bg-white p-4" x-data="{ scope: '{{ form.scope.value|default:'ELEMENT' }}' }">
-    <h2 class="mb-3 font-semibold">Catat biaya</h2>
-    <form method="post" enctype="multipart/form-data" @change="scope = $el.querySelector('[name=scope]').value">{% csrf_token %}
+  <aside class="gt-card app-split__sticky" x-data="{ scope: '{{ form.scope.value|default:'ELEMENT' }}' }">
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Catat biaya" %}</h2></div>
+    <form method="post" enctype="multipart/form-data" class="app-stackform" @change="scope = $el.querySelector('[name=scope]').value">{% csrf_token %}
       {% include "_form_fields.html" with cols="grid-cols-1" %}
-      <p class="mt-2 text-xs text-stone-400" x-show="scope === 'GENERAL'">Biaya umum menjadi overhead operasional dan tidak masuk HPP.</p>
-      <p class="mt-2 text-xs text-stone-400" x-show="scope === 'ELEMENT'">Tanpa siklus, biaya elemen menempel ke siklus aktif elemen saat disetujui.</p>
-      <button class="mt-3 w-full rounded bg-emerald-600 px-3 py-2 text-sm text-white hover:bg-emerald-700">Simpan (menunggu persetujuan)</button>
+      <p class="app-row__meta" x-show="scope === 'GENERAL'">{% translate "Biaya umum menjadi overhead operasional dan tidak masuk HPP." %}</p>
+      <p class="app-row__meta" x-show="scope === 'ELEMENT'">{% translate "Tanpa siklus, biaya elemen menempel ke siklus aktif elemen saat disetujui." %}</p>
+      <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Ajukan biaya" %}</button>
     </form>
   </aside>
 </div>

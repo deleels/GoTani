@@ -1,77 +1,104 @@
 {% extends "base_bare.html" %}
-{% load ui %}
+{% load i18n %}
+{% load static ui %}
 {% block body %}
 {% if user.is_authenticated %}
-<div x-data="shell()" @keydown.window.ctrl.b.prevent="toggle()" @keydown.window.meta.b.prevent="toggle()" class="flex min-h-screen">
-  {# Sidebar (D67): 16rem, collapses to a 3rem rail; mobile = slide-in sheet #}
-  <div x-show="mobile" x-cloak class="no-print fixed inset-0 z-30 bg-black/40 md:hidden" @click="mobile=false"></div>
-  <aside class="no-print fixed inset-y-0 left-0 z-40 flex flex-col border-r border-stone-200 bg-white transition-all duration-200 md:sticky md:top-0 md:h-screen md:translate-x-0"
-         :class="[collapsed ? 'md:w-12' : 'md:w-64', mobile ? 'w-72 translate-x-0' : 'w-72 -translate-x-full']">
-    <div class="flex h-16 items-center gap-3 border-b border-stone-200 px-2.5">
-      {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="h-8 w-8 shrink-0 rounded-lg object-cover">
-      {% else %}<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-600 text-white">{% icon "leaf" 18 %}</span>{% endif %}
-      <div class="min-w-0" :class="collapsed && 'md:hidden'">
-        <p class="truncate text-sm font-semibold">{{ farm_profile.name }}</p>
-        <p class="truncate text-xs text-stone-500">{{ roles.label|lower|capfirst }}</p>
-      </div>
-    </div>
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden px-2 py-3 text-sm">
-      {% for group in nav_groups %}
-      <p class="mb-1 mt-4 px-2 text-[11px] font-semibold tracking-wider text-stone-400" :class="collapsed && 'md:invisible md:h-1 md:mt-2'">{{ group.title }}</p>
+{# Framed design-system shell (D104): grey sidebar + grey main panel inside a white frame. #}
+<div x-data="shell()" @keydown.window.ctrl.b.prevent="toggle()" @keydown.window.meta.b.prevent="toggle()" @keydown.escape.window="mobile=false"
+     class="gt-app gt-app--framed app-frame" :class="[collapsed && 'app-frame--rail', mobile && 'app-frame--mobile']">
+  <div x-show="mobile" x-cloak class="app-scrim no-print md:hidden" @click="mobile=false"></div>
+
+  {# Sidebar: full width; on phones a slide-in sheet. #}
+  <aside class="gt-sidebar app-sidebar no-print" aria-label="{% translate 'Navigasi utama' %}">
+    <a class="gt-brand app-brand" href="{% url 'home' %}">
+      {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="app-brand__logo">
+      {% else %}<img src="{% static 'core/ds/logos/gotani-mark.svg' %}" alt="">{% endif %}
+      <span class="app-brand__text"><span class="app-brand__name">{{ farm_profile.name }}</span><span class="app-brand__role">{{ roles.label|lower|capfirst }}</span></span>
+    </a>
+    {% for group in nav_groups %}
+    <div>
+      <div class="gt-nav__label">{{ group.title }}</div>
+      <ul class="gt-nav">
       {% for item in group.items %}
         {% if item.children %}
-        <div x-data="{ open: {{ item.active|yesno:'true,false' }} }">
-          <button type="button" @click="if (collapsed) { collapsed = false; save(); open = true } else { open = !open }" title="{{ item.label }}"
-                  class="flex w-full items-center gap-3 rounded-lg px-2 py-2 hover:bg-stone-100 {% if item.active %}font-medium text-emerald-700{% else %}text-stone-700{% endif %}">
-            {% icon item.icon %}<span class="flex-1 text-left" :class="collapsed && 'md:hidden'">{{ item.label }}</span>
-            <span :class="[open && 'rotate-180', collapsed && 'md:hidden']" class="transition">{% icon "chevron" 14 %}</span>
+        <li x-data="{ open: {{ item.active|yesno:'true,false' }} }" @nav-open.window="if ($event.detail === '{{ item.label|escapejs }}') open = true">
+          <button type="button" class="gt-nav__item app-nav__parent{% if item.active %} app-nav__parent--active{% endif %}" @click="open = !open" :aria-expanded="open">
+            {% icon item.icon 20 %}<span>{{ item.label }}</span>
+            <span class="app-nav__chev" :class="open && 'app-nav__chev--open'">{% icon "chevron" 16 "gt-ico" %}</span>
           </button>
-          <div x-show="open && !collapsed" x-cloak class="ml-5 border-l border-stone-200 pl-2">
+          <ul class="gt-nav app-nav__children" x-show="open" {% if not item.active %}x-cloak{% endif %}>
             {% for c in item.children %}
-            <a href="{{ c.url }}" class="block rounded-md px-2 py-1.5 {% if c.active %}bg-emerald-50 font-medium text-emerald-800{% else %}text-stone-600 hover:bg-stone-100{% endif %}">{{ c.label }}</a>
+            <li><a href="{{ c.url }}" class="gt-nav__item app-nav__child"{% if c.active %} aria-current="page"{% endif %}>{{ c.label }}</a></li>
             {% endfor %}
-          </div>
-        </div>
+          </ul>
+        </li>
         {% else %}
-        <a href="{{ item.url }}" title="{{ item.label }}" class="flex items-center gap-3 rounded-lg px-2 py-2 {% if item.active %}bg-emerald-50 font-medium text-emerald-800{% else %}text-stone-700 hover:bg-stone-100{% endif %}">
-          {% icon item.icon %}<span class="whitespace-nowrap" :class="collapsed && 'md:hidden'">{{ item.label }}</span>
-        </a>
+        <li><a href="{{ item.url }}" class="gt-nav__item"{% if item.active %} aria-current="page"{% endif %}>{% icon item.icon 20 %}{{ item.label }}</a></li>
         {% endif %}
       {% endfor %}
-      {% endfor %}
-    </nav>
-    <div class="border-t border-stone-200 p-3 text-xs text-stone-400" :class="collapsed && 'md:hidden'">Ctrl/⌘ + B untuk menciutkan</div>
+      </ul>
+    </div>
+    {% endfor %}
+    {# "Pasang GoTani" shows only after the browser offers installation (beforeinstallprompt). #}
+    <div class="gt-sidebar__foot" x-data="installCard()" x-show="can" x-cloak>
+      <div class="gt-dark app-install">
+        <img src="{% static 'core/ds/logos/gotani-mark-white.svg' %}" width="28" height="28" alt="">
+        <span class="gt-dark__title">{% translate "Pasang GoTani" %}</span>
+        <span class="app-install__note">{% translate "Buka kasir dan laporan langsung dari layar utama." %}</span>
+        <button type="button" class="gt-btn gt-btn--solid gt-btn--md gt-btn--block" @click="install()">{% translate "Pasang" %}</button>
+      </div>
+    </div>
   </aside>
 
-  <div class="flex min-w-0 flex-1 flex-col">
-    {# Top bar (D67) #}
-    <header class="no-print sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-stone-200 bg-white/70 px-4 backdrop-blur">
-      <button type="button" class="rounded-lg p-2 hover:bg-stone-100 md:hidden" @click="mobile=true" aria-label="Buka menu">{% icon "menu" %}</button>
-      <button type="button" class="hidden rounded-lg p-2 hover:bg-stone-100 md:block" @click="toggle()" aria-label="Ciutkan sidebar">{% icon "panel" %}</button>
+  {# Collapsed (Ctrl/⌘ + B): an 80px icon rail. #}
+  <nav class="gt-rail app-rail no-print" aria-label="{% translate 'Navigasi utama (ringkas)' %}">
+    <a href="{% url 'home' %}" aria-label="{{ farm_profile.name }}"><img class="gt-rail__logo" src="{% static 'core/ds/logos/gotani-app-icon.svg' %}" alt=""></a>
+    {% for group in nav_groups %}{% for item in group.items %}
+      {% if item.children %}
+      <button type="button" class="gt-rail__item app-rail__btn{% if item.active %} gt-rail__item--active{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}"
+              @click="collapsed = false; save(); $nextTick(() => $dispatch('nav-open', '{{ item.label|escapejs }}'))">{% icon item.icon 22 "gt-ico" %}</button>
+      {% else %}
+      <a href="{{ item.url }}" class="gt-rail__item{% if item.active %} gt-rail__item--active{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}"{% if item.active %} aria-current="page"{% endif %}>{% icon item.icon 22 "gt-ico" %}</a>
+      {% endif %}
+    {% endfor %}{% endfor %}
+  </nav>
+
+  <div class="gt-shell">
+    <header class="gt-topbar app-topbar no-print">
+      <button type="button" class="gt-iconbtn gt-iconbtn--md md:hidden" @click="mobile=true" aria-label="{% translate 'Buka menu' %}">{% icon "menu" 22 "gt-ico" %}</button>
+      <button type="button" class="gt-iconbtn gt-iconbtn--md hidden md:inline-grid" @click="toggle()"
+              :aria-label="collapsed ? '{% jt "Lebarkan sidebar" %}' : '{% jt "Ciutkan sidebar" %}'" title="{% translate 'Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)' %}">{% icon "panel" 22 "gt-ico" %}</button>
       <span class="flex-1"></span>
       {% include "components/bell.html" %}
-      <button type="button" class="rounded-lg p-2 hover:bg-stone-100" @click="toggleTheme()" :aria-label="dark ? 'Mode terang' : 'Mode gelap'">
-        <span x-show="!dark">{% icon "moon" %}</span><span x-show="dark" x-cloak>{% icon "sun" %}</span>
-      </button>
-      <span class="mx-1 h-6 border-l border-dashed border-stone-300"></span>
-      <div class="relative" x-data="{ open: false }" @click.outside="open=false">
-        <button type="button" @click="open=!open" class="flex items-center gap-2 rounded-lg p-1.5 hover:bg-stone-100">
-          <span class="grid h-8 w-8 place-items-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-800">{{ user.username|first|upper }}</span>
-          <span class="hidden text-left text-sm sm:block"><span class="block font-medium leading-tight">{{ user.get_full_name|default:user.username }}</span><span class="block text-xs text-stone-500">{{ roles.label }}</span></span>
+      <div class="relative" x-data="{ open: false }" @click.outside="open=false" @keydown.escape="open=false">
+        <button type="button" @click="open=!open" class="gt-user app-user" :aria-expanded="open" aria-haspopup="menu" aria-label="{% translate 'Menu akun' %}">
+          <span class="gt-avatar">{{ user.username|first|upper }}</span>
+          <span class="gt-user__text app-user__text">{{ user.get_full_name|default:user.username }}<span>{{ roles.label }}</span></span>
         </button>
-        <div x-show="open" x-cloak class="absolute right-0 mt-2 w-52 rounded-xl border border-stone-200 bg-white p-1 text-sm shadow-lg">
-          <a href="{% url 'core:profile' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-stone-100">{% icon "users" 16 %} Profil</a>
-          <a href="{% url 'core:password_change' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-stone-100">{% icon "key" 16 %} Ganti Kata Sandi</a>
-          {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-stone-100">{% icon "settings" 16 %} Admin Django</a>{% endif %}
-          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-red-700 hover:bg-stone-100">{% icon "logout" 16 %} Keluar</button></form>
+        <div x-show="open" x-cloak class="app-menu" role="menu">
+          <a href="{% url 'core:profile' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "users" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Profil" %}</span></a>
+          <a href="{% url 'core:password_change' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "key" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Ganti Kata Sandi" %}</span></a>
+          {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="gt-row app-menu__item" role="menuitem"><span class="gt-row__lead">{% icon "settings" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Admin Django" %}</span></a>{% endif %}
+          {% get_current_language as CUR_LANG %}
+          <form method="post" action="{% url 'core:set_language' %}" class="app-lang" role="group" aria-label="{% translate 'Bahasa' %}">{% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <span class="app-lang__label">{% icon "globe" 18 "gt-ico" %}{% translate "Bahasa" %}</span>
+            <span class="app-lang__seg">
+              <button name="language" value="en" class="app-lang__opt{% if CUR_LANG == 'en' %} is-on{% endif %}"{% if CUR_LANG == 'en' %} aria-pressed="true"{% endif %}>EN</button>
+              <button name="language" value="id" class="app-lang__opt{% if CUR_LANG == 'id' %} is-on{% endif %}"{% if CUR_LANG == 'id' %} aria-pressed="true"{% endif %}>ID</button>
+            </span>
+          </form>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="gt-row app-menu__item app-menu__item--danger" role="menuitem"><span class="gt-row__lead">{% icon "logout" 18 "gt-ico" %}</span><span class="gt-row__title">{% translate "Keluar" %}</span></button></form>
         </div>
       </div>
     </header>
 {% endif %}
-    <main class="print-full mx-auto w-full max-w-7xl flex-1 px-4 py-6">
-      {% block subnav %}{% endblock %}
-      {% include "components/messages.html" %}
-      {% block content %}{% endblock %}
+    <main class="{% if user.is_authenticated %}gt-main app-main{% else %}mx-auto w-full max-w-7xl px-4 py-6{% endif %} print-full">
+      <div class="app-main__inner">
+        {% block subnav %}{% endblock %}
+        {% include "components/messages.html" %}
+        {% block content %}{% endblock %}
+      </div>
     </main>
 {% if user.is_authenticated %}
   </div>
@@ -91,15 +118,25 @@
   }
   function shell() {
     return {
-      collapsed: false, mobile: false, dark: document.documentElement.classList.contains("dark"),
+      collapsed: false, mobile: false,
       init() { try { this.collapsed = localStorage.getItem("gotani-sidebar") === "collapsed"; } catch (e) {} },
       save() { try { localStorage.setItem("gotani-sidebar", this.collapsed ? "collapsed" : "open"); } catch (e) {} },
       toggle() { this.collapsed = !this.collapsed; this.save(); },
-      toggleTheme() {
-        this.dark = !this.dark;
-        document.documentElement.classList.toggle("dark", this.dark);
-        try { localStorage.setItem("gotani-theme", this.dark ? "dark" : "light"); } catch (e) {}
-        window.dispatchEvent(new CustomEvent("gotani-theme", { detail: { dark: this.dark } }));
+    };
+  }
+  function installCard() {
+    return {
+      can: !!window.gtInstallPrompt,
+      init() {
+        window.addEventListener("gotani-installable", () => { this.can = true; });
+        window.addEventListener("gotani-installed", () => { this.can = false; });
+      },
+      async install() {
+        const p = window.gtInstallPrompt;
+        if (!p) return;
+        p.prompt();
+        try { await p.userChoice; } catch (e) {}
+        window.gtInstallPrompt = null; this.can = false;
       },
     };
   }

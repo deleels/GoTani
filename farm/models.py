@@ -4,7 +4,12 @@ Business rules live in `farm/services.py`; models only carry structure and
 DB-level invariants (constraints) that must hold regardless of code path.
 """
 
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _l
+from decimal import Decimal
+
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -15,27 +20,41 @@ MONEY = {"max_digits": 14, "decimal_places": 2}
 
 
 class Unit(models.TextChoices):
-    L = "L", "Liter"
-    ML = "mL", "Mililiter"
-    KG = "KG", "Kilogram"
-    G = "G", "Gram"
+    L = "L", _l("Liter")
+    ML = "mL", _l("Mililiter")
+    KG = "KG", _l("Kilogram")
+    G = "G", _l("Gram")
 
 
 class PaymentMethod(models.TextChoices):
-    CASH = "CASH", "Tunai"
-    QRIS = "QRIS", "QRIS"
-    TRANSFER = "TRANSFER", "Transfer"
+    CASH = "CASH", _l("Tunai")
+    QRIS = "QRIS", _l("QRIS")
+    TRANSFER = "TRANSFER", _l("Transfer")
+
+
+class VoidReason(models.TextChoices):
+    """Why a POS order or an invoice was voided (D94). OTHER needs a note."""
+
+    WRONG_ENTRY = "WRONG_ENTRY", _l("Salah input")
+    WRONG_PRICE = "WRONG_PRICE", _l("Salah harga / produk")
+    CUSTOMER_CANCELLED = "CUSTOMER_CANCELLED", _l("Pembeli batal")
+    PAYMENT_FAILED = "PAYMENT_FAILED", _l("Pembayaran gagal")
+    OTHER = "OTHER", _l("Lainnya")
 
 
 class Variety(models.Model):
-    name = models.CharField("nama", max_length=100, unique=True)
-    crop = models.CharField("tanaman", max_length=100)
-    days_to_harvest = models.PositiveIntegerField("umur panen (hari)", null=True, blank=True)
+    name = models.CharField(_l("nama"), max_length=100, unique=True)
+    crop = models.CharField(_l("tanaman"), max_length=100)
+    # D91: optional FAO crop coefficient; water need = ET₀ × Kc. Empty → only ET₀ is shown.
+    kc = models.DecimalField(_l("koefisien tanaman (Kc)"), max_digits=4, decimal_places=2, null=True, blank=True,
+                             validators=[MinValueValidator(Decimal("0.1")), MaxValueValidator(Decimal("2"))],
+                             help_text=_l("Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."))
+    days_to_harvest = models.PositiveIntegerField(_l("umur panen (hari)"), null=True, blank=True)
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "varietas"
-        verbose_name_plural = "varietas"
+        verbose_name = _l("varietas")
+        verbose_name_plural = _l("varietas")
 
     def __str__(self):
         return self.name
@@ -43,21 +62,21 @@ class Variety(models.Model):
 
 class FarmElement(models.Model):
     class ElementType(models.TextChoices):
-        GREENHOUSE = "GREENHOUSE", "Greenhouse"
-        OPEN_FIELD = "OPEN_FIELD", "Lahan Terbuka"
-        HYDROPONIC = "HYDROPONIC", "Hidroponik"
-        SCREEN_HOUSE = "SCREEN_HOUSE", "Screen House"
-        SHADENET = "SHADENET", "Shadenet"
+        GREENHOUSE = "GREENHOUSE", _l("Greenhouse")
+        OPEN_FIELD = "OPEN_FIELD", _l("Lahan Terbuka")
+        HYDROPONIC = "HYDROPONIC", _l("Hidroponik")
+        SCREEN_HOUSE = "SCREEN_HOUSE", _l("Screen House")
+        SHADENET = "SHADENET", _l("Shadenet")
 
-    name = models.CharField("nama", max_length=100, unique=True)
-    element_type = models.CharField("jenis", max_length=20, choices=ElementType.choices)
-    area_m2 = models.DecimalField("luas (m²)", max_digits=10, decimal_places=2)
-    is_active = models.BooleanField("aktif", default=True)
+    name = models.CharField(_l("nama"), max_length=100, unique=True)
+    element_type = models.CharField(_l("jenis"), max_length=20, choices=ElementType.choices)
+    area_m2 = models.DecimalField(_l("luas (m²)"), max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(_l("aktif"), default=True)
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "elemen kebun"
-        verbose_name_plural = "elemen kebun"
+        verbose_name = _l("elemen kebun")
+        verbose_name_plural = _l("elemen kebun")
         constraints = [
             models.CheckConstraint(condition=Q(area_m2__gt=0), name="farmelement_area_positive"),
         ]
@@ -68,37 +87,37 @@ class FarmElement(models.Model):
 
 class CropCycle(models.Model):
     class Stage(models.TextChoices):
-        PLANTING = "PLANTING", "Penanaman"
-        SPROUTING = "SPROUTING", "Perkecambahan"
-        TRANSPLANTING = "TRANSPLANTING", "Pindah Tanam"
-        VEGETATIVE = "VEGETATIVE", "Vegetatif"
-        FLOWERING = "FLOWERING", "Pembungaan"
-        FRUITING = "FRUITING", "Pembuahan"
-        HARVESTING = "HARVESTING", "Panen"
-        CLEARING = "CLEARING", "Pembersihan"
+        PLANTING = "PLANTING", _l("Penanaman")
+        SPROUTING = "SPROUTING", _l("Perkecambahan")
+        TRANSPLANTING = "TRANSPLANTING", _l("Pindah Tanam")
+        VEGETATIVE = "VEGETATIVE", _l("Vegetatif")
+        FLOWERING = "FLOWERING", _l("Pembungaan")
+        FRUITING = "FRUITING", _l("Pembuahan")
+        HARVESTING = "HARVESTING", _l("Panen")
+        CLEARING = "CLEARING", _l("Pembersihan")
 
     # Forward-only order used by stage transition rules (rule 1).
     STAGE_ORDER = [s.value for s in Stage]
 
     element = models.ForeignKey(
-        FarmElement, on_delete=models.PROTECT, related_name="cycles", verbose_name="elemen"
+        FarmElement, on_delete=models.PROTECT, related_name="cycles", verbose_name=_l("elemen")
     )
     variety = models.ForeignKey(
-        Variety, on_delete=models.PROTECT, related_name="cycles", verbose_name="varietas"
+        Variety, on_delete=models.PROTECT, related_name="cycles", verbose_name=_l("varietas")
     )
-    stage = models.CharField("tahap", max_length=20, choices=Stage.choices, default=Stage.PLANTING)
-    planting_start_date = models.DateField("tanggal mulai tanam")
+    stage = models.CharField(_l("tahap"), max_length=20, choices=Stage.choices, default=Stage.PLANTING)
+    planting_start_date = models.DateField(_l("tanggal mulai tanam"))
     # Plant count — the one deliberate non-kg quantity (D60).
-    planted_qty = models.PositiveIntegerField("jumlah tanaman", null=True, blank=True)
-    expected_harvest_date = models.DateField("perkiraan panen", null=True, blank=True)
-    expected_yield_kg = models.DecimalField("perkiraan hasil (kg)", null=True, blank=True, **QTY)
-    is_active = models.BooleanField("aktif", default=True)
-    closed_at = models.DateTimeField("ditutup pada", null=True, blank=True)
+    planted_qty = models.PositiveIntegerField(_l("jumlah tanaman"), null=True, blank=True)
+    expected_harvest_date = models.DateField(_l("perkiraan panen"), null=True, blank=True)
+    expected_yield_kg = models.DecimalField(_l("perkiraan hasil (kg)"), null=True, blank=True, **QTY)
+    is_active = models.BooleanField(_l("aktif"), default=True)
+    closed_at = models.DateTimeField(_l("ditutup pada"), null=True, blank=True)
 
     class Meta:
         ordering = ["-planting_start_date", "-id"]
-        verbose_name = "siklus tanam"
-        verbose_name_plural = "siklus tanam"
+        verbose_name = _l("siklus tanam")
+        verbose_name_plural = _l("siklus tanam")
         constraints = [
             models.UniqueConstraint(
                 fields=["element"],
@@ -137,21 +156,21 @@ class CropCycle(models.Model):
 
 class InputItem(models.Model):
     class ItemType(models.TextChoices):
-        FERTILIZER = "FERTILIZER", "Pupuk"
-        PESTICIDE = "PESTICIDE", "Pestisida"
-        SEED = "SEED", "Benih"
+        FERTILIZER = "FERTILIZER", _l("Pupuk")
+        PESTICIDE = "PESTICIDE", _l("Pestisida")
+        SEED = "SEED", _l("Benih")
 
-    name = models.CharField("nama", max_length=100, unique=True)
-    item_type = models.CharField("jenis", max_length=20, choices=ItemType.choices)
-    unit = models.CharField("satuan", max_length=4, choices=Unit.choices)
-    stock_qty = models.DecimalField("stok", default=0, **QTY)
-    avg_cost_per_unit_idr = models.DecimalField("biaya rata-rata per satuan", default=0, **MONEY)
-    min_alert_qty = models.DecimalField("batas peringatan stok", default=0, **QTY)
+    name = models.CharField(_l("nama"), max_length=100, unique=True)
+    item_type = models.CharField(_l("jenis"), max_length=20, choices=ItemType.choices)
+    unit = models.CharField(_l("satuan"), max_length=4, choices=Unit.choices)
+    stock_qty = models.DecimalField(_l("stok"), default=0, **QTY)
+    avg_cost_per_unit_idr = models.DecimalField(_l("biaya rata-rata per satuan"), default=0, **MONEY)
+    min_alert_qty = models.DecimalField(_l("batas peringatan stok"), default=0, **QTY)
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "input produksi"
-        verbose_name_plural = "input produksi"
+        verbose_name = _l("input produksi")
+        verbose_name_plural = _l("input produksi")
         constraints = [
             models.CheckConstraint(condition=Q(stock_qty__gte=0), name="inputitem_stock_nonnegative"),
             models.CheckConstraint(
@@ -174,25 +193,25 @@ class InputPurchase(models.Model):
     """Inventory asset purchase — cash-out report only, never P&L (D22)."""
 
     item = models.ForeignKey(
-        InputItem, on_delete=models.PROTECT, related_name="purchases", verbose_name="input"
+        InputItem, on_delete=models.PROTECT, related_name="purchases", verbose_name=_l("input")
     )
-    qty = models.DecimalField("jumlah", **QTY)
-    cost_per_unit_idr = models.DecimalField("harga per satuan", **MONEY)
-    supplier = models.CharField("pemasok", max_length=150, blank=True)
-    purchased_at = models.DateTimeField("dibeli pada", default=timezone.now)
+    qty = models.DecimalField(_l("jumlah"), **QTY)
+    cost_per_unit_idr = models.DecimalField(_l("harga per satuan"), **MONEY)
+    supplier = models.CharField(_l("pemasok"), max_length=150, blank=True)
+    purchased_at = models.DateTimeField(_l("dibeli pada"), default=timezone.now)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="+",
-        verbose_name="dicatat oleh",
+        verbose_name=_l("dicatat oleh"),
     )
 
     class Meta:
         ordering = ["-purchased_at", "-id"]
-        verbose_name = "pembelian input"
-        verbose_name_plural = "pembelian input"
+        verbose_name = _l("pembelian input")
+        verbose_name_plural = _l("pembelian input")
         constraints = [
             models.CheckConstraint(condition=Q(qty__gt=0), name="inputpurchase_qty_positive"),
             models.CheckConstraint(
@@ -229,22 +248,22 @@ class AppendOnlyModel(models.Model):
 
 class InputLedger(AppendOnlyModel):
     class MovementType(models.TextChoices):
-        PURCHASE = "PURCHASE", "Pembelian"
-        USAGE = "USAGE", "Pemakaian"
-        USAGE_REVERSAL = "USAGE_REVERSAL", "Pembatalan Pemakaian"
+        PURCHASE = "PURCHASE", _l("Pembelian")
+        USAGE = "USAGE", _l("Pemakaian")
+        USAGE_REVERSAL = "USAGE_REVERSAL", _l("Pembatalan Pemakaian")
 
     item = models.ForeignKey(
-        InputItem, on_delete=models.PROTECT, related_name="ledger", verbose_name="input"
+        InputItem, on_delete=models.PROTECT, related_name="ledger", verbose_name=_l("input")
     )
-    movement_type = models.CharField("jenis mutasi", max_length=20, choices=MovementType.choices)
-    qty = models.DecimalField("jumlah (bertanda)", **QTY)
-    reference = models.CharField("referensi", max_length=100, blank=True)
-    timestamp = models.DateTimeField("waktu", default=timezone.now)
+    movement_type = models.CharField(_l("jenis mutasi"), max_length=20, choices=MovementType.choices)
+    qty = models.DecimalField(_l("jumlah (bertanda)"), **QTY)
+    reference = models.CharField(_l("referensi"), max_length=100, blank=True)
+    timestamp = models.DateTimeField(_l("waktu"), default=timezone.now)
 
     class Meta:
         ordering = ["timestamp", "id"]
-        verbose_name = "buku besar input"
-        verbose_name_plural = "buku besar input"
+        verbose_name = _l("buku besar input")
+        verbose_name_plural = _l("buku besar input")
         constraints = [
             models.CheckConstraint(condition=~Q(qty=0), name="inputledger_qty_nonzero"),
         ]
@@ -255,19 +274,19 @@ class InputLedger(AppendOnlyModel):
 
 class ActivityLog(models.Model):
     class ActivityType(models.TextChoices):
-        IRRIGATION = "IRRIGATION", "Irigasi"
-        FERTILIZER = "FERTILIZER", "Pemupukan"
-        PESTICIDE = "PESTICIDE", "Penyemprotan Pestisida"
+        IRRIGATION = "IRRIGATION", _l("Irigasi")
+        FERTILIZER = "FERTILIZER", _l("Pemupukan")
+        PESTICIDE = "PESTICIDE", _l("Penyemprotan Pestisida")
         # Consumes a SEED input item → BIBIT usage expense (rule 11).
-        SEEDING = "SEEDING", "Penanaman Benih"
-        SCOUTING = "SCOUTING", "Pengamatan"
+        SEEDING = "SEEDING", _l("Penanaman Benih")
+        SCOUTING = "SCOUTING", _l("Pengamatan")
 
     cycle = models.ForeignKey(
-        CropCycle, on_delete=models.PROTECT, related_name="activities", verbose_name="siklus"
+        CropCycle, on_delete=models.PROTECT, related_name="activities", verbose_name=_l("siklus")
     )
-    activity_type = models.CharField("jenis kegiatan", max_length=20, choices=ActivityType.choices)
+    activity_type = models.CharField(_l("jenis kegiatan"), max_length=20, choices=ActivityType.choices)
     stage_at_activity = models.CharField(
-        "tahap saat kegiatan", max_length=20, choices=CropCycle.Stage.choices
+        _l("tahap saat kegiatan"), max_length=20, choices=CropCycle.Stage.choices
     )
     input_item = models.ForeignKey(
         InputItem,
@@ -275,28 +294,28 @@ class ActivityLog(models.Model):
         null=True,
         blank=True,
         related_name="activities",
-        verbose_name="input",
+        verbose_name=_l("input"),
     )
-    quantity = models.DecimalField("jumlah", default=0, **QTY)
-    unit = models.CharField("satuan", max_length=4, choices=Unit.choices, blank=True)
-    application_method = models.CharField("metode aplikasi", max_length=100, blank=True)
-    duration_minutes = models.PositiveIntegerField("durasi (menit)", null=True, blank=True)  # IRRIGATION only
-    photo = models.ImageField("foto", upload_to="scouting/%Y/%m/", blank=True)  # SCOUTING only
-    notes = models.TextField("catatan", blank=True)
-    logged_at = models.DateTimeField("waktu", default=timezone.now)
+    quantity = models.DecimalField(_l("jumlah"), default=0, **QTY)
+    unit = models.CharField(_l("satuan"), max_length=4, choices=Unit.choices, blank=True)
+    application_method = models.CharField(_l("metode aplikasi"), max_length=100, blank=True)
+    duration_minutes = models.PositiveIntegerField(_l("durasi (menit)"), null=True, blank=True)  # IRRIGATION only
+    photo = models.ImageField(_l("foto"), upload_to="scouting/%Y/%m/", blank=True)  # SCOUTING only
+    notes = models.TextField(_l("catatan"), blank=True)
+    logged_at = models.DateTimeField(_l("waktu"), default=timezone.now)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="+",
-        verbose_name="dicatat oleh",
+        verbose_name=_l("dicatat oleh"),
     )
 
     class Meta:
         ordering = ["-logged_at", "-id"]
-        verbose_name = "log kegiatan"
-        verbose_name_plural = "log kegiatan"
+        verbose_name = _l("log kegiatan")
+        verbose_name_plural = _l("log kegiatan")
         constraints = [
             models.CheckConstraint(
                 condition=Q(quantity__gte=0), name="activitylog_quantity_nonnegative"
@@ -310,14 +329,14 @@ class ActivityLog(models.Model):
 class PreHarvestChecklistItem(models.Model):
     """Admin-editable pre-harvest checklist line (D61)."""
 
-    text = models.CharField("butir", max_length=200)
-    order = models.PositiveIntegerField("urutan", default=0)
-    is_active = models.BooleanField("aktif", default=True)
+    text = models.CharField(_l("butir"), max_length=200)
+    order = models.PositiveIntegerField(_l("urutan"), default=0)
+    is_active = models.BooleanField(_l("aktif"), default=True)
 
     class Meta:
         ordering = ["order", "id"]
-        verbose_name = "butir cek pra-panen"
-        verbose_name_plural = "butir cek pra-panen"
+        verbose_name = _l("butir cek pra-panen")
+        verbose_name_plural = _l("butir cek pra-panen")
 
     def __str__(self):
         return self.text
@@ -327,36 +346,36 @@ class PreHarvestCheck(models.Model):
     """One checklist pass; several per cycle allowed, the latest counts (rule 14)."""
 
     cycle = models.ForeignKey(CropCycle, on_delete=models.PROTECT, related_name="preharvest_checks",
-                              verbose_name="siklus")
+                              verbose_name=_l("siklus"))
     checked_items = models.ManyToManyField(PreHarvestChecklistItem, blank=True, related_name="+",
-                                           verbose_name="butir tercentang")
-    completed_pct = models.DecimalField("persen selesai", max_digits=5, decimal_places=2, default=0)
-    notes = models.TextField("catatan", blank=True)
+                                           verbose_name=_l("butir tercentang"))
+    completed_pct = models.DecimalField(_l("persen selesai"), max_digits=5, decimal_places=2, default=0)
+    notes = models.TextField(_l("catatan"), blank=True)
     recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
-                                    related_name="+", verbose_name="dicatat oleh")
-    recorded_at = models.DateTimeField("waktu", default=timezone.now)
+                                    related_name="+", verbose_name=_l("dicatat oleh"))
+    recorded_at = models.DateTimeField(_l("waktu"), default=timezone.now)
 
     class Meta:
         ordering = ["-recorded_at", "-id"]
-        verbose_name = "cek pra-panen"
-        verbose_name_plural = "cek pra-panen"
+        verbose_name = _l("cek pra-panen")
+        verbose_name_plural = _l("cek pra-panen")
         constraints = [
             models.CheckConstraint(condition=Q(completed_pct__gte=0, completed_pct__lte=100),
                                    name="preharvestcheck_pct_range"),
         ]
 
     def __str__(self):
-        return f"Cek pra-panen {self.cycle} {self.completed_pct}%"
+        return _("Cek pra-panen %(cycle)s %(pct)s%%") % {"cycle": self.cycle, "pct": self.completed_pct}
 
 
 class ExpenseCategory(models.Model):
-    code = models.CharField("kode", max_length=30, unique=True)
-    name = models.CharField("nama", max_length=100)
+    code = models.CharField(_l("kode"), max_length=30, unique=True)
+    name = models.CharField(_l("nama"), max_length=100)
 
     class Meta:
         ordering = ["code"]
-        verbose_name = "kategori biaya"
-        verbose_name_plural = "kategori biaya"
+        verbose_name = _l("kategori biaya")
+        verbose_name_plural = _l("kategori biaya")
 
     def __str__(self):
         return self.name
@@ -364,29 +383,29 @@ class ExpenseCategory(models.Model):
 
 class Expense(models.Model):
     class Scope(models.TextChoices):
-        ELEMENT = "ELEMENT", "Elemen"
-        GENERAL = "GENERAL", "Umum"
+        ELEMENT = "ELEMENT", _l("Elemen")
+        GENERAL = "GENERAL", _l("Umum")
 
     class Status(models.TextChoices):
-        PENDING = "PENDING", "Menunggu"
-        APPROVED = "APPROVED", "Disetujui"
-        REJECTED = "REJECTED", "Ditolak"
+        PENDING = "PENDING", _l("Menunggu")
+        APPROVED = "APPROVED", _l("Disetujui")
+        REJECTED = "REJECTED", _l("Ditolak")
 
     class Source(models.TextChoices):
-        MANUAL = "MANUAL", "Manual"
-        INPUT_USAGE = "INPUT_USAGE", "Pemakaian Input"
+        MANUAL = "MANUAL", _l("Manual")
+        INPUT_USAGE = "INPUT_USAGE", _l("Pemakaian Input")
 
     category = models.ForeignKey(
-        ExpenseCategory, on_delete=models.PROTECT, related_name="expenses", verbose_name="kategori"
+        ExpenseCategory, on_delete=models.PROTECT, related_name="expenses", verbose_name=_l("kategori")
     )
-    scope = models.CharField("cakupan", max_length=10, choices=Scope.choices)
+    scope = models.CharField(_l("cakupan"), max_length=10, choices=Scope.choices)
     element = models.ForeignKey(
         FarmElement,
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="expenses",
-        verbose_name="elemen",
+        verbose_name=_l("elemen"),
     )
     cycle = models.ForeignKey(
         CropCycle,
@@ -394,25 +413,25 @@ class Expense(models.Model):
         null=True,
         blank=True,
         related_name="expenses",
-        verbose_name="siklus",
+        verbose_name=_l("siklus"),
     )
-    amount_idr = models.DecimalField("jumlah (Rp)", **MONEY)
-    vendor = models.CharField("vendor", max_length=150, blank=True)
-    narration = models.CharField("keterangan", max_length=255, blank=True)
-    date_incurred = models.DateField("tanggal biaya", default=timezone.localdate)
+    amount_idr = models.DecimalField(_l("jumlah (Rp)"), **MONEY)
+    vendor = models.CharField(_l("vendor"), max_length=150, blank=True)
+    narration = models.CharField(_l("keterangan"), max_length=255, blank=True)
+    date_incurred = models.DateField(_l("tanggal biaya"), default=timezone.localdate)
     payment_method = models.CharField(
-        "metode pembayaran", max_length=10, choices=PaymentMethod.choices, default=PaymentMethod.CASH
+        _l("metode pembayaran"), max_length=10, choices=PaymentMethod.choices, default=PaymentMethod.CASH
     )
-    receipt = models.FileField("bukti", upload_to="receipts/%Y/%m/", blank=True)
-    status = models.CharField("status", max_length=10, choices=Status.choices, default=Status.PENDING)
-    source = models.CharField("sumber", max_length=15, choices=Source.choices, default=Source.MANUAL)
+    receipt = models.FileField(_l("bukti"), upload_to="receipts/%Y/%m/", blank=True)
+    status = models.CharField(_l("status"), max_length=10, choices=Status.choices, default=Status.PENDING)
+    source = models.CharField(_l("sumber"), max_length=15, choices=Source.choices, default=Source.MANUAL)
     source_activity = models.ForeignKey(
         ActivityLog,
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="usage_expenses",
-        verbose_name="kegiatan sumber",
+        verbose_name=_l("kegiatan sumber"),
     )
     # SET_NULL: deleting an (allowed) batch un-absorbs its expenses (rule 10).
     absorbed_by = models.ForeignKey(
@@ -421,7 +440,7 @@ class Expense(models.Model):
         null=True,
         blank=True,
         related_name="absorbed_expenses",
-        verbose_name="diserap oleh panen",
+        verbose_name=_l("diserap oleh panen"),
     )
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -429,15 +448,15 @@ class Expense(models.Model):
         null=True,
         blank=True,
         related_name="+",
-        verbose_name="disetujui oleh",
+        verbose_name=_l("disetujui oleh"),
     )
-    approved_at = models.DateTimeField("disetujui pada", null=True, blank=True)
-    created_at = models.DateTimeField("dibuat pada", default=timezone.now)
+    approved_at = models.DateTimeField(_l("disetujui pada"), null=True, blank=True)
+    created_at = models.DateTimeField(_l("dibuat pada"), default=timezone.now)
 
     class Meta:
         ordering = ["-date_incurred", "-id"]
-        verbose_name = "biaya"
-        verbose_name_plural = "biaya"
+        verbose_name = _l("biaya")
+        verbose_name_plural = _l("biaya")
         constraints = [
             models.CheckConstraint(condition=Q(amount_idr__gt=0), name="expense_amount_positive"),
             # ELEMENT expenses name an element; GENERAL expenses are farm-wide overhead.
@@ -462,35 +481,35 @@ class Expense(models.Model):
         indexes = [models.Index(fields=["cycle", "status", "absorbed_by"])]
 
     def __str__(self):
-        return f"{self.category.code} Rp {self.amount_idr} ({self.get_status_display()})"
+        return f"{self.category.code} Rp{self.amount_idr} ({self.get_status_display()})"
 
 
 class HarvestBatch(models.Model):
     cycle = models.ForeignKey(
-        CropCycle, on_delete=models.PROTECT, related_name="harvests", verbose_name="siklus"
+        CropCycle, on_delete=models.PROTECT, related_name="harvests", verbose_name=_l("siklus")
     )
-    high_quality_kg = models.DecimalField("grade HIGH (kg)", **QTY)
-    low_quality_kg = models.DecimalField("grade LOW (kg)", default=0, **QTY)
-    harvest_loss_kg = models.DecimalField("susut panen (kg)", default=0, **QTY)
-    number_of_bags = models.PositiveIntegerField("jumlah karung", null=True, blank=True)
-    weight_per_bag_kg = models.DecimalField("berat per karung (kg)", null=True, blank=True, **QTY)
-    absorbed_cost_idr = models.DecimalField("biaya terserap", default=0, **MONEY)
-    unit_cogs_high_idr = models.DecimalField("HPP/kg HIGH", default=0, **MONEY)
-    unit_cogs_low_idr = models.DecimalField("HPP/kg LOW", default=0, **MONEY)
-    harvested_at = models.DateTimeField("dipanen pada", default=timezone.now)
+    high_quality_kg = models.DecimalField(_l("grade HIGH (kg)"), **QTY)
+    low_quality_kg = models.DecimalField(_l("grade LOW (kg)"), default=0, **QTY)
+    harvest_loss_kg = models.DecimalField(_l("susut panen (kg)"), default=0, **QTY)
+    number_of_bags = models.PositiveIntegerField(_l("jumlah karung"), null=True, blank=True)
+    weight_per_bag_kg = models.DecimalField(_l("berat per karung (kg)"), null=True, blank=True, **QTY)
+    absorbed_cost_idr = models.DecimalField(_l("biaya terserap"), default=0, **MONEY)
+    unit_cogs_high_idr = models.DecimalField(_l("HPP/kg HIGH"), default=0, **MONEY)
+    unit_cogs_low_idr = models.DecimalField(_l("HPP/kg LOW"), default=0, **MONEY)
+    harvested_at = models.DateTimeField(_l("dipanen pada"), default=timezone.now)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="+",
-        verbose_name="dicatat oleh",
+        verbose_name=_l("dicatat oleh"),
     )
 
     class Meta:
         ordering = ["-harvested_at", "-id"]
-        verbose_name = "batch panen"
-        verbose_name_plural = "batch panen"
+        verbose_name = _l("batch panen")
+        verbose_name_plural = _l("batch panen")
         constraints = [
             # Rule 2's strict `high > 0` is a service validation; the DB only forbids negatives
             # so that the zero-yield path (rule 5) stays representable.
@@ -505,7 +524,7 @@ class HarvestBatch(models.Model):
         ]
 
     def __str__(self):
-        return f"Panen #{self.pk} — {self.cycle} ({self.harvested_at:%Y-%m-%d})"
+        return _("Panen #%(pk)s — %(cycle)s (%(date)s)") % {"pk": self.pk, "cycle": self.cycle, "date": f"{self.harvested_at:%Y-%m-%d}"}
 
     @property
     def sellable_kg(self):

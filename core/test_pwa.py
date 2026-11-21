@@ -59,3 +59,24 @@ class PwaTests(TestCase):
         for url in ("/sw.js", "/manifest.webmanifest", "/offline/"):
             self.assertEqual(self.client.get(url).status_code, 200, url)
         self.assertEqual(self.client.get(reverse("farm:cycles")).status_code, 302)
+
+
+class AssetVersionTests(TestCase):
+    def test_version_covers_every_static_file(self):
+        """A change to any cache-first static file (not just pre-cached ones) must change the version."""
+        from unittest import mock
+
+        from core import pwa
+
+        pwa.asset_version.cache_clear()
+        before = pwa.asset_version()
+        real = pwa.Path.read_bytes
+
+        def fake(path):
+            data = real(path)
+            return data + b"//changed" if path.name == "confirm.js" else data
+
+        with mock.patch.object(pwa.Path, "read_bytes", fake):
+            pwa.asset_version.cache_clear()
+            self.assertNotEqual(pwa.asset_version(), before)
+        pwa.asset_version.cache_clear()

@@ -1,7 +1,12 @@
-{% if messages %}
-<div class="no-print mb-4 space-y-2">
+{% load ui i18n %}{# Phase 7: Django messages are toasts (bottom right). Success/info fade out after 5 s (forms.js); warnings and errors stay until closed. #}
+<div id="gt-toasts" class="app-toasts no-print" role="status" aria-live="polite">
   {% for message in messages %}
-  <div class="rounded-lg border px-4 py-2 text-sm {% if message.tags == 'error' %}border-red-200 bg-red-50 text-red-800{% elif message.tags == 'warning' %}border-amber-200 bg-amber-50 text-amber-800{% else %}border-emerald-200 bg-emerald-50 text-emerald-800{% endif %}">{{ message }}</div>
+  {% with tone=message.tags|default:"info" %}
+  <div class="app-toast app-toast--{% if tone == 'error' %}error{% elif tone == 'warning' %}warning{% elif tone == 'success' %}success{% else %}info{% endif %}">
+    <span class="app-toast__icon">{% if tone == 'error' or tone == 'warning' %}{% icon "alert" 18 %}{% elif tone == 'success' %}{% icon "check" 18 %}{% else %}{% icon "info" 18 %}{% endif %}</span>
+    <span class="app-toast__text">{{ message }}</span>
+    <button type="button" class="app-toast__close" aria-label="{% translate 'Tutup' %}">×</button>
+  </div>
+  {% endwith %}
   {% endfor %}
 </div>
-{% endif %}

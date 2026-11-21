@@ -1,0 +1,13 @@
+{% load i18n %}{# Spray-window hint on the pesticide report (D89): advice only, never blocks saving. Quiet callout; tone in the icon disc. #}
+{% load ui %}
+<div x-data="{ s: null, next: null, async load() { try { const r = await fetch('{% url 'geo:weather' %}'); const d = await r.json(); if (d.weather) { this.s = d.weather.spray; this.next = d.weather.next_good_spray; } } catch (e) {} } }"
+     x-init="load()" x-show="s" x-cloak class="gt-callout"
+     :class="!s ? '' : s.level === 'GOOD' ? 'gt-callout--success' : s.level === 'FAIR' ? 'gt-callout--warning' : 'gt-callout--danger'">
+  {% icon "info" 18 %}
+  <div>
+    <span class="gt-callout__title" x-text="s ? '{% jt "Waktu semprot saat ini:" %} ' + s.label : ''"></span>
+    <span class="gt-callout__body app-block" x-text="s && s.reasons.length ? s.reasons.join(', ') : '{% jt "Angin tenang dan tidak ada hujan dalam 4 jam." %}'"></span>
+    <span class="gt-callout__body app-block" x-show="s && s.level !== 'GOOD' && next" x-text="next ? '{% jt "Waktu baik berikutnya:" %} ' + new Date(next).toLocaleString(window.GT_LOCALE, { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''"></span>
+  </div>
+  {% info_tip _("Saran saja; laporan tetap bisa disimpan.") %}
+</div>

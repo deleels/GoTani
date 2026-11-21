@@ -11,4 +11,5 @@ urlpatterns = [
     path("orders/", views.OrdersView.as_view(), name="orders"),
     path("receipt/<int:pk>/", views.ReceiptView.as_view(), name="receipt"),
     path("orders/<int:pk>/void/", views.VoidView.as_view(), name="void"),
+    path("shift/", views.ShiftView.as_view(), name="shift"),
 ]
