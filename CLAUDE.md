@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D103); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D120); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 
@@ -133,7 +133,8 @@ An engineering programming class project modeling end-to-end agricultural produc
 | CASHIER | POS register and receipts only |
 
 ## UI (FarmCloud layout, GoTani's own brand — D66)
-- **Brand:** GoTani-design-system (tokens + CSS components, `gt-` classes), light theme only (D104). Button hierarchy, info-tip footnotes, themed date picker, varied bars and gauge: D107. Bahasa Indonesia copy.
+- **Brand:** GoTani-design-system (tokens + CSS components, `gt-` classes), light theme only (D104). Button hierarchy, info-tip footnotes, themed date picker, varied bars and gauge: D107. Source of truth: the GoTani design-system artifact https://claude.ai/artifact/25DsxzDss5aQCsGom2HahT — read its `project/README.md` before UI work.
+- **Language (Phase 7):** English UI with a per-user Indonesian option; Indonesian is the source text (msgid), English lives in `locale/en/tr_*.py` (run `python manage.py i18n`). Money, numbers and dates follow the user's language (`Rp15,000` in English, `Rp15.000` in Indonesian); dates use named formats only (D119); built-in categories/checklist lines translate until renamed (D120).
 - **Shell:** left sidebar 16rem, collapses to a 3rem icon rail (Ctrl/⌘+B, state in localStorage); mobile = slide-in sheet from a hamburger. Header slot shows FarmProfile name/logo + user's role. Groups (role-filtered):
   - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
   - **PENJUALAN:** Kasir (POS) · Pesanan · Shift & Kas · Invoice · Pembeli
