@@ -333,7 +333,7 @@ class Command(BaseCommand):
             days = round(start_days_ago - i * step)
             self.on(days, 6, lambda ts, stage=stage: farm.advance_cycle_stage(self.cycles[key], stage, allow_skip=True), 30)
 
-    def _activity(self, key, days_ago, activity_type, item=None, qty="0", method="", notes=""):
+    def _activity(self, key, days_ago, activity_type, item=None, qty="0", method="", notes="", finding="", severity=""):
         def run(ts):
             input_item = self.items[item] if item else None
             farm.log_activity(
@@ -347,6 +347,8 @@ class Command(BaseCommand):
                 duration_minutes=(45 if activity_type == A.IRRIGATION else None),
                 logged_at=ts,
                 limit_backdate=False,
+                finding=finding,
+                severity=severity,
                 user=self.users[ROLE_WORKER],
             )
 
@@ -379,7 +381,7 @@ class Command(BaseCommand):
             self._activity(MELON_OLD, days, A.PESTICIDE, ABAMEKTIN, "100", "Semprot daun")
         for days in (90, 60, 33):
             self._activity(MELON_OLD, days, A.IRRIGATION, qty="1500", method="Tetes")
-        self._activity(MELON_OLD, 55, A.SCOUTING, notes="Kutu kebul ringan di sisi timur")
+        self._activity(MELON_OLD, 55, A.SCOUTING, notes="Kutu kebul ringan di sisi timur", finding="PEST", severity="LIGHT")
         self._check(MELON_OLD, 37, 5)
         self._close(MELON_OLD, 27)
 
@@ -415,7 +417,7 @@ class Command(BaseCommand):
         for days in (60, 20):
             self._activity(KAKAO, days, A.FERTILIZER, POC, "3", "Kocor")
         self._activity(KAKAO, 30, A.PESTICIDE, ABAMEKTIN, "100", "Semprot buah")
-        self._activity(KAKAO, 35, A.SCOUTING, notes="Gejala busuk buah minim")
+        self._activity(KAKAO, 35, A.SCOUTING, notes="Gejala busuk buah minim", finding="DISEASE", severity="LIGHT")
 
     # ------------------------------------------------------------------
     # Plan: manual expenses

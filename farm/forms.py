@@ -191,6 +191,9 @@ class ActivityForm(StyledForm):
     duration_minutes = forms.IntegerField(label=_l("Durasi"), min_value=1, required=False)
     photo = forms.ImageField(label=_l("Foto"), required=False)
     notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+    finding = forms.ChoiceField(label=_l("Temuan"), choices=ActivityLog.Finding.choices, required=False)
+    severity = forms.ChoiceField(label=_l("Tingkat"), choices=ActivityLog.Severity.choices, required=False,
+                                 help_text=_l("Wajib kecuali temuan Normal."))
     task_name = forms.CharField(label=_l("Pekerjaan"), max_length=80, required=False,
                                 help_text=_l("Contoh: penyiangan, pemangkasan, pasang ajir."))
     worker_count = forms.IntegerField(label=_l("Jumlah pekerja (opsional)"), min_value=1, required=False)
@@ -203,7 +206,7 @@ class ActivityForm(StyledForm):
         ActivityLog.ActivityType.PESTICIDE: ["cycle", "logged_at", "input_item", "quantity", "application_method", "notes"],
         ActivityLog.ActivityType.SEEDING: ["cycle", "logged_at", "input_item", "quantity", "application_method", "notes"],
         ActivityLog.ActivityType.IRRIGATION: ["cycle", "logged_at", "quantity", "unit", "duration_minutes", "application_method", "notes"],
-        ActivityLog.ActivityType.SCOUTING: ["cycle", "logged_at", "photo", "notes"],
+        ActivityLog.ActivityType.SCOUTING: ["cycle", "logged_at", "finding", "severity", "photo", "notes"],
         ActivityLog.ActivityType.OTHER: ["cycle", "logged_at", "task_name", "duration_minutes", "worker_count",
                                          "photo", "notes"],
     }
@@ -233,6 +236,12 @@ class ActivityForm(StyledForm):
             if activity_type == ActivityLog.ActivityType.IRRIGATION:
                 self.fields["quantity"].label = _("Volume air")
                 self.fields["unit"].initial = Unit.L
+            if activity_type == ActivityLog.ActivityType.SCOUTING:
+                self.fields["finding"].required = True
+                self.fields["notes"].label = _("Pengamatan")
+                self.fields["notes"].help_text = _("Wajib kecuali temuan Normal.")
+                self.fields["severity"].show_when = "finding=" + "|".join(
+                    v for v in ActivityLog.Finding.values if v != ActivityLog.Finding.NORMAL)
             if activity_type == ActivityLog.ActivityType.OTHER:
                 from .services import ACTIVITY_BACKDATE_DAYS
 
@@ -253,7 +262,7 @@ class ActivityForm(StyledForm):
         if self.fixed_type:
             data["activity_type"] = self.fixed_type
         nullable = ("input_item", "duration_minutes", "photo", "logged_at", "worker_count")
-        for name in nullable + ("unit", "application_method", "notes", "task_name"):
+        for name in nullable + ("unit", "application_method", "notes", "task_name", "finding", "severity"):
             data.setdefault(name, None if name in nullable else "")
         item = data.get("input_item")
         if item and not data.get("unit"):

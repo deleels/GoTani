@@ -68,7 +68,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
   Penanaman) · Pemantauan (Scouting, Pra-panen) · Panen & Lainnya (Panen, Susut, Lainnya).
 - Same picker on the cycle page, preset to that cycle.
 
-## 7. Structured scouting (D129)
+## 7. Structured scouting (D129) ✅
 - New fields: `finding` (Normal / Hama / Penyakit / Gulma / Kekurangan hara / Lainnya, required),
   `severity` (Ringan / Sedang / Berat, required unless Normal), observation text required unless Normal.
   Photo stays optional.

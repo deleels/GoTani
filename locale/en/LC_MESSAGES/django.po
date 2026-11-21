@@ -354,6 +354,10 @@ msgstr "Low stock: %(name)s"
 msgid "Stok produk menipis: %(product)s"
 msgstr "Product running low: %(product)s"
 
+#: core\notifications.py
+msgid "Temuan berat: %(variety)s @ %(element)s"
+msgstr "Severe finding: %(variety)s @ %(element)s"
+
 #: core\services.py
 msgid "Anda tidak dapat menonaktifkan akun Anda sendiri."
 msgstr "You can't deactivate your own account."
@@ -915,6 +919,10 @@ msgid "Pembelian pertama: jumlah (opsional)"
 msgstr "First purchase: quantity (optional)"
 
 #: farm\forms.py
+msgid "Pengamatan"
+msgstr "Observation"
+
+#: farm\forms.py
 msgid "Perkiraan hasil (kg)"
 msgstr "Expected yield (kg)"
 
@@ -939,6 +947,10 @@ msgid "Tanggal mulai tanam"
 msgstr "Planting date"
 
 #: farm\forms.py
+msgid "Tingkat"
+msgstr "Severity"
+
+#: farm\forms.py
 msgid "Umur panen (hari, opsional)"
 msgstr "Days to harvest (optional)"
 
@@ -949,6 +961,10 @@ msgstr "Vendor"
 #: farm\forms.py
 msgid "Volume air"
 msgstr "Water volume"
+
+#: farm\forms.py
+msgid "Wajib kecuali temuan Normal."
+msgstr "Required unless the finding is Normal."
 
 #: farm\forms.py
 msgid "Waktu kegiatan"
@@ -967,6 +983,10 @@ msgid "Benih"
 msgstr "Seed"
 
 #: farm\models.py
+msgid "Berat"
+msgstr "Severe"
+
+#: farm\models.py
 msgid "Cek pra-panen %(cycle)s %(pct)s%%"
 msgstr "Pre-harvest check %(cycle)s %(pct)s%%"
 
@@ -979,6 +999,10 @@ msgid "Greenhouse"
 msgstr "Greenhouse"
 
 #: farm\models.py
+msgid "Gulma"
+msgstr "Weeds"
+
+#: farm\models.py
 msgid "HPP/kg HIGH"
 msgstr "COGS/kg HIGH"
 
@@ -987,8 +1011,16 @@ msgid "HPP/kg LOW"
 msgstr "COGS/kg LOW"
 
 #: farm\models.py
+msgid "Hama"
+msgstr "Pests"
+
+#: farm\models.py
 msgid "Hidroponik"
 msgstr "Hydroponic"
+
+#: farm\models.py
+msgid "Kekurangan hara"
+msgstr "Nutrient deficiency"
 
 #: farm\models.py
 msgid "Kilogram"
@@ -1005,6 +1037,10 @@ msgstr "Manual"
 #: farm\models.py
 msgid "Mililiter"
 msgstr "Millilitre"
+
+#: farm\models.py
+msgid "Normal"
+msgstr "Normal"
 
 #: farm\models.py
 msgid "Panen #%(pk)s · %(cycle)s (%(date)s)"
@@ -1047,8 +1083,8 @@ msgid "Penanaman Benih"
 msgstr "Seeding"
 
 #: farm\models.py
-msgid "Pengamatan"
-msgstr "Scouting"
+msgid "Penyakit"
+msgstr "Disease"
 
 #: farm\models.py
 msgid "Penyemprotan Pestisida"
@@ -1065,6 +1101,10 @@ msgstr "Transplanting"
 #: farm\models.py
 msgid "QRIS"
 msgstr "QRIS"
+
+#: farm\models.py
+msgid "Ringan"
+msgstr "Light"
 
 #: farm\models.py
 msgid "Salah harga / produk"
@@ -1359,6 +1399,14 @@ msgid "tanggal mulai tanam"
 msgstr "planting date"
 
 #: farm\models.py
+msgid "temuan"
+msgstr "finding"
+
+#: farm\models.py
+msgid "tingkat"
+msgstr "severity"
+
+#: farm\models.py
 msgid "umur panen (hari)"
 msgstr "days to harvest"
 
@@ -1635,6 +1683,10 @@ msgid "Perkiraan panen tidak boleh sebelum tanggal mulai tanam."
 msgstr "Expected harvest can't be before the planting date."
 
 #: farm\services.py
+msgid "Pilih tingkat temuan (ringan, sedang atau berat)."
+msgstr "Choose a severity (light, medium or severe)."
+
+#: farm\services.py
 msgid "Satuan kegiatan (%(v)s) harus sama dengan satuan input (%(unit)s)."
 msgstr "The activity unit (%(v)s) must match the input unit (%(unit)s)."
 
@@ -1671,12 +1723,24 @@ msgid "Tahap tidak dikenal: %(new_stage)s."
 msgstr "Unknown stage: %(new_stage)s."
 
 #: farm\services.py
+msgid "Temuan dan tingkat hanya untuk pengamatan (scouting)."
+msgstr "Finding and severity are only for scouting."
+
+#: farm\services.py
+msgid "Temuan tidak dikenal."
+msgstr "Unknown finding."
+
+#: farm\services.py
 msgid "Tidak ada perpindahan tahap yang bisa dibatalkan."
 msgstr "There's no stage change to undo."
 
 #: farm\services.py
 msgid "Total panen siklus menjadi %(after)s kg, lebih dari 150%% perkiraan (%(expected)s kg). Periksa angka atau satuan."
 msgstr "The cycle total becomes %(after)s kg, more than 150%% of the estimate (%(expected)s kg). Check the number or the unit."
+
+#: farm\services.py
+msgid "Tulis apa yang diamati."
+msgstr "Describe what you observed."
 
 #: farm\services.py
 msgid "Varietas %(name)s diubah"
@@ -2185,10 +2249,6 @@ msgstr "Grade B (LOW)"
 #: inventory\models.py
 msgid "HPP per kg"
 msgstr "COGS per kg"
-
-#: inventory\models.py
-msgid "Hama"
-msgstr "Pests"
 
 #: inventory\models.py
 msgid "Masuk Panen"
@@ -3899,6 +3959,10 @@ msgid "Tahap"
 msgstr "Stage"
 
 #: templates\farm\activities.html
+msgid "Temuan"
+msgstr "Finding"
+
+#: templates\farm\activities.html
 msgid "Volume"
 msgstr "Volume"
 
@@ -5208,7 +5272,7 @@ msgstr "The satellite sees the roof, not the crop"
 
 #: templates\geo\map.html
 msgid "Sedang"
-msgstr "Moderate"
+msgstr "Medium"
 
 #: templates\geo\map.html
 msgid "Selesai"

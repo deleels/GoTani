@@ -287,6 +287,19 @@ class ActivityLog(models.Model):
         # D127: any other field work (weeding, pruning, trellising ...); never uses an input item.
         OTHER = "OTHER", _l("Lainnya")
 
+    class Finding(models.TextChoices):  # D129: structured scouting
+        NORMAL = "NORMAL", _l("Normal")
+        PEST = "PEST", _l("Hama")
+        DISEASE = "DISEASE", _l("Penyakit")
+        WEED = "WEED", _l("Gulma")
+        NUTRIENT = "NUTRIENT", _l("Kekurangan hara")
+        OTHER = "OTHER", _l("Lainnya")
+
+    class Severity(models.TextChoices):
+        LIGHT = "LIGHT", _l("Ringan")
+        MEDIUM = "MEDIUM", _l("Sedang")
+        SEVERE = "SEVERE", _l("Berat")
+
     cycle = models.ForeignKey(
         CropCycle, on_delete=models.PROTECT, related_name="activities", verbose_name=_l("siklus")
     )
@@ -309,6 +322,8 @@ class ActivityLog(models.Model):
     photo = models.ImageField(_l("foto"), upload_to="scouting/%Y/%m/", blank=True)  # SCOUTING only
     notes = models.TextField(_l("catatan"), blank=True)
     task_name = models.CharField(_l("pekerjaan"), max_length=80, blank=True)  # OTHER only (D127)
+    finding = models.CharField(_l("temuan"), max_length=10, choices=Finding.choices, blank=True)  # SCOUTING
+    severity = models.CharField(_l("tingkat"), max_length=10, choices=Severity.choices, blank=True)  # SCOUTING
     worker_count = models.PositiveIntegerField(_l("jumlah pekerja"), null=True, blank=True)  # OTHER only
     # D126: logged_at = when the work was done (up to 3 days back); created_at = when it was recorded.
     logged_at = models.DateTimeField(_l("waktu"), default=timezone.now)

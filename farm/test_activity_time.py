@@ -45,7 +45,7 @@ class ActivityTimeTests(TestCase):
         self.client.force_login(self.worker)
         when = timezone.localtime() - timedelta(days=1)
         r = self.client.post(reverse("farm:activities") + "?tab=scouting",
-                             {"cycle": self.cycle.pk, "logged_at": when.strftime("%Y-%m-%dT%H:%M"), "notes": "ok"})
+                             {"cycle": self.cycle.pk, "logged_at": when.strftime("%Y-%m-%dT%H:%M"), "notes": "ok", "finding": "NORMAL"})
         self.assertEqual(r.status_code, 302)
         a = ActivityLog.objects.get()
         self.assertEqual(timezone.localtime(a.logged_at).strftime("%Y-%m-%d %H:%M"), when.strftime("%Y-%m-%d %H:%M"))

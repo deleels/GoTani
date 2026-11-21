@@ -342,6 +342,7 @@ class ActivitiesView(FarmPage):
             notes=d.get("notes") or "", user=self.request.user,
             duration_minutes=d.get("duration_minutes"), photo=d.get("photo"), logged_at=d.get("logged_at"),
             task_name=d.get("task_name") or "", worker_count=d.get("worker_count"),
+            finding=d.get("finding") or "", severity=d.get("severity") or "",
         )
 
     def get_context_data(self, **kwargs):

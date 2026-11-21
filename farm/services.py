@@ -472,6 +472,48 @@ INPUT_EXPENSE_CATEGORY = {
 
 
 ACTIVITY_BACKDATE_DAYS = 3
+SEVERE_FINDING_DAYS = 3
+
+
+def check_scouting(activity_type, finding="", severity="", notes=""):
+    """D129: a scouting entry names its finding; anything but Normal needs a severity and an observation.
+    An empty finding on a service call means Normal (the form always asks)."""
+    Finding, Severity = ActivityLog.Finding, ActivityLog.Severity
+    if activity_type != ActivityLog.ActivityType.SCOUTING:
+        if finding or severity:
+            raise ValidationError(_("Temuan dan tingkat hanya untuk pengamatan (scouting)."))
+        return "", ""
+    finding = finding or Finding.NORMAL
+    if finding not in Finding.values:
+        raise ValidationError(_("Temuan tidak dikenal."))
+    if finding == Finding.NORMAL:
+        return finding, ""
+    if severity not in Severity.values:
+        raise ValidationError(_("Pilih tingkat temuan (ringan, sedang atau berat)."))
+    if not (notes or "").strip():
+        raise ValidationError(_("Tulis apa yang diamati."))
+    return finding, severity
+
+
+def severe_scouting_cycles(now=None):
+    """D129 bell: active cycles with a Berat scouting finding in the last 3 days and no newer Normal or Ringan
+    scouting on that cycle. Returns [(cycle, latest severe activity)]."""
+    from django.db.models import Q
+
+    now = now or timezone.now()
+    scouting = ActivityLog.objects.filter(activity_type=ActivityLog.ActivityType.SCOUTING)
+    severe = (scouting.filter(cycle__is_active=True, severity=ActivityLog.Severity.SEVERE,
+                              logged_at__gte=now - timedelta(days=SEVERE_FINDING_DAYS))
+              .select_related("cycle__variety", "cycle__element").order_by("cycle_id", "-logged_at", "-id"))
+    out, seen = [], set()
+    for act in severe:
+        if act.cycle_id in seen:
+            continue
+        seen.add(act.cycle_id)
+        calm = Q(finding=ActivityLog.Finding.NORMAL) | Q(severity=ActivityLog.Severity.LIGHT)
+        if not scouting.filter(calm, cycle_id=act.cycle_id, logged_at__gt=act.logged_at).exists():
+            out.append((act.cycle, act))
+    return out
 
 
 def other_allowed_on_closed(cycle: CropCycle) -> bool:
@@ -513,6 +555,8 @@ def log_activity(
     limit_backdate: bool = True,
     task_name: str = "",
     worker_count=None,
+    finding: str = "",
+    severity: str = "",
 ) -> ActivityLog:
     """Log a field activity; consuming an input deducts stock and books an
     APPROVED INPUT_USAGE cycle expense of qty × avg cost (rule 11, D22, D34)."""
@@ -550,6 +594,7 @@ def log_activity(
             raise ValidationError(_("Durasi harus lebih dari 0 menit."))
     if photo and activity_type not in (ActivityLog.ActivityType.SCOUTING, ActivityLog.ActivityType.OTHER):
         raise ValidationError(_("Foto hanya untuk kegiatan pengamatan (scouting) dan lainnya."))
+    finding, severity = check_scouting(activity_type, finding, severity, notes)
     task_name = (task_name or "").strip()
     if is_other:
         if not task_name:
@@ -576,6 +621,8 @@ def log_activity(
         photo=photo or "",
         task_name=task_name,
         worker_count=worker_count,
+        finding=finding,
+        severity=severity,
     )
 
     if input_item is not None:

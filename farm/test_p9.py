@@ -157,7 +157,7 @@ class P9ViewTests(P9Fixtures):
         self.assertRedirects(r, url + "?tab=irigasi")
         self.assertEqual(ActivityLog.objects.get().duration_minutes, 30)
         photo = SimpleUploadedFile("leaf.gif", GIF, content_type="image/gif")
-        r = self.client.post(url + "?tab=scouting", {"tab": "scouting", "cycle": self.cycle.pk, "notes": "Aman", "photo": photo})
+        r = self.client.post(url + "?tab=scouting", {"tab": "scouting", "cycle": self.cycle.pk, "notes": "Aman", "finding": "NORMAL", "photo": photo})
         self.assertRedirects(r, url + "?tab=scouting")
         scouting = ActivityLog.objects.get(activity_type="SCOUTING")
         self.assertTrue(scouting.photo)

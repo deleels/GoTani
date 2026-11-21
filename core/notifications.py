@@ -65,7 +65,16 @@ def build_notifications(roles, today=None):
                     "at": _aware(cycle.expected_harvest_date + timedelta(days=1)),
                 })
     if roles.finance:
+        from farm.services import severe_scouting_cycles
         from invoicing.models import Invoice
+
+        for cycle, act in severe_scouting_cycles():  # D129
+            out.append({
+                "kind": "scouting_severe",
+                "title": _("Temuan berat: %(variety)s @ %(element)s") % {"variety": cycle.variety, "element": cycle.element},
+                "body": f"{act.get_finding_display()} · {act.notes[:80]}",
+                "url": reverse("farm:cycle_detail", args=[cycle.pk]), "at": act.logged_at,
+            })
 
         pending = Expense.objects.filter(status=Expense.Status.PENDING)
         n = pending.count()
