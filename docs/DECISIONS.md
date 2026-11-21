@@ -218,3 +218,11 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   is still used. `core/static/core/ds/` (tokens, bundle, fonts, logos) is byte-identical to the design-system
   source. Screen check: no horizontal scroll on 26 OWNER screens at 390, 768 (spot) and 1440; CASHIER reaches only
   POS, orders, shift and profile. Analytics date fields share one row on phones with Terapkan below.
+- **D118 Own polygon editor instead of Leaflet.draw.** Leaflet.draw 1.0.4 (2017) predates Leaflet 1.9 and misbehaved:
+  taps on its midpoint handles were swallowed, its toolbar and action buttons covered the map, and the earlier
+  version kept Leaflet layers in Alpine state, whose proxies broke the shape on zoom. `core/static/core/polyedit.js`
+  (`gtPolyEditor`) replaces it: click to place corners (dashed guide to the pointer), tap the first corner or
+  Selesai to close; corners drag, a "+" on each edge adds a corner by tap or drag, right-click / long-press removes
+  one; Urungkan / Backspace / Ctrl+Z undo, Esc cancels, Enter finishes. It shows corner count and live area, and
+  blocks saving while edges cross. Every action sits in the panel under the map; on the map there is only an
+  icon button. Leaflet objects never enter Alpine state. OSM tiles send the origin as Referer (their policy).

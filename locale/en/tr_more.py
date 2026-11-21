@@ -299,4 +299,10 @@ TR = {
     'Gambar batas lahan': 'Draw a field boundary',
     'Batang = pendapatan hari itu, garis putus-putus = HPP. Jarak antara puncak batang dan garis adalah laba kotor.': "Bars = that day's revenue, dashed line = COGS. The gap between a bar's top and the line is gross profit.",
     'HPP ': 'COGS ',
+    'Menggambar lahan baru': 'Drawing a new field',
+    'Klik peta untuk menaruh titik sudut. Klik titik pertama atau Selesai untuk menutup. Titik bisa ditarik, klik kanan untuk menghapus.': 'Click the map to place corners. Click the first corner or Done to close the shape. Drag a corner to move it, right-click to remove it.',
+    'Tarik titik untuk memindahkan · klik + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus.': 'Drag a corner to move it · click a + on an edge to add a corner · right-click (or long-press) a corner to remove it.',
+    'Sisi poligon bersilangan. Pindahkan titik agar sisinya tidak saling memotong.': 'The edges cross each other. Move a corner so no edges intersect.',
+    'Klik ikon ⬠ di kiri peta untuk menggambar lahan.': 'Click the ⬠ button on the left of the map to draw a field.',
+    '%(n)s titik': '%(n)s corners',
 }

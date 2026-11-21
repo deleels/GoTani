@@ -2427,10 +2427,6 @@ msgid "Pengembalian order batal"
 msgstr "Voided order refund"
 
 #: pos\models.py
-msgid "Selesai"
-msgstr "Completed"
-
-#: pos\models.py
 msgid "Setor ke pemilik"
 msgstr "Hand to owner"
 
@@ -4359,6 +4355,10 @@ msgid "angin tenang, tidak ada hujan dalam 4 jam"
 msgstr "calm wind, no rain within 4 hours"
 
 #: templates\geo\map.html
+msgid "%(n)s titik"
+msgstr "%(n)s corners"
+
+#: templates\geo\map.html
 msgid "48 jam ke depan"
 msgstr "Next 48 hours"
 
@@ -4459,10 +4459,6 @@ msgid "Gagal menyimpan."
 msgstr "Couldn't save."
 
 #: templates\geo\map.html
-msgid "Gambar batas lahan"
-msgstr "Draw a field boundary"
-
-#: templates\geo\map.html
 msgid "Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI."
 msgstr "Draw field boundaries on the map to measure area and track NDVI."
 
@@ -4519,8 +4515,12 @@ msgid "Kehijauan tanaman, 0–1. Makin tinggi makin rimbun."
 msgstr "Crop greenness, 0–1. Higher means denser foliage."
 
 #: templates\geo\map.html
-msgid "Klik Gambar lahan di peta, lalu klik sudut-sudut lahan. Saat menggambar, Backspace menghapus titik terakhir."
-msgstr "Click Draw field on the map, then click the field's corners. While drawing, Backspace removes the last point."
+msgid "Klik ikon ⬠ di kiri peta untuk menggambar lahan."
+msgstr "Click the ⬠ button on the left of the map to draw a field."
+
+#: templates\geo\map.html
+msgid "Klik peta untuk menaruh titik sudut. Klik titik pertama atau Selesai untuk menutup. Titik bisa ditarik, klik kanan untuk menghapus."
+msgstr "Click the map to place corners. Click the first corner or Done to close the shape. Drag a corner to move it, right-click to remove it."
 
 #: templates\geo\map.html
 msgid "Kurang"
@@ -4561,6 +4561,10 @@ msgstr "Loading satellite data…"
 #: templates\geo\map.html
 msgid "Mencari…"
 msgstr "Searching…"
+
+#: templates\geo\map.html
+msgid "Menggambar lahan baru"
+msgstr "Drawing a new field"
 
 #: templates\geo\map.html
 msgid "Minta OWNER mengisinya di Pengaturan"
@@ -4643,16 +4647,24 @@ msgid "Sedang"
 msgstr "Moderate"
 
 #: templates\geo\map.html
+msgid "Selesai"
+msgstr "Completed"
+
+#: templates\geo\map.html
 msgid "Seperti NDVI, lebih peka pada tajuk yang rapat."
 msgstr "Like NDVI, more sensitive in dense canopy."
+
+#: templates\geo\map.html
+msgid "Sisi poligon bersilangan. Pindahkan titik agar sisinya tidak saling memotong."
+msgstr "The edges cross each other. Move a corner so no edges intersect."
 
 #: templates\geo\map.html
 msgid "Skala NDVI: merah jarang, kuning sedang, hijau rimbun"
 msgstr "NDVI scale: red sparse, yellow moderate, green dense"
 
 #: templates\geo\map.html
-msgid "Tarik titik putih untuk memindahkan · klik tanda + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus."
-msgstr "Drag a white point to move it · click a + on an edge to add a point · right-click (or long-press) a point to remove it."
+msgid "Tarik titik untuk memindahkan · klik + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus."
+msgstr "Drag a corner to move it · click a + on an edge to add a corner · right-click (or long-press) a corner to remove it."
 
 #: templates\geo\map.html
 msgid "Terpetakan"

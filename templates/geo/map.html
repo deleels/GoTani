@@ -4,9 +4,8 @@
 {% block title %}{% translate "Cuaca & Satelit" %}{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="{% static 'core/polyedit.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="{% static 'core/charts.js' %}"></script>
 <style>.leaflet-container { font: inherit; } #map { z-index: 0; }</style>
@@ -35,17 +34,26 @@
           </ul>
         </form>
         <div id="map" class="app-map"></div>
-        {# Phase 7: a drawn or edited shape is only saved on Simpan; until then its points can be dragged, added and removed. #}
-        <div class="app-mapedit" x-show="draft || editing" x-cloak role="region" aria-label="{% translate 'Ubah batas poligon' %}">
-          <div class="app-rowform">
-            <input x-show="draft" x-model="draftName" class="app-field app-field--sm app-grow" aria-label="{% translate 'Nama poligon' %}">
-            <b x-show="editing" x-text="editing && editing.name" class="app-grow"></b>
-            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="cancelEdit()">{% translate "Batal" %}</button>
-            <button type="button" class="gt-btn gt-btn--solid gt-btn--sm" @click="saveEdit()">{% translate "Simpan" %}</button>
+        {# Phase 7 polygon editor (core/polyedit.js): every action sits here under the map; saved only on Simpan. #}
+        <div class="app-mapedit" x-show="edMode" x-cloak role="region" aria-label="{% translate 'Ubah batas poligon' %}">
+          <div class="app-mapedit__head">
+            <template x-if="edMode === 'edit' && !edTarget"><input x-model="draftName" class="app-field app-field--sm app-grow" aria-label="{% translate 'Nama poligon' %}"></template>
+            <b x-show="edMode === 'draw'" class="app-grow">{% translate "Menggambar lahan baru" %}</b>
+            <b x-show="edMode === 'edit' && edTarget" x-text="edTarget && edTarget.name" class="app-grow"></b>
+            <span class="gt-chip gt-chip--sm" x-show="edCount" x-text="edStat()"></span>
           </div>
-          <p class="app-row__meta">{% translate "Tarik titik putih untuk memindahkan · klik tanda + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus." %}</p>
+          <p class="app-row__meta" x-show="edMode === 'draw'">{% translate "Klik peta untuk menaruh titik sudut. Klik titik pertama atau Selesai untuk menutup. Titik bisa ditarik, klik kanan untuk menghapus." %}</p>
+          <p class="app-row__meta" x-show="edMode === 'edit'">{% translate "Tarik titik untuk memindahkan · klik + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus." %}</p>
+          <p class="app-error" x-show="edCross">{% translate "Sisi poligon bersilangan. Pindahkan titik agar sisinya tidak saling memotong." %}</p>
+          <div class="app-mapedit__actions">
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="edUndo()" :disabled="!edCanUndo">{% translate "Urungkan" %}</button>
+            <span class="app-grow"></span>
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="cancelEdit()">{% translate "Batal" %}</button>
+            <button type="button" x-show="edMode === 'draw'" class="gt-btn gt-btn--solid gt-btn--sm" @click="edFinish()" :disabled="edCount < 3 || edCross">{% translate "Selesai" %}</button>
+            <button type="button" x-show="edMode === 'edit'" class="gt-btn gt-btn--solid gt-btn--sm" @click="saveEdit()" :disabled="edCount < 3 || edCross || saving">{% translate "Simpan" %}</button>
+          </div>
         </div>
-        <p class="app-row__meta app-maphint" x-show="canEdit && !draft && !editing">{% translate "Klik Gambar lahan di peta, lalu klik sudut-sudut lahan. Saat menggambar, Backspace menghapus titik terakhir." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
+        <p class="app-row__meta app-maphint" x-show="canEdit && !edMode">{% translate "Klik ikon ⬠ di kiri peta untuk menggambar lahan." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
       </section>
 
       <section class="gt-card" x-data="forecastPanel()" @weather-loaded.window="set($event.detail)" x-show="w" x-cloak aria-labelledby="h-48">
@@ -166,7 +174,7 @@
                     <div class="app-rowform"><select class="app-field app-field--sm" aria-label="{% translate 'Elemen tertaut' %}" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">{% translate "Tidak ditautkan" %}</option>
                       <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
                     <div class="app-rowform">
-                      <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="startEdit(p)" :disabled="!!(draft || editing)">{% translate "Ubah batas" %}</button>
+                      <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="startEdit(p)" :disabled="!!edMode">{% translate "Ubah batas" %}</button>
                       <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--solid gt-btn--sm" @click="useArea(p)" title="{% translate 'Pakai luas terpetakan sebagai luas elemen' %}">{% translate "Pakai luas" %}</button>
                       <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" @click="remove(p)">{% translate "Hapus" %}</button>
                     </div>
@@ -220,13 +228,14 @@ function geoPage() {
   const data = JSON.parse(document.getElementById("map-data").textContent);
   const csrf = "{{ csrf_token }}";
   const base = "{% url 'geo:polygon_create' %}";
-  let map, group, overlay, chart;
+  let map, group, overlay, chart, editor;
   const layers = {};
   return {
     polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
     selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false, error: "",
     query: "", places: [], searchMsg: "", searching: false,
-    draft: null, draftName: "", editing: null,
+    // Editor state: plain values only (Leaflet objects stay in the closure; Alpine proxies break them).
+    edMode: "", edTarget: null, edCount: 0, edArea: 0, edCross: false, edCanUndo: false, draftName: "", saving: false,
     async search() {
       if (this.query.trim().length < 3) { this.searchMsg = "Ketik minimal 3 huruf."; return; }
       this.searching = true; this.places = []; this.searchMsg = "";
@@ -243,33 +252,6 @@ function geoPage() {
       else map.setView([pl.lat, pl.lon], 16);
     },
     init() {
-      if (window.L && L.Edit && L.Edit.PolyVerticesEdit && !L.Edit.PolyVerticesEdit._gt) {
-        // A plain click no longer deletes a point (too easy to hit while dragging); right-click or long-press does.
-        const P = L.Edit.PolyVerticesEdit.prototype, make = P._createMarker, remove = P._onMarkerClick;
-        P._onMarkerClick = function (e) {
-          if (e.type !== "contextmenu" || this._markers.indexOf(e.target) < 0) return;   // only right-click, only real points
-          remove.call(this, e);
-        };
-        P._createMarker = function (latlng, index) {
-          const m = make.call(this, latlng, index);
-          m.on("contextmenu", (e) => { if (e.originalEvent) e.originalEvent.preventDefault(); this._onMarkerClick(e); });
-          return m;
-        };
-        // A tap on a "+" midpoint adds the point there (Leaflet's drag handling swallows the plain click).
-        const mid = P._createMiddleMarker;
-        P._createMiddleMarker = function (a, b) {
-          mid.call(this, a, b);
-          const m = a._middleRight, el = m && m._icon; if (!el) return;
-          // Leaflet retargets the release to the map, so listen for it on the document once the "+" is pressed.
-          L.DomEvent.on(el, "pointerdown", (e) => {
-            const at = [e.clientX, e.clientY];
-            document.addEventListener("pointerup", (u) => {
-              if (Math.hypot(u.clientX - at[0], u.clientY - at[1]) < 5 && el.style.opacity === "0.6") m.fire("click");
-            }, { once: true, capture: true });
-          });
-        };
-        L.Edit.PolyVerticesEdit._gt = true;
-      }
       if (!window.L) { document.getElementById("map").innerHTML = '<p class="app-muted app-empty-cell">{% jt "Tidak dapat memuat peta · muat ulang halaman." %}</p>'; return; }
       map = L.map("map").setView(data.center, 16);
       const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/";
@@ -288,28 +270,31 @@ function geoPage() {
       group = new L.FeatureGroup().addTo(map);
       this.polygons.forEach((p) => this.addLayer(p));
       if (this.polygons.length) map.fitBounds(group.getBounds(), { padding: [30, 30] });
-      if (this.canEdit && L.Control.Draw) {
-        const shape = { color: this.css("--green-600"), weight: 2.5, fillColor: this.css("--green-400"), fillOpacity: 0.2 };
-        const draw = new L.Control.Draw({
-          edit: false,
-          draw: { polygon: { allowIntersection: false, showArea: true, shapeOptions: shape }, polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false },
+      if (this.canEdit && window.gtPolyEditor) {
+        editor = gtPolyEditor(map, {
+          style: { color: this.css("--green-600"), weight: 2.5, fillColor: this.css("--green-400"), fillOpacity: 0.22, lineJoin: "round" },
+          onChange: (st) => { this.edMode = st.mode || ""; this.edCount = st.count; this.edArea = st.areaM2; this.edCross = st.crosses; this.edCanUndo = st.canUndo;
+                              if (drawLink) drawLink.classList.toggle("is-on", st.mode === "draw"); },
         });
-        map.addControl(draw);
-        const drawBtn = map.getContainer().querySelector(".leaflet-draw-draw-polygon");
-        if (drawBtn) { drawBtn.dataset.label = "{% jt "Gambar lahan" %}"; drawBtn.title = "{% jt "Gambar batas lahan" %}"; }
-        const drawing = () => { const h = draw._toolbars.draw._modes.polygon.handler; return h && h.enabled() ? h : null; };
-        // Backspace removes the last point while drawing (same as the toolbar's "Delete last point").
+        let drawLink = null;
+        const Draw = L.Control.extend({
+          options: { position: "topleft" },
+          onAdd: () => {
+            const box = L.DomUtil.create("div", "leaflet-bar"); drawLink = L.DomUtil.create("a", "app-drawbtn", box);
+            drawLink.href = "#"; drawLink.title = "{% jt "Gambar lahan" %}"; drawLink.setAttribute("role", "button"); drawLink.setAttribute("aria-label", "{% jt "Gambar lahan" %}");
+            L.DomEvent.on(drawLink, "click", (e) => { L.DomEvent.stop(e); this.startDraw(); });
+            L.DomEvent.disableClickPropagation(box);
+            return box;
+          },
+        });
+        new Draw().addTo(map);
+        // Keys while editing: Backspace / Ctrl+Z undo, Enter finishes a drawing, Esc cancels.
         document.addEventListener("keydown", (e) => {
-          if (e.key !== "Backspace" || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
-          const h = drawing(); if (h) { e.preventDefault(); h.deleteLastVertex(); }
+          if (!this.edMode || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+          if (e.key === "Escape") { e.preventDefault(); this.cancelEdit(); }
+          else if ((e.key === "Backspace" && this.edMode === "draw") || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z")) { e.preventDefault(); this.edUndo(); }
+          else if (e.key === "Enter" && this.edMode === "draw") { e.preventDefault(); this.edFinish(); }
         });
-        // A finished shape stays a draft: its points can still be moved until Simpan.
-        map.on(L.Draw.Event.CREATED, (e) => {
-          if (this.draft || this.editing) return;
-          const layer = e.layer; layer.setStyle(shape); group.addLayer(layer); layer.editing.enable();
-          this.draft = layer; this.draftName = "{% jt "Lahan " %}" + (this.polygons.length + 1);
-        });
-        map.on(L.Draw.Event.DRAWSTART, () => { if (this.draft || this.editing) this.cancelEdit(); });
       }
     },
     addLocateControl() {
@@ -338,33 +323,46 @@ function geoPage() {
       return { color: active ? this.css("--green-700") : this.css("--green-600"), weight: active ? 3.5 : 2.5,
                fillColor: this.css("--green-400"), fillOpacity: active ? 0.28 : 0.16, dashArray: p.satellite_ok ? null : "6 5", lineJoin: "round" };
     },
+    edStat() {
+      const n = gtT("{% jt "%(n)s titik" %}", { n: this.edCount });
+      return this.edCount >= 3 ? n + " · ≈ " + this.fmtNum(this.edArea / 10000, 2) + " ha (" + this.fmtM2(this.edArea) + " m²)" : n;
+    },
+    startDraw() {
+      if (!editor || this.edMode) return;
+      this.edTarget = null; this.draftName = "{% jt "Lahan " %}" + (this.polygons.length + 1); this.error = "";
+      editor.draw();
+    },
+    edUndo() { if (editor) editor.undo(); },
+    edFinish() { if (editor && !this.edCross) editor.finish(); },
     startEdit(p) {
-      const layer = layers[p.id]; if (!layer || this.draft || this.editing) return;
+      const layer = layers[p.id]; if (!editor || !layer || this.edMode) return;
       if (!this.selected || this.selected.id !== p.id) this.select(p.id);
-      this.editing = p; layer.editing.enable();
+      this.edTarget = p; this.error = "";
+      group.removeLayer(layer);   // the editor draws the shape while it is being changed
+      editor.edit(L.GeoJSON.coordsToLatLngs(p.geojson.coordinates[0], 0));
     },
-    cancelEdit() {
-      if (this.draft) { this.draft.editing.disable(); group.removeLayer(this.draft); this.draft = null; }
-      if (this.editing) {
-        const layer = layers[this.editing.id];
-        layer.editing.disable(); layer.setLatLngs(L.GeoJSON.coordsToLatLngs(this.editing.geojson.coordinates, 1)); layer.setStyle(this.styleFor(this.editing));
-        this.editing = null;
-      }
+    endEdit() {
+      if (this.edTarget && layers[this.edTarget.id]) group.addLayer(layers[this.edTarget.id]);
+      this.edTarget = null; editor.cancel();
     },
+    cancelEdit() { if (editor) this.endEdit(); },
     async saveEdit() {
-      if (this.draft) {
-        const name = this.draftName.trim(); if (!name) { this.error = "{% jt "Isi nama poligon." %}"; return; }
-        const r = await this.post(base, { name, geojson: this.draft.toGeoJSON().geometry });
-        if (!r) return;
-        this.draft.editing.disable(); group.removeLayer(this.draft); this.draft = null;
-        this.polygons.push(r); this.addLayer(r); this.select(r.id);
-      } else if (this.editing) {
-        const p = this.editing, layer = layers[p.id];
-        const r = await this.post(`${base}${p.id}/`, { geojson: layer.toGeoJSON().geometry });
-        if (!r) return;
-        layer.editing.disable(); this.editing = null;
-        Object.assign(p, r); this.refreshLayer(p); if (this.selected && this.selected.id === p.id) this.loadData();
-      }
+      if (!editor || this.edCount < 3 || this.edCross || this.saving) return;
+      const target = this.edTarget, geojson = editor.geojson();
+      let r;
+      this.saving = true;
+      if (!target) {
+        const name = this.draftName.trim();
+        if (!name) { this.error = "{% jt "Isi nama poligon." %}"; this.saving = false; return; }
+        r = await this.post(base, { name, geojson });
+      } else r = await this.post(`${base}${target.id}/`, { geojson });
+      this.saving = false;
+      if (!r) return;
+      if (!target) { this.endEdit(); this.polygons.push(r); this.addLayer(r); this.select(r.id); return; }
+      Object.assign(target, r);
+      layers[target.id].setLatLngs(L.GeoJSON.coordsToLatLngs(r.geojson.coordinates, 1));
+      this.endEdit(); this.refreshLayer(target);
+      if (this.selected && this.selected.id === target.id) this.loadData();
     },
     restyle() { this.polygons.forEach((p) => layers[p.id] && layers[p.id].setStyle(this.styleFor(p))); },
     tooltipFor(p) { return `${p.name} · ${this.fmtArea(p)}${p.satellite_ok ? "" : " · " + "{% jt "tanpa NDVI" %}"}`; },
@@ -372,7 +370,7 @@ function geoPage() {
       const layer = L.geoJSON({ type: "Feature", geometry: p.geojson }, { style: this.styleFor(p) }).getLayers()[0];
       layer.polygonId = p.id;
       layer.bindTooltip(this.tooltipFor(p));
-      layer.on("click", () => this.select(p.id));
+      layer.on("click", () => { if (!this.edMode) this.select(p.id); });   // while drawing, the click adds a corner
       group.addLayer(layer); layers[p.id] = layer;
     },
     refreshLayer(p) {
