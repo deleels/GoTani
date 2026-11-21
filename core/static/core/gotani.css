@@ -93,17 +93,9 @@ html body:has(> .app-frame) { background: var(--canvas); }
 ::view-transition-new(gt-shell) { animation: none; }
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 
-/* Sidebar head: brand + collapse button. Collapsed rail: the logo turns into the expand control on hover. */
-.app-brandrow { display: flex; align-items: center; gap: var(--space-2); }
-.app-brandrow .app-brand { flex: 1; }
-.app-brandrow__toggle { flex: none; display: none; color: var(--ink-muted); background: none; }
-.app-brandrow__toggle:hover { background: var(--surface-raised); color: var(--ink); }
-@media (min-width: 768px) { .app-brandrow__toggle { display: inline-grid; } }
-.app-rail__logo { position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: var(--radius-md); margin-bottom: var(--space-4); }
-.app-rail .app-rail__logo .gt-rail__logo { margin: 0; display: block; }
-.app-rail__expand { position: absolute; inset: 0; display: grid; place-items: center; border-radius: var(--radius-md);
-  background: var(--surface-raised); color: var(--ink); opacity: 0; transition: opacity var(--dur-fast) ease; }
-.app-rail__logo:hover .app-rail__expand, .app-rail__logo:focus-visible .app-rail__expand { opacity: 1; }
+/* Top-bar sidebar toggle: desktop only (phones use the hamburger). */
+.app-topbar__toggle { display: none; }
+@media (min-width: 768px) { .app-topbar__toggle { display: inline-grid; } }
 
 /* Hover/focus label for [data-tip] (one floating element, positioned by base.html). */
 .app-tip { position: fixed; left: 0; top: 0; z-index: 80; pointer-events: none; max-width: 16rem; padding: 6px 10px;
@@ -111,7 +103,7 @@ html body:has(> .app-frame) { background: var(--canvas); }
   font: 500 13px/18px var(--font-sans); box-shadow: var(--shadow-float); white-space: nowrap; animation: app-tip-in var(--dur-fast) var(--ease-out); }
 .app-tip[hidden] { display: none; }
 @keyframes app-tip-in { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .app-tip, .app-rail__expand { animation: none; transition: none; } .app-sidebar, .gt-app--framed > .gt-sidebar.app-sidebar, .app-nav__chev { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .app-tip { animation: none; } .app-sidebar, .gt-app--framed > .gt-sidebar.app-sidebar, .app-nav__chev { transition: none; } }
 
 /* Menus (bell, account): raised, radius-lg, shadow-float; rows are gt-row. */
 .app-menu { position: absolute; right: 0; top: calc(100% + var(--space-2)); z-index: 30; width: 15rem; padding: var(--space-2);

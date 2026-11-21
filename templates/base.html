@@ -10,15 +10,11 @@
 
   {# Sidebar: full width; on phones a slide-in sheet. #}
   <aside class="gt-sidebar app-sidebar no-print" aria-label="{% translate 'Navigasi utama' %}">
-    <div class="app-brandrow">
-      <a class="gt-brand app-brand" href="{% url 'home' %}">
-        {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="app-brand__logo">
-        {% else %}<img src="{% static 'core/ds/logos/gotani-mark.svg' %}" alt="">{% endif %}
-        <span class="app-brand__text"><span class="app-brand__name">{{ farm_profile.name }}</span><span class="app-brand__role">{{ roles.label|lower|capfirst }}</span></span>
-      </a>
-      <button type="button" class="gt-iconbtn gt-iconbtn--sm app-brandrow__toggle" @click="setCollapsed(true)"
-              aria-label="{% translate 'Ciutkan sidebar' %}" data-tip="{% translate 'Ciutkan sidebar (Ctrl/⌘ + B)' %}" data-tip-pos="bottom">{% icon "panel" 20 "gt-ico" %}</button>
-    </div>
+    <a class="gt-brand app-brand" href="{% url 'home' %}">
+      {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="app-brand__logo">
+      {% else %}<img src="{% static 'core/ds/logos/gotani-mark.svg' %}" alt="">{% endif %}
+      <span class="app-brand__text"><span class="app-brand__name">{{ farm_profile.name }}</span><span class="app-brand__role">{{ roles.label|lower|capfirst }}</span></span>
+    </a>
     {% for group in nav_groups %}
     <div>
       <div class="gt-nav__label">{{ group.title }}</div>
@@ -56,9 +52,7 @@
 
   {# Collapsed (Ctrl/⌘ + B): an 80px icon rail. #}
   <nav class="gt-rail app-rail no-print" aria-label="{% translate 'Navigasi utama (ringkas)' %}">
-    {# The logo is the expand control; Ringkasan stays one icon below for home. #}
-    <button type="button" class="app-rail__logo" @click="setCollapsed(false)" aria-label="{% translate 'Lebarkan sidebar' %}" data-tip="{% translate 'Lebarkan sidebar (Ctrl/⌘ + B)' %}">
-      <img class="gt-rail__logo" src="{% static 'core/ds/logos/gotani-app-icon.svg' %}" alt=""><span class="app-rail__expand" aria-hidden="true">{% icon "panel" 22 "gt-ico" %}</span></button>
+    <a href="{% url 'home' %}" aria-label="{{ farm_profile.name }}"><img class="gt-rail__logo" src="{% static 'core/ds/logos/gotani-app-icon.svg' %}" alt=""></a>
     {% for group in nav_groups %}{% for item in group.items %}
       {% if item.children %}
       <button type="button" class="gt-rail__item app-rail__btn{% if item.active %} gt-rail__item--active{% endif %}" data-tip="{{ item.label }}" aria-label="{{ item.label }}"
@@ -72,6 +66,9 @@
   <div class="gt-shell">
     <header class="gt-topbar app-topbar no-print">
       <button type="button" class="gt-iconbtn gt-iconbtn--md md:hidden" @click="mobile=true" aria-label="{% translate 'Buka menu' %}">{% icon "menu" 22 "gt-ico" %}</button>
+      <button type="button" class="gt-iconbtn gt-iconbtn--md app-topbar__toggle" @click="toggle()"
+              :aria-label="collapsed ? '{% jt "Lebarkan sidebar" %}' : '{% jt "Ciutkan sidebar" %}'"
+              :data-tip="collapsed ? '{% jt "Lebarkan sidebar (Ctrl/⌘ + B)" %}' : '{% jt "Ciutkan sidebar (Ctrl/⌘ + B)" %}'" data-tip-pos="bottom">{% icon "panel" 22 "gt-ico" %}</button>
       <span class="flex-1"></span>
       {% include "components/bell.html" %}
       <div class="relative" x-data="{ open: false }" @click.outside="open=false" @keydown.escape="open=false">
