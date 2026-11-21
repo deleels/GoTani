@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from farm.admin import ReadOnlyLedgerAdmin
+
 from .models import Buyer, Invoice, InvoiceLine, InvoiceLineLotAllocation, InvoicePayment, PaymentAllocation
 
 
@@ -12,19 +14,33 @@ class BuyerAdmin(admin.ModelAdmin):
 class InvoiceLineInline(admin.TabularInline):
     model = InvoiceLine
     extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
+# Invoices, payments and allocations change only through invoicing.services (D123).
 @admin.register(Invoice)
-class InvoiceAdmin(admin.ModelAdmin):
+class InvoiceAdmin(ReadOnlyLedgerAdmin):
     list_display = ["__str__", "buyer", "status", "issue_date", "due_date", "total_idr"]
     list_filter = ["status"]
     inlines = [InvoiceLineInline]
 
 
 @admin.register(InvoicePayment)
-class InvoicePaymentAdmin(admin.ModelAdmin):
+class InvoicePaymentAdmin(ReadOnlyLedgerAdmin):
     list_display = ["buyer", "amount_idr", "method", "paid_on", "reference"]
 
 
-admin.site.register(InvoiceLineLotAllocation)
-admin.site.register(PaymentAllocation)
+@admin.register(InvoiceLineLotAllocation)
+class InvoiceLineLotAllocationAdmin(ReadOnlyLedgerAdmin):
+    list_display = ["line", "lot", "qty_kg", "unit_cogs_idr"]
+
+
+@admin.register(PaymentAllocation)
+class PaymentAllocationAdmin(ReadOnlyLedgerAdmin):
+    list_display = ["payment", "invoice", "amount_idr"]

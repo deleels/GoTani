@@ -352,6 +352,7 @@ class GeoViewTests(TestCase):
         get.side_effect = requests.ConnectionError()
         self.assertEqual(self.client.get(reverse("geo:weather")).json()["message"], "data tidak tersedia")
 
+    @override_settings(AGRO_API_KEY="")
     @mock.patch("geo.services.requests.get")
     def test_polygon_data_unavailable_without_key(self, get):
         get.side_effect = open_meteo_or(lambda url: FakeResponse(status=404))

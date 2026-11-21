@@ -48,13 +48,18 @@ class AuditLogTests(TestCase):
             entry.delete()
 
     def test_admin_edit_is_logged(self):
+        from inventory.models import Tax
+
+        tax = Tax.objects.create(name="PPN", rate_pct=11)
         self.client.force_login(self.owner)
         url = reverse("admin:inventory_product_change", args=[self.product.pk])
         self.client.post(url, {"variety": self.product.variety_id, "grade": "HIGH", "selling_price_idr": "15000",
-                               "tax": ""})
+                               "tax": tax.pk, "pos_step_kg": "0.5"})
+        self.product.refresh_from_db()
+        self.assertIsNone(self.product.selling_price_idr)  # price is read-only in admin (D123)
         entry = AuditLog.objects.get()
         self.assertEqual(entry.action, "PRODUCT_ADMIN_EDIT")
-        self.assertEqual(entry.after, {"selling_price_idr": "15000.00"})
+        self.assertEqual(entry.after, {"tax_id": tax.pk})
 
     def test_log_page_roles_and_content(self):
         from farm.bootstrap import ROLE_CASHIER, ROLE_MANAGER

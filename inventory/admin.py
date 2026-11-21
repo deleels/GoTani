@@ -14,7 +14,8 @@ class TaxAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = ["__str__", "variety", "grade", "selling_price_idr", "tax", "stock_kg"]
     list_filter = ["grade", "variety"]
-    list_editable = ["selling_price_idr"]
+    # Prices change only on Harga, which writes the audit log (D123).
+    readonly_fields = ["selling_price_idr"]
     search_fields = ["variety__name"]
 
     @admin.display(description="stok (kg)")
@@ -48,16 +49,15 @@ class StockLotAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(SpoilageRecord)
-class SpoilageRecordAdmin(admin.ModelAdmin):
+class SpoilageRecordAdmin(ReadOnlyLedgerAdmin):
     list_display = ["recorded_at", "lot", "qty_kg", "reason", "loss_idr", "recorded_by"]
     list_filter = ["reason"]
     date_hierarchy = "recorded_at"
-    readonly_fields = ["loss_idr"]
-
-    def has_change_permission(self, request, obj=None):
-        return False
 
 
 @admin.register(StockLedger)

@@ -15,7 +15,9 @@ from .models import (
 
 
 class ReadOnlyLedgerAdmin(admin.ModelAdmin):
-    """Append-only ledgers: viewable in the back office, never edited there."""
+    """Ledgers and transaction data: viewable in the back office, never edited there (D123).
+
+    Admin edits would skip the services (stock ledger, cost pool, credit, audit log)."""
 
     def has_add_permission(self, request):
         return False
@@ -43,6 +45,8 @@ class FarmElementAdmin(admin.ModelAdmin):
 
 @admin.register(CropCycle)
 class CropCycleAdmin(admin.ModelAdmin):
+    # Stage moves only through farm.services (rule 1, D123).
+    readonly_fields = ["stage", "closed_at"]
     list_display = ["__str__", "element", "variety", "stage", "planting_start_date", "is_active", "closed_at"]
     list_filter = ["stage", "is_active", "variety", "element"]
     autocomplete_fields = ["element", "variety"]
@@ -63,7 +67,7 @@ class InputItemAdmin(admin.ModelAdmin):
 
 
 @admin.register(InputPurchase)
-class InputPurchaseAdmin(admin.ModelAdmin):
+class InputPurchaseAdmin(ReadOnlyLedgerAdmin):
     list_display = ["item", "qty", "cost_per_unit_idr", "supplier", "purchased_at", "recorded_by"]
     list_filter = ["item__item_type", "item"]
     search_fields = ["item__name", "supplier"]
@@ -79,7 +83,7 @@ class InputLedgerAdmin(ReadOnlyLedgerAdmin):
 
 
 @admin.register(ActivityLog)
-class ActivityLogAdmin(admin.ModelAdmin):
+class ActivityLogAdmin(ReadOnlyLedgerAdmin):
     list_display = ["logged_at", "cycle", "activity_type", "stage_at_activity", "input_item", "quantity", "unit", "recorded_by"]
     list_filter = ["activity_type", "stage_at_activity", "cycle__element"]
     search_fields = ["notes", "application_method"]
@@ -93,7 +97,7 @@ class ExpenseCategoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(Expense)
-class ExpenseAdmin(admin.ModelAdmin):
+class ExpenseAdmin(ReadOnlyLedgerAdmin):
     list_display = ["date_incurred", "category", "scope", "element", "cycle", "amount_idr", "status", "source", "absorbed_by"]
     list_filter = ["status", "source", "scope", "category", "payment_method"]
     search_fields = ["vendor", "narration"]
@@ -102,7 +106,7 @@ class ExpenseAdmin(admin.ModelAdmin):
 
 
 @admin.register(HarvestBatch)
-class HarvestBatchAdmin(admin.ModelAdmin):
+class HarvestBatchAdmin(ReadOnlyLedgerAdmin):
     list_display = ["__str__", "cycle", "high_quality_kg", "low_quality_kg", "harvest_loss_kg", "absorbed_cost_idr", "unit_cogs_high_idr", "unit_cogs_low_idr"]
     list_filter = ["cycle__variety", "cycle__element"]
     date_hierarchy = "harvested_at"
