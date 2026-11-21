@@ -875,14 +875,6 @@ html { scrollbar-gutter: stable; }
   :is(.app-dash__stats, .app-buyer__value) .gt-stat__value, :is(.app-dash__stats, .app-buyer__value) .gt-stat__value.app-stat__money { font-size: 20px; }
 }
 
-/* One light for every green surface: the featured stat card's glow from the bottom-left corner (bundle.css
-   .gt-stat--featured) is reused for the hero panel and the primary button, so cards, panel and buttons read as lit
-   from the same place. Flat: no drop shadow, no rim highlight. Overrides bundle.css (copied, never edited). */
-:root { --gt-lit: radial-gradient(130% 160% at 0% 100%, #3f9d6b 0%, var(--green-600) 28%, var(--green-800) 72%, var(--green-900) 100%); }
-.gt-hero { background: var(--gt-lit); }
-.gt-btn--primary { background: var(--gt-lit); color: #fff; font-weight: 500; letter-spacing: -.01em; gap: 12px; box-shadow: none; }
-.gt-btn--primary:hover { background: radial-gradient(130% 160% at 0% 100%, #4aab78 0%, var(--green-600) 32%, var(--green-800) 76%, var(--green-900) 100%); }
-/* The gradient is painted from the outer edge (border-box), so the 1.5px transparent border doesn't show a
-   repeated sliver of the gradient along the edges. */
-.gt-btn--primary, .gt-btn--primary:hover, .gt-hero, .gt-stat--featured { background-origin: border-box !important; border-color: transparent; }
-.gt-btn--primary:disabled, .gt-btn--primary[aria-disabled=true] { background: var(--surface); color: var(--ink-subtle); box-shadow: none; }
+/* One light (bundle.css): the glow's corner follows where a green surface sits. The document bar above an invoice
+   print is a top-of-page place the design system doesn't know. */
+.app-docbar .gt-btn--primary { --gt-lit-at: 100% 100%; }
