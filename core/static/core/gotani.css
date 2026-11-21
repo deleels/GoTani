@@ -643,7 +643,7 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-hour__rain.is-wet { color: var(--info-ink); font-weight: 500; }
 .app-hour__spray { width: 26px; height: 6px; margin-top: 4px; border-radius: var(--radius-pill); }
 .app-hour__spray.is-good { background: var(--green-600); }
-.app-hour__spray.is-fair { background: var(--late-ink); }
+.app-hour__spray.is-fair { background: var(--warning-ink); }
 .app-hour__spray.is-bad { background: var(--danger); }
 .app-geo__parts { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
 .app-subtitle { display: flex; align-items: center; gap: 2px; font: 500 16px/22px var(--font-sans); }
