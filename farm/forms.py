@@ -188,14 +188,16 @@ class ActivityForm(StyledForm):
     duration_minutes = forms.IntegerField(label=_l("Durasi"), min_value=1, required=False)
     photo = forms.ImageField(label=_l("Foto"), required=False)
     notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+    logged_at = forms.DateTimeField(label=_l("Waktu kegiatan"), required=False, widget=DateTimeInput(),
+                                    help_text=_l("Kosongkan untuk sekarang. Paling lama 3 hari ke belakang."))
 
     # Fields shown per activity type (D62); everything else is dropped for that type.
     TYPE_FIELDS = {
-        ActivityLog.ActivityType.FERTILIZER: ["cycle", "input_item", "quantity", "application_method", "notes"],
-        ActivityLog.ActivityType.PESTICIDE: ["cycle", "input_item", "quantity", "application_method", "notes"],
-        ActivityLog.ActivityType.SEEDING: ["cycle", "input_item", "quantity", "application_method", "notes"],
-        ActivityLog.ActivityType.IRRIGATION: ["cycle", "quantity", "unit", "duration_minutes", "application_method", "notes"],
-        ActivityLog.ActivityType.SCOUTING: ["cycle", "photo", "notes"],
+        ActivityLog.ActivityType.FERTILIZER: ["cycle", "logged_at", "input_item", "quantity", "application_method", "notes"],
+        ActivityLog.ActivityType.PESTICIDE: ["cycle", "logged_at", "input_item", "quantity", "application_method", "notes"],
+        ActivityLog.ActivityType.SEEDING: ["cycle", "logged_at", "input_item", "quantity", "application_method", "notes"],
+        ActivityLog.ActivityType.IRRIGATION: ["cycle", "logged_at", "quantity", "unit", "duration_minutes", "application_method", "notes"],
+        ActivityLog.ActivityType.SCOUTING: ["cycle", "logged_at", "photo", "notes"],
     }
     INPUT_TYPE = {
         ActivityLog.ActivityType.FERTILIZER: InputItem.ItemType.FERTILIZER,
@@ -233,8 +235,8 @@ class ActivityForm(StyledForm):
         data = super().clean()
         if self.fixed_type:
             data["activity_type"] = self.fixed_type
-        for name in ("input_item", "unit", "application_method", "notes", "duration_minutes", "photo"):
-            data.setdefault(name, None if name in ("input_item", "duration_minutes", "photo") else "")
+        for name in ("input_item", "unit", "application_method", "notes", "duration_minutes", "photo", "logged_at"):
+            data.setdefault(name, None if name in ("input_item", "duration_minutes", "photo", "logged_at") else "")
         item = data.get("input_item")
         if item and not data.get("unit"):
             data["unit"] = item.unit  # an input activity always uses the item's own unit

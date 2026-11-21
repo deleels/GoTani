@@ -479,7 +479,7 @@ class PurchaseDeletionTests(ServiceFixtures):
         now = timezone.now()
         services.record_input_purchase(self.npk, 5, 1000, purchased_at=now - timedelta(days=5))
         services.log_activity(
-            self.cycle, Act.FERTILIZER, 1, Unit.KG, self.npk, logged_at=now - timedelta(days=4)
+            self.cycle, Act.FERTILIZER, 1, Unit.KG, self.npk, logged_at=now - timedelta(days=4), limit_backdate=False
         )
         later = services.record_input_purchase(self.npk, 5, 3000, purchased_at=now - timedelta(days=1))
         services.delete_input_purchase(later)
@@ -494,7 +494,7 @@ class PurchaseDeletionTests(ServiceFixtures):
         services.record_input_purchase(self.npk, 5, 1000, purchased_at=now - timedelta(days=5))
         later = services.record_input_purchase(self.npk, 10, 2000, purchased_at=now - timedelta(days=1))
         services.log_activity(
-            self.cycle, Act.FERTILIZER, 12, Unit.KG, self.npk, logged_at=now - timedelta(days=3)
+            self.cycle, Act.FERTILIZER, 12, Unit.KG, self.npk, logged_at=now - timedelta(days=3), limit_backdate=False
         )
         with self.assertRaisesMessage(ValidationError, "tidak cukup untuk membatalkan"):
             services.delete_input_purchase(later)

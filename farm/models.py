@@ -10,6 +10,8 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
+from datetime import timedelta
+
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -304,7 +306,9 @@ class ActivityLog(models.Model):
     duration_minutes = models.PositiveIntegerField(_l("durasi (menit)"), null=True, blank=True)  # IRRIGATION only
     photo = models.ImageField(_l("foto"), upload_to="scouting/%Y/%m/", blank=True)  # SCOUTING only
     notes = models.TextField(_l("catatan"), blank=True)
+    # D126: logged_at = when the work was done (up to 3 days back); created_at = when it was recorded.
     logged_at = models.DateTimeField(_l("waktu"), default=timezone.now)
+    created_at = models.DateTimeField(_l("dicatat pada"), default=timezone.now, editable=False)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -313,6 +317,10 @@ class ActivityLog(models.Model):
         related_name="+",
         verbose_name=_l("dicatat oleh"),
     )
+
+    @property
+    def is_backdated(self) -> bool:
+        return self.created_at - self.logged_at > timedelta(minutes=10)
 
     class Meta:
         ordering = ["-logged_at", "-id"]

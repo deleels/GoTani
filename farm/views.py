@@ -300,7 +300,7 @@ class ActivitiesView(FarmPage):
             d["cycle"], d["activity_type"], quantity=d.get("quantity") or 0, unit=d.get("unit") or "",
             input_item=d.get("input_item"), application_method=d.get("application_method") or "",
             notes=d.get("notes") or "", user=self.request.user,
-            duration_minutes=d.get("duration_minutes"), photo=d.get("photo"),
+            duration_minutes=d.get("duration_minutes"), photo=d.get("photo"), logged_at=d.get("logged_at"),
         )
 
     def get_context_data(self, **kwargs):

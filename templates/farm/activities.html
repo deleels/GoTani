@@ -79,7 +79,7 @@
         <tbody>
         {% for a in activities %}
           <tr>
-            <td class="whitespace-nowrap">{{ a.logged_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+            <td class="whitespace-nowrap">{{ a.logged_at|date:"SHORT_DATETIME_FORMAT" }}{% if a.is_backdated %}<span class="app-row__meta">{% translate "dicatat" %} {{ a.created_at|date:"SHORT_DATETIME_FORMAT" }}</span>{% endif %}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' a.cycle_id %}">{{ a.cycle.variety }} @ {{ a.cycle.element }}</a></td>
             <td>{{ a.get_stage_at_activity_display }}</td>
             {% if report_tab == 'irigasi' %}<td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}-{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}-{% endif %}</td>

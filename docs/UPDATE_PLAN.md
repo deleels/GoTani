@@ -51,7 +51,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - Old URLs keep working (redirects); role filtering unchanged (a WORKER still reaches Susut and Opname).
 - Update the shell section of `CLAUDE.md`.
 
-## 4. When the work was done (D126)
+## 4. When the work was done (D126) ✅
 - Every work report gets "Waktu kegiatan": default now, at most 3 days back, never in the future, never
   before the cycle start.
 - Table shows the activity time, with "dicatat <time>" underneath when it differs from the record time.

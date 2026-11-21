@@ -859,6 +859,10 @@ msgid "Kosongkan untuk memakai umur panen varietas."
 msgstr "Leave blank to use the variety's days to harvest."
 
 #: farm\forms.py
+msgid "Kosongkan untuk sekarang. Paling lama 3 hari ke belakang."
+msgstr "Leave empty for now. At most 3 days back."
+
+#: farm\forms.py
 msgid "Kosongkan untuk waktu sekarang."
 msgstr "Leave blank for now."
 
@@ -933,6 +937,10 @@ msgstr "Vendor"
 #: farm\forms.py
 msgid "Volume air"
 msgstr "Water volume"
+
+#: farm\forms.py
+msgid "Waktu kegiatan"
+msgstr "Time of work"
 
 #: farm\forms.py
 msgid "Waktu panen"
@@ -1133,6 +1141,10 @@ msgstr "created at"
 #: farm\models.py
 msgid "dicatat oleh"
 msgstr "logged by"
+
+#: farm\models.py
+msgid "dicatat pada"
+msgstr "logged at"
 
 #: farm\models.py
 msgid "dipanen pada"
@@ -1637,6 +1649,18 @@ msgstr "The cycle total becomes %(after)s kg, more than 150%% of the estimate (%
 #: farm\services.py
 msgid "Varietas %(name)s diubah"
 msgstr "Variety %(name)s changed"
+
+#: farm\services.py
+msgid "Waktu kegiatan paling lama %(days)s hari ke belakang."
+msgstr "The time of work can be at most %(days)s days back."
+
+#: farm\services.py
+msgid "Waktu kegiatan tidak boleh di masa depan."
+msgstr "The time of work cannot be in the future."
+
+#: farm\services.py
+msgid "Waktu kegiatan tidak boleh sebelum siklus dimulai (%(date)s)."
+msgstr "The time of work cannot be before the cycle started (%(date)s)."
 
 #: farm\views.py
 msgid "%(completed_pct)s%% lengkap"
@@ -2145,10 +2169,6 @@ msgstr "reversed by"
 #: inventory\models.py
 msgid "dibatalkan pada"
 msgstr "reversed at"
-
-#: inventory\models.py
-msgid "dicatat pada"
-msgstr "logged at"
 
 #: inventory\models.py
 msgid "dihitung oleh"
@@ -3797,6 +3817,10 @@ msgstr "Stage"
 #: templates\farm\activities.html
 msgid "Volume"
 msgstr "Volume"
+
+#: templates\farm\activities.html
+msgid "dicatat"
+msgstr "recorded"
 
 #: templates\farm\activities.html
 msgid "mnt"

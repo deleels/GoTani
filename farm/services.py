@@ -471,6 +471,25 @@ INPUT_EXPENSE_CATEGORY = {
 }
 
 
+ACTIVITY_BACKDATE_DAYS = 3
+
+
+def check_activity_time(cycle: CropCycle, logged_at=None, limit_backdate: bool = True):
+    """D126: when the work was done. Default now; at most 3 days back, never in the future, never before the
+    cycle started."""
+    now = timezone.now()
+    if logged_at is None:
+        return now
+    if logged_at > now + timedelta(minutes=5):
+        raise ValidationError(_("Waktu kegiatan tidak boleh di masa depan."))
+    if limit_backdate and logged_at < now - timedelta(days=ACTIVITY_BACKDATE_DAYS):
+        raise ValidationError(_("Waktu kegiatan paling lama %(days)s hari ke belakang.") % {"days": ACTIVITY_BACKDATE_DAYS})
+    if timezone.localdate(logged_at) < cycle.planting_start_date:
+        raise ValidationError(_("Waktu kegiatan tidak boleh sebelum siklus dimulai (%(date)s).")
+                              % {"date": cycle.planting_start_date.strftime("%d-%m-%Y")})
+    return logged_at
+
+
 @transaction.atomic
 def log_activity(
     cycle: CropCycle,
@@ -484,6 +503,7 @@ def log_activity(
     user=None,
     duration_minutes=None,
     photo=None,
+    limit_backdate: bool = True,
 ) -> ActivityLog:
     """Log a field activity; consuming an input deducts stock and books an
     APPROVED INPUT_USAGE cycle expense of qty × avg cost (rule 11, D22, D34)."""
@@ -493,7 +513,8 @@ def log_activity(
     quantity = q_qty(quantity)
     if quantity < 0:
         raise ValidationError(_("Jumlah tidak boleh negatif."))
-    logged_at = logged_at or timezone.now()
+    # limit_backdate=False only for seed_demo history and tests of old records.
+    logged_at = check_activity_time(cycle, logged_at, limit_backdate)
 
     expected_type = ACTIVITY_INPUT_TYPE.get(activity_type)
     if input_item is not None:

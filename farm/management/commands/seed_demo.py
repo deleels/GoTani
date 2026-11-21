@@ -346,6 +346,7 @@ class Command(BaseCommand):
                 notes=notes,
                 duration_minutes=(45 if activity_type == A.IRRIGATION else None),
                 logged_at=ts,
+                limit_backdate=False,
                 user=self.users[ROLE_WORKER],
             )
 

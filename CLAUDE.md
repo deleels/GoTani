@@ -35,7 +35,7 @@ An engineering programming class project modeling end-to-end agricultural produc
   - Constraint: `CheckConstraint(stock_qty >= 0)`
 - `InputPurchase`: `item` (FK), `qty` (Decimal > 0), `cost_per_unit_idr` (Decimal > 0), `supplier`, `purchased_at`, `recorded_by` — inventory asset purchase; shown in cash-out report, NOT in P&L.
 - `InputLedger`: `item` (FK), `movement_type` (PURCHASE / USAGE / USAGE_REVERSAL), `qty` (signed Decimal), `reference`, `timestamp` — append-only.
-- `ActivityLog`: `cycle` (FK), `activity_type` (IRRIGATION / FERTILIZER / PESTICIDE / SCOUTING / SEEDING), `stage_at_activity` (snapshot of cycle stage), `input_item` (nullable FK), `quantity` (Decimal), `unit` (L / mL / KG / G), `application_method`, `duration_minutes` (nullable; IRRIGATION), `photo` (optional ImageField; SCOUTING), `notes`, `logged_at`, `recorded_by`
+- `ActivityLog`: `cycle` (FK), `activity_type` (IRRIGATION / FERTILIZER / PESTICIDE / SCOUTING / SEEDING), `stage_at_activity` (snapshot of cycle stage), `input_item` (nullable FK), `quantity` (Decimal), `unit` (L / mL / KG / G), `application_method`, `duration_minutes` (nullable; IRRIGATION), `photo` (optional ImageField; SCOUTING), `notes`, `logged_at` (when the work was done: default now, ≤ 3 days back, not before the cycle start, D126), `created_at` (when recorded), `recorded_by`
 - `PreHarvestChecklistItem`: `text`, `order`, `is_active` — admin-editable.
 - `PreHarvestCheck`: `cycle` (FK), `checked_items` (M2M PreHarvestChecklistItem), `completed_pct` (Decimal snapshot), `recorded_by`, `recorded_at` — several per cycle allowed; the latest counts.
 - `ExpenseCategory`: `code` (unique), `name` — admin-editable, seeded with BIBIT, PUPUK, PESTISIDA, TENAGA_KERJA, UTILITAS, PERALATAN, LAINNYA.

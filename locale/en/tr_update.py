@@ -51,4 +51,11 @@ TR = {
     "KEBUN": "FARM",
     "Grosir": "Wholesale",
     "Opname": "Stock count",
+    # D126 activity time
+    "dicatat": "recorded",
+    "Waktu kegiatan": "Time of work",
+    "Kosongkan untuk sekarang. Paling lama 3 hari ke belakang.": "Leave empty for now. At most 3 days back.",
+    "Waktu kegiatan tidak boleh di masa depan.": "The time of work cannot be in the future.",
+    "Waktu kegiatan paling lama %(days)s hari ke belakang.": "The time of work can be at most %(days)s days back.",
+    "Waktu kegiatan tidak boleh sebelum siklus dimulai (%(date)s).": "The time of work cannot be before the cycle started (%(date)s).",
 }
