@@ -874,3 +874,20 @@ html { scrollbar-gutter: stable; }
   :is(.app-dash__stats, .app-buyer__value) .gt-stat__title { white-space: normal; }
   :is(.app-dash__stats, .app-buyer__value) .gt-stat__value, :is(.app-dash__stats, .app-buyer__value) .gt-stat__value.app-stat__money { font-size: 20px; }
 }
+
+/* Primary (gradient) button as in the design-system reference shots: dark green on the left easing to a lighter
+   green on the right with a soft glow in the lower-right corner, medium-weight white label. Overrides
+   bundle.css (copied, never edited). Used for the one headline action per view (D107). */
+.gt-btn--primary {
+  background:
+    radial-gradient(90% 140% at 100% 100%, rgb(95 189 146 / .38), transparent 60%),
+    linear-gradient(100deg, var(--green-800) 0%, var(--green-700) 50%, var(--green-600) 100%);
+  color: #fff; font-weight: 500; letter-spacing: -.01em; gap: 12px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .12), 0 8px 18px -10px rgb(19 69 45 / .6);
+}
+.gt-btn--primary:hover {
+  background:
+    radial-gradient(90% 140% at 100% 100%, rgb(95 189 146 / .5), transparent 62%),
+    linear-gradient(100deg, var(--green-900) 0%, var(--green-800) 45%, var(--green-600) 100%);
+}
+.gt-btn--primary:disabled, .gt-btn--primary[aria-disabled=true] { background: var(--surface); color: var(--ink-subtle); box-shadow: none; }
