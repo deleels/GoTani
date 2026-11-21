@@ -968,3 +968,7 @@ html { scrollbar-gutter: stable; }
 
 /* D130: Tidak answers on the pre-harvest check */
 .app-text-danger { color: var(--danger); }
+
+/* D132: Ubah + Hapus side by side */
+.app-rowactions { white-space: nowrap; }
+.app-rowactions > * { display: inline-block; margin-left: .25rem; }

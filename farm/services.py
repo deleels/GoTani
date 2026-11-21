@@ -525,6 +525,48 @@ def severe_scouting_cycles(now=None):
     return out
 
 
+EDITABLE_ACTIVITY_FIELDS = {
+    "FERTILIZER": ("application_method", "notes"),
+    "PESTICIDE": ("application_method", "notes"),
+    "SEEDING": ("application_method", "notes"),
+    "IRRIGATION": ("application_method", "notes"),
+    "SCOUTING": ("finding", "severity", "notes", "photo"),
+    "OTHER": ("task_name", "notes", "photo"),
+}
+
+
+@transaction.atomic
+def update_activity_details(activity: ActivityLog, user=None, **changes) -> ActivityLog:
+    """D132: edit only fields that touch neither stock nor cost; quantity, input and cycle still need delete and
+    re-enter. Every edit goes to the audit log."""
+    from core.audit import log_event
+
+    activity = ActivityLog.objects.select_for_update().get(pk=activity.pk)
+    allowed = EDITABLE_ACTIVITY_FIELDS.get(activity.activity_type, ())
+    unknown = set(changes) - set(allowed)
+    if unknown:
+        raise ValidationError(_("Kolom ini tidak bisa diubah; hapus dan catat ulang laporannya."))
+    new = {f: getattr(activity, f) for f in allowed}
+    new.update({k: v for k, v in changes.items() if not (k == "photo" and not v)})
+    if activity.activity_type == ActivityLog.ActivityType.SCOUTING:
+        new["finding"], new["severity"] = check_scouting(activity.activity_type, new["finding"], new["severity"],
+                                                         new["notes"])
+    if activity.activity_type == ActivityLog.ActivityType.OTHER:
+        new["task_name"] = (new["task_name"] or "").strip()
+        if not new["task_name"] or len(new["task_name"]) > 80:
+            raise ValidationError(_("Isi nama pekerjaan (paling banyak 80 huruf)."))
+    changed = [f for f in allowed if new[f] != getattr(activity, f)]
+    if not changed:
+        return activity
+    before = {f: str(getattr(activity, f)) for f in changed}
+    for f in changed:
+        setattr(activity, f, new[f])
+    activity.save(update_fields=changed)
+    log_event(user, "ACTIVITY_EDIT", activity, _("Laporan %(what)s diubah") % {"what": activity},
+              before=before, after={f: str(getattr(activity, f)) for f in changed})
+    return activity
+
+
 MULTI_MAX_ROWS = 10
 MULTI_TYPES = ("FERTILIZER", "PESTICIDE", "IRRIGATION", "SEEDING", "OTHER")
 

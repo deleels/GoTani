@@ -89,7 +89,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - One atomic save: all or nothing. Each row runs the normal stock and usage-expense rules; if the input
   stock is short for the combined total the batch is rejected with the shortfall named.
 
-## 10. Limited editing of reports (D132)
+## 10. Limited editing of reports (D132) ✅
 - "Ubah" next to Hapus edits only fields that touch neither stock nor cost: method, notes, photo,
   scouting finding/severity/observation, Lainnya task name. Quantity, input item and cycle still need
   delete and re-enter. Every edit goes to the audit log.

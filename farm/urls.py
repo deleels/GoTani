@@ -20,6 +20,7 @@ urlpatterns = [
     path("cycles/<int:pk>/stage/undo/", views.UndoStageView.as_view(), name="cycle_stage_undo"),
     path("activities/", views.ActivitiesView.as_view(), name="activities"),
     path("activities/multi/", views.MultiActivityView.as_view(), name="activities_multi"),
+    path("activities/<int:pk>/edit/", views.ActivityEditView.as_view(), name="activity_edit"),
     path("activities/<int:pk>/delete/", views.ActivityDeleteView.as_view(), name="activity_delete"),
     path("inputs/", views.InputsView.as_view(), name="inputs"),
     path("expenses/", views.ExpensesView.as_view(), name="expenses"),

@@ -136,4 +136,12 @@ TR = {
     "%(n)s laporan dicatat.": "%(n)s reports recorded.",
     "%(type)s untuk beberapa siklus": "%(type)s for several cycles",
     "Durasi (menit)": "Duration (minutes)",
+    # D132 limited editing
+    "Foto baru (opsional)": "New photo (optional)",
+    "Kolom ini tidak bisa diubah; hapus dan catat ulang laporannya.": "This field cannot change; delete the report and record it again.",
+    "Laporan %(what)s diubah": "Report %(what)s changed",
+    "Isi nama pekerjaan (paling banyak 80 huruf).": "Fill in the task name (at most 80 characters).",
+    "Laporan diperbarui.": "Report updated.",
+    "Jumlah, input dan siklus tidak bisa diubah karena memengaruhi stok dan biaya: hapus lalu catat ulang. Setiap perubahan tercatat di Log aktivitas.": "Quantity, input and cycle cannot change because they affect stock and cost: delete and record again. Every change goes to the activity log.",
+    "Ubah laporan: %(what)s": "Edit report: %(what)s",
 }

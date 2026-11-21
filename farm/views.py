@@ -29,6 +29,7 @@ from .forms import (
     ElementForm,
     InputItemForm,
     MultiActivityForm,
+    ActivityEditForm,
     VarietyForm,
     EstimatesForm,
     PreHarvestForm,
@@ -433,6 +434,46 @@ class PreHarvestCheckView(FarmPage):
                                                  user=self.request.user, notes=d["notes"])
         self.success_message = _("Cek pra-panen dicatat (%(pct)s%% lengkap).") % {"pct": f"{check.completed_pct.normalize():f}"}
         return check
+
+
+class ActivityEditView(FarmPage):
+    """D132: "Ubah" next to Hapus; only fields that touch neither stock nor cost; audited."""
+
+    template_name = "farm/form_page.html"
+    form_class = ActivityEditForm
+    allowed_roles = FINANCE_ROLES
+    success_message = _l("Laporan diperbarui.")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.activity = get_object_or_404(ActivityLog.objects.select_related("cycle__variety", "cycle__element"),
+                                          pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def editable(self):
+        return services.EDITABLE_ACTIVITY_FIELDS.get(self.activity.activity_type, ())
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["editable"] = self.editable()
+        return kwargs
+
+    def get_initial(self):
+        return {f: getattr(self.activity, f) for f in self.editable() if f != "photo"}
+
+    def tab_key(self):
+        return next((k for k, t in TAB_TYPES.items() if t == self.activity.activity_type), "pemupukan")
+
+    def get_success_url(self):
+        return f"{reverse('farm:activities')}?tab={self.tab_key()}"
+
+    def get_context_data(self, **kwargs):
+        kwargs.update(page_title=_("Ubah laporan: %(what)s") % {"what": self.activity}, back_href=self.get_success_url(),
+                      page_help=_("Jumlah, input dan siklus tidak bisa diubah karena memengaruhi stok dan biaya: hapus lalu catat ulang. Setiap perubahan tercatat di Log aktivitas."))
+        return super().get_context_data(**kwargs)
+
+    def perform(self, form):
+        changes = {f: form.cleaned_data.get(f) or "" for f in self.editable() if f in form.cleaned_data}
+        return services.update_activity_details(self.activity, user=self.request.user, **changes)
 
 
 class ActivityDeleteView(ActionView):

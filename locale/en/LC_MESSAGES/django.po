@@ -839,6 +839,10 @@ msgid "Durasi (opsional)"
 msgstr "Duration (optional)"
 
 #: farm\forms.py
+msgid "Foto baru (opsional)"
+msgstr "New photo (optional)"
+
+#: farm\forms.py
 msgid "Grade A / HIGH (kg)"
 msgstr "Grade A / HIGH (kg)"
 
@@ -1595,6 +1599,10 @@ msgid "Isi minimal satu baris siklus."
 msgstr "Fill in at least one cycle row."
 
 #: farm\services.py
+msgid "Isi nama pekerjaan (paling banyak 80 huruf)."
+msgstr "Fill in the task name (at most 80 characters)."
+
+#: farm\services.py
 msgid "Isi nama pekerjaan."
 msgstr "Fill in the task name."
 
@@ -1657,6 +1665,14 @@ msgstr "You can't log work on a closed cycle."
 #: farm\services.py
 msgid "Kegiatan tidak dapat dihapus: biaya pemakaian inputnya sudah diserap oleh panen."
 msgstr "This entry can't be deleted: its input cost has already been absorbed by a harvest."
+
+#: farm\services.py
+msgid "Kolom ini tidak bisa diubah; hapus dan catat ulang laporannya."
+msgstr "This field cannot change; delete the report and record it again."
+
+#: farm\services.py
+msgid "Laporan %(what)s diubah"
+msgstr "Report %(what)s changed"
 
 #: farm\services.py
 msgid "Luas harus lebih dari 0."
@@ -1927,8 +1943,16 @@ msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif. Setiap 
 msgstr "The element type can only change while no crop cycle is active. Every change goes to the activity log."
 
 #: farm\views.py
+msgid "Jumlah, input dan siklus tidak bisa diubah karena memengaruhi stok dan biaya: hapus lalu catat ulang. Setiap perubahan tercatat di Log aktivitas."
+msgstr "Quantity, input and cycle cannot change because they affect stock and cost: delete and record again. Every change goes to the activity log."
+
+#: farm\views.py
 msgid "Kegiatan dihapus; stok input dikembalikan."
 msgstr "Entry deleted; input stock returned."
+
+#: farm\views.py
+msgid "Laporan diperbarui."
+msgstr "Report updated."
 
 #: farm\views.py
 msgid "Laporan kerja dicatat."
@@ -2057,6 +2081,10 @@ msgstr "No: %(lines)s"
 #: farm\views.py
 msgid "Ubah elemen %(name)s"
 msgstr "Edit element %(name)s"
+
+#: farm\views.py
+msgid "Ubah laporan: %(what)s"
+msgstr "Edit report: %(what)s"
 
 #: farm\views.py
 msgid "Ubah varietas %(name)s"

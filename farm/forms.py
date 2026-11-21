@@ -283,6 +283,24 @@ class ActivityForm(StyledForm):
         return data
 
 
+class ActivityEditForm(StyledForm):
+    """D132: the non-stock, non-cost fields of one report."""
+
+    finding = forms.ChoiceField(label=_l("Temuan"), choices=ActivityLog.Finding.choices, required=False)
+    severity = forms.ChoiceField(label=_l("Tingkat"), choices=[("", "-")] + list(ActivityLog.Severity.choices),
+                                 required=False, help_text=_l("Wajib kecuali temuan Normal."))
+    task_name = forms.CharField(label=_l("Pekerjaan"), max_length=80, required=False)
+    application_method = forms.CharField(label=_l("Metode aplikasi"), max_length=100, required=False)
+    photo = forms.ImageField(label=_l("Foto baru (opsional)"), required=False)
+    notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 3}))
+
+    def __init__(self, *args, editable=(), **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in list(self.fields):
+            if name not in editable:
+                del self.fields[name]
+
+
 class MultiActivityForm(StyledForm):
     """D131: shared fields once, then up to 10 rows of cycle + quantity (+ duration). Blank rows are skipped."""
 
