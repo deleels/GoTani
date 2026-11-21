@@ -545,4 +545,8 @@ TR = {
     'Selamat siang': 'Good afternoon',
     'Selamat sore': 'Good afternoon',
     'Selamat malam': 'Good evening',
+    'Inti (profil kebun & staf)': 'Core (farm profile & staff)',
+    'Peta, satelit & cuaca': 'Map, satellite & weather',
+    'Invoice & Pembeli': 'Invoices & customers',
+    'Laporan': 'Reports',
 }

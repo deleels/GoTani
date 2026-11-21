@@ -10,6 +10,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone
 
 from farm.models import MONEY, QTY, PaymentMethod, VoidReason
+from farm.templatetags.gotani import rupiah
 from inventory.models import Product, StockLot
 
 ZERO = Decimal("0.00")
@@ -196,7 +197,7 @@ class InvoicePayment(models.Model):
         constraints = [models.CheckConstraint(condition=Q(amount_idr__gt=0), name="payment_amount_positive")]
 
     def __str__(self):
-        return _("Bayar %(buyer)s %(amount)s") % {"buyer": self.buyer, "amount": self.amount_idr}
+        return _("Bayar %(buyer)s %(amount)s") % {"buyer": self.buyer, "amount": rupiah(self.amount_idr)}
 
     @property
     def allocated_idr(self) -> Decimal:

@@ -6,6 +6,10 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: core\apps.py
+msgid "Inti (profil kebun & staf)"
+msgstr "Core (farm profile & staff)"
+
 #: core\forms.py
 msgid "Kata sandi sementara baru"
 msgstr "New temporary password"
@@ -1626,6 +1630,10 @@ msgstr "Done."
 msgid "Tersimpan."
 msgstr "Saved."
 
+#: geo\apps.py
+msgid "Peta, satelit & cuaca"
+msgstr "Map, satellite & weather"
+
 #: geo\models.py
 msgid "geometri (GeoJSON Polygon)"
 msgstr "geometry (GeoJSON Polygon)"
@@ -2069,6 +2077,10 @@ msgstr "Wrong sign for movement %(movement_type)s."
 #: inventory\services.py
 msgid "Tarif pajak harus 0–100%."
 msgstr "Tax rate must be 0–100%."
+
+#: invoicing\apps.py
+msgid "Invoice & Pembeli"
+msgstr "Invoices & customers"
 
 #: invoicing\forms.py
 msgid "Angka tidak valid pada baris %(product)s."
@@ -2801,6 +2813,10 @@ msgstr "Shift closed."
 #: pos\views.py
 msgid "Tidak ada shift yang terbuka."
 msgstr "No shift is open."
+
+#: reports\apps.py
+msgid "Laporan"
+msgstr "Reports"
 
 #: reports\views.py
 msgid "30 hari"

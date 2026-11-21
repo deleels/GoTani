@@ -220,7 +220,9 @@ class InputPurchase(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.item.name} +{self.qty} @ {self.cost_per_unit_idr}"
+        from farm.templatetags.gotani import kg, rupiah
+
+        return f"{self.item.name} +{kg(self.qty)} {self.item.unit} @ {rupiah(self.cost_per_unit_idr)}"
 
     @property
     def total_cost_idr(self):
@@ -481,7 +483,9 @@ class Expense(models.Model):
         indexes = [models.Index(fields=["cycle", "status", "absorbed_by"])]
 
     def __str__(self):
-        return f"{self.category.code} Rp{self.amount_idr} ({self.get_status_display()})"
+        from farm.templatetags.gotani import rupiah
+
+        return f"{self.category.code} {rupiah(self.amount_idr)} ({self.get_status_display()})"
 
 
 class HarvestBatch(models.Model):
