@@ -25,7 +25,10 @@ from . import services
 from .access import FARM_ROLES, FINANCE_ROLES, RoleRequiredMixin
 from .forms import (
     ActivityForm,
+    ElementEditForm,
     ElementForm,
+    InputItemForm,
+    VarietyForm,
     EstimatesForm,
     PreHarvestForm,
     ExpenseForm,
@@ -46,8 +49,9 @@ from .models import (
     InputPurchase,
     PreHarvestCheck,
     PreHarvestChecklistItem,
+    Variety,
 )
-from .views_common import ActionView, ServiceFormView, error_text
+from .views_common import ActionView, ServiceFormView, error_text, safe_next
 
 
 class FarmPage(ServiceFormView):
@@ -119,6 +123,73 @@ class ElementCreateView(FarmPage):
 
     def perform(self, form):
         return FarmElement.objects.create(**form.cleaned_data)
+
+
+class ElementEditView(FarmPage):
+    """Name, area and (without an active cycle) type; audited (D124)."""
+
+    template_name = "farm/form_page.html"
+    form_class = ElementEditForm
+    allowed_roles = FINANCE_ROLES
+    tab = "cycles"
+    success_message = _l("Elemen kebun diperbarui.")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.element = get_object_or_404(FarmElement, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        el = self.element
+        return {"name": el.name, "element_type": el.element_type, "area_m2": el.area_m2}
+
+    def get_success_url(self):
+        return reverse("farm:element_detail", args=[self.element.pk])
+
+    def get_context_data(self, **kwargs):
+        kwargs.update(page_title=_("Ubah elemen %(name)s") % {"name": self.element.name},
+                      back_href=self.get_success_url(),
+                      page_help=_("Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif. Setiap perubahan tercatat di Log aktivitas."))
+        return super().get_context_data(**kwargs)
+
+    def perform(self, form):
+        d = form.cleaned_data
+        return services.update_element(self.element, name=d["name"], area_m2=d["area_m2"],
+                                       element_type=d["element_type"], user=self.request.user)
+
+
+class VarietyFormView(FarmPage):
+    """New variety (from the start-cycle form) or a fix to an existing one (from Pengaturan), D124."""
+
+    template_name = "farm/form_page.html"
+    form_class = VarietyForm
+    allowed_roles = FINANCE_ROLES
+    tab = "cycles"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.variety = get_object_or_404(Variety, pk=kwargs["pk"]) if "pk" in kwargs else None
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_initial(self):
+        v = self.variety
+        return {"name": v.name, "crop": v.crop, "days_to_harvest": v.days_to_harvest, "kc": v.kc} if v else {}
+
+    def get_success_url(self):
+        return safe_next(self.request, reverse("farm:cycles"))
+
+    @property
+    def success_message(self):
+        return _("Varietas diperbarui.") if self.variety else _("Varietas ditambahkan.")
+
+    def get_context_data(self, **kwargs):
+        title = _("Ubah varietas %(name)s") % {"name": self.variety.name} if self.variety else _("Varietas baru")
+        kwargs.update(page_title=title, back_href=self.get_success_url(), next_url=self.get_success_url(),
+                      page_help=_("Umur panen mengisi perkiraan tanggal panen siklus baru. Kc dipakai untuk kebutuhan air di Cuaca & Satelit."))
+        return super().get_context_data(**kwargs)
+
+    def perform(self, form):
+        d = form.cleaned_data
+        return services.save_variety(self.variety, name=d["name"], crop=d["crop"], days_to_harvest=d["days_to_harvest"],
+                                     kc=d["kc"], user=self.request.user)
 
 
 class ElementToggleView(ActionView):
@@ -319,6 +390,27 @@ class InputsView(FarmPage):
         if self.roles.finance:
             ctx["purchases"] = InputPurchase.objects.select_related("item")[:30]
         return ctx
+
+
+class InputCreateView(FarmPage):
+    """New input item with an optional first purchase (D124)."""
+
+    template_name = "farm/form_page.html"
+    form_class = InputItemForm
+    allowed_roles = FINANCE_ROLES
+    tab = "inputs"
+    success_url_name = "farm:inputs"
+    success_message = _l("Input baru ditambahkan.")
+    extra_context = {"page_title": _l("Input baru"), "back_url": "farm:inputs",
+                     "page_help": _l("Satuan tidak bisa diubah nanti: setiap laporan kerja memakai satuan input ini. Pembelian pertama boleh dikosongkan.")}
+
+    def perform(self, form):
+        d = form.cleaned_data
+        return services.create_input_item(
+            name=d["name"], item_type=d["item_type"], unit=d["unit"], min_alert_qty=d["min_alert_qty"],
+            first_qty=d["first_qty"], first_cost_per_unit_idr=d["first_cost_per_unit_idr"], supplier=d["supplier"],
+            user=self.request.user,
+        )
 
 
 # --- Expenses (rules 7, 9) ---------------------------------------------------------

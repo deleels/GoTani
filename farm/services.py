@@ -71,6 +71,79 @@ def set_element_active(element: FarmElement, is_active: bool) -> FarmElement:
 
 
 @transaction.atomic
+def update_element(element: FarmElement, *, name: str, area_m2, element_type: str, user=None) -> FarmElement:
+    """Rename / resize an element (D124). The type changes only while no cycle is active; audited."""
+    from core.audit import log_event
+
+    element = FarmElement.objects.select_for_update().get(pk=element.pk)
+    name = (name or "").strip()
+    if not name:
+        raise ValidationError(_("Nama elemen wajib diisi."))
+    if FarmElement.objects.filter(name__iexact=name).exclude(pk=element.pk).exists():
+        raise ValidationError(_("Nama elemen sudah dipakai."))
+    area = Decimal(area_m2).quantize(Decimal("0.01"))
+    if area <= 0:
+        raise ValidationError(_("Luas harus lebih dari 0."))
+    if element_type != element.element_type and element.cycles.filter(is_active=True).exists():
+        raise ValidationError(_("Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif."))
+    fields = ("name", "area_m2", "element_type")
+    before = {f: getattr(element, f) for f in fields}
+    element.name, element.area_m2, element.element_type = name, area, element_type
+    after = {f: getattr(element, f) for f in fields}
+    changed = [f for f in fields if before[f] != after[f]]
+    if changed:
+        element.save(update_fields=changed)
+        log_event(user, "ELEMENT_EDIT", element, _("Elemen %(name)s diubah") % {"name": element.name},
+                  before={f: before[f] for f in changed}, after={f: after[f] for f in changed})
+    return element
+
+
+@transaction.atomic
+def create_input_item(*, name: str, item_type: str, unit: str, min_alert_qty=0, first_qty=None,
+                      first_cost_per_unit_idr=None, supplier: str = "", user=None) -> InputItem:
+    """New input item, optionally with its first purchase in the same step (D124)."""
+    name = (name or "").strip()
+    if not name:
+        raise ValidationError(_("Nama input wajib diisi."))
+    if InputItem.objects.filter(name__iexact=name).exists():
+        raise ValidationError(_("Nama input sudah dipakai."))
+    if bool(first_qty) != bool(first_cost_per_unit_idr):
+        raise ValidationError(_("Isi jumlah dan harga pembelian pertama, atau kosongkan keduanya."))
+    item = InputItem.objects.create(name=name, item_type=item_type, unit=unit, min_alert_qty=q_qty(min_alert_qty or 0))
+    if first_qty:
+        record_input_purchase(item, first_qty, first_cost_per_unit_idr, supplier=supplier, user=user)
+        item.refresh_from_db()
+    return item
+
+
+def save_variety(variety: Variety | None, *, name: str, crop: str, days_to_harvest=None, kc=None,
+                 user=None) -> Variety:
+    """Create or fix a variety in the app (D124). Existing cycles keep their own expected dates."""
+    from core.audit import log_event
+
+    name, crop = (name or "").strip(), (crop or "").strip()
+    if not name or not crop:
+        raise ValidationError(_("Nama varietas dan tanaman wajib diisi."))
+    clash = Variety.objects.filter(name__iexact=name)
+    if variety is not None:
+        clash = clash.exclude(pk=variety.pk)
+    if clash.exists():
+        raise ValidationError(_("Nama varietas sudah dipakai."))
+    fields = ("name", "crop", "days_to_harvest", "kc")
+    before = {f: getattr(variety, f) for f in fields} if variety else {}
+    variety = variety or Variety()
+    variety.name, variety.crop, variety.days_to_harvest, variety.kc = name, crop, days_to_harvest, kc
+    variety.full_clean()
+    variety.save()
+    if before:
+        changed = [f for f in fields if before[f] != getattr(variety, f)]
+        if changed:
+            log_event(user, "VARIETY_EDIT", variety, _("Varietas %(name)s diubah") % {"name": variety.name},
+                      before={f: before[f] for f in changed}, after={f: getattr(variety, f) for f in changed})
+    return variety
+
+
+@transaction.atomic
 def start_cycle(element: FarmElement, variety: Variety, planting_start_date, *, planted_qty=None,
                 expected_harvest_date=None, expected_yield_kg=None) -> CropCycle:
     element = FarmElement.objects.select_for_update().get(pk=element.pk)

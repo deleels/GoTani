@@ -64,6 +64,7 @@
       <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Mulai siklus" %}</h2></div>
       <form method="post" class="app-stackform">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
+        {% if roles.finance %}<a class="app-link" href="{% url 'farm:variety_create' %}?next={{ request.path|urlencode }}">{% translate "+ Varietas baru" %}</a>{% endif %}
         <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Mulai siklus" %}</button>
       </form>
     </div>

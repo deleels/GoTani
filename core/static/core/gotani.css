@@ -950,3 +950,7 @@ html { scrollbar-gutter: stable; }
 .app-joined > :last-child { flex: none; width: 7.5rem; margin-left: -1.5px; }
 .gt-root .app-joined > :last-child .app-select__btn, .gt-root .app-joined > select:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; background: var(--surface); }
 .app-joined > :first-child:focus-within, .app-joined > :first-child > input:focus { position: relative; z-index: 1; }
+
+/* D124: farm location search row on Pengaturan */
+.app-searchrow { display: flex; gap: .5rem; }
+.app-searchrow > .app-field { flex: 1; min-width: 0; }

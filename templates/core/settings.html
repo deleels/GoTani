@@ -2,22 +2,93 @@
 {% load i18n %}
 {% load ui %}
 {% block title %}{% translate "Pengaturan" %}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>.leaflet-container { font: inherit; } #pinmap { z-index: 0; height: 18rem; border-radius: var(--radius-md, 8px); }</style>
+{% endblock %}
 {% block content %}
-{# Pengaturan (Phase 5b): one form card, Batal · Simpan footer (D104). #}
+{# Pengaturan (Phase 5b): one form card, Batal · Simpan footer (D104). Location by map pin + varieties (D124). #}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
     <a href="{% url 'home' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
-    <h1>{% translate "Pengaturan Kebun" %} {% info_tip _("Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur.") %}</h1>
+    <h1>{% translate "Pengaturan Kebun" %} {% info_tip _("Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Klik peta untuk menaruh pin lokasi kebun, atau isi lintang dan bujur langsung.") %}</h1>
   </div>
 </div>
 <div class="app-formpage">
   <form method="post" enctype="multipart/form-data" class="gt-card">{% csrf_token %}
     <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Profil kebun" %}</h2></div>
     {% include "_form_fields.html" %}
+    <div class="app-stackform" x-data="farmPin()" x-init="init()">
+      <h3 class="gt-card__title">{% translate "Lokasi kebun" %}</h3>
+      <div class="app-searchrow">
+        <input type="search" class="app-field" x-model="query" @keydown.enter.prevent="search()" placeholder="{% translate "Cari desa, kecamatan atau kota" %}">
+        <button type="button" class="gt-btn gt-btn--outline gt-btn--md" @click="search()" :disabled="searching">{% translate "Cari" %}</button>
+      </div>
+      <p class="app-muted" x-show="msg" x-text="msg"></p>
+      <ul class="gt-list" x-show="places.length">
+        <template x-for="pl in places" :key="pl.lat + ',' + pl.lon">
+          <li class="gt-row"><button type="button" class="app-link" @click="goTo(pl)" x-text="pl.name"></button></li>
+        </template>
+      </ul>
+      <div id="pinmap"></div>
+      <p class="app-muted">{% translate "Klik peta untuk menaruh pin; lintang dan bujur di atas ikut terisi." %}</p>
+    </div>
     <div class="gt-footer app-formpage__foot">
       <a href="{% url 'home' %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
       <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan" %}</button>
     </div>
   </form>
+
+  <div class="gt-card app-tablecard">
+    <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Varietas" %}</h2>
+      <a href="{% url 'farm:variety_create' %}?next={{ request.path|urlencode }}" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} {% translate "Varietas baru" %}</a></div>
+    <table class="gt-table">
+      <thead><tr><th>{% translate "Varietas" %}</th><th>{% translate "Tanaman" %}</th><th class="num">{% translate "Umur panen (hari)" %}</th><th class="num">Kc</th><th></th></tr></thead>
+      <tbody>
+        {% for v in varieties %}
+        <tr><td class="app-strong">{{ v.name }}</td><td>{{ v.crop }}</td><td class="num">{{ v.days_to_harvest|default:"-" }}</td><td class="num">{{ v.kc|default:"-" }}</td>
+          <td class="num"><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'farm:variety_edit' v.pk %}?next={{ request.path|urlencode }}">{% translate "Ubah" %}</a></td></tr>
+        {% empty %}
+        <tr><td colspan="5" class="app-muted app-empty-cell">{% translate "Belum ada varietas. Tambahkan varietas sebelum memulai siklus tanam." %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
+<script>
+  function farmPin() {
+    let map, marker;
+    const lat = () => document.getElementById("id_latitude"), lon = () => document.getElementById("id_longitude");
+    return {
+      query: "", places: [], msg: "", searching: false,
+      async search() {
+        if (this.query.trim().length < 3) { this.msg = "{% jt "Ketik minimal 3 huruf." %}"; return; }
+        this.searching = true; this.places = []; this.msg = "";
+        try {
+          const r = await fetch("{% url 'geo:search' %}?q=" + encodeURIComponent(this.query));
+          const d = await r.json();
+          this.places = d.places; this.msg = d.message || "";
+        } catch (e) { this.msg = "{% jt "Pencarian lokasi tidak tersedia." %}"; }
+        this.searching = false;
+      },
+      goTo(pl) { this.places = []; map.setView([pl.lat, pl.lon], 15); this.pin(pl.lat, pl.lon); },
+      pin(a, b) {
+        if (marker) marker.setLatLng([a, b]); else marker = L.marker([a, b]).addTo(map);
+        lat().value = Number(a).toFixed(6); lon().value = Number(b).toFixed(6);
+        lat().dispatchEvent(new Event("input", { bubbles: true })); lon().dispatchEvent(new Event("input", { bubbles: true }));
+      },
+      init() {
+        if (!window.L) { document.getElementById("pinmap").innerHTML = '<p class="app-muted app-empty-cell">{% jt "Tidak dapat memuat peta · muat ulang halaman." %}</p>'; return; }
+        const a = parseFloat(lat().value), b = parseFloat(lon().value), has = !isNaN(a) && !isNaN(b);
+        map = L.map("pinmap").setView(has ? [a, b] : [-2.5, 118], has ? 15 : 4);
+        map.attributionControl.setPrefix(false);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+          { maxZoom: 19, attribution: "© OpenStreetMap", referrerPolicy: "strict-origin-when-cross-origin" }).addTo(map);
+        if (has) marker = L.marker([a, b]).addTo(map);
+        map.on("click", (e) => this.pin(e.latlng.lat, e.latlng.lng));
+      },
+    };
+  }
+</script>
 {% endblock %}

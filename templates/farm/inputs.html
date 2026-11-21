@@ -11,7 +11,7 @@
 <div class="{% if roles.finance %}app-split{% endif %}">
   <section class="app-side">
     <div class="gt-card app-tablecard">
-      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Stok input" %}</h2></div>
+      <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Stok input" %}</h2>{% if roles.finance %}<a href="{% url 'farm:input_create' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% icon "plus" 16 %} {% translate "Input baru" %}</a>{% endif %}</div>
       <table class="gt-table">
         <thead><tr><th>{% translate "Input" %}</th><th>{% translate "Jenis" %}</th><th class="num">{% translate "Stok" %}</th><th class="num">{% translate "Batas peringatan" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya rata-rata" %}</th>{% endif %}</tr></thead>
         <tbody>

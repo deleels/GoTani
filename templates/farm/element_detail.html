@@ -10,7 +10,7 @@
       <h1 class="app-pagehead__title">{{ element.name }} {% if not element.is_active %}{% pill _("Nonaktif") "INACTIVE" %}{% endif %}</h1>
       <p>{{ element.get_element_type_display }} · {{ element.area_m2|kg }} {% translate "m² tercatat" %}</p>
     </div>
-    {% if element.is_active and not active_cycle %}<div class="gt-pagehead__actions"><button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Mulai siklus" %}</button></div>{% endif %}
+    <div class="gt-pagehead__actions">{% if roles.finance %}<a href="{% url 'farm:element_edit' element.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Ubah" %}</a>{% endif %}{% if element.is_active and not active_cycle %}<button type="button" @click="sheet=true" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Mulai siklus" %}</button>{% endif %}</div>
   </div>
 
   <div class="gt-grid app-kpis">
@@ -55,6 +55,7 @@
   {% blocktranslate asvar sheet_t with name=element.name %}Mulai siklus di {{ name }}{% endblocktranslate %}{% include "components/sheet.html" with title=sheet_t %}
       <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
+        {% if roles.finance %}<a class="app-link" href="{% url 'farm:variety_create' %}?next={{ request.path|urlencode }}">{% translate "+ Varietas baru" %}</a>{% endif %}
         <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>
           <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Mulai" %}</button></div>
       </form>

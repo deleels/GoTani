@@ -98,7 +98,12 @@ class SettingsView(RoleRequiredMixin, View):
     template_name = "core/settings.html"
 
     def get(self, request):
-        return render(request, self.template_name, {"form": FarmProfileForm(instance=services.get_farm_profile())})
+        return render(request, self.template_name, self.context(FarmProfileForm(instance=services.get_farm_profile())))
+
+    def context(self, form):
+        from farm.models import Variety
+
+        return {"form": form, "varieties": Variety.objects.all()}
 
     def post(self, request):
         profile = services.get_farm_profile()
@@ -111,7 +116,7 @@ class SettingsView(RoleRequiredMixin, View):
             else:
                 messages.success(request, _("Profil kebun disimpan."))
                 return redirect("core:settings")
-        return render(request, self.template_name, {"form": form}, status=400)
+        return render(request, self.template_name, self.context(form), status=400)
 
 
 class PasswordChangeView(auth_views.PasswordChangeView):

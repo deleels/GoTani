@@ -787,6 +787,10 @@ msgid "Utilitas"
 msgstr "Utilities"
 
 #: farm\forms.py
+msgid "Batas stok menipis"
+msgstr "Low-stock level"
+
+#: farm\forms.py
 msgid "Berat per karung (kg)"
 msgstr "Weight per sack (kg)"
 
@@ -799,6 +803,10 @@ msgid "Butir yang sudah dipenuhi"
 msgstr "Items completed"
 
 #: farm\forms.py
+msgid "Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."
+msgstr "E.g. chilli 1.05 · melon 1.0 · cocoa 1.0 (FAO-56, mid-season)."
+
+#: farm\forms.py
 msgid "Grade A / HIGH (kg)"
 msgstr "Grade A / HIGH (kg)"
 
@@ -809,6 +817,10 @@ msgstr "Grade B / LOW (kg)"
 #: farm\forms.py
 msgid "Harga jual per kg (Rp)"
 msgstr "Selling price per kg (Rp)"
+
+#: farm\forms.py
+msgid "Harga per satuan"
+msgstr "Price per unit"
 
 #: farm\forms.py
 msgid "Harga per satuan (Rp)"
@@ -829,6 +841,10 @@ msgstr "Quantity (kg)"
 #: farm\forms.py
 msgid "Jumlah karung"
 msgstr "Number of sacks"
+
+#: farm\forms.py
+msgid "Koefisien tanaman Kc (opsional)"
+msgstr "Crop coefficient Kc (optional)"
 
 #: farm\forms.py
 msgid "Kosongkan untuk memakai umur panen varietas."
@@ -859,6 +875,22 @@ msgid "Nama elemen sudah dipakai."
 msgstr "That plot name is taken."
 
 #: farm\forms.py
+msgid "Nama input"
+msgstr "Input name"
+
+#: farm\forms.py
+msgid "Nama varietas"
+msgstr "Variety name"
+
+#: farm\forms.py
+msgid "Pemasok (opsional)"
+msgstr "Supplier (optional)"
+
+#: farm\forms.py
+msgid "Pembelian pertama: jumlah (opsional)"
+msgstr "First purchase: quantity (optional)"
+
+#: farm\forms.py
 msgid "Perkiraan hasil (kg)"
 msgstr "Expected yield (kg)"
 
@@ -883,6 +915,10 @@ msgid "Tanggal mulai tanam"
 msgstr "Planting date"
 
 #: farm\forms.py
+msgid "Umur panen (hari, opsional)"
+msgstr "Days to harvest (optional)"
+
+#: farm\forms.py
 msgid "Vendor"
 msgstr "Vendor"
 
@@ -905,10 +941,6 @@ msgstr "Seed"
 #: farm\models.py
 msgid "Cek pra-panen %(cycle)s %(pct)s%%"
 msgstr "Pre-harvest check %(cycle)s %(pct)s%%"
-
-#: farm\models.py
-msgid "Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."
-msgstr "E.g. chilli 1.05 · melon 1.0 · cocoa 1.0 (FAO-56, mid-season)."
 
 #: farm\models.py
 msgid "Gram"
@@ -1387,6 +1419,10 @@ msgid "Durasi irigasi harus lebih dari 0 menit."
 msgstr "Irrigation duration must be more than 0 minutes."
 
 #: farm\services.py
+msgid "Elemen %(name)s diubah"
+msgstr "Element %(name)s changed"
+
+#: farm\services.py
 msgid "Elemen %(name)s masih memiliki siklus tanam aktif; tutup siklusnya terlebih dahulu."
 msgstr "Plot %(name)s still has an active crop cycle; close it first."
 
@@ -1435,6 +1471,14 @@ msgid "Harga per satuan harus lebih dari 0."
 msgstr "Price per unit must be more than 0."
 
 #: farm\services.py
+msgid "Isi jumlah dan harga pembelian pertama, atau kosongkan keduanya."
+msgstr "Fill in both the first purchase quantity and price, or leave both empty."
+
+#: farm\services.py
+msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif."
+msgstr "The element type can only change while no crop cycle is active."
+
+#: farm\services.py
 msgid "Jenis mutasi input tidak dikenal: %(movement_type)s."
 msgstr "Unknown input movement type: %(movement_type)s."
 
@@ -1479,8 +1523,32 @@ msgid "Kegiatan tidak dapat dihapus: biaya pemakaian inputnya sudah diserap oleh
 msgstr "This entry can't be deleted: its input cost has already been absorbed by a harvest."
 
 #: farm\services.py
+msgid "Luas harus lebih dari 0."
+msgstr "Area must be more than 0."
+
+#: farm\services.py
 msgid "Melewati tahap harus dikonfirmasi dengan mencentang \"Lewati tahap\"."
 msgstr "To skip a stage, tick \"Skip stage\"."
+
+#: farm\services.py
+msgid "Nama elemen wajib diisi."
+msgstr "Element name is required."
+
+#: farm\services.py
+msgid "Nama input sudah dipakai."
+msgstr "That input name is already used."
+
+#: farm\services.py
+msgid "Nama input wajib diisi."
+msgstr "Input name is required."
+
+#: farm\services.py
+msgid "Nama varietas dan tanaman wajib diisi."
+msgstr "Variety name and crop are required."
+
+#: farm\services.py
+msgid "Nama varietas sudah dipakai."
+msgstr "That variety name is already used."
 
 #: farm\services.py
 msgid "Panen hanya dapat dicatat saat siklus berada pada tahap Panen."
@@ -1558,6 +1626,10 @@ msgstr "There's no stage change to undo."
 msgid "Total panen siklus menjadi %(after)s kg, lebih dari 150%% perkiraan (%(expected)s kg). Periksa angka atau satuan."
 msgstr "The cycle total becomes %(after)s kg, more than 150%% of the estimate (%(expected)s kg). Check the number or the unit."
 
+#: farm\services.py
+msgid "Varietas %(name)s diubah"
+msgstr "Variety %(name)s changed"
+
 #: farm\views.py
 msgid "%(completed_pct)s%% lengkap"
 msgstr "%(completed_pct)s%% complete"
@@ -1611,6 +1683,10 @@ msgid "Elemen adalah satu bedengan, bak hidroponik atau area tanam. Luasnya dipa
 msgstr "A plot is one bed, hydroponic tank or growing area. Its area is used for yield per m² and to split costs."
 
 #: farm\views.py
+msgid "Elemen kebun diperbarui."
+msgstr "Farm element updated."
+
+#: farm\views.py
 msgid "Elemen kebun ditambahkan."
 msgstr "Plot added."
 
@@ -1629,6 +1705,14 @@ msgstr "Price of %(product)s saved."
 #: farm\views.py
 msgid "Harga tidak valid."
 msgstr "Invalid price."
+
+#: farm\views.py
+msgid "Input baru ditambahkan."
+msgstr "New input added."
+
+#: farm\views.py
+msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif. Setiap perubahan tercatat di Log aktivitas."
+msgstr "The element type can only change while no crop cycle is active. Every change goes to the activity log."
 
 #: farm\views.py
 msgid "Kegiatan dihapus; stok input dikembalikan."
@@ -1675,6 +1759,10 @@ msgid "Perpindahan tahap dibatalkan."
 msgstr "Stage change undone."
 
 #: farm\views.py
+msgid "Satuan tidak bisa diubah nanti: setiap laporan kerja memakai satuan input ini. Pembelian pertama boleh dikosongkan."
+msgstr "The unit cannot change later: every work report uses this input's unit. The first purchase may stay empty."
+
+#: farm\views.py
 msgid "Semua"
 msgstr "All"
 
@@ -1717,6 +1805,26 @@ msgstr "Invalid stage."
 #: farm\views.py
 msgid "Tambah elemen kebun"
 msgstr "Add plot"
+
+#: farm\views.py
+msgid "Ubah elemen %(name)s"
+msgstr "Edit element %(name)s"
+
+#: farm\views.py
+msgid "Ubah varietas %(name)s"
+msgstr "Edit variety %(name)s"
+
+#: farm\views.py
+msgid "Umur panen mengisi perkiraan tanggal panen siklus baru. Kc dipakai untuk kebutuhan air di Cuaca & Satelit."
+msgstr "Days to harvest fills in the expected harvest date of new cycles. Kc is used for water need on Weather & Satellite."
+
+#: farm\views.py
+msgid "Varietas diperbarui."
+msgstr "Variety updated."
+
+#: farm\views.py
+msgid "Varietas ditambahkan."
+msgstr "Variety added."
 
 #: farm\views.py
 msgid "di %(element)s"
@@ -3331,8 +3439,36 @@ msgid "Peran"
 msgstr "Role"
 
 #: templates\core\settings.html
-msgid "Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur."
-msgstr "Name, address, coordinates and logo are used for weather, the map, receipts and invoices. Coordinates: open Google Maps, right-click the farm, copy the latitude, longitude."
+msgid "Belum ada varietas. Tambahkan varietas sebelum memulai siklus tanam."
+msgstr "No varieties yet. Add one before starting a crop cycle."
+
+#: templates\core\settings.html
+msgid "Cari"
+msgstr "Search"
+
+#: templates\core\settings.html
+msgid "Cari desa, kecamatan atau kota"
+msgstr "Search a village, district or town"
+
+#: templates\core\settings.html
+msgid "Ketik minimal 3 huruf."
+msgstr "Type at least 3 letters."
+
+#: templates\core\settings.html
+msgid "Klik peta untuk menaruh pin; lintang dan bujur di atas ikut terisi."
+msgstr "Click the map to drop a pin; the latitude and longitude above fill in."
+
+#: templates\core\settings.html
+msgid "Lokasi kebun"
+msgstr "Farm location"
+
+#: templates\core\settings.html
+msgid "Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Klik peta untuk menaruh pin lokasi kebun, atau isi lintang dan bujur langsung."
+msgstr "Name, address, coordinates and logo are used for weather, the map, receipts and invoices. Click the map to drop a pin on the farm, or type the latitude and longitude."
+
+#: templates\core\settings.html
+msgid "Pencarian lokasi tidak tersedia."
+msgstr "Location search isn't available."
 
 #: templates\core\settings.html
 msgid "Pengaturan"
@@ -3345,6 +3481,30 @@ msgstr "Farm settings"
 #: templates\core\settings.html
 msgid "Profil kebun"
 msgstr "Farm profile"
+
+#: templates\core\settings.html
+msgid "Tanaman"
+msgstr "Crop"
+
+#: templates\core\settings.html
+msgid "Tidak dapat memuat peta · muat ulang halaman."
+msgstr "Couldn't load the map · reload the page."
+
+#: templates\core\settings.html
+msgid "Ubah"
+msgstr "Change"
+
+#: templates\core\settings.html
+msgid "Umur panen (hari)"
+msgstr "Days to harvest"
+
+#: templates\core\settings.html
+msgid "Varietas"
+msgstr "Variety"
+
+#: templates\core\settings.html
+msgid "Varietas baru"
+msgstr "New variety"
 
 #: templates\core\staff.html
 msgid "Aksi"
@@ -3445,10 +3605,6 @@ msgstr "Add workers, cashiers or managers so they can log work and sales."
 #: templates\core\staff.html
 msgid "Tidak ada staf yang cocok dengan “"
 msgstr "No team member matches “"
-
-#: templates\core\staff.html
-msgid "Ubah"
-msgstr "Change"
 
 #: templates\core\staff.html
 msgid "superuser"
@@ -3723,6 +3879,10 @@ msgid "· mulai"
 msgstr "· started"
 
 #: templates\farm\cycles.html
+msgid "+ Varietas baru"
+msgstr "+ New variety"
+
+#: templates\farm\cycles.html
 msgid "Aktifkan"
 msgstr "Activate"
 
@@ -3825,10 +3985,6 @@ msgstr "Start a cycle on %(name)s"
 #: templates\farm\element_detail.html
 msgid "Riwayat siklus"
 msgstr "Cycle history"
-
-#: templates\farm\element_detail.html
-msgid "Varietas"
-msgstr "Variety"
 
 #: templates\farm\element_detail.html
 msgid "m² tercatat"
@@ -4197,6 +4353,10 @@ msgstr "Price/unit"
 #: templates\farm\inputs.html
 msgid "Input Produksi"
 msgstr "Inputs"
+
+#: templates\farm\inputs.html
+msgid "Input baru"
+msgstr "New input"
 
 #: templates\farm\inputs.html
 msgid "Jenis input"
@@ -4635,10 +4795,6 @@ msgid "Butuh = ET₀ × Kc; hujan tidak dihitung untuk elemen beratap. Isi Kc va
 msgstr "Needed = ET₀ × Kc; rain isn't counted for covered plots. Fill in the variety's Kc in admin if it's blank."
 
 #: templates\geo\map.html
-msgid "Cari"
-msgstr "Search"
-
-#: templates\geo\map.html
 msgid "Cari desa, kecamatan, atau kabupaten…"
 msgstr "Search village, district or regency…"
 
@@ -4755,10 +4911,6 @@ msgid "Kehijauan tanaman, 0–1. Makin tinggi makin rimbun."
 msgstr "Crop greenness, 0–1. Higher means denser foliage."
 
 #: templates\geo\map.html
-msgid "Ketik minimal 3 huruf."
-msgstr "Type at least 3 letters."
-
-#: templates\geo\map.html
 msgid "Klik ikon ⬠ di kiri peta untuk menggambar lahan."
 msgstr "Click the ⬠ button on the left of the map to draw a field."
 
@@ -4859,10 +5011,6 @@ msgid "Pakai luas terpetakan sebagai luas elemen"
 msgstr "Use the mapped area as the plot area"
 
 #: templates\geo\map.html
-msgid "Pencarian lokasi tidak tersedia."
-msgstr "Location search isn't available."
-
-#: templates\geo\map.html
 msgid "Peta (OpenStreetMap)"
 msgstr "Map (OpenStreetMap)"
 
@@ -4925,10 +5073,6 @@ msgstr "Drag a corner to move it · click a + on an edge to add a corner · righ
 #: templates\geo\map.html
 msgid "Terpetakan"
 msgstr "Mapped"
-
-#: templates\geo\map.html
-msgid "Tidak dapat memuat peta · muat ulang halaman."
-msgstr "Couldn't load the map · reload the page."
 
 #: templates\geo\map.html
 msgid "Tidak dapat terhubung ke server."
@@ -6569,6 +6713,9 @@ msgstr "Can't get your location — allow location access in the browser."
 
 msgid "Lot #%(pk)s — %(product)s — panen %(date)s — sisa %(left)s kg"
 msgstr "Lot #%(pk)s — %(product)s — harvested %(date)s — %(left)s kg left"
+
+msgid "Nama, alamat, koordinat, dan logo dipakai di cuaca, peta, struk, dan invoice. Koordinat: buka Google Maps, klik kanan lokasi kebun, salin angka lintang, bujur."
+msgstr "Name, address, coordinates and logo are used for weather, the map, receipts and invoices. Coordinates: open Google Maps, right-click the farm, copy the latitude, longitude."
 
 msgid "Panen #%(pk)s — %(cycle)s (%(date)s)"
 msgstr "Harvest #%(pk)s — %(cycle)s (%(date)s)"

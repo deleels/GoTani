@@ -97,6 +97,42 @@ class ElementForm(StyledForm):
         return name
 
 
+class ElementEditForm(ElementForm):
+    """Edit name, area and (without an active cycle) type (D124); uniqueness is checked by the service."""
+
+    def clean_name(self):
+        return self.cleaned_data["name"].strip()
+
+
+class InputItemForm(StyledForm):
+    name = forms.CharField(label=_l("Nama input"), max_length=100)
+    item_type = forms.ChoiceField(label=_l("Jenis"), choices=InputItem.ItemType.choices)
+    unit = forms.ChoiceField(label=_l("Satuan"), choices=Unit.choices)
+    min_alert_qty = IDDecimalField(label=_l("Batas stok menipis"), max_digits=10, decimal_places=3,
+                                   min_value=Decimal("0"), required=False, kind="kg")
+    first_qty = qty_field(_l("Pembelian pertama: jumlah (opsional)"), required=False)
+    first_cost_per_unit_idr = money_field(_l("Harga per satuan"), required=False, kind="money2")
+    supplier = forms.CharField(label=_l("Pemasok (opsional)"), max_length=100, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name in ("min_alert_qty", "first_qty"):  # in the item's own unit, not kg
+            self.fields[name].widget.unit = None
+
+
+class VarietyForm(StyledForm):
+    name = forms.CharField(label=_l("Nama varietas"), max_length=100)
+    crop = forms.CharField(label=_l("Tanaman"), max_length=100)
+    days_to_harvest = forms.IntegerField(label=_l("Umur panen (hari, opsional)"), min_value=1, required=False)
+    kc = IDDecimalField(label=_l("Koefisien tanaman Kc (opsional)"), max_digits=4, decimal_places=2,
+                        min_value=Decimal("0.1"), max_value=Decimal("2"), required=False, kind="kg",
+                        help_text=_l("Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["kc"].widget.unit = None
+
+
 class StartCycleForm(StyledForm):
     element = forms.ModelChoiceField(label=_l("Elemen"), queryset=FarmElement.objects.none())
     variety = forms.ModelChoiceField(label=_l("Varietas"), queryset=Variety.objects.all())

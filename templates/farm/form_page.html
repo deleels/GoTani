@@ -4,7 +4,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 {# Single-form page on the CheckoutPage template: back link + title, form card with a Batal · Simpan footer, help on the right (D104). #}
-{% url back_url as back_href %}
+{% if not back_href %}{% url back_url as back_href %}{% endif %}
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
     <a href="{{ back_href }}{{ back_query }}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
@@ -12,7 +12,7 @@
   </div>
 </div>
 <div class="app-formpage">
-  <form method="post" enctype="multipart/form-data" class="gt-card app-formpage__main">{% csrf_token %}
+  <form method="post" enctype="multipart/form-data" class="gt-card app-formpage__main">{% csrf_token %}{% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
     {% include "_form_fields.html" %}
     <div class="gt-footer app-formpage__foot">
       <a href="{{ back_href }}{{ back_query }}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
