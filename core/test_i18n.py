@@ -122,3 +122,19 @@ class DateFormatTests(TestCase):
                 if not fmt.endswith("_FORMAT") and fmt not in allowed:
                     bad.append(f"{path.name}: {fmt}")
         self.assertEqual(bad, [], "Use a named format, e.g. |date:\"SHORT_DATE_FORMAT\" (D119).")
+
+
+class BuiltinNameTests(TestCase):
+    """D120: built-in categories and checklist lines follow the language until an admin renames them."""
+
+    def test_builtin_names_translate_and_renamed_ones_do_not(self):
+        from farm.models import ExpenseCategory
+
+        cat = ExpenseCategory.objects.get(code="TENAGA_KERJA")
+        with translation.override("en"):
+            self.assertEqual(str(cat), "Labour")
+        with translation.override("id"):
+            self.assertEqual(str(cat), "Tenaga Kerja")
+        cat.name = "Upah harian"
+        with translation.override("en"):
+            self.assertEqual(str(cat), "Upah harian")

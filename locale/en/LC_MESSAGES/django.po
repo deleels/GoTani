@@ -682,6 +682,50 @@ msgstr "stage"
 msgid "Anda tidak memiliki akses ke halaman ini."
 msgstr "You don't have access to this page."
 
+#: farm\bootstrap.py
+msgid "Alat panen, keranjang dan timbangan bersih"
+msgstr "Harvest tools, crates and scales are clean"
+
+#: farm\bootstrap.py
+msgid "Area sortir dan gudang siap"
+msgstr "Sorting area and storeroom are ready"
+
+#: farm\bootstrap.py
+msgid "Bibit"
+msgstr "Seeds"
+
+#: farm\bootstrap.py
+msgid "Lainnya"
+msgstr "Other"
+
+#: farm\bootstrap.py
+msgid "Masa henti pestisida (PHI) sudah terlewati"
+msgstr "Pesticide pre-harvest interval (PHI) has passed"
+
+#: farm\bootstrap.py
+msgid "Peralatan"
+msgstr "Equipment"
+
+#: farm\bootstrap.py
+msgid "Pupuk"
+msgstr "Fertiliser"
+
+#: farm\bootstrap.py
+msgid "Sampel buah memenuhi kematangan / brix target"
+msgstr "Sample fruit meets target ripeness / brix"
+
+#: farm\bootstrap.py
+msgid "Tenaga Kerja"
+msgstr "Labour"
+
+#: farm\bootstrap.py
+msgid "Tenaga panen terjadwal"
+msgstr "Harvest crew is scheduled"
+
+#: farm\bootstrap.py
+msgid "Utilitas"
+msgstr "Utilities"
+
 #: farm\forms.py
 msgid "Berat per karung (kg)"
 msgstr "Weight per sack (kg)"
@@ -831,10 +875,6 @@ msgid "Lahan Terbuka"
 msgstr "Open field"
 
 #: farm\models.py
-msgid "Lainnya"
-msgstr "Other"
-
-#: farm\models.py
 msgid "Manual"
 msgstr "Manual"
 
@@ -897,10 +937,6 @@ msgstr "Germination"
 #: farm\models.py
 msgid "Pindah Tanam"
 msgstr "Transplanting"
-
-#: farm\models.py
-msgid "Pupuk"
-msgstr "Fertiliser"
 
 #: farm\models.py
 msgid "QRIS"

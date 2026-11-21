@@ -232,3 +232,7 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   same day-first form in both languages; only month names follow the user's language. Templates never use a
   literal pattern (tested), and Python uses `django.utils.formats.date_format`, never `strftime`, for text a user
   reads (the bell used `strftime`, which printed English months in Indonesian).
+- **D120 Built-in names follow the language.** The seeded expense categories and pre-harvest checklist lines are
+  stored in Indonesian and marked for translation (`gettext_noop` in `farm/bootstrap.py`). `builtin_label()` shows
+  them in the user's language (Labour, Seeds …) while the stored text is still the built-in one; once an admin
+  renames an entry it shows exactly as typed. Farm data people enter (element names, notes, buyers) is never translated.

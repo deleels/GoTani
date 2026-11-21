@@ -45,7 +45,7 @@
           <tr><td class="whitespace-nowrap">{{ c.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.cycle_id %}">{{ c.cycle.variety }} @ {{ c.cycle.element }}</a></td>
             <td>{% if c.completed_pct == 100 %}{% pill _("100%") tone="green" %}{% else %}{% pill c.completed_pct|pct:0 tone="yellow" %}{% endif %}</td>
-            <td class="app-muted">{% for i in c.checked_items.all %}{{ i.text }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}{% if c.notes %}<p class="app-row__meta">{{ c.notes }}</p>{% endif %}</td>
+            <td class="app-muted">{% for i in c.checked_items.all %}{{ i }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}{% if c.notes %}<p class="app-row__meta">{{ c.notes }}</p>{% endif %}</td>
             <td>{{ c.recorded_by|default:"—" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=5 msg="Belum ada cek pra-panen. Lakukan sebelum memajukan siklus ke tahap Panen agar tidak muncul peringatan." %}{% endfor %}
         </tbody>

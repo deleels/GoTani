@@ -12,6 +12,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.db.models import Prefetch, Sum
 from django.utils import timezone
 
+from farm.bootstrap import builtin_label
 from farm.models import ActivityLog, CropCycle, Expense, HarvestBatch, InputPurchase
 from inventory.models import SpoilageRecord, StockLot
 from invoicing.models import InvoiceLineLotAllocation
@@ -419,7 +420,7 @@ def dashboard_metrics(start, end) -> dict:
     yield_rows.sort(key=lambda r: r["kg_per_m2"], reverse=True)
 
     expense_rows = [
-        {"category": r["category__name"], "amount": r["s"]}
+        {"category": builtin_label(r["category__name"]), "amount": r["s"]}
         for r in approved.filter(date_incurred__gte=start, date_incurred__lte=end)
         .values("category__name")
         .annotate(s=Sum("amount_idr"))

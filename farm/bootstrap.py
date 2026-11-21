@@ -4,20 +4,24 @@ Used by the data migration (with historical models) and by `seed_demo`
 (with live models). Both paths are idempotent.
 """
 
+from django.utils.translation import gettext, gettext_noop as _
+
 ROLE_OWNER = "OWNER"
 ROLE_MANAGER = "MANAGER"
 ROLE_WORKER = "WORKER"
 ROLE_CASHIER = "CASHIER"
 ROLES = [ROLE_OWNER, ROLE_MANAGER, ROLE_WORKER, ROLE_CASHIER]
 
+# Built-in names are stored in Indonesian and marked for translation (gettext_noop): while an admin has not
+# renamed one, `builtin_label` shows it in the user's language (D120). A renamed entry shows as typed.
 EXPENSE_CATEGORIES = [
-    ("BIBIT", "Bibit"),
-    ("PUPUK", "Pupuk"),
-    ("PESTISIDA", "Pestisida"),
-    ("TENAGA_KERJA", "Tenaga Kerja"),
-    ("UTILITAS", "Utilitas"),
-    ("PERALATAN", "Peralatan"),
-    ("LAINNYA", "Lainnya"),
+    ("BIBIT", _("Bibit")),
+    ("PUPUK", _("Pupuk")),
+    ("PESTISIDA", _("Pestisida")),
+    ("TENAGA_KERJA", _("Tenaga Kerja")),
+    ("UTILITAS", _("Utilitas")),
+    ("PERALATAN", _("Peralatan")),
+    ("LAINNYA", _("Lainnya")),
 ]
 
 
@@ -47,12 +51,19 @@ def ensure_role_groups(Group) -> int:
 
 
 PREHARVEST_CHECKLIST = [
-    "Masa henti pestisida (PHI) sudah terlewati",
-    "Sampel buah memenuhi kematangan / brix target",
-    "Alat panen, keranjang dan timbangan bersih",
-    "Area sortir dan gudang siap",
-    "Tenaga panen terjadwal",
+    _("Masa henti pestisida (PHI) sudah terlewati"),
+    _("Sampel buah memenuhi kematangan / brix target"),
+    _("Alat panen, keranjang dan timbangan bersih"),
+    _("Area sortir dan gudang siap"),
+    _("Tenaga panen terjadwal"),
 ]
+
+BUILTIN_TEXTS = frozenset([name for _code, name in EXPENSE_CATEGORIES] + PREHARVEST_CHECKLIST)
+
+
+def builtin_label(text: str) -> str:
+    """A built-in name in the active language; anything an admin typed is shown unchanged (D120)."""
+    return gettext(text) if text in BUILTIN_TEXTS else text
 
 
 def ensure_preharvest_checklist(PreHarvestChecklistItem) -> int:

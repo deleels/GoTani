@@ -341,7 +341,9 @@ class PreHarvestChecklistItem(models.Model):
         verbose_name_plural = _l("butir cek pra-panen")
 
     def __str__(self):
-        return self.text
+        from farm.bootstrap import builtin_label
+
+        return builtin_label(self.text)
 
 
 class PreHarvestCheck(models.Model):
@@ -380,7 +382,9 @@ class ExpenseCategory(models.Model):
         verbose_name_plural = _l("kategori biaya")
 
     def __str__(self):
-        return self.name
+        from farm.bootstrap import builtin_label
+
+        return builtin_label(self.name)
 
 
 class Expense(models.Model):

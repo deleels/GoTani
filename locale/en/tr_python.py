@@ -549,4 +549,17 @@ TR = {
     'Peta, satelit & cuaca': 'Map, satellite & weather',
     'Invoice & Pembeli': 'Invoices & customers',
     'Laporan': 'Reports',
+    # Built-in expense categories and pre-harvest checklist (D120)
+    'Bibit': 'Seeds',
+    'Pupuk': 'Fertiliser',
+    'Pestisida': 'Pesticide',
+    'Tenaga Kerja': 'Labour',
+    'Utilitas': 'Utilities',
+    'Peralatan': 'Equipment',
+    'Lainnya': 'Other',
+    'Masa henti pestisida (PHI) sudah terlewati': 'Pesticide pre-harvest interval (PHI) has passed',
+    'Sampel buah memenuhi kematangan / brix target': 'Sample fruit meets target ripeness / brix',
+    'Alat panen, keranjang dan timbangan bersih': 'Harvest tools, crates and scales are clean',
+    'Area sortir dan gudang siap': 'Sorting area and storeroom are ready',
+    'Tenaga panen terjadwal': 'Harvest crew is scheduled',
 }
