@@ -212,3 +212,9 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   timeline is one green line over a soft area. The daily revenue chart drops the loss series (COGS is capped at
   revenue) and uses solid greens. The Django admin keeps its own templates, restyled by templates/admin/base_site.html
   and core/admin.css (Django's CSS variables mapped to design tokens), light only like the app.
+- **D117 Phase 6 clean-up (Phase 7 step 7).** `components/kpi.html` takes `tone=danger|warning|positive|late`
+  instead of a colour class (the `value_tone` filter is gone). The stone/emerald alias layer is removed from the
+  Tailwind config; no template uses the old palette. Seven unused `app-` rules are deleted; every icon in `ui.py`
+  is still used. `core/static/core/ds/` (tokens, bundle, fonts, logos) is byte-identical to the design-system
+  source. Screen check: no horizontal scroll on 26 OWNER screens at 390, 768 (spot) and 1440; CASHIER reaches only
+  POS, orders, shift and profile. Analytics date fields share one row on phones with Terapkan below.

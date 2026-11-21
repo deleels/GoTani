@@ -554,7 +554,7 @@ Agreed with the owner in a grilling session. One commit per step, tests green ea
 7. **Phase 6** clean-up (below) with the lighter screen check agreed: OWNER every screen at 1440 and 390,
    CASHIER on its own screens, 768 spot checks; stat-card tone via `tone=` instead of colour classes; delete
    only provably unused CSS/icons; verify `core/static/core/ds/` matches the design-system source; keep the
-   Tailwind CDN. Branch is not pushed.
+   Tailwind CDN (superseded by D112: Tailwind is prebuilt). Branch is not pushed. **Done 2026-11-21.**
 
 ---
 
