@@ -325,7 +325,7 @@ class ActivityLog(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.get_activity_type_display()} — {self.cycle} ({self.logged_at:%Y-%m-%d})"
+        return f"{self.get_activity_type_display()} · {self.cycle} ({self.logged_at:%Y-%m-%d})"
 
 
 class PreHarvestChecklistItem(models.Model):
@@ -532,7 +532,7 @@ class HarvestBatch(models.Model):
         ]
 
     def __str__(self):
-        return _("Panen #%(pk)s — %(cycle)s (%(date)s)") % {"pk": self.pk, "cycle": self.cycle, "date": f"{self.harvested_at:%Y-%m-%d}"}
+        return _("Panen #%(pk)s · %(cycle)s (%(date)s)") % {"pk": self.pk, "cycle": self.cycle, "date": f"{self.harvested_at:%Y-%m-%d}"}
 
     @property
     def sellable_kg(self):

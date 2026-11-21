@@ -36,17 +36,17 @@
     <div class="gt-card__head"><h2 class="gt-card__title" id="h-short">{% translate "Ringkas" %}</h2></div>
     <div class="gt-metrics app-metrics4">
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Perkiraan panen" %}{% if cycle.variety.days_to_harvest %} {% with t=cycle.variety.days_to_harvest|stringformat:"d" %}{% blocktranslate asvar tip_age %}Umur panen varietas {{ t }} hari.{% endblocktranslate %}{% info_tip tip_age %}{% endwith %}{% endif %}</span>
-        <span class="gt-metric__value {% if overdue %}app-value--late{% endif %}">{{ cycle.expected_harvest_date|date:"SHORT_DATE_FORMAT"|default:"—" }}</span></div>
+        <span class="gt-metric__value {% if overdue %}app-value--late{% endif %}">{{ cycle.expected_harvest_date|date:"SHORT_DATE_FORMAT"|default:"-" }}</span></div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Hasil layak jual" %}</span>
         <span class="gt-metric__value">{{ ys.actual_kg|kg }} kg</span>
         {% if ys.pct is not None %}<span class="gt-seg app-yield" aria-hidden="true"><i class="ok" style="flex: 0 0 {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></i><i class="todo"></i></span>
         <span class="gt-metric__note">{{ ys.pct|pct }} {% translate "dari" %} {{ ys.expected_kg|kg }} kg</span>{% elif ys.expected_kg %}<span class="gt-metric__note">{% translate "dari" %} {{ ys.expected_kg|kg }} kg</span>{% endif %}</div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Jumlah tanaman" %}</span>
-        <span class="gt-metric__value">{{ cycle.planted_qty|default:"—" }}</span>
+        <span class="gt-metric__value">{{ cycle.planted_qty|default:"-" }}</span>
         {% if ys.per_plant_kg is not None %}<span class="gt-metric__note">{{ ys.per_plant_kg|kg }} {% translate "kg per tanaman" %}</span>{% endif %}</div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Cek pra-panen" %}</span>
         {% if latest_check %}<span class="gt-metric__value {% if latest_check.completed_pct < 100 %}app-value--late{% else %}app-value--positive{% endif %}">{{ latest_check.completed_pct|pct:0 }}</span><span class="gt-metric__note">{{ latest_check.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</span>
-        {% else %}<span class="gt-metric__value app-muted">—</span><span class="gt-metric__note">{% translate "Belum ada" %}</span>{% endif %}</div>
+        {% else %}<span class="gt-metric__value app-muted">-</span><span class="gt-metric__note">{% translate "Belum ada" %}</span>{% endif %}</div>
     </div>
   </section>
   {% endwith %}

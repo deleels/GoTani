@@ -138,7 +138,7 @@ class ShiftView(RoleRequiredMixin, View):
                 closed = services.close_shift(shift, request.user, counts, request.POST.get("close_note", ""))
                 diff = closed.difference_idr
                 messages.success(request, _("Shift ditutup.") + ("" if not diff else
-                                 " " + _("Selisih %(diff)s — menunggu tinjauan manajer.") % {"diff": services.format_rp(diff)}))
+                                 " " + _("Selisih %(diff)s, menunggu tinjauan manajer.") % {"diff": services.format_rp(diff)}))
             else:
                 raise ValidationError(_("Aksi tidak dikenal."))
         except ValidationError as exc:

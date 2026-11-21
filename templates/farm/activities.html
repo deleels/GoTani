@@ -45,8 +45,8 @@
           <tr><td class="whitespace-nowrap">{{ c.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.cycle_id %}">{{ c.cycle.variety }} @ {{ c.cycle.element }}</a></td>
             <td>{% if c.completed_pct == 100 %}{% pill _("100%") tone="green" %}{% else %}{% pill c.completed_pct|pct:0 tone="yellow" %}{% endif %}</td>
-            <td class="app-muted">{% for i in c.checked_items.all %}{{ i }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}{% if c.notes %}<p class="app-row__meta">{{ c.notes }}</p>{% endif %}</td>
-            <td>{{ c.recorded_by|default:"—" }}</td></tr>
+            <td class="app-muted">{% for i in c.checked_items.all %}{{ i }}{% if not forloop.last %}; {% endif %}{% empty %}-{% endfor %}{% if c.notes %}<p class="app-row__meta">{{ c.notes }}</p>{% endif %}</td>
+            <td>{{ c.recorded_by|default:"-" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=5 msg="Belum ada cek pra-panen. Lakukan sebelum memajukan siklus ke tahap Panen agar tidak muncul peringatan." %}{% endfor %}
         </tbody>
       {% elif report_tab == 'panen' %}
@@ -57,8 +57,8 @@
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
             <td class="num">{{ b.high_quality_kg|kg }} kg</td><td class="num">{{ b.low_quality_kg|kg }} kg</td>
             <td class="num">{{ b.harvest_loss_kg|kg }} kg</td>
-            <td>{% if b.number_of_bags %}{{ b.number_of_bags }} × {{ b.weight_per_bag_kg|kg }} kg{% else %}—{% endif %}</td>
-            <td>{{ b.recorded_by|default:"—" }}</td></tr>
+            <td>{% if b.number_of_bags %}{{ b.number_of_bags }} × {{ b.weight_per_bag_kg|kg }} kg{% else %}-{% endif %}</td>
+            <td>{{ b.recorded_by|default:"-" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=7 msg="Belum ada panen. Panen hanya bisa dicatat saat siklus di tahap Panen; tiap grade menjadi lot stok." %}{% endfor %}
         </tbody>
       {% elif report_tab == 'susut' %}
@@ -66,7 +66,7 @@
         <tbody>
         {% for r in activities %}
           <tr><td class="whitespace-nowrap">{{ r.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td><td>{% translate "Lot #" %}{{ r.lot_id }} · {{ r.lot.product }}</td>
-            <td class="num">{{ r.qty_kg|kg }}</td><td>{{ r.get_reason_display }}</td><td class="app-muted">{{ r.notes|default:"—" }}</td><td>{{ r.recorded_by|default:"—" }}</td></tr>
+            <td class="num">{{ r.qty_kg|kg }}</td><td>{{ r.get_reason_display }}</td><td class="app-muted">{{ r.notes|default:"-" }}</td><td>{{ r.recorded_by|default:"-" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=6 msg="Belum ada susut tercatat. Catat produk busuk, rusak, atau menyusut dari lot tertentu." %}{% endfor %}
         </tbody>
       {% else %}
@@ -82,11 +82,11 @@
             <td class="whitespace-nowrap">{{ a.logged_at|date:"SHORT_DATETIME_FORMAT" }}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' a.cycle_id %}">{{ a.cycle.variety }} @ {{ a.cycle.element }}</a></td>
             <td>{{ a.get_stage_at_activity_display }}</td>
-            {% if report_tab == 'irigasi' %}<td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}—{% endif %}</td>
-            {% elif report_tab == 'scouting' %}<td>{% if a.photo %}<a href="{{ a.photo.url }}" target="_blank"><img src="{{ a.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-thumb"></a>{% else %}—{% endif %}</td>
-            {% else %}<td>{% if a.input_item %}<a class="app-link--plain" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}—{% endif %}</td><td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td>{% endif %}
+            {% if report_tab == 'irigasi' %}<td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}-{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}-{% endif %}</td>
+            {% elif report_tab == 'scouting' %}<td>{% if a.photo %}<a href="{{ a.photo.url }}" target="_blank"><img src="{{ a.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-thumb"></a>{% else %}-{% endif %}</td>
+            {% else %}<td>{% if a.input_item %}<a class="app-link--plain" href="{% url 'farm:input_detail' a.input_item_id %}">{{ a.input_item.name }}</a>{% else %}-{% endif %}</td><td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}-{% endif %}</td>{% endif %}
             <td class="app-muted">{{ a.application_method }}{% if a.application_method and a.notes %} · {% endif %}{{ a.notes|truncatechars:80 }}</td>
-            <td>{{ a.recorded_by|default:"—" }}</td>
+            <td>{{ a.recorded_by|default:"-" }}</td>
             {% if roles.finance %}<td class="num"><form method="post" action="{% url 'farm:activity_delete' a.pk %}" data-confirm-title="{% translate 'Hapus kegiatan?' %}" data-confirm="{% translate 'Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen).' %}" data-confirm-action="{% translate 'Hapus kegiatan' %}" data-confirm-danger>{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}?tab={{ report_tab }}"><button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form></td>{% endif %}
           </tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=8 msg="Belum ada laporan jenis ini. Klik “Laporan Baru” untuk mencatat pekerjaan lapangan." %}{% endfor %}

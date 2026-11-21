@@ -22,14 +22,14 @@ class SelectPromptTests(TestCase):
     def test_optional_select_offers_none(self):
         with translation.override("id"):
             html = str(ExpenseForm()["cycle"])
-        self.assertIn("— Tidak ada —", html)
+        self.assertIn(">Tidak ada</option>", html)
 
     def test_prompt_follows_required_set_after_init(self):
         with translation.override("id"):
             seeding = ActivityForm(activity_type=ActivityLog.ActivityType.SEEDING)
             fert = ActivityForm(activity_type=ActivityLog.ActivityType.FERTILIZER)
         self.assertEqual(seeding.fields["input_item"].empty_label, "Pilih input…")
-        self.assertEqual(fert.fields["input_item"].empty_label, "— Tidak ada —")
+        self.assertEqual(fert.fields["input_item"].empty_label, "Tidak ada")
 
 
 class UnitTests(TestCase):

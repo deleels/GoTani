@@ -1,7 +1,7 @@
 # Project: GoTani — Seed-to-Sale Agri-Production & Retail POS System
 
 ## Overview
-An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D121); do not silently deviate from it.
+An engineering programming class project modeling end-to-end agricultural production, three-tier post-harvest grading, lot-level mass-balance inventory, retail POS checkout, and wholesale invoicing in Python and Django. Single farm. Decision rationale lives in `docs/DECISIONS.md` (D1–D122); do not silently deviate from it.
 
 **Direction (D42):** grow GoTani toward a real product, borrowing FarmCloud's UX and field features, while keeping domain correctness + tests as the bar for every feature. **Zero-cost rule (D43):** nothing may require the developer to pay — no paid APIs, no payment gateways, no subscriptions; only free, no-card services (Open-Meteo, Agromonitoring free tier). Azure VM runs on student credit.
 

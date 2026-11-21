@@ -130,7 +130,7 @@ def reverse_spoilage(record: SpoilageRecord, actor, reason: str) -> SpoilageReco
                    reference=f"SPL-{record.pk}-BATAL", timestamp=now)
     record.reversed_at, record.reversed_by, record.reversal_reason = now, actor, reason.strip()
     record.save(update_fields=["reversed_at", "reversed_by", "reversal_reason"])
-    log_event(actor, "SPOILAGE_REVERSAL", record, f"Batal susut {record.qty_kg.normalize():f} kg — lot #{record.lot_id}",
+    log_event(actor, "SPOILAGE_REVERSAL", record, f"Batal susut {record.qty_kg.normalize():f} kg dari lot #{record.lot_id}",
               before={"qty_kg": record.qty_kg}, after={"qty_kg": Decimal("0")}, reason=record.reversal_reason)
     return record
 

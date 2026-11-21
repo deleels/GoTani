@@ -35,8 +35,8 @@
       {% if invoice.buyer.address %}<div class="app-doc__muted app-doc__pre">{{ invoice.buyer.address }}</div>{% endif %}
     </div>
     <dl class="gt-kv gt-kv--compact app-doc__dates">
-      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ invoice.issue_date|date:"DATE_FORMAT"|default:"—" }}</dd></div>
-      <div><dt>{% translate "Jatuh tempo" %}</dt><dd>{{ invoice.due_date|date:"DATE_FORMAT"|default:"—" }}</dd></div>
+      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ invoice.issue_date|date:"DATE_FORMAT"|default:"-" }}</dd></div>
+      <div><dt>{% translate "Jatuh tempo" %}</dt><dd>{{ invoice.due_date|date:"DATE_FORMAT"|default:"-" }}</dd></div>
     </dl>
   </section>
 
@@ -44,7 +44,7 @@
     <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Harga/kg" %}</th><th class="num">{% translate "PPN" %}</th><th class="num">{% translate "Jumlah" %}</th></tr></thead>
     <tbody>
     {% for ln in invoice.lines.all %}
-      <tr><td>{{ ln.product }}</td><td class="num">{{ ln.qty_kg|kg }}</td><td class="num">{{ ln.unit_price_idr|rupiah }}</td><td class="num">{% if ln.tax_rate_pct %}{{ ln.tax_rate_pct|pct:0 }}{% else %}—{% endif %}</td><td class="num">{{ ln.line_subtotal_idr|rupiah }}</td></tr>
+      <tr><td>{{ ln.product }}</td><td class="num">{{ ln.qty_kg|kg }}</td><td class="num">{{ ln.unit_price_idr|rupiah }}</td><td class="num">{% if ln.tax_rate_pct %}{{ ln.tax_rate_pct|pct:0 }}{% else %}-{% endif %}</td><td class="num">{{ ln.line_subtotal_idr|rupiah }}</td></tr>
     {% endfor %}
     </tbody>
   </table>

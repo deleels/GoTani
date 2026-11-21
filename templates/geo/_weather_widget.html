@@ -10,7 +10,7 @@
       <div class="app-weather__now">
         <span class="app-weather__temp" x-text="Math.round(w.current.temp) + '°C'"></span>
         <span><span class="app-weather__label" x-text="w.current.label"></span>
-          <span class="app-row__meta" x-text="gtT('{% jt "Lembap %(hum)s%% · angin %(wind)s km/j" %}', { hum: w.current.humidity ?? '—', wind: w.current.wind ?? '—' })"></span></span>
+          <span class="app-row__meta" x-text="gtT('{% jt "Lembap %(hum)s%% · angin %(wind)s km/j" %}', { hum: w.current.humidity ?? '-', wind: w.current.wind ?? '-' })"></span></span>
       </div>
       <div x-show="w.spray" class="gt-callout" :class="sprayClass(w.spray.level)">
         <div><span class="gt-callout__title" x-text="'{% jt "Semprot:" %} ' + w.spray.label"></span>

@@ -27,7 +27,7 @@
         <div class="gt-metric"><span class="gt-metric__label">{% translate "Modal awal" %}</span><span class="gt-metric__value">{{ summary.opening|rupiah }}</span></div>
         <div class="gt-metric"><span class="gt-metric__label">{% translate "Order" %}</span><span class="gt-metric__value">{{ summary.orders }}</span>{% if summary.voided %}<span class="gt-metric__note app-value--danger">{{ summary.voided }} {% translate "batal" %}</span>{% endif %}</div>
         {% if show_expected %}<div class="gt-metric"><span class="gt-metric__label">{% translate "Uang seharusnya di laci" %}</span><span class="gt-metric__value">{{ summary.expected|rupiah }}</span></div>
-        {% else %}<div class="gt-metric"><span class="gt-metric__label">{% translate "Uang seharusnya" %} {% info_tip _("Disembunyikan sampai hitungan selesai (hitung buta).") %}</span><span class="gt-metric__value app-muted">—</span></div>{% endif %}
+        {% else %}<div class="gt-metric"><span class="gt-metric__label">{% translate "Uang seharusnya" %} {% info_tip _("Disembunyikan sampai hitungan selesai (hitung buta).") %}</span><span class="gt-metric__value app-muted">-</span></div>{% endif %}
       </div>
       {% if summary.sales_by_method %}<div class="app-chips app-shift__methods">{% for label, v in summary.sales_by_method %}<span class="gt-chip gt-chip--sm">{{ label }} {{ v|rupiah }}</span>{% endfor %}</div>{% endif %}
     </section>

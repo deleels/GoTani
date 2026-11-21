@@ -22,7 +22,7 @@ def select_prompts():
 
 def apply_select_prompts(form):
     """D121 (supersedes the Phase 7 blank first option): a required select starts on a prompt that names what to
-    pick ("Pilih siklus…"); an optional one offers "— Tidak ada —" as a real choice."""
+    pick ("Pilih siklus…"); an optional one offers "Tidak ada" as a real choice."""
     prompts = None
     for name, field in form.fields.items():
         if isinstance(field.widget, (forms.RadioSelect, forms.CheckboxSelectMultiple, forms.HiddenInput)):
@@ -32,13 +32,13 @@ def apply_select_prompts(form):
                 continue
             if getattr(field, "prompt_auto", False) or field.empty_label in ("", "---------", "- Select an option -"):
                 prompts = prompts or select_prompts()
-                field.empty_label = prompts.get(name, _("Pilih…")) if field.required else _("— Tidak ada —")
+                field.empty_label = prompts.get(name, _("Pilih…")) if field.required else _("Tidak ada")
                 field.prompt_auto = True  # a later call (after `required` changed) may rewrite it
         elif isinstance(field, forms.ChoiceField) and not isinstance(field, forms.MultipleChoiceField):
             choices = list(field.choices)
             if choices and choices[0][0] == "" and (getattr(field, "prompt_auto", False) or str(choices[0][1]) in ("", "-", "---------")):
                 prompts = prompts or select_prompts()
-                label = prompts.get(name, _("Pilih…")) if field.required else _("— Tidak ada —")
+                label = prompts.get(name, _("Pilih…")) if field.required else _("Tidak ada")
                 field.choices = [("", label)] + choices[1:]
                 field.prompt_auto = True
 

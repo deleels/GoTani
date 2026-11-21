@@ -23,7 +23,7 @@
 </div>
 
 {% if invoice.status == 'DRAFT' %}
-{% blocktranslate asvar t_data_confirm_title_9 with v1=invoice.buyer %}Terbitkan invoice untuk {{ v1 }}?{% endblocktranslate %}{% blocktranslate asvar t_data_confirm_10 with v1=invoice.total_idr|rupiah v2=invoice.lines.count %}Total {{ v1 }} untuk {{ v2 }} baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah — hanya dibatalkan.{% endblocktranslate %}<form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'issue' %}"
+{% blocktranslate asvar t_data_confirm_title_9 with v1=invoice.buyer %}Terbitkan invoice untuk {{ v1 }}?{% endblocktranslate %}{% blocktranslate asvar t_data_confirm_10 with v1=invoice.total_idr|rupiah v2=invoice.lines.count %}Total {{ v1 }} untuk {{ v2 }} baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah, hanya bisa dibatalkan.{% endblocktranslate %}<form method="post" action="{% url 'invoicing:invoice_action' invoice.pk 'issue' %}"
       data-confirm-title="{{ t_data_confirm_title_9 }}" data-confirm-level="2" data-confirm-action="{% translate 'Terbitkan' %}"
       data-confirm="{{ t_data_confirm_10 }}"
       class="gt-callout gt-callout--on-white app-issue">{% csrf_token %}
@@ -64,8 +64,8 @@
           </td>
           <td class="num">{{ ln.qty_kg|kg }}</td>
           <td class="num">{{ ln.unit_price_idr|rupiah }}</td>
-          <td class="num">{% if ln.discount_share_idr %}− {{ ln.discount_share_idr|rupiah }}{% else %}—{% endif %}</td>
-          <td class="num">{% if ln.tax_rate_pct %}{{ ln.tax_idr|rupiah }}<span class="app-sub">{{ ln.tax_rate_pct|pct:0 }}</span>{% else %}—{% endif %}</td>
+          <td class="num">{% if ln.discount_share_idr %}− {{ ln.discount_share_idr|rupiah }}{% else %}-{% endif %}</td>
+          <td class="num">{% if ln.tax_rate_pct %}{{ ln.tax_idr|rupiah }}<span class="app-sub">{{ ln.tax_rate_pct|pct:0 }}</span>{% else %}-{% endif %}</td>
           <td class="num"><b>{{ ln.line_subtotal_idr|rupiah }}</b></td>
         </tr>
       {% endfor %}

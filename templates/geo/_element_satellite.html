@@ -14,7 +14,7 @@
           <div class="gt-metrics app-metrics3">
             <template x-for="k in ['ndvi', 'evi', 'ndwi']" :key="k">
               <div class="gt-metric"><span class="gt-metric__label" x-text="gtT('{% jt "%(index)s rata-rata" %}', { index: k.toUpperCase() })"></span>
-                <span class="gt-metric__value" x-text="d.satellite.passes[0][k] ? Number(d.satellite.passes[0][k].mean).toFixed(3) : '—'"></span></div>
+                <span class="gt-metric__value" x-text="d.satellite.passes[0][k] ? Number(d.satellite.passes[0][k].mean).toFixed(3) : '-'"></span></div>
             </template>
           </div>
         </template>
@@ -23,9 +23,9 @@
             <h3 class="app-subtitle">{% translate "Tanah" %} {% info_tip _("Perkiraan model Open-Meteo, bukan sensor.") %}</h3>
             <div class="app-soil">
               <div class="gt-metric"><span class="gt-metric__label">{% translate "Suhu tanah" %}</span>
-                <dl class="gt-kv gt-kv--compact"><template x-for="t in d.soil.temperature" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? num(t.value, 1) + ' °C' : '—'"></dd></div></template></dl></div>
+                <dl class="gt-kv gt-kv--compact"><template x-for="t in d.soil.temperature" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? num(t.value, 1) + ' °C' : '-'"></dd></div></template></dl></div>
               <div class="gt-metric"><span class="gt-metric__label">{% translate "Kelembapan tanah" %} {% info_tip _("Persentase volume air di tanah.") %}</span>
-                <dl class="gt-kv gt-kv--compact"><template x-for="m in d.soil.moisture" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? num(m.value * 100, 1) + '%' : '—'"></dd></div></template></dl></div>
+                <dl class="gt-kv gt-kv--compact"><template x-for="m in d.soil.moisture" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? num(m.value * 100, 1) + '%' : '-'"></dd></div></template></dl></div>
             </div>
           </div>
         </template>

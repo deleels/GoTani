@@ -3,7 +3,7 @@
      script checks the same rules (required, min/max, length, email, number) on submit, writes an app message
      under each bad field, scrolls to the first one and shows a toast. It runs in the capture phase before
      confirm.js, so a dialog never opens for an invalid form.
-   - Toasts: window.gtToast(text, tone) — bottom right, success/info fade out, warnings and errors stay.
+   - Toasts: window.gtToast(text, tone): bottom right, every toast fades out on its own (D122).
    - Navigation: a thin progress bar while the next page loads; repeat clicks on a link that is already
      loading are ignored. Loaded synchronously (not deferred) right after numbers.js. */
 (function () {
@@ -37,11 +37,22 @@
     wire(t, tone);
     return t;
   };
+  // Every toast leaves on its own (D122): 5 s for success/info, 7 s for warnings and errors so there is time to read
+  // them. The countdown pauses while the pointer or keyboard focus is on the toast.
   function wire(t, tone) {
-    var close = function () { t.classList.add('is-leaving'); setTimeout(function () { t.remove(); }, 200); };
+    var gone = false, timer = null, left = (tone === 'success' || tone === 'info') ? 5000 : 7000, started = 0;
+    var close = function () {
+      if (gone) return; gone = true; clearTimeout(timer);
+      t.classList.add('is-leaving'); setTimeout(function () { t.remove(); }, 200);
+    };
+    var run = function () { started = Date.now(); timer = setTimeout(close, left); };
+    var pause = function () { if (timer) { clearTimeout(timer); timer = null; left = Math.max(1500, left - (Date.now() - started)); } };
+    var resume = function () { if (!timer && !gone && !t.matches(':hover') && !t.contains(document.activeElement)) run(); };
     var b = t.querySelector('.app-toast__close');
     if (b) b.addEventListener('click', close);
-    if (tone === 'success' || tone === 'info') setTimeout(close, 5000);
+    t.addEventListener('mouseenter', pause); t.addEventListener('mouseleave', resume);
+    t.addEventListener('focusin', pause); t.addEventListener('focusout', function () { setTimeout(resume); });
+    run();
   }
 
   /* ---------- validation ---------- */

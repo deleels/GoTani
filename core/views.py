@@ -176,7 +176,7 @@ class ProfileView(View):
         lang = services.get_user_profile(user).language or settings.LANGUAGE_CODE
         return {"form": form or OwnProfileForm(initial={"first_name": user.first_name, "last_name": user.last_name,
                                                         "language": lang}),
-                "role": services.user_role(user) or ("OWNER" if user.is_superuser else "—")}
+                "role": services.user_role(user) or ("OWNER" if user.is_superuser else "-")}
 
     def get(self, request):
         return render(request, self.template_name, self.context(request))

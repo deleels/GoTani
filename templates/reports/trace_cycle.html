@@ -37,8 +37,8 @@
       <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Kegiatan" %}</th><th>{% translate "Tahap" %}</th><th>{% translate "Input" %}</th><th class="num">{% translate "Biaya input" %}</th></tr></thead>
       <tbody>
       {% for a in trace.activities %}
-        <tr><td class="app-muted">{{ a.logged_at|date:"SHORT_DATE_FORMAT" }}<span class="app-sub">{{ a.logged_at|date:"TIME_FORMAT" }}</span></td><td>{{ a.get_activity_type_display }}</td><td><span class="gt-chip gt-chip--sm">{{ a.get_stage_at_activity_display }}</span></td><td>{% if a.input_item %}{{ a.input_item.name }} <span class="app-muted">{{ a.quantity|kg }} {{ a.unit }}</span>{% else %}—{% endif %}</td>
-        <td class="num">{% for e in a.usage_expenses.all %}{{ e.amount_idr|rupiah }}{% empty %}—{% endfor %}</td></tr>
+        <tr><td class="app-muted">{{ a.logged_at|date:"SHORT_DATE_FORMAT" }}<span class="app-sub">{{ a.logged_at|date:"TIME_FORMAT" }}</span></td><td>{{ a.get_activity_type_display }}</td><td><span class="gt-chip gt-chip--sm">{{ a.get_stage_at_activity_display }}</span></td><td>{% if a.input_item %}{{ a.input_item.name }} <span class="app-muted">{{ a.quantity|kg }} {{ a.unit }}</span>{% else %}-{% endif %}</td>
+        <td class="num">{% for e in a.usage_expenses.all %}{{ e.amount_idr|rupiah }}{% empty %}-{% endfor %}</td></tr>
       {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Tidak ada kegiatan." %}</td></tr>{% endfor %}
       </tbody>
     </table>

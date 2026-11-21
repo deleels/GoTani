@@ -11,7 +11,7 @@
     <form method="post" class="app-stackform">{% csrf_token %}
       <input type="hidden" name="action" value="count">
       <label class="app-fieldlabel"><span class="app-label">{% translate "Produk" %}</span>
-        <select name="product" class="app-field">{% for p in products %}<option value="{{ p.pk }}">{{ p }} {% translate "— sistem" %} {{ p.stock|kg }} kg</option>{% endfor %}</select></label>
+        <select name="product" class="app-field">{% for p in products %}<option value="{{ p.pk }}">{{ p }} {% translate "· sistem" %} {{ p.stock|kg }} kg</option>{% endfor %}</select></label>
       <label class="app-fieldlabel"><span class="app-label">{% translate "Stok fisik (kg)" %}</span>
         <span class="app-unit" data-unit="kg"><input name="counted_kg" data-num="kg" inputmode="decimal" autocomplete="off" required class="app-field"></span></label>
       <label class="app-fieldlabel"><span class="app-label">{% translate "Catatan" %}</span><input name="note" class="app-field"></label>
@@ -27,7 +27,7 @@
         <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Stok sistem" %}</th><th class="num">{% translate "Batas menipis" %}</th><th>{% translate "Status" %}</th></tr></thead>
         <tbody>
         {% for p in products %}<tr><td>{{ p }}</td><td class="num">{{ p.stock|kg }} kg</td>
-          <td class="num">{% if p.min_alert_kg is not None %}{{ p.min_alert_kg|kg }} kg{% else %}—{% endif %}</td>
+          <td class="num">{% if p.min_alert_kg is not None %}{{ p.min_alert_kg|kg }} kg{% else %}-{% endif %}</td>
           <td>{% if p.low %}{% pill _("Menipis") tone="orange" %}{% elif p.min_alert_kg is not None %}{% pill _("Aman") tone="green" %}{% else %}<span class="app-row__meta">{% translate "Atur batas di Harga Produk" %}</span>{% endif %}</td></tr>
         {% empty %}<tr><td colspan="4" class="app-empty-cell app-muted">{% translate "Belum ada produk." %}</td></tr>{% endfor %}
         </tbody>
@@ -44,7 +44,7 @@
             <td>{{ c.product }}{% if c.note %}<p class="app-row__meta">{{ c.note }}</p>{% endif %}</td>
             <td class="num">{{ c.system_kg|kg }}</td><td class="num">{{ c.counted_kg|kg }}</td>
             <td class="num {% if c.difference_kg < 0 %}app-value--danger{% elif c.difference_kg > 0 %}app-value--late{% endif %}">{{ c.difference_kg|kg }} kg</td>
-            {% if roles.finance %}<td class="num">{% if c.status == 'APPROVED' %}{{ c.loss_idr|rupiah }}{% else %}—{% endif %}</td>{% endif %}
+            {% if roles.finance %}<td class="num">{% if c.status == 'APPROVED' %}{{ c.loss_idr|rupiah }}{% else %}-{% endif %}</td>{% endif %}
             <td>
               {% if c.status == 'PENDING' %}{% pill _("Menunggu") tone="yellow" %}
                 {% if roles.finance %}<span class="app-actions app-actions--start">

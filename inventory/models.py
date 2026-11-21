@@ -80,7 +80,7 @@ class Product(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.variety.name} — {self.get_grade_display()}"
+        return f"{self.variety.name} · {self.get_grade_display()}"
 
     @property
     def stock_kg(self):
@@ -168,7 +168,7 @@ class SpoilageRecord(models.Model):
         ]
 
     def __str__(self):
-        return f"Susut {self.qty_kg} kg — {self.lot}"
+        return f"Susut {self.qty_kg} kg · {self.lot}"
 
 
 class StockCount(models.Model):

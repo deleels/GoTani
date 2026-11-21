@@ -71,8 +71,8 @@ msgid "Pilih…"
 msgstr "Choose…"
 
 #: core\forms.py
-msgid "— Tidak ada —"
-msgstr "— None —"
+msgid "Tidak ada"
+msgstr "None"
 
 #: core\home.py
 msgid "Agustus"
@@ -839,8 +839,8 @@ msgid "Kosongkan untuk waktu sekarang."
 msgstr "Leave blank for now."
 
 #: farm\forms.py
-msgid "Lot #%(pk)s — %(product)s — panen %(date)s — sisa %(left)s kg"
-msgstr "Lot #%(pk)s — %(product)s — harvested %(date)s — %(left)s kg left"
+msgid "Lot #%(pk)s · %(product)s · panen %(date)s · sisa %(left)s kg"
+msgstr "Lot #%(pk)s · %(product)s · harvested %(date)s · %(left)s kg left"
 
 #: farm\forms.py
 msgid "Luas (m²)"
@@ -947,8 +947,8 @@ msgid "Mililiter"
 msgstr "Millilitre"
 
 #: farm\models.py
-msgid "Panen #%(pk)s — %(cycle)s (%(date)s)"
-msgstr "Harvest #%(pk)s — %(cycle)s (%(date)s)"
+msgid "Panen #%(pk)s · %(cycle)s (%(date)s)"
+msgstr "Harvest #%(pk)s · %(cycle)s (%(date)s)"
 
 #: farm\models.py
 msgid "Pemakaian"
@@ -1811,8 +1811,8 @@ msgid "Data tidak tersedia: layanan Agromonitoring tidak merespons. Coba lagi na
 msgstr "Data not available: Agromonitoring isn't responding. Try again later."
 
 #: geo\services.py
-msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
-msgstr "About %(round)s mm expected — hold off spraying and check drainage."
+msgid "Diperkirakan %(round)s mm. Tunda penyemprotan, cek drainase."
+msgstr "About %(round)s mm expected. Hold off spraying and check drainage."
 
 #: geo\services.py
 msgid "Geometri harus berupa satu poligon."
@@ -1835,8 +1835,8 @@ msgid "Hanya OWNER/MANAGER yang dapat mengubah poligon."
 msgstr "Only an OWNER/MANAGER can change boundaries."
 
 #: geo\services.py
-msgid "Hembusan hingga %(round)s km/j — periksa penyangga dan atap."
-msgstr "Gusts up to %(round)s km/h — check supports and roofs."
+msgid "Hembusan hingga %(round)s km/j. Periksa penyangga dan atap."
+msgstr "Gusts up to %(round)s km/h. Check supports and roofs."
 
 #: geo\services.py
 msgid "Hujan beku"
@@ -1855,8 +1855,8 @@ msgid "Hujan lebat besok (%(when)s)"
 msgstr "Heavy rain tomorrow (%(when)s)"
 
 #: geo\services.py
-msgid "Hujan lebat diperkirakan %(date)s (%(mm)s mm) — tunda penyemprotan & siapkan drainase."
-msgstr "Heavy rain expected %(date)s (%(mm)s mm) — hold off spraying and get drainage ready."
+msgid "Hujan lebat diperkirakan %(date)s (%(mm)s mm). Tunda penyemprotan & siapkan drainase."
+msgstr "Heavy rain expected %(date)s (%(mm)s mm). Hold off spraying and get drainage ready."
 
 #: geo\services.py
 msgid "Hujan lokal"
@@ -1879,8 +1879,8 @@ msgid "Koordinat poligon tidak valid."
 msgstr "Invalid boundary coordinates."
 
 #: geo\services.py
-msgid "Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit."
-msgstr "Open fields may need extra irrigation — check water needs in Weather & satellite."
+msgid "Lahan terbuka mungkin perlu irigasi tambahan. Lihat kebutuhan air di Cuaca & Satelit."
+msgstr "Open fields may need extra irrigation. Check water needs in Weather & satellite."
 
 #: geo\services.py
 msgid "Luas poligon %(area)s ha di luar batas %(MIN_HA)s–%(MAX_HA)s ha."
@@ -2899,8 +2899,8 @@ msgid "Order %(order_number)s berhasil."
 msgstr "Order %(order_number)s complete."
 
 #: pos\views.py
-msgid "Selisih %(diff)s — menunggu tinjauan manajer."
-msgstr "Difference %(diff)s — waiting for a manager's review."
+msgid "Selisih %(diff)s, menunggu tinjauan manajer."
+msgstr "Difference %(diff)s, waiting for a manager's review."
 
 #: pos\views.py
 msgid "Shift dibuka. Selamat berjualan!"
@@ -3035,8 +3035,8 @@ msgid "Notifikasi"
 msgstr "Notifications"
 
 #: templates\components\bell.html
-msgid "Semua beres — tidak ada yang perlu ditindaklanjuti."
-msgstr "All clear — nothing needs your attention."
+msgid "Semua beres, tidak ada yang perlu ditindaklanjuti."
+msgstr "All clear. Nothing needs your attention."
 
 #: templates\components\bell.html
 msgid "Tidak dapat memuat notifikasi ·"
@@ -3283,8 +3283,8 @@ msgid "Offline · GoTani"
 msgstr "Offline · GoTani"
 
 #: templates\core\offline.html
-msgid "membutuhkan koneksi internet. Data tidak disimpan saat offline agar stok dan kas tetap akurat — sambungkan kembali lalu coba lagi."
-msgstr "needs an internet connection. Nothing is saved offline so stock and cash stay accurate — reconnect and try again."
+msgid "membutuhkan koneksi internet. Data tidak disimpan saat offline agar stok dan kas tetap akurat. Sambungkan kembali lalu coba lagi."
+msgstr "needs an internet connection. Nothing is saved offline so stock and cash stay accurate. Reconnect and try again."
 
 #: templates\core\password_change.html
 msgid "Akun Anda memakai kata sandi sementara. Ganti dulu sebelum melanjutkan."
@@ -4335,8 +4335,8 @@ msgid "kg dihapus"
 msgstr "kg written off"
 
 #: templates\farm\opname.html
-msgid "— sistem"
-msgstr "— system"
+msgid "· sistem"
+msgstr "· system"
 
 #: templates\farm\prices.html
 msgid "Batas menipis (kg)"
@@ -4795,8 +4795,8 @@ msgid "Lokasi saya"
 msgstr "My location"
 
 #: templates\geo\map.html
-msgid "Lokasi tidak dapat diakses — izinkan akses lokasi di browser."
-msgstr "Can't get your location — allow location access in the browser."
+msgid "Lokasi tidak dapat diakses. Izinkan akses lokasi di browser."
+msgstr "Can't get your location. Allow location access in the browser."
 
 #: templates\geo\map.html
 msgid "Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon."
@@ -5170,10 +5170,6 @@ msgstr "· balance"
 msgid "· termin"
 msgstr "· terms"
 
-#: templates\invoicing\buyer_detail.html
-msgid "—"
-msgstr "—"
-
 #: templates\invoicing\buyers.html
 msgid "%(n)s order"
 msgstr "%(n)s orders"
@@ -5355,8 +5351,8 @@ msgid "Termin pembeli: %(t)s hari."
 msgstr "Customer terms: %(t)s days."
 
 #: templates\invoicing\invoice_detail.html
-msgid "Total %(v1)s untuk %(v2)s baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah — hanya dibatalkan."
-msgstr "Total %(v1)s for %(v2)s line items. Stock is deducted FIFO from the oldest lots and the invoice gets its number. Once issued, it can't be edited — only voided."
+msgid "Total %(v1)s untuk %(v2)s baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah, hanya bisa dibatalkan."
+msgstr "Total %(v1)s for %(v2)s line items. Stock is deducted FIFO from the oldest lots and the invoice gets its number. Once issued, it can't be edited, only voided."
 
 #: templates\invoicing\invoice_detail.html
 msgid "Total di atas Rp5.000.000: tempel meterai (atau e-meterai) pada invoice yang diserahkan ke pembeli."
@@ -6550,8 +6546,53 @@ msgstr "by"
 msgid "· kasir"
 msgstr "· cashier"
 
+msgid "-"
+msgstr ""
+
+msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
+msgstr "About %(round)s mm expected — hold off spraying and check drainage."
+
 msgid "Durasi (menit)"
 msgstr "Duration (minutes)"
 
+msgid "Hembusan hingga %(round)s km/j — periksa penyangga dan atap."
+msgstr "Gusts up to %(round)s km/h — check supports and roofs."
+
+msgid "Hujan lebat diperkirakan %(date)s (%(mm)s mm) — tunda penyemprotan & siapkan drainase."
+msgstr "Heavy rain expected %(date)s (%(mm)s mm) — hold off spraying and get drainage ready."
+
+msgid "Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit."
+msgstr "Open fields may need extra irrigation — check water needs in Weather & satellite."
+
+msgid "Lokasi tidak dapat diakses — izinkan akses lokasi di browser."
+msgstr "Can't get your location — allow location access in the browser."
+
+msgid "Lot #%(pk)s — %(product)s — panen %(date)s — sisa %(left)s kg"
+msgstr "Lot #%(pk)s — %(product)s — harvested %(date)s — %(left)s kg left"
+
+msgid "Panen #%(pk)s — %(cycle)s (%(date)s)"
+msgstr "Harvest #%(pk)s — %(cycle)s (%(date)s)"
+
+msgid "Selisih %(diff)s — menunggu tinjauan manajer."
+msgstr "Difference %(diff)s — waiting for a manager's review."
+
+msgid "Semua beres — tidak ada yang perlu ditindaklanjuti."
+msgstr "All clear — nothing needs your attention."
+
+msgid "Total %(v1)s untuk %(v2)s baris produk. Stok dipotong FIFO dari lot terlama dan nomor invoice diberikan. Setelah terbit, invoice tidak bisa diubah — hanya dibatalkan."
+msgstr "Total %(v1)s for %(v2)s line items. Stock is deducted FIFO from the oldest lots and the invoice gets its number. Once issued, it can't be edited — only voided."
+
+msgid "membutuhkan koneksi internet. Data tidak disimpan saat offline agar stok dan kas tetap akurat — sambungkan kembali lalu coba lagi."
+msgstr "needs an internet connection. Nothing is saved offline so stock and cash stay accurate — reconnect and try again."
+
+msgid "—"
+msgstr "—"
+
+msgid "— Tidak ada —"
+msgstr "— None —"
+
 msgid "— pilih —"
 msgstr "Select"
+
+msgid "— sistem"
+msgstr "— system"

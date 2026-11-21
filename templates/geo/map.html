@@ -91,10 +91,10 @@
                 <template x-for="r in (water ? water.rows : [])" :key="r.element">
                   <tr>
                     <td><b x-text="r.element"></b> <span class="app-muted" x-text="r.variety"></span><span x-show="r.covered" class="app-muted"> {% translate "· beratap" %}</span></td>
-                    <td class="num" x-text="r.kc ? fmtNum(r.kc, 2) : '—'"></td>
-                    <td class="num" x-text="r.need_mm ? fmtNum(r.need_mm, 1) + ' mm' : '—'"></td>
-                    <td class="num" x-text="r.deficit_mm ? fmtNum(r.deficit_mm, 1) + ' mm' : '—'"></td>
-                    <td class="num"><b x-text="r.litres ? fmtNum(r.litres, 0) + ' L' : '—'"></b></td>
+                    <td class="num" x-text="r.kc ? fmtNum(r.kc, 2) : '-'"></td>
+                    <td class="num" x-text="r.need_mm ? fmtNum(r.need_mm, 1) + ' mm' : '-'"></td>
+                    <td class="num" x-text="r.deficit_mm ? fmtNum(r.deficit_mm, 1) + ' mm' : '-'"></td>
+                    <td class="num"><b x-text="r.litres ? fmtNum(r.litres, 0) + ' L' : '-'"></b></td>
                   </tr>
                 </template>
                 <tr x-show="water && !water.rows.length"><td colspan="5" class="app-empty-cell app-muted">{% translate "Tidak ada siklus aktif." %}</td></tr>
@@ -116,9 +116,9 @@
           <template x-if="!loading && !dataError && message"><div class="gt-callout" :class="reason === 'NO_IMAGERY' ? '' : 'gt-callout--warning'">{% icon "info" 18 %}<span class="gt-callout__title" x-text="message"></span></div></template>
           <div x-show="!loading && sat" class="app-geo__parts">
             <div class="gt-metrics app-metrics3" x-show="sat && sat.passes.length">
-              <div class="gt-metric"><span class="gt-metric__label">{% translate "NDVI rata-rata" %} {% info_tip _("Kehijauan tanaman, 0–1. Makin tinggi makin rimbun.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndvi ? n3(sat.passes[0].ndvi.mean) : '—'"></span></div>
-              <div class="gt-metric"><span class="gt-metric__label">{% translate "EVI rata-rata" %} {% info_tip _("Seperti NDVI, lebih peka pada tajuk yang rapat.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].evi ? n3(sat.passes[0].evi.mean) : '—'"></span></div>
-              <div class="gt-metric"><span class="gt-metric__label">{% translate "NDWI rata-rata" %} {% info_tip _("Kandungan air daun. Negatif = lebih kering.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndwi ? n3(sat.passes[0].ndwi.mean) : '—'"></span></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "NDVI rata-rata" %} {% info_tip _("Kehijauan tanaman, 0–1. Makin tinggi makin rimbun.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndvi ? n3(sat.passes[0].ndvi.mean) : '-'"></span></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "EVI rata-rata" %} {% info_tip _("Seperti NDVI, lebih peka pada tajuk yang rapat.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].evi ? n3(sat.passes[0].evi.mean) : '-'"></span></div>
+              <div class="gt-metric"><span class="gt-metric__label">{% translate "NDWI rata-rata" %} {% info_tip _("Kandungan air daun. Negatif = lebih kering.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndwi ? n3(sat.passes[0].ndwi.mean) : '-'"></span></div>
             </div>
             <div class="app-ndvi-legend" x-show="showNdvi" role="img" aria-label="{% translate 'Skala NDVI: merah jarang, kuning sedang, hijau rimbun' %}"><span>0</span><i></i><span>1</span>
               <small>{% translate "Jarang" %}</small><small>{% translate "Sedang" %}</small><small>{% translate "Rimbun" %}</small></div>
@@ -128,9 +128,9 @@
                 <thead><tr><th>{% translate "Lintasan" %}</th><th class="num">{% translate "Awan" %}</th><th class="num">{% translate "NDVI min / rata / maks" %}</th><th class="num">{% translate "EVI" %}</th><th class="num">{% translate "NDWI" %}</th></tr></thead>
                 <tbody>
                   <template x-for="p in (sat ? sat.passes : [])" :key="p.dt + p.type">
-                    <tr><td x-text="fmtDate(p.dt) + ' · ' + (p.type || '')"></td><td class="num" x-text="p.cloud != null ? Math.round(p.cloud) + '%' : '—'"></td>
-                      <td class="num" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '—'"></td>
-                      <td class="num" x-text="p.evi ? n3(p.evi.mean) : '—'"></td><td class="num" x-text="p.ndwi ? n3(p.ndwi.mean) : '—'"></td></tr>
+                    <tr><td x-text="fmtDate(p.dt) + ' · ' + (p.type || '')"></td><td class="num" x-text="p.cloud != null ? Math.round(p.cloud) + '%' : '-'"></td>
+                      <td class="num" x-text="p.ndvi ? [p.ndvi.min, p.ndvi.mean, p.ndvi.max].map(n3).join(' / ') : '-'"></td>
+                      <td class="num" x-text="p.evi ? n3(p.evi.mean) : '-'"></td><td class="num" x-text="p.ndwi ? n3(p.ndwi.mean) : '-'"></td></tr>
                   </template>
                 </tbody>
               </table>
@@ -140,9 +140,9 @@
             <h3 class="app-subtitle">{% translate "Tanah" %} {% info_tip _("Perkiraan model Open-Meteo, bukan sensor.") %}</h3>
             <div class="app-soil">
               <div class="gt-metric"><span class="gt-metric__label">{% translate "Suhu tanah" %}</span>
-                <dl class="gt-kv gt-kv--compact"><template x-for="t in (soil ? soil.temperature : [])" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? fmtNum(t.value, 1) + ' °C' : '—'"></dd></div></template></dl></div>
+                <dl class="gt-kv gt-kv--compact"><template x-for="t in (soil ? soil.temperature : [])" :key="t.depth"><div><dt x-text="t.depth"></dt><dd x-text="t.value != null ? fmtNum(t.value, 1) + ' °C' : '-'"></dd></div></template></dl></div>
               <div class="gt-metric"><span class="gt-metric__label">{% translate "Kelembapan tanah" %} {% info_tip _("Persentase volume air di tanah.") %}</span>
-                <dl class="gt-kv gt-kv--compact"><template x-for="m in (soil ? soil.moisture : [])" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? fmtNum(m.value * 100, 1) + '%' : '—'"></dd></div></template></dl></div>
+                <dl class="gt-kv gt-kv--compact"><template x-for="m in (soil ? soil.moisture : [])" :key="m.depth"><div><dt x-text="m.depth"></dt><dd x-text="m.value != null ? fmtNum(m.value * 100, 1) + '%' : '-'"></dd></div></template></dl></div>
             </div>
           </div>
           <p x-show="!loading && !dataError && !soil" class="app-row__meta">{% translate "Data tanah tidak tersedia saat ini." %}</p>
@@ -319,7 +319,7 @@ function geoPage() {
         if (here) map.removeLayer(here);
         here = L.circle(e.latlng, { radius: e.accuracy, color: "#0ea5e9", weight: 1, fillOpacity: 0.15 }).addTo(map);
       });
-      map.on("locationerror", () => { this.fail("{% jt "Lokasi tidak dapat diakses — izinkan akses lokasi di browser." %}"); });
+      map.on("locationerror", () => { this.fail("{% jt "Lokasi tidak dapat diakses. Izinkan akses lokasi di browser." %}"); });
     },
     // Async errors are toasts (forms.js gtToast) so they show where the user is looking, not at the foot of the list.
     fail(msg) { gtToast(msg, "error"); },
@@ -449,8 +449,8 @@ function geoPage() {
                               gtTag: { index: h.length - 1, text: h.length ? "NDVI " + this.fmtNum(h[h.length - 1].mean, 2) : "" } } },
       });
     },
-    fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString(window.GT_LOCALE, { day: "2-digit", month: "short" }) : "—"; },
-    n3(v) { return v == null ? "—" : Number(v).toFixed(3); },
+    fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString(window.GT_LOCALE, { day: "2-digit", month: "short" }) : "-"; },
+    n3(v) { return v == null ? "-" : Number(v).toFixed(3); },
     fmtHa(v) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: 4 }); },
     fmtNum(v, d) { return Number(v).toLocaleString(window.GT_LOCALE, { maximumFractionDigits: d }); },
     // D92: "0,06 ha (614 m²)"

@@ -22,11 +22,11 @@
   <div class="gt-grid app-kpis app-buyer__value" aria-label="{% translate 'Nilai pelanggan' %}">
     {% include "components/kpi.html" with stat=True featured=True label=_("LTGP") value=buyer.ltgp|rupiah tip=_("Lifetime gross profit: laba kotor dari semua invoice terbit pembeli ini. Rumus: Pendapatan − HPP, sepanjang waktu.") %}
     {% include "components/kpi.html" with stat=True label=_("Order") value=buyer.orders tip=_("Jumlah invoice yang sudah terbit (draf dan batal tidak dihitung).") %}
-    {% if cadence.avg_gap_days is not None %}{% blocktranslate asvar gap_v with d=cadence.avg_gap_days|floatformat:0 %}{{ d }} hari{% endblocktranslate %}{% else %}{% translate "—" as gap_v %}{% endif %}
+    {% if cadence.avg_gap_days is not None %}{% blocktranslate asvar gap_v with d=cadence.avg_gap_days|floatformat:0 %}{{ d }} hari{% endblocktranslate %}{% else %}{% translate "Belum ada" as gap_v %}{% endif %}
     {% include "components/kpi.html" with stat=True label=_("Jeda antar order") value=gap_v tip=_("Rata-rata hari di antara dua invoice. Rumus: (order terakhir − order pertama) ÷ (jumlah order − 1). Perlu minimal dua order.") %}
     <div class="gt-stat app-stat">
       <span class="gt-stat__title">{% translate "Order terakhir" %}{% info_tip _("Berisiko: belum order lebih dari 2× jeda biasanya. Saatnya menghubungi pembeli ini.") %}</span>
-      <span class="gt-stat__value">{% if buyer.last_order %}{{ buyer.last_order|date:"SHORT_DATE_FORMAT" }}{% else %}—{% endif %}</span>
+      <span class="gt-stat__value">{% if buyer.last_order %}{{ buyer.last_order|date:"SHORT_DATE_FORMAT" }}{% else %}-{% endif %}</span>
       {% if cadence.days_since_last is not None %}<span class="gt-stat__trend">{% blocktranslate with n=cadence.days_since_last %}{{ n }} hari lalu{% endblocktranslate %}{% if cadence.at_risk %} {% pill _("Berisiko") tone="red" %}{% endif %}</span>{% endif %}
     </div>
   </div>
@@ -56,7 +56,7 @@
     <section class="gt-card" aria-labelledby="h-contact">
       <div class="gt-card__head"><h2 class="gt-card__title" id="h-contact">{% translate "Kontak" %}</h2></div>
       <dl class="gt-kv gt-kv--compact">
-        <div><dt>{% translate "Telepon" %}</dt><dd>{{ buyer.phone|default:"—" }}</dd></div>
+        <div><dt>{% translate "Telepon" %}</dt><dd>{{ buyer.phone|default:"-" }}</dd></div>
         {% if buyer.email %}<div><dt>{% translate "Email" %}</dt><dd>{{ buyer.email }}</dd></div>{% endif %}
         {% if buyer.address %}<div><dt>{% translate "Alamat" %}</dt><dd class="app-pre">{{ buyer.address }}</dd></div>{% endif %}
       </dl>
@@ -82,8 +82,8 @@
           <tr{% if p.voided_at %} class="app-row--void"{% endif %}>
             <td>{{ p.paid_on|date:"SHORT_DATE_FORMAT" }}{% if p.voided_at %}<span class="app-sub">{% pill _("Dibatalkan") tone="gray" %} {% info_tip p.void_reason "Alasan" %}</span>{% endif %}</td>
             <td>{{ p.get_method_display }}{% if p.withholding_slip_no %}<span class="app-sub">{% translate "Bukti potong" %} {{ p.withholding_slip_no }}</span>{% endif %}</td>
-            <td>{{ p.reference|default:"—" }}{% if p.proof %} · <a class="app-link" href="{{ p.proof.url }}">{% translate "bukti" %}</a>{% endif %}</td>
-            <td>{% for a in p.allocations.all %}<span class="app-block"><a class="app-mono app-link--plain" href="{% url 'invoicing:invoice_detail' a.invoice_id %}">{{ a.invoice }}</a> {{ a.amount_idr|rupiah }}</span>{% empty %}<span class="app-muted">—</span>{% endfor %}</td>
+            <td>{{ p.reference|default:"-" }}{% if p.proof %} · <a class="app-link" href="{{ p.proof.url }}">{% translate "bukti" %}</a>{% endif %}</td>
+            <td>{% for a in p.allocations.all %}<span class="app-block"><a class="app-mono app-link--plain" href="{% url 'invoicing:invoice_detail' a.invoice_id %}">{{ a.invoice }}</a> {{ a.amount_idr|rupiah }}</span>{% empty %}<span class="app-muted">-</span>{% endfor %}</td>
             <td class="num"><b>{{ p.amount_idr|rupiah }}</b></td>
             <td class="num">{{ p.unallocated_idr|rupiah }}</td>
             <td class="num">{% if roles.label == 'OWNER' and not p.allocations.all and not p.voided_at %}
@@ -101,8 +101,8 @@
         {% for inv in invoices %}
           <tr>
             <td class="app-mono"><a class="app-link--plain" href="{% url 'invoicing:invoice_detail' inv.pk %}">{{ inv }}</a></td>
-            <td class="app-muted">{{ inv.issue_date|date:"SHORT_DATE_FORMAT"|default:"—" }}</td>
-            <td class="app-muted">{{ inv.due_date|date:"SHORT_DATE_FORMAT"|default:"—" }}</td>
+            <td class="app-muted">{{ inv.issue_date|date:"SHORT_DATE_FORMAT"|default:"-" }}</td>
+            <td class="app-muted">{{ inv.due_date|date:"SHORT_DATE_FORMAT"|default:"-" }}</td>
             <td class="num"><b>{{ inv.total_idr|rupiah }}</b></td>
             <td>{% pill inv.pay_label inv.pill_key %}</td>
           </tr>

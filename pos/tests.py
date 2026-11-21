@@ -178,7 +178,7 @@ class CheckoutTests(PosFixtures):
         with self.assertRaises(ValidationError) as ctx:
             self.sell({self.low.pk: 5, self.high.pk: "150.5"})
         msg = " ".join(ctx.exception.messages)
-        self.assertIn("Melon Golden — Grade A (HIGH)", msg)
+        self.assertIn("Melon Golden · Grade A (HIGH)", msg)
         self.assertIn("tersedia 150 kg", msg)
         self.assertIn("diminta 150,5 kg", msg)
         # Nothing written: the in-stock LOW line was rolled back too.

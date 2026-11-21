@@ -290,7 +290,7 @@ def _parse_weather(data, today=None):
         for i, day in enumerate(daily["time"]):
             code = daily["weather_code"][i]
             row = {
-                "date": day, "code": code, "label": WEATHER_CODES.get(code, "—"),
+                "date": day, "code": code, "label": WEATHER_CODES.get(code, "-"),
                 "tmax": daily["temperature_2m_max"][i], "tmin": daily["temperature_2m_min"][i],
                 "rain_mm": daily["precipitation_sum"][i] or 0, "rain_pct": col("precipitation_probability_max")[i],
                 "et0_mm": col("et0_fao_evapotranspiration")[i], "gust_max": col("wind_gusts_10m_max")[i],
@@ -300,7 +300,7 @@ def _parse_weather(data, today=None):
         current = {
             "temp": cur["temperature_2m"], "humidity": cur.get("relative_humidity_2m"),
             "wind": cur.get("wind_speed_10m"), "rain_mm": cur.get("precipitation"),
-            "code": cur["weather_code"], "label": WEATHER_CODES.get(cur["weather_code"], "—"),
+            "code": cur["weather_code"], "label": WEATHER_CODES.get(cur["weather_code"], "-"),
         }
         hours = _hours(data)
         return {
@@ -311,7 +311,7 @@ def _parse_weather(data, today=None):
             "rain_30d_mm": round(sum(d["rain_mm"] for d in history[-30:]), 1),
             "spray": spray_rating(current, hours[1:1 + SPRAY_LOOKAHEAD_H]),
             "next_good_spray": next((h["time"] for h in hours if h["spray"] == "GOOD"), None),
-            "rain_warning": (_("Hujan lebat diperkirakan %(date)s (%(mm)s mm) — tunda penyemprotan & siapkan drainase.")
+            "rain_warning": (_("Hujan lebat diperkirakan %(date)s (%(mm)s mm). Tunda penyemprotan & siapkan drainase.")
                              % {"date": _id_date(rainy[0]['date']), "mm": rainy[0]['rain_mm']}) if rainy else None,
         }
     except (KeyError, IndexError, TypeError):
@@ -582,16 +582,16 @@ def weather_alerts(weather, has_open_field_cycle: bool):
     when = _id_date(tomorrow["date"])
     if (tomorrow.get("rain_mm") or 0) >= ALERT_RAIN_MM:
         out.append({"kind": "weather_rain", "title": _("Hujan lebat besok (%(when)s)") % {"when": when},
-                    "body": _("Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase.") % {"round": round(tomorrow['rain_mm'])},
+                    "body": _("Diperkirakan %(round)s mm. Tunda penyemprotan, cek drainase.") % {"round": round(tomorrow['rain_mm'])},
                     "date": weather["days"][0]["date"]})
     if (tomorrow.get("gust_max") or 0) >= ALERT_GUST_KMH:
         out.append({"kind": "weather_wind", "title": _("Angin kencang besok (%(when)s)") % {"when": when},
-                    "body": _("Hembusan hingga %(round)s km/j — periksa penyangga dan atap.") % {"round": round(tomorrow['gust_max'])},
+                    "body": _("Hembusan hingga %(round)s km/j. Periksa penyangga dan atap.") % {"round": round(tomorrow['gust_max'])},
                     "date": weather["days"][0]["date"]})
     recent = (weather.get("history") or [])[-ALERT_DRY_DAYS:]
     if has_open_field_cycle and len(recent) == ALERT_DRY_DAYS and all((d.get("rain_mm") or 0) < DRY_DAY_MM for d in recent):
         out.append({"kind": "weather_dry", "title": _("%(ALERT_DRY_DAYS)s hari tanpa hujan") % {"ALERT_DRY_DAYS": ALERT_DRY_DAYS},
-                    "body": _("Lahan terbuka mungkin perlu irigasi tambahan — lihat kebutuhan air di Cuaca & Satelit."),
+                    "body": _("Lahan terbuka mungkin perlu irigasi tambahan. Lihat kebutuhan air di Cuaca & Satelit."),
                     "date": recent[-1]["date"]})
     return out
 

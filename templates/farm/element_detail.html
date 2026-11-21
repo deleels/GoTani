@@ -19,11 +19,11 @@
       <span class="gt-stat__title">{% translate "Siklus aktif" %}</span><span class="gt-stat__arrow" aria-hidden="true">{% icon "arrow" 16 %}</span>
       <span class="gt-stat__value app-stat__money">{{ active_cycle.variety }}</span>
       <span class="gt-stat__trend">{{ active_cycle.get_stage_display }} {% translate "· hari ke-" %}{{ active_cycle.days }}</span></a>
-    {% else %}{% include "components/kpi.html" with stat=True label=_("Siklus aktif") value="—" hint=_("Elemen sedang kosong") %}{% endif %}
+    {% else %}{% include "components/kpi.html" with stat=True label=_("Siklus aktif") value="-" hint=_("Elemen sedang kosong") %}{% endif %}
     {% include "components/kpi.html" with stat=True label=_("Jumlah siklus") value=cycles|length %}
     {% with total=total_kg|kg|add:" kg" %}{% include "components/kpi.html" with stat=True compact=True label=_("Hasil layak jual") value=total %}{% endwith %}
     {% if polygons %}{% with poly=polygons.0 %}{% with a=poly.area_ha|kg|add:" ha" %}{% include "components/kpi.html" with stat=True compact=True label=_("Luas terpetakan") value=a hint=poly.name %}{% endwith %}{% endwith %}
-    {% else %}{% include "components/kpi.html" with stat=True label=_("Luas terpetakan") value="—" tip=_("Gambar poligon di Cuaca & Satelit.") %}{% endif %}
+    {% else %}{% include "components/kpi.html" with stat=True label=_("Luas terpetakan") value="-" tip=_("Gambar poligon di Cuaca & Satelit.") %}{% endif %}
   </div>
 
   {% with poly=polygons.0 %}{% if poly %}{% include "geo/_element_satellite.html" %}{% endif %}{% endwith %}

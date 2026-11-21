@@ -27,7 +27,7 @@
           {% if review.batch_avg_kg %}<div><dt>{% translate "Rata-rata batch sebelumnya" %}</dt><dd>{{ review.batch_avg_kg|kg }} kg</dd></div>{% endif %}
           {% if roles.finance %}
           <div><dt>{% translate "Biaya yang diserap" %}</dt><dd>{{ review.pool_idr|rupiah }} <span class="app-row__meta">({{ review.expenses }} {% translate "biaya)" %}</span></dd></div>
-          <div><dt>{% translate "HPP/kg HIGH · LOW" %}</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}—{% endif %}</dd></div>
+          <div><dt>{% translate "HPP/kg HIGH · LOW" %}</dt><dd>{{ review.unit_cogs_high|rupiah }} · {% if review.low_kg %}{{ review.unit_cogs_low|rupiah }}{% else %}-{% endif %}</dd></div>
           {% endif %}
         </dl>
         {% for w in review.warnings %}<div class="gt-callout gt-callout--warning gt-callout--raised">{% icon "alert" 18 %}<div><span class="gt-callout__title">{{ w }}</span></div></div>{% endfor %}

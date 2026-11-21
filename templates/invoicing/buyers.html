@@ -34,10 +34,10 @@
         {% for b in page.object_list %}
           <tr>
             <td><a href="{% url 'invoicing:buyer_detail' b.pk %}" class="app-link--plain"><b>{{ b.name }}</b></a>{% if b.company %}<span class="app-sub">{{ b.company }}</span>{% endif %}</td>
-            <td class="app-muted">{{ b.phone|default:"—" }}{% if b.email %}<span class="app-sub">{{ b.email }}</span>{% endif %}</td>
+            <td class="app-muted">{{ b.phone|default:"-" }}{% if b.email %}<span class="app-sub">{{ b.email }}</span>{% endif %}</td>
             <td>{% if b.payment_terms_days %}{{ b.payment_terms_days }} {% translate "hari" %}{% else %}{% translate "Saat diterima" %}{% endif %}</td>
             <td class="num"><b>{{ b.ltgp|rupiah }}</b><span class="app-sub">{% blocktranslate with n=b.orders %}{{ n }} order{% endblocktranslate %}</span></td>
-            <td>{% if b.last_order %}{{ b.last_order|date:"SHORT_DATE_FORMAT" }}{% if b.cadence.at_risk %} {% pill _("Berisiko") tone="red" %}{% endif %}{% else %}<span class="app-muted">—</span>{% endif %}</td>
+            <td>{% if b.last_order %}{{ b.last_order|date:"SHORT_DATE_FORMAT" }}{% if b.cadence.at_risk %} {% pill _("Berisiko") tone="red" %}{% endif %}{% else %}<span class="app-muted">-</span>{% endif %}</td>
             <td class="num">{{ b.outstanding|rupiah }}</td>
             <td class="num {% if b.credit %}app-value--positive{% endif %}">{{ b.credit|rupiah }}</td>
           </tr>

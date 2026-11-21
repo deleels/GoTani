@@ -181,7 +181,7 @@ class Command(BaseCommand):
         self._seed_profile_and_map()
 
         if HarvestBatch.objects.exists() or SaleOrder.objects.exists():
-            self.stdout.write("Riwayat operasional sudah ada — dilewati (idempoten).")
+            self.stdout.write("Riwayat operasional sudah ada, dilewati (idempoten).")
         else:
             if CropCycle.objects.exists():
                 raise CommandError(

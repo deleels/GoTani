@@ -90,7 +90,7 @@
     {% icon "alert" 18 %}
     <div>
       <h2 class="gt-callout__title" id="h-low">{% translate "Stok input menipis" %}</h2>
-      {% for i in low_stock %}<a href="{% url 'farm:input_detail' i.pk %}" class="app-notice__row">{{ i.name }} — {{ i.stock_qty|kg }} {{ i.unit }}</a>{% endfor %}
+      {% for i in low_stock %}<a href="{% url 'farm:input_detail' i.pk %}" class="app-notice__row">{{ i.name }} · {{ i.stock_qty|kg }} {{ i.unit }}</a>{% endfor %}
     </div>
   </section>
   {% endif %}

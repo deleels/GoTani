@@ -149,12 +149,12 @@ def forward_csv_rows(trace: ForwardTrace):
     c = trace.cycle
     yield FORWARD_CSV_HEADER
     yield ["SIKLUS", c.planting_start_date.isoformat(), f"CYC-{c.pk}",
-           f"{c.variety} @ {c.element} ({c.element.get_element_type_display()}) — tahap {c.get_stage_display()}", "", ""]
+           f"{c.variety} @ {c.element} ({c.element.get_element_type_display()}) · tahap {c.get_stage_display()}", "", ""]
     for a in trace.activities:
         cost = sum((e.amount_idr for e in a.usage_expenses.all()), ZERO)
         desc = a.get_activity_type_display()
         if a.input_item:
-            desc += f" — {a.input_item.name}"
+            desc += f" · {a.input_item.name}"
         yield ["KEGIATAN", _local(a.logged_at).isoformat(timespec="minutes"), f"ACT-{a.pk}",
                f"{desc} ({a.get_stage_at_activity_display()})", f"{a.quantity} {a.unit}".strip() if a.input_item else "",
                cost or ""]
@@ -162,14 +162,14 @@ def forward_csv_rows(trace: ForwardTrace):
         b = bt.batch
         for e in bt.expenses:
             yield ["BIAYA_TERSERAP", e.date_incurred.isoformat(), f"HB-{b.pk}",
-                   f"{e.category} — {e.narration or e.vendor or e.get_source_display()}", "", e.amount_idr]
+                   f"{e.category} · {e.narration or e.vendor or e.get_source_display()}", "", e.amount_idr]
         yield ["PANEN", _local(b.harvested_at).isoformat(timespec="minutes"), f"HB-{b.pk}",
                f"HIGH {b.high_quality_kg} kg @ {b.unit_cogs_high_idr}; LOW {b.low_quality_kg} kg @ {b.unit_cogs_low_idr}; susut {b.harvest_loss_kg} kg",
                b.high_quality_kg + b.low_quality_kg, b.absorbed_cost_idr]
         for lt in bt.lots:
             lot = lt.lot
             yield ["LOT", _local(lot.harvested_at).date().isoformat(), f"LOT-{lot.pk}",
-                   f"{lot.product} — HPP/kg {lot.unit_cogs_idr}; sisa {lot.qty_remaining_kg} kg", lot.qty_initial_kg, ""]
+                   f"{lot.product} · HPP/kg {lot.unit_cogs_idr}; sisa {lot.qty_remaining_kg} kg", lot.qty_initial_kg, ""]
             for s in lt.spoilages:
                 yield ["SUSUT", _local(s.recorded_at).isoformat(timespec="minutes"), f"LOT-{lot.pk}",
                        f"{s.get_reason_display()} {s.notes}".strip(), -s.qty_kg, s.loss_idr]
@@ -179,16 +179,16 @@ def forward_csv_rows(trace: ForwardTrace):
             for a in lt.invoice_allocations:
                 invoice = a.line.invoice
                 yield ["INVOICE", invoice.issue_date.isoformat() if invoice.issue_date else "", invoice.number or "",
-                       f"{invoice.buyer} @ {a.line.unit_price_idr}/kg — {invoice.get_status_display()}",
+                       f"{invoice.buyer} @ {a.line.unit_price_idr}/kg · {invoice.get_status_display()}",
                        -a.qty_kg, _money(a.qty_kg * a.line.unit_price_idr)]
             for a in lt.allocations:
                 order = a.line.order
                 yield ["PENJUALAN", _local(order.created_at).isoformat(timespec="minutes"), order.order_number,
-                       f"{a.line.product} @ {a.line.unit_price_idr}/kg — {order.get_status_display()}",
+                       f"{a.line.product} @ {a.line.unit_price_idr}/kg · {order.get_status_display()}",
                        -a.qty_kg, _money(a.qty_kg * a.line.unit_price_idr)]
     for e in trace.unabsorbed_expenses:
         yield ["BIAYA_TAK_TERSERAP", e.date_incurred.isoformat(), f"EXP-{e.pk}",
-               f"{e.category} — {e.narration or e.vendor or e.get_source_display()}", "", e.amount_idr]
+               f"{e.category} · {e.narration or e.vendor or e.get_source_display()}", "", e.amount_idr]
 
 
 # ---------------------------------------------------------------------------

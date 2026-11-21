@@ -1,4 +1,4 @@
-{% load ui i18n %}{# Phase 7: Django messages are toasts (bottom right). Success/info fade out after 5 s (forms.js); warnings and errors stay until closed. #}
+{% load ui i18n %}{# Phase 7: Django messages are toasts (bottom right). Every toast fades out on its own (forms.js, D122): success/info after 5 s, warnings/errors after 7 s, paused on hover. #}
 <div id="gt-toasts" class="app-toasts no-print" role="status" aria-live="polite">
   {% for message in messages %}
   {% with tone=message.tags|default:"info" %}

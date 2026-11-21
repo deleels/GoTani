@@ -260,7 +260,7 @@ class HarvestForm(StyledForm):
 class LotChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, lot):
         return (
-            _("Lot #%(pk)s — %(product)s — panen %(date)s — sisa %(left)s kg") % {
+            _("Lot #%(pk)s · %(product)s · panen %(date)s · sisa %(left)s kg") % {
                 "pk": lot.pk, "product": lot.product, "date": f"{timezone.localtime(lot.harvested_at):%d-%m-%Y}",
                 "left": f"{lot.qty_remaining_kg.normalize():f}"}
         )

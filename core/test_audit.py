@@ -65,7 +65,7 @@ class AuditLogTests(TestCase):
         self.client.force_login(self.owner)
         resp = self.client.get(url, {"action": "PRICE_CHANGE"})
         self.assertContains(resp, "Harga Melon")
-        self.assertContains(resp, "— → 20.000")
+        self.assertContains(resp, "- → 20.000")
         self.assertNotContains(self.client.get(url, {"q": "zzz"}), "Harga Melon")
         for role, status in ((ROLE_MANAGER, 200), (ROLE_CASHIER, 403)):
             user = get_user_model().objects.create_user(role.lower(), password="x")

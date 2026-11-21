@@ -244,9 +244,14 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   Esc, type-ahead). Phones and tablets (coarse pointer) keep the native select, whose OS picker is better there;
   `select[multiple]`, the date picker's month list and `[data-native]` stay native too. Empty first options are
   no longer blank (supersedes the Phase 7 blank option and D108's "— pilih —"): a required select starts on a
-  prompt naming what to pick ("Pilih siklus…"), hidden from the list; an optional one offers "— Tidak ada —".
+  prompt naming what to pick ("Pilih siklus…"), hidden from the list; an optional one offers "Tidak ada" (D122).
   Password fields get `{% pw_toggle %}`: eye while hidden, eye-off with a pressed green-100 state while shown.
   A fixed unit is a suffix inside the field (`.app-unit[data-unit]`: kg, m², menit; "Rp" stays the `.app-money`
   prefix); a quantity in an input item's own unit follows the chosen item (`data-unit-from`, no conversion);
   a choosable unit (irrigation volume) is a compact select joined to the number (`.app-joined`). Async errors on
   the map (location, save) are toasts (`gtToast`) instead of a line at the foot of the polygon list.
+- **D122 No em dashes in UI text; toasts always leave on their own (user preference, 2026-11-21).** Screen, print,
+  CSV and message text never uses "—": sentences use a full stop, comma or colon; name parts are joined with " · "
+  (`Melon Golden · Grade A (HIGH)`, `Lot #3 · … · sisa 12 kg`); an empty value shows "-"; the empty select choice
+  reads "Tidak ada" / "None". Applies to both languages. Every toast fades out by itself: success/info after 5 s,
+  warnings/errors after 7 s; the countdown pauses while the pointer or focus is on it, and × still closes it at once.

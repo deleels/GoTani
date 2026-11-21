@@ -35,8 +35,8 @@
         <tr>
           <td class="app-mono"><a class="app-link--plain" href="{% url 'invoicing:invoice_detail' inv.pk %}">{{ inv }}</a></td>
           <td :class="hidden('Pembeli')">{{ inv.buyer }}</td>
-          <td class="app-muted" :class="hidden('Terbit')">{{ inv.issue_date|date:"SHORT_DATE_FORMAT"|default:"—" }}</td>
-          <td class="app-muted" :class="hidden('Jatuh tempo')">{{ inv.due_date|date:"SHORT_DATE_FORMAT"|default:"—" }}</td>
+          <td class="app-muted" :class="hidden('Terbit')">{{ inv.issue_date|date:"SHORT_DATE_FORMAT"|default:"-" }}</td>
+          <td class="app-muted" :class="hidden('Jatuh tempo')">{{ inv.due_date|date:"SHORT_DATE_FORMAT"|default:"-" }}</td>
           <td class="num" :class="hidden('Total')"><b>{{ inv.total_idr|rupiah }}</b></td>
           <td>{% pill inv.pay_label inv.pill_key %}</td>
           <td class="num">
