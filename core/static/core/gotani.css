@@ -975,3 +975,10 @@ html { scrollbar-gutter: stable; }
 
 /* D135: first-harvest cost skew note */
 .app-text-warn { display: block; font-size: .8125rem; color: var(--warning-ink); }
+
+/* D136: report search, harvest call to action, variety notes */
+.app-searchrow--sm { flex: 1 1 16rem; max-width: 24rem; }
+.app-searchrow--sm .app-field { height: 36px; }
+.app-cta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.app-cta p { margin-top: .25rem; }
+.app-prewrap { white-space: pre-line; }

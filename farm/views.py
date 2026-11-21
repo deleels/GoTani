@@ -79,7 +79,7 @@ class CyclesView(FarmPage):
     def perform(self, form):
         d = form.cleaned_data
         return services.start_cycle(
-            d["element"], d["variety"], d["planting_start_date"], planted_qty=d["planted_qty"],
+            d["element"], d["variety"], d["planting_start_date"], planted_qty=d["planted_qty"], planted_unit=d.get("planted_unit") or "PLANT",
             expected_harvest_date=d["expected_harvest_date"], expected_yield_kg=d["expected_yield_kg"],
         )
 
@@ -173,7 +173,8 @@ class VarietyFormView(FarmPage):
 
     def get_initial(self):
         v = self.variety
-        return {"name": v.name, "crop": v.crop, "days_to_harvest": v.days_to_harvest, "kc": v.kc} if v else {}
+        return ({"name": v.name, "crop": v.crop, "days_to_harvest": v.days_to_harvest, "kc": v.kc, "notes": v.notes}
+                if v else {})
 
     def get_success_url(self):
         return safe_next(self.request, reverse("farm:cycles"))
@@ -191,7 +192,7 @@ class VarietyFormView(FarmPage):
     def perform(self, form):
         d = form.cleaned_data
         return services.save_variety(self.variety, name=d["name"], crop=d["crop"], days_to_harvest=d["days_to_harvest"],
-                                     kc=d["kc"], user=self.request.user)
+                                     kc=d["kc"], notes=d.get("notes") or "", user=self.request.user)
 
 
 class ElementToggleView(ActionView):
@@ -363,9 +364,15 @@ class ActivitiesView(FarmPage):
             "susut": SpoilageRecord.objects.filter(recorded_at__gte=week_ago).count(),
             **{k: counts.get(t, 0) for k, t in TAB_TYPES.items()},
         }
+        q = (self.request.GET.get("q") or "").strip()
+        ctx["q"] = q
         if tab in TAB_TYPES:
             qs = ActivityLog.objects.filter(activity_type=TAB_TYPES[tab]).select_related(
                 "cycle__element", "cycle__variety", "input_item", "recorded_by")
+            if q:  # D136: element, cycle (variety), input, notes, task
+                qs = qs.filter(Q(cycle__element__name__icontains=q) | Q(cycle__variety__name__icontains=q)
+                               | Q(input_item__name__icontains=q) | Q(notes__icontains=q)
+                               | Q(task_name__icontains=q) | Q(application_method__icontains=q))
         elif tab == "prapanen":
             qs = PreHarvestCheck.objects.select_related("cycle__element", "cycle__variety", "recorded_by").prefetch_related("checked_items", "failed_items")
             ctx["preharvest_form"] = PreHarvestForm()
@@ -955,7 +962,7 @@ class ElementDetailView(FarmPage):
     def perform(self, form):
         d = form.cleaned_data
         return services.start_cycle(
-            self.element, d["variety"], d["planting_start_date"], planted_qty=d["planted_qty"],
+            self.element, d["variety"], d["planting_start_date"], planted_qty=d["planted_qty"], planted_unit=d.get("planted_unit") or "PLANT",
             expected_harvest_date=d["expected_harvest_date"], expected_yield_kg=d["expected_yield_kg"],
         )
 

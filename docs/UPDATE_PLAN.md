@@ -111,7 +111,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
   panen pertama" when a cycle has one harvest batch, or its first batch absorbed more than 60% of the
   cycle's absorbed cost. Warning only; COGS math unchanged.
 
-## 14. UX bundle (D136)
+## 14. UX bundle (D136) ✅
 - `Variety.notes` shown as a card on the cycle page.
 - `CropCycle.planted_unit` label (tanaman / tray / polybag / lubang); count stays an integer, no conversion.
 - "Telusuri" button on Laporan Kerja.

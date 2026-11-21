@@ -52,6 +52,7 @@ class Variety(models.Model):
                              validators=[MinValueValidator(Decimal("0.1")), MaxValueValidator(Decimal("2"))],
                              help_text=_l("Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."))
     days_to_harvest = models.PositiveIntegerField(_l("umur panen (hari)"), null=True, blank=True)
+    notes = models.TextField(_l("catatan budidaya"), blank=True)  # D136: shown on the cycle page
 
     class Meta:
         ordering = ["name"]
@@ -111,6 +112,15 @@ class CropCycle(models.Model):
     planting_start_date = models.DateField(_l("tanggal mulai tanam"))
     # Plant count — the one deliberate non-kg quantity (D60).
     planted_qty = models.PositiveIntegerField(_l("jumlah tanaman"), null=True, blank=True)
+
+    class PlantedUnit(models.TextChoices):  # D136: a label for the count; no conversion
+        PLANT = "PLANT", _l("tanaman")
+        TRAY = "TRAY", _l("tray")
+        POLYBAG = "POLYBAG", _l("polybag")
+        HOLE = "HOLE", _l("lubang")
+
+    planted_unit = models.CharField(_l("satuan tanam"), max_length=10, choices=PlantedUnit.choices,
+                                    default=PlantedUnit.PLANT)
     expected_harvest_date = models.DateField(_l("perkiraan panen"), null=True, blank=True)
     expected_yield_kg = models.DecimalField(_l("perkiraan hasil (kg)"), null=True, blank=True, **QTY)
     is_active = models.BooleanField(_l("aktif"), default=True)

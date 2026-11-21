@@ -135,6 +135,10 @@ class VarietyForm(StyledForm):
         super().__init__(*args, **kwargs)
         self.fields["kc"].widget.unit = None
 
+    notes = forms.CharField(label=_l("Catatan budidaya (opsional)"), required=False,
+                            widget=forms.Textarea(attrs={"rows": 3}),
+                            help_text=_l("Jarak tanam, pupuk dasar, hama yang sering muncul. Tampil di halaman siklus."))
+
 
 class StartCycleForm(StyledForm):
     element = forms.ModelChoiceField(label=_l("Elemen"), queryset=FarmElement.objects.none())
@@ -144,6 +148,8 @@ class StartCycleForm(StyledForm):
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     planted_qty = forms.IntegerField(label=_l("Jumlah tanaman"), min_value=1, required=False)
+    planted_unit = forms.ChoiceField(label=_l("Satuan"), choices=CropCycle.PlantedUnit.choices,
+                                     initial=CropCycle.PlantedUnit.PLANT, required=False)
     expected_harvest_date = forms.DateField(
         label=_l("Perkiraan panen"), required=False, widget=forms.DateInput(attrs={"type": "date"}),
         help_text=_l("Kosongkan untuk memakai umur panen varietas."),
@@ -152,6 +158,7 @@ class StartCycleForm(StyledForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        join_unit(self, "planted_qty", "planted_unit")
         self.fields["element"].queryset = FarmElement.objects.filter(is_active=True).exclude(
             cycles__is_active=True
         )

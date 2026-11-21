@@ -24,6 +24,22 @@
     </div>
   </div>
 
+  {% if cycle.is_active and cycle.stage == "HARVESTING" %}
+  {# D136: at HARVESTING the next job is the harvest itself. #}
+  <section class="gt-card app-section app-cta" aria-labelledby="h-harvest-cta">
+    <div><h2 class="gt-card__title" id="h-harvest-cta">{% translate "Siklus siap dipanen" %}</h2>
+      <p>{% translate "Catat hasil grade A dan B; setiap grade menjadi lot stok." %}</p></div>
+    <a href="{% url 'farm:harvests' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--primary gt-btn--md">{% translate "Catat Panen" %}</a>
+  </section>
+  {% endif %}
+  {% if cycle.variety.notes %}
+  <section class="gt-card app-section" aria-labelledby="h-variety-notes">
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-variety-notes">{% blocktranslate with name=cycle.variety.name %}Catatan budidaya {{ name }}{% endblocktranslate %}</h2>
+      {% if roles.finance %}<a href="{% url 'farm:variety_edit' cycle.variety_id %}?next={{ request.path|urlencode }}" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Ubah" %}</a>{% endif %}</div>
+    <p class="app-prewrap">{{ cycle.variety.notes }}</p>
+  </section>
+  {% endif %}
+
   {# Stage track: done green, current dark, still-to-come hatched ("not yet"). #}
   <section class="gt-card app-section" aria-labelledby="h-stage">
     <div class="gt-card__head"><div class="app-stagehead"><h2 class="app-stagehead__label" id="h-stage">{% translate "Tahap sekarang" %}</h2><span class="app-stagehead__value">{% if cycle.is_active %}{{ cycle.get_stage_display }}{% else %}{% translate "Ditutup" %}{% endif %}</span></div></div>
@@ -45,7 +61,7 @@
         {% if ys.pct is not None %}<span class="gt-seg app-yield" aria-hidden="true"><i class="ok" style="flex: 0 0 {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></i><i class="todo"></i></span>
         <span class="gt-metric__note">{{ ys.pct|pct }} {% translate "dari" %} {{ ys.expected_kg|kg }} kg</span>{% elif ys.expected_kg %}<span class="gt-metric__note">{% translate "dari" %} {{ ys.expected_kg|kg }} kg</span>{% endif %}</div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Jumlah tanaman" %}</span>
-        <span class="gt-metric__value">{{ cycle.planted_qty|default:"-" }}</span>
+        <span class="gt-metric__value">{% if cycle.planted_qty %}{{ cycle.planted_qty }} <small>{{ cycle.get_planted_unit_display }}</small>{% else %}-{% endif %}</span>
         {% if ys.per_plant_kg is not None %}<span class="gt-metric__note">{{ ys.per_plant_kg|kg }} {% translate "kg per tanaman" %}</span>{% endif %}</div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Cek pra-panen" %}</span>
         {% if latest_check %}<span class="gt-metric__value {% if latest_check.completed_pct < 100 %}app-value--late{% else %}app-value--positive{% endif %}">{{ latest_check.completed_pct|pct:0 }}</span><span class="gt-metric__note">{{ latest_check.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</span>

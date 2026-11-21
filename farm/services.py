@@ -117,7 +117,7 @@ def create_input_item(*, name: str, item_type: str, unit: str, min_alert_qty=0, 
 
 
 def save_variety(variety: Variety | None, *, name: str, crop: str, days_to_harvest=None, kc=None,
-                 user=None) -> Variety:
+                 user=None, notes=None) -> Variety:
     """Create or fix a variety in the app (D124). Existing cycles keep their own expected dates."""
     from core.audit import log_event
 
@@ -129,10 +129,12 @@ def save_variety(variety: Variety | None, *, name: str, crop: str, days_to_harve
         clash = clash.exclude(pk=variety.pk)
     if clash.exists():
         raise ValidationError(_("Nama varietas sudah dipakai."))
-    fields = ("name", "crop", "days_to_harvest", "kc")
+    fields = ("name", "crop", "days_to_harvest", "kc", "notes")
     before = {f: getattr(variety, f) for f in fields} if variety else {}
     variety = variety or Variety()
     variety.name, variety.crop, variety.days_to_harvest, variety.kc = name, crop, days_to_harvest, kc
+    if notes is not None:
+        variety.notes = notes.strip()
     variety.full_clean()
     variety.save()
     if before:
@@ -144,7 +146,7 @@ def save_variety(variety: Variety | None, *, name: str, crop: str, days_to_harve
 
 
 @transaction.atomic
-def start_cycle(element: FarmElement, variety: Variety, planting_start_date, *, planted_qty=None,
+def start_cycle(element: FarmElement, variety: Variety, planting_start_date, *, planted_qty=None, planted_unit="PLANT",
                 expected_harvest_date=None, expected_yield_kg=None) -> CropCycle:
     element = FarmElement.objects.select_for_update().get(pk=element.pk)
     if not element.is_active:
@@ -153,7 +155,10 @@ def start_cycle(element: FarmElement, variety: Variety, planting_start_date, *, 
         raise ValidationError(_("Elemen %(name)s sudah memiliki siklus tanam aktif.") % {"name": element.name})
     if expected_harvest_date is None and variety.days_to_harvest:
         expected_harvest_date = planting_start_date + timedelta(days=variety.days_to_harvest)  # rule 13
-    cycle = CropCycle(element=element, variety=variety, planting_start_date=planting_start_date)
+    if planted_unit not in CropCycle.PlantedUnit.values:
+        raise ValidationError(_("Satuan tanam tidak dikenal."))
+    cycle = CropCycle(element=element, variety=variety, planting_start_date=planting_start_date,
+                      planted_unit=planted_unit)
     _set_estimates(cycle, planted_qty, expected_harvest_date, expected_yield_kg)
     cycle.save()
     return cycle

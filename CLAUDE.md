@@ -27,9 +27,9 @@ An engineering programming class project modeling end-to-end agricultural produc
 - `AuditLog` (append-only, D82): `actor`, `action`, `target_type`, `target_id`, `summary`, `before`/`after` (JSON), `reason`, `created_at` — written only via `core.audit.log_event()`; price, kasir step and PKP changes are logged.
 
 ### 1. `farm` (Upstream Production)
-- `Variety`: `name` (unique, e.g., Melon Golden, Cabai Rawit, Kakao Forastero), `crop`, `days_to_harvest` (nullable positive int), `kc` (nullable Decimal 0.1–2, FAO crop coefficient for water need — D91)
+- `Variety`: `name` (unique, e.g., Melon Golden, Cabai Rawit, Kakao Forastero), `crop`, `days_to_harvest` (nullable positive int), `kc` (nullable Decimal 0.1–2, FAO crop coefficient for water need — D91), `notes` (growing notes shown on the cycle page, D136)
 - `FarmElement`: `name`, `element_type` (GREENHOUSE / OPEN_FIELD / HYDROPONIC / SCREEN_HOUSE / SHADENET), `area_m2`, `is_active`
-- `CropCycle`: `element` (FK), `variety` (FK Variety), `stage` (PLANTING / SPROUTING / TRANSPLANTING / VEGETATIVE / FLOWERING / FRUITING / HARVESTING / CLEARING), `planting_start_date`, `planted_qty` (nullable positive int, plant count), `expected_harvest_date` (nullable; defaults to start + `variety.days_to_harvest`), `expected_yield_kg` (nullable Decimal), `is_active`, `closed_at` (nullable)
+- `CropCycle`: `element` (FK), `variety` (FK Variety), `stage` (PLANTING / SPROUTING / TRANSPLANTING / VEGETATIVE / FLOWERING / FRUITING / HARVESTING / CLEARING), `planting_start_date`, `planted_qty` (nullable positive int, plant count), `planted_unit` (PLANT / TRAY / POLYBAG / HOLE label, no conversion, D136), `expected_harvest_date` (nullable; defaults to start + `variety.days_to_harvest`), `expected_yield_kg` (nullable Decimal), `is_active`, `closed_at` (nullable)
   - Constraint: `UniqueConstraint(fields=["element"], condition=Q(is_active=True))` — at most one active cycle per element.
 - `InputItem`: `name`, `item_type` (FERTILIZER / PESTICIDE / SEED), `unit`, `stock_qty` (Decimal), `avg_cost_per_unit_idr` (Decimal), `min_alert_qty` (Decimal)
   - Constraint: `CheckConstraint(stock_qty >= 0)`

@@ -827,6 +827,10 @@ msgid "Bukti (opsional)"
 msgstr "Receipt (optional)"
 
 #: farm\forms.py
+msgid "Catatan budidaya (opsional)"
+msgstr "Growing notes (optional)"
+
+#: farm\forms.py
 msgid "Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."
 msgstr "E.g. chilli 1.05 · melon 1.0 · cocoa 1.0 (FAO-56, mid-season)."
 
@@ -869,6 +873,10 @@ msgstr "Input (optional)"
 #: farm\forms.py
 msgid "Isi jumlah untuk %(cycle)s."
 msgstr "Fill in the quantity for %(cycle)s."
+
+#: farm\forms.py
+msgid "Jarak tanam, pupuk dasar, hama yang sering muncul. Tampil di halaman siklus."
+msgstr "Plant spacing, base fertilizer, common pests. Shown on the cycle page."
 
 #: farm\forms.py
 msgid "Jawab Ya atau Tidak."
@@ -1215,6 +1223,10 @@ msgid "catatan"
 msgstr "notes"
 
 #: farm\models.py
+msgid "catatan budidaya"
+msgstr "growing notes"
+
+#: farm\models.py
 msgid "cek pra-panen"
 msgstr "pre-harvest check"
 
@@ -1351,6 +1363,10 @@ msgid "luas (m²)"
 msgstr "area (m²)"
 
 #: farm\models.py
+msgid "lubang"
+msgstr "hole"
+
+#: farm\models.py
 msgid "metode aplikasi"
 msgstr "application method"
 
@@ -1387,12 +1403,20 @@ msgid "persen selesai"
 msgstr "percent complete"
 
 #: farm\models.py
+msgid "polybag"
+msgstr "polybag"
+
+#: farm\models.py
 msgid "referensi"
 msgstr "reference"
 
 #: farm\models.py
 msgid "satuan"
 msgstr "unit"
+
+#: farm\models.py
+msgid "satuan tanam"
+msgstr "planting unit"
 
 #: farm\models.py
 msgid "siklus"
@@ -1441,6 +1465,10 @@ msgstr "finding"
 #: farm\models.py
 msgid "tingkat"
 msgstr "severity"
+
+#: farm\models.py
+msgid "tray"
+msgstr "tray"
 
 #: farm\models.py
 msgid "umur panen (hari)"
@@ -1761,6 +1789,10 @@ msgstr "A line can only be answered Yes or No."
 #: farm\services.py
 msgid "Satuan kegiatan (%(v)s) harus sama dengan satuan input (%(unit)s)."
 msgstr "The activity unit (%(v)s) must match the input unit (%(unit)s)."
+
+#: farm\services.py
+msgid "Satuan tanam tidak dikenal."
+msgstr "Unknown planting unit."
 
 #: farm\services.py
 msgid "Setiap siklus hanya boleh muncul sekali."
@@ -3967,6 +3999,14 @@ msgid "Butir terpenuhi"
 msgstr "Items met"
 
 #: templates\farm\activities.html
+msgid "Cari elemen, siklus, input, catatan"
+msgstr "Search element, cycle, input, notes"
+
+#: templates\farm\activities.html
+msgid "Cari laporan"
+msgstr "Search reports"
+
+#: templates\farm\activities.html
 msgid "Catat pekerjaan lapangan hari ini: pemupukan, penyemprotan, irigasi, pengamatan, panen, dan susut."
 msgstr "Log today's field work: fertilising, spraying, irrigation, scouting, harvest and spoilage."
 
@@ -4075,6 +4115,10 @@ msgid "Tahap"
 msgstr "Stage"
 
 #: templates\farm\activities.html
+msgid "Telusuri"
+msgstr "Trace"
+
+#: templates\farm\activities.html
 msgid "Temuan"
 msgstr "Finding"
 
@@ -4121,6 +4165,18 @@ msgstr "Absorbed cost"
 #: templates\farm\cycle_detail.html
 msgid "Biaya yang sudah masuk ke HPP panen."
 msgstr "Costs already included in harvest COGS."
+
+#: templates\farm\cycle_detail.html
+msgid "Catat Panen"
+msgstr "Record harvest"
+
+#: templates\farm\cycle_detail.html
+msgid "Catat hasil grade A dan B; setiap grade menjadi lot stok."
+msgstr "Record the grade A and B yield; each grade becomes a stock lot."
+
+#: templates\farm\cycle_detail.html
+msgid "Catatan budidaya %(name)s"
+msgstr "Growing notes for %(name)s"
 
 #: templates\farm\cycle_detail.html
 msgid "Cek pra-panen"
@@ -4175,12 +4231,12 @@ msgid "Ringkas"
 msgstr "Summary"
 
 #: templates\farm\cycle_detail.html
-msgid "Tahap sekarang"
-msgstr "Current stage"
+msgid "Siklus siap dipanen"
+msgstr "Cycle ready to harvest"
 
 #: templates\farm\cycle_detail.html
-msgid "Telusuri"
-msgstr "Trace"
+msgid "Tahap sekarang"
+msgstr "Current stage"
 
 #: templates\farm\cycle_detail.html
 msgid "Ubah perkiraan siklus"

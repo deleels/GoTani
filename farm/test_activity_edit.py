@@ -96,3 +96,27 @@ class FirstHarvestSkewTests(TestCase):
         batch(500)
         self.assertFalse(services.first_harvest_skewed(cycle))  # 1000 of 2000 = 50%
         self.assertEqual(services.first_harvest_skewed_varieties(), set())
+
+
+class UxBundleTests(TestCase):
+    """D136: variety notes, planted unit, Catat Panen card, report search, Telusuri button."""
+
+    def test_cycle_page_and_search(self):
+        owner = make_user("o", ROLE_OWNER)
+        v = services.save_variety(None, name="Melon", crop="Melon", notes="Jarak tanam 50 cm")
+        el = FarmElement.objects.create(name="GH Timur", element_type="GREENHOUSE", area_m2=10)
+        cycle = services.start_cycle(el, v, timezone.localdate(), planted_qty=40, planted_unit="POLYBAG")
+        self.client.force_login(owner)
+        page = self.client.get(reverse("farm:cycle_detail", args=[cycle.pk]))
+        self.assertContains(page, "Jarak tanam 50 cm")
+        self.assertContains(page, "polybag")
+        self.assertNotContains(page, "Catat Panen")
+        cycle.stage = "HARVESTING"
+        cycle.save()
+        self.assertContains(self.client.get(reverse("farm:cycle_detail", args=[cycle.pk])), "Catat Panen")
+        services.log_activity(cycle, "OTHER", task_name="Penyiangan")
+        services.log_activity(cycle, "OTHER", task_name="Pemangkasan")
+        url = reverse("farm:activities")
+        r = self.client.get(url, {"tab": "lainnya", "q": "mangkas"})
+        self.assertEqual([a.task_name for a in r.context["activities"]], ["Pemangkasan"])
+        self.assertContains(r, reverse("reports:trace_index"))

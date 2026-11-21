@@ -28,6 +28,8 @@
   <div class="gt-card">
     <div class="app-toolbar">
       {% include "components/tabs.html" with tab=report_tab %}
+      {% if report_tab in multi_tabs %}<form method="get" class="app-searchrow app-searchrow--sm" role="search"><input type="hidden" name="tab" value="{{ report_tab }}"><input type="search" name="q" value="{{ q }}" class="app-field" placeholder="{% translate "Cari elemen, siklus, input, catatan" %}" aria-label="{% translate "Cari laporan" %}"><button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Cari" %}</button></form>{% elif report_tab == "scouting" %}<form method="get" class="app-searchrow app-searchrow--sm" role="search"><input type="hidden" name="tab" value="{{ report_tab }}"><input type="search" name="q" value="{{ q }}" class="app-field" placeholder="{% translate "Cari elemen, siklus, input, catatan" %}" aria-label="{% translate "Cari laporan" %}"><button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Cari" %}</button></form>{% endif %}
+      {% if roles.finance %}<a href="{% url 'reports:trace_index' %}" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Telusuri" %}</a>{% endif %}
       {% if report_tab in multi_tabs %}<a href="{% url 'farm:activities_multi' %}?tab={{ report_tab }}" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Beberapa siklus" %}</a>{% endif %}
     </div>
     <div class="app-table-wrap">
