@@ -6,7 +6,7 @@
 {# Invoice list (Phase 4d): table page pattern — page head, stat cards, card with tabs + search + columns, gt-table, pager. #}
 <div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
-    {% subtitle "Penjualan grosir ke pembeli tetap: draf, terbitkan (potong stok FIFO), catat pembayaran, pantau piutang." as sub %}
+    {% subtitle _("Penjualan grosir ke pembeli tetap: draf, terbitkan (potong stok FIFO), catat pembayaran, pantau piutang.") as sub %}
     <h1 class="app-pagehead__title">{% translate "Invoice" %} {% info_tip sub %}</h1>
   </div>
   <div class="gt-pagehead__actions"><a href="{% url 'invoicing:invoice_new' %}" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Invoice baru" %}</a></div>

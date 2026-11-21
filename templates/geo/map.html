@@ -15,7 +15,7 @@
 <div x-data="geoPage()">
   <div class="gt-pagehead app-pagehead--sm">
     <div class="app-pagehead__text">
-      {% subtitle "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kondisi tanah, waktu semprot, kebutuhan air, dan prakiraan cuaca." worker="Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja." as sub %}
+      {% subtitle _("Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kondisi tanah, waktu semprot, kebutuhan air, dan prakiraan cuaca.") worker=_("Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja.") as sub %}
       <h1 class="app-pagehead__title">{% translate "Cuaca &amp; Satelit" %} {% info_tip sub %}</h1>
     </div>
   </div>
@@ -184,7 +184,6 @@
             </li>
           </template>
         </ul>
-        <p x-show="error" x-text="error" class="app-error"></p>
       </section>
     </aside>
   </div>
@@ -232,12 +231,12 @@ function geoPage() {
   const layers = {};
   return {
     polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
-    selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false, error: "",
+    selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false,
     query: "", places: [], searchMsg: "", searching: false,
     // Editor state: plain values only (Leaflet objects stay in the closure; Alpine proxies break them).
     edMode: "", edTarget: null, edCount: 0, edArea: 0, edCross: false, edCanUndo: false, draftName: "", saving: false,
     async search() {
-      if (this.query.trim().length < 3) { this.searchMsg = "Ketik minimal 3 huruf."; return; }
+      if (this.query.trim().length < 3) { this.searchMsg = "{% jt "Ketik minimal 3 huruf." %}"; return; }
       this.searching = true; this.places = []; this.searchMsg = "";
       try {
         const r = await fetch("{% url 'geo:search' %}?q=" + encodeURIComponent(this.query));
@@ -320,8 +319,10 @@ function geoPage() {
         if (here) map.removeLayer(here);
         here = L.circle(e.latlng, { radius: e.accuracy, color: "#0ea5e9", weight: 1, fillOpacity: 0.15 }).addTo(map);
       });
-      map.on("locationerror", () => { this.error = "{% jt "Lokasi tidak dapat diakses — izinkan akses lokasi di browser." %}"; });
+      map.on("locationerror", () => { this.fail("{% jt "Lokasi tidak dapat diakses — izinkan akses lokasi di browser." %}"); });
     },
+    // Async errors are toasts (forms.js gtToast) so they show where the user is looking, not at the foot of the list.
+    fail(msg) { gtToast(msg, "error"); },
     css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); },
     // Green outline with a soft fill; the selected shape is bolder. Shapes without NDVI are dashed.
     styleFor(p) {
@@ -335,7 +336,7 @@ function geoPage() {
     },
     startDraw() {
       if (!editor || this.edMode) return;
-      this.edTarget = null; this.draftName = "{% jt "Lahan " %}" + (this.polygons.length + 1); this.error = "";
+      this.edTarget = null; this.draftName = "{% jt "Lahan " %}" + (this.polygons.length + 1);
       editor.draw();
     },
     edUndo() { if (editor) editor.undo(); },
@@ -343,7 +344,7 @@ function geoPage() {
     startEdit(p) {
       const layer = layers[p.id]; if (!editor || !layer || this.edMode) return;
       if (!this.selected || this.selected.id !== p.id) this.select(p.id);
-      this.edTarget = p; this.error = "";
+      this.edTarget = p;
       group.removeLayer(layer);   // the editor draws the shape while it is being changed
       editor.edit(L.GeoJSON.coordsToLatLngs(p.geojson.coordinates[0], 0));
     },
@@ -359,7 +360,7 @@ function geoPage() {
       this.saving = true;
       if (!target) {
         const name = this.draftName.trim();
-        if (!name) { this.error = "{% jt "Isi nama poligon." %}"; this.saving = false; return; }
+        if (!name) { this.fail("{% jt "Isi nama poligon." %}"); this.saving = false; return; }
         r = await this.post(base, { name, geojson });
       } else r = await this.post(`${base}${target.id}/`, { geojson });
       this.saving = false;
@@ -384,21 +385,20 @@ function geoPage() {
       layer.setTooltipContent(this.tooltipFor(p)); layer.setStyle(this.styleFor(p));
     },
     async post(url, body) {
-      this.error = "";
-      try {
+            try {
         const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": csrf }, body: JSON.stringify(body) });
         const json = await r.json();
-        if (!r.ok) { this.error = json.error || "{% jt "Gagal menyimpan." %}"; return null; }
+        if (!r.ok) { this.fail(json.error || "{% jt "Gagal menyimpan." %}"); return null; }
         return json;
-      } catch (e) { this.error = "{% jt "Tidak dapat terhubung ke server." %}"; return null; }
+      } catch (e) { this.fail("{% jt "Tidak dapat terhubung ke server." %}"); return null; }
     },
     async save(p, body) { const r = await this.post(`${base}${p.id}/`, body); if (r) { Object.assign(p, r); this.refreshLayer(p); } },
     async useArea(p) {
-      if (!(await gtConfirm({ title: "{% jt "Pakai luas dari peta?" %}", body: `Luas tercatat ${p.element} diganti menjadi ${this.fmtM2(p.area_m2)} m². Angka ini dipakai untuk analitik kg/m².`, action: "{% jt "Pakai luas peta" %}" }))) return;
+      if (!(await gtConfirm({ title: "{% jt "Pakai luas dari peta?" %}", body: gtT("{% jt "Luas tercatat %(element)s diganti menjadi %(area)s m². Angka ini dipakai untuk analitik kg/m²." %}", { element: p.element, area: this.fmtM2(p.area_m2) }), action: "{% jt "Pakai luas peta" %}" }))) return;
       const r = await this.post(`${base}${p.id}/?action=use_area`, {}); if (r) Object.assign(p, r);
     },
     async remove(p, fromMap = false) {
-      if (!p || (!fromMap && !(await gtConfirm({ title: `Hapus poligon ${p.name}?`, body: "{% jt "Batas di peta dan riwayat data satelitnya dihapus. Elemen kebun tidak terpengaruh." %}", action: "{% jt "Hapus poligon" %}", danger: true })))) return;
+      if (!p || (!fromMap && !(await gtConfirm({ title: gtT("{% jt "Hapus poligon %(name)s?" %}", { name: p.name }), body: "{% jt "Batas di peta dan riwayat data satelitnya dihapus. Elemen kebun tidak terpengaruh." %}", action: "{% jt "Hapus poligon" %}", danger: true })))) return;
       const r = await this.post(`${base}${p.id}/?action=delete`, {});
       if (r) {
         this.polygons = this.polygons.filter((x) => x.id !== p.id);

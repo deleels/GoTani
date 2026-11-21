@@ -47,7 +47,7 @@
                   {% endif %}
                   <button type="button" @click="pw=!pw" class="app-menu__item">{% translate "Atur ulang sandi" %}</button>
                   <form x-show="pw" x-cloak method="post" action="{% url 'core:staff_action' u.pk 'password' %}" class="app-rowform">{% csrf_token %}
-                    <input type="password" name="temp_password" placeholder="{% translate 'Sandi sementara' %}" required class="app-field app-field--sm" aria-label="{% translate 'Sandi sementara' %}">
+                    <span class="app-field-wrap app-grow"><input type="password" name="temp_password" placeholder="{% translate 'Sandi sementara' %}" required class="app-field app-field--sm" aria-label="{% translate 'Sandi sementara' %}">{% pw_toggle %}</span>
                     <button class="gt-btn gt-btn--solid gt-btn--sm">{% translate "Simpan" %}</button>
                   </form>
                   {% if u.is_active %}

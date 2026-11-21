@@ -52,7 +52,7 @@
     </ul>
   </section>
 
-  {% with sheet_t="Mulai siklus di "|add:element.name %}{% include "components/sheet.html" with title=sheet_t %}{% endwith %}
+  {% blocktranslate asvar sheet_t with name=element.name %}Mulai siklus di {{ name }}{% endblocktranslate %}{% include "components/sheet.html" with title=sheet_t %}
       <form method="post" class="app-sheet__form">{% csrf_token %}
         {% include "_form_fields.html" with cols="grid-cols-1" %}
         <div class="app-sheet__foot"><button type="button" @click="sheet=false" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</button>

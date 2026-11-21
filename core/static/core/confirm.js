@@ -167,7 +167,7 @@
   // Keeps Tab inside a sheet or dialog (used by components/sheet.html).
   window.gtTrapFocus = function (e, root) {
     var f = Array.prototype.filter.call(
-      root.querySelectorAll('a[href],button:not([disabled]),input:not([type=hidden]):not([disabled]),select:not([disabled]),textarea:not([disabled])'),
+      root.querySelectorAll('a[href],button:not([disabled]),input:not([type=hidden]):not([disabled]),select:not([disabled]):not(.app-select__native),textarea:not([disabled])'),
       function (n) { return n.offsetParent !== null; });
     if (!f.length) return;
     var first = f[0], last = f[f.length - 1];

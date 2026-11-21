@@ -76,7 +76,7 @@ TR = {
     "Total biaya disetujui": "Total approved expenses",
     "Total penjualan": "Total revenue",
     "full": "full",
-    "· hari ke-": "· day",
+    "· hari ke-": "· day ",
     "· panen": "· harvest",
     # offline / password / profile / settings
     "Anda sedang offline": "You're offline",

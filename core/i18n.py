@@ -37,7 +37,7 @@ def template_dirs():
 
 def python_files():
     base = Path(settings.BASE_DIR)
-    skip = {".venv", "migrations", "staticfiles", "media", "node_modules", "__pycache__"}
+    skip = {".venv", ".git", ".claude", ".agents", "migrations", "staticfiles", "media", "node_modules", "__pycache__"}
     for path in base.rglob("*.py"):
         parts = set(path.relative_to(base).parts)
         if parts & skip or path.name.startswith("test") or path.parent.name == "tests":

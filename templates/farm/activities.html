@@ -6,7 +6,7 @@
 <div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }}, picker: false }">
   <div class="gt-pagehead app-pagehead--sm">
     <div class="app-pagehead__text">
-      {% subtitle "Semua pekerjaan lapangan per jenis. Pemakaian input otomatis memotong stok dan dibukukan ke biaya siklus." worker="Catat pekerjaan lapangan hari ini: pemupukan, penyemprotan, irigasi, pengamatan, panen, dan susut." as sub %}
+      {% subtitle _("Semua pekerjaan lapangan per jenis. Pemakaian input otomatis memotong stok dan dibukukan ke biaya siklus.") worker=_("Catat pekerjaan lapangan hari ini: pemupukan, penyemprotan, irigasi, pengamatan, panen, dan susut.") as sub %}
       <h1 class="app-pagehead__title">{% translate "Laporan Kerja" %} {% info_tip sub %}</h1>
     </div>
     <div class="gt-pagehead__actions relative" @click.outside="picker=false" @keydown.escape="picker=false">

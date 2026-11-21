@@ -33,14 +33,14 @@
           <template x-for="(ln, i) in lines" :key="ln.key">
             <tr>
               <td>
-                <select name="product_id" x-model.number="ln.product" @change="defaultPrice(ln)" class="app-field app-field--sm" aria-label="{% translate 'Produk' %}">
-                  <option value="">{% translate "— pilih —" %}</option>
+                <select name="product_id" x-model.number="ln.product" @change="defaultPrice(ln)" class="app-field app-field--sm" aria-label="{% translate 'Produk' %}" data-prompt>
+                  <option value="">{% translate "Pilih produk…" %}</option>
                   <template x-for="p in products" :key="p.id"><option :value="p.id" x-text="p.name" :selected="p.id === ln.product"></option></template>
                 </select>
                 <span class="app-sub" x-show="prod(ln)" x-text="prod(ln) ? gtT('{% jt "Stok %(kg)s kg" %}', { kg: fmtKg(prod(ln).available) }) + (Number(prod(ln).tax) ? ' · ' + gtT('{% jt "PPN %(rate)s%%" %}', { rate: prod(ln).tax }) : '') : ''"></span>
                 <span class="app-error" x-show="prod(ln) && idNum.parse(ln.qty) > Number(prod(ln).available)">{% translate "Melebihi stok saat ini." %}</span>
               </td>
-              <td><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required class="app-field app-field--sm app-num" aria-label="{% translate 'Kg' %}"></td>
+              <td><span class="app-unit" data-unit="kg"><input name="qty_kg" data-num="kg" inputmode="decimal" autocomplete="off" x-model="ln.qty" required class="app-field app-field--sm app-num" aria-label="{% translate 'Kg' %}"></span></td>
               <td><span class="app-money"><input name="unit_price" data-num="money" inputmode="decimal" autocomplete="off" x-model="ln.price" :placeholder="prod(ln) && prod(ln).price ? idNum.format(prod(ln).price, 'money') : '{% jt "wajib" %}'" class="app-field app-field--sm app-num" aria-label="{% translate 'Harga per kg' %}"></span></td>
               <td class="num"><b x-text="rp(sub(ln))"></b></td>
               <td class="num"><button type="button" @click="lines.splice(i,1)" class="gt-iconbtn gt-iconbtn--sm app-line__remove" aria-label="{% translate 'Hapus baris' %}">{% icon "trash" 16 %}</button></td>

@@ -7,7 +7,7 @@
   {# Phase 7: plain panel, kept empty as the stage for the coming three.js scene (mount it on #login-stage). #}
   <section id="login-stage" class="app-login__panel hidden lg:block" aria-hidden="true"></section>
   <section class="app-login__form flex items-center justify-center px-6 py-12">
-    <div class="w-full max-w-sm" x-data="{ show: false }">
+    <div class="w-full max-w-sm">
       <img src="{% static 'core/ds/logos/gotani-lockup.svg' %}" alt="{% translate 'GoTani' %}" class="app-login__lockup mb-10">
       <h1 class="app-login__title">{% translate "Selamat datang kembali" %}</h1>
       <p class="app-login__sub mb-8 mt-2">{% translate "Masuk dengan akun yang diberikan pemilik kebun." %}</p>
@@ -22,8 +22,8 @@
         <div>
           <label class="app-label" for="id_password">{% translate "Kata sandi" %}</label>
           <div class="app-field-wrap">
-            <input id="id_password" :type="show ? 'text' : 'password'" type="password" name="password" required autocomplete="current-password" class="app-field">
-            <button type="button" @click="show=!show" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken" :aria-label="show ? '{% jt "Sembunyikan kata sandi" %}' : '{% jt "Tampilkan kata sandi" %}'" :aria-pressed="show">{% icon "eye" 16 "gt-ico" %}</button>
+            <input id="id_password" type="password" name="password" required autocomplete="current-password" class="app-field">
+            {% pw_toggle %}
           </div>
         </div>
         <button class="gt-btn gt-btn--primary gt-btn--md gt-btn--block">{% translate "Masuk" %}</button>

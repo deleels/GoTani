@@ -236,3 +236,17 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   stored in Indonesian and marked for translation (`gettext_noop` in `farm/bootstrap.py`). `builtin_label()` shows
   them in the user's language (Labour, Seeds …) while the stored text is still the built-in one; once an admin
   renames an entry it shows exactly as typed. Farm data people enter (element names, notes, buyers) is never translated.
+- **D121 Form controls: GoTani select, password eye, units beside the number, errors where you look.**
+  Selects use a design-system dropdown (`core/static/core/select.js`, Alpine `gtSelect`): the real `<select>` stays in
+  the form (hidden) so submit, server validation, `x-model`, `onchange` and `data-show-when` work unchanged; the
+  pill button opens a list in `<body>` (radius-lg, shadow-float; hover = surface, chosen = green-100 + check),
+  with a search box above 8 options and select-only-combobox keys (arrows, Home/End, PageUp/Down, Enter/Space,
+  Esc, type-ahead). Phones and tablets (coarse pointer) keep the native select, whose OS picker is better there;
+  `select[multiple]`, the date picker's month list and `[data-native]` stay native too. Empty first options are
+  no longer blank (supersedes the Phase 7 blank option and D108's "— pilih —"): a required select starts on a
+  prompt naming what to pick ("Pilih siklus…"), hidden from the list; an optional one offers "— Tidak ada —".
+  Password fields get `{% pw_toggle %}`: eye while hidden, eye-off with a pressed green-100 state while shown.
+  A fixed unit is a suffix inside the field (`.app-unit[data-unit]`: kg, m², menit; "Rp" stays the `.app-money`
+  prefix); a quantity in an input item's own unit follows the chosen item (`data-unit-from`, no conversion);
+  a choosable unit (irrigation volume) is a compact select joined to the number (`.app-joined`). Async errors on
+  the map (location, save) are toasts (`gtToast`) instead of a line at the foot of the polygon list.

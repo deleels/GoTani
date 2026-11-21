@@ -104,7 +104,7 @@
         <td>
           {% if s.needs_review %}<span class="app-actions">{% pill _("Perlu ditinjau") tone="yellow" %}
             {% if show_expected %}{% blocktranslate asvar t_data_confirm_title_13 with v1=s %}Tinjau selisih {{ v1 }}{% endblocktranslate %}{% blocktranslate asvar t_data_confirm_14 with v1=s.difference_idr|rupiah %}Selisih {{ v1 }}. Catatan tinjauan disimpan di log aktivitas.{% endblocktranslate %}<form method="post" data-confirm-title="{{ t_data_confirm_title_13 }}" data-confirm="{{ t_data_confirm_14 }}" data-confirm-action="{% translate 'Simpan tinjauan' %}" data-confirm-reason="Catatan tinjauan">{% csrf_token %}<input type="hidden" name="action" value="review"><input type="hidden" name="shift" value="{{ s.pk }}"><button class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Tinjau" %}</button></form>{% endif %}</span>
-          {% elif s.review_note %}{% pill _("Ditinjau") tone="blue" %} {% info_tip s.review_note "Catatan tinjauan" %}
+          {% elif s.review_note %}{% pill _("Ditinjau") tone="blue" %} {% info_tip s.review_note _("Catatan tinjauan") %}
           {% else %}{% pill _("Sesuai") tone="green" %}{% endif %}
         </td>
       </tr>

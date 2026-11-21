@@ -61,9 +61,19 @@ def format_id_decimal(value, places=3) -> str:
     return sign + f"{int(whole):,}".replace(",", th) + (f"{dec}{frac}" if frac else "")
 
 
+# D121: the unit written inside the field after the number; money shows "Rp" before it instead.
+UNIT_SUFFIX = {"kg": "kg", "m2": "m²"}
+
+
 class IDNumberInput(forms.TextInput):
+    """`unit` = suffix shown inside the field (None = none); `unit_from` + `units` = the suffix follows a select
+    (element id -> {option value: unit}), e.g. a purchase quantity in the chosen input's own unit."""
+
     def __init__(self, kind="kg", attrs=None):
         self.kind = kind
+        self.unit = UNIT_SUFFIX.get(kind)
+        self.unit_from = None
+        self.units = None
         super().__init__({"inputmode": "decimal", "data-num": kind, "autocomplete": "off", **(attrs or {})})
 
     def format_value(self, value):
@@ -84,6 +94,17 @@ class IDNumberInput(forms.TextInput):
             from django.utils.safestring import mark_safe
 
             return mark_safe(f'<span class="app-money">{html}</span>')
+        if self.unit_from:
+            import json
+
+            from django.utils.html import format_html
+
+            return format_html('<span class="app-unit" data-unit="" data-unit-from="{}" data-units="{}">{}</span>',
+                               self.unit_from, json.dumps(self.units or {}), html)
+        if self.unit:
+            from django.utils.html import format_html
+
+            return format_html('<span class="app-unit" data-unit="{}">{}</span>', self.unit, html)
         return html
 
 

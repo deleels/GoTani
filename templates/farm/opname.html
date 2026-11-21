@@ -13,7 +13,7 @@
       <label class="app-fieldlabel"><span class="app-label">{% translate "Produk" %}</span>
         <select name="product" class="app-field">{% for p in products %}<option value="{{ p.pk }}">{{ p }} {% translate "— sistem" %} {{ p.stock|kg }} kg</option>{% endfor %}</select></label>
       <label class="app-fieldlabel"><span class="app-label">{% translate "Stok fisik (kg)" %}</span>
-        <input name="counted_kg" data-num="kg" inputmode="decimal" autocomplete="off" required class="app-field"></label>
+        <span class="app-unit" data-unit="kg"><input name="counted_kg" data-num="kg" inputmode="decimal" autocomplete="off" required class="app-field"></span></label>
       <label class="app-fieldlabel"><span class="app-label">{% translate "Catatan" %}</span><input name="note" class="app-field"></label>
       <button class="gt-btn gt-btn--solid gt-btn--md gt-btn--block">{% translate "Simpan hitungan" %}</button>
     </form>

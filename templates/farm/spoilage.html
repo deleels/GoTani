@@ -57,7 +57,7 @@
         const lot = f.querySelector('select[name=lot]').value, qty = idNum.parse(f.querySelector('[name=qty_kg]').value) || 0;
         const left = Number(remaining[lot] || 0);
         let text = '{% jt "Susut " %}' + idNum.format(qty, 'kg') + '{% jt " kg dari lot #" %}' + lot + '{% jt " (sisa " %}' + idNum.format(left, 'kg') + '{% jt " kg) dicatat sebagai kerugian dan stoknya berkurang." %}';
-        if (left && qty > left * 0.5) text += '\nPeringatan: lebih dari 50% sisa lot ini (' + Math.round(qty / left * 100) + '%). Pastikan jumlah dan lotnya benar.';
+        if (left && qty > left * 0.5) text += '\n' + gtT('{% jt "Peringatan: lebih dari 50%% sisa lot ini (%(pct)s%%). Pastikan jumlah dan lotnya benar." %}', { pct: Math.round(qty / left * 100) });
         f.dataset.confirm = text;
       },
       lotSelect() { return this.$refs.form && this.$refs.form.querySelector('select[name=lot]'); },

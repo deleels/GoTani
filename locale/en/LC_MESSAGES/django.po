@@ -30,6 +30,50 @@ msgstr "Full name"
 msgid "Pengguna wajib menggantinya saat pertama masuk."
 msgstr "The user must change it at first login."
 
+#: core\forms.py
+msgid "Pilih elemen…"
+msgstr "Choose an element…"
+
+#: core\forms.py
+msgid "Pilih input…"
+msgstr "Choose an input…"
+
+#: core\forms.py
+msgid "Pilih invoice…"
+msgstr "Choose an invoice…"
+
+#: core\forms.py
+msgid "Pilih kategori…"
+msgstr "Choose a category…"
+
+#: core\forms.py
+msgid "Pilih lot…"
+msgstr "Choose a lot…"
+
+#: core\forms.py
+msgid "Pilih pembeli…"
+msgstr "Choose a buyer…"
+
+#: core\forms.py
+msgid "Pilih peran…"
+msgstr "Choose a role…"
+
+#: core\forms.py
+msgid "Pilih siklus…"
+msgstr "Choose a cycle…"
+
+#: core\forms.py
+msgid "Pilih varietas…"
+msgstr "Choose a variety…"
+
+#: core\forms.py
+msgid "Pilih…"
+msgstr "Choose…"
+
+#: core\forms.py
+msgid "— Tidak ada —"
+msgstr "— None —"
+
 #: core\home.py
 msgid "Agustus"
 msgstr "August"
@@ -371,6 +415,10 @@ msgid "Biaya belum terserap %(amount)s dicatat sebagai biaya siklus tak terserap
 msgstr "Unabsorbed cost %(amount)s is recorded as an unabsorbed cycle cost (write-off)."
 
 #: core\templatetags\ui.py
+msgid "Cari…"
+msgstr "Search…"
+
+#: core\templatetags\ui.py
 msgid "Cek pra-panen terakhir: %(pct)s%% lengkap (belum lengkap)."
 msgstr "Last pre-harvest check: %(pct)s%% complete (incomplete)."
 
@@ -479,6 +527,10 @@ msgid "Saya sudah memeriksa data ini"
 msgstr "I have checked this"
 
 #: core\templatetags\ui.py
+msgid "Sembunyikan kata sandi"
+msgstr "Hide password"
+
+#: core\templatetags\ui.py
 msgid "Simpan %(left)s sebagai kredit?"
 msgstr "Keep %(left)s as credit?"
 
@@ -511,8 +563,16 @@ msgid "Tahap yang dilewati: %(list)s."
 msgstr "Skipped stages: %(list)s."
 
 #: core\templatetags\ui.py
+msgid "Tampilkan kata sandi"
+msgstr "Show password"
+
+#: core\templatetags\ui.py
 msgid "Tidak ada biaya yang belum terserap."
 msgstr "No unabsorbed costs."
+
+#: core\templatetags\ui.py
+msgid "Tidak ada yang cocok"
+msgstr "No matches"
 
 #: core\templatetags\ui.py
 msgid "Wajib diisi."
@@ -739,10 +799,6 @@ msgid "Butir yang sudah dipenuhi"
 msgstr "Items completed"
 
 #: farm\forms.py
-msgid "Durasi (menit)"
-msgstr "Duration (minutes)"
-
-#: farm\forms.py
 msgid "Grade A / HIGH (kg)"
 msgstr "Grade A / HIGH (kg)"
 
@@ -831,8 +887,16 @@ msgid "Vendor"
 msgstr "Vendor"
 
 #: farm\forms.py
+msgid "Volume air"
+msgstr "Water volume"
+
+#: farm\forms.py
 msgid "Waktu panen"
 msgstr "Harvest time"
+
+#: farm\forms.py
+msgid "menit"
+msgstr "min"
 
 #: farm\models.py
 msgid "Benih"
@@ -3135,6 +3199,10 @@ msgid "Kelola"
 msgstr "Manage"
 
 #: templates\core\home.html
+msgid "Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar."
+msgstr "The farm's condition, this week's work and the financial position on one screen."
+
+#: templates\core\home.html
 msgid "Mulai siklus dari halaman elemen untuk mulai mencatat."
 msgstr "Start a cycle from a plot page to begin logging."
 
@@ -3153,6 +3221,10 @@ msgstr "Expected harvest passed, stage not yet Harvest"
 #: templates\core\home.html
 msgid "Ringkasan"
 msgstr "Overview"
+
+#: templates\core\home.html
+msgid "Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan."
+msgstr "Have a good day! Here is this week's work and the crops that need attention."
 
 #: templates\core\home.html
 msgid "Semua elemen"
@@ -3196,7 +3268,7 @@ msgstr "Total revenue"
 
 #: templates\core\home.html
 msgid "· hari ke-"
-msgstr "· day"
+msgstr "· day "
 
 #: templates\core\home.html
 msgid "· panen"
@@ -3443,6 +3515,10 @@ msgid "Butir terpenuhi"
 msgstr "Items met"
 
 #: templates\farm\activities.html
+msgid "Catat pekerjaan lapangan hari ini: pemupukan, penyemprotan, irigasi, pengamatan, panen, dan susut."
+msgstr "Log today's field work: fertilising, spraying, irrigation, scouting, harvest and spoilage."
+
+#: templates\farm\activities.html
 msgid "Catatan"
 msgstr "Notes"
 
@@ -3525,6 +3601,10 @@ msgstr "Choosing an input deducts it from input stock in its own unit."
 #: templates\farm\activities.html
 msgid "Metode / catatan"
 msgstr "Method / notes"
+
+#: templates\farm\activities.html
+msgid "Semua pekerjaan lapangan per jenis. Pemakaian input otomatis memotong stok dan dibukukan ke biaya siklus."
+msgstr "All field work by type. Input usage deducts stock automatically and is booked to the cycle cost."
 
 #: templates\farm\activities.html
 msgid "Stok input yang dipakai dikembalikan dan biaya pemakaiannya dihapus (selama belum terserap panen)."
@@ -3737,6 +3817,10 @@ msgstr "Mapped area"
 #: templates\farm\element_detail.html
 msgid "Mulai"
 msgstr "Start"
+
+#: templates\farm\element_detail.html
+msgid "Mulai siklus di %(name)s"
+msgstr "Start a cycle on %(name)s"
 
 #: templates\farm\element_detail.html
 msgid "Riwayat siklus"
@@ -4075,6 +4159,10 @@ msgid "Tambah stok"
 msgstr "Add stock"
 
 #: templates\farm\input_detail.html
+msgid "Tambah stok %(name)s"
+msgstr "Restock %(name)s"
+
+#: templates\farm\input_detail.html
 msgid "Total terpakai"
 msgstr "Total used"
 
@@ -4383,6 +4471,10 @@ msgid "Lot tertua dipilih otomatis; ubah bila yang rusak lot lain."
 msgstr "The oldest lot is picked automatically; change it if another lot spoiled."
 
 #: templates\farm\spoilage.html
+msgid "Peringatan: lebih dari 50%% sisa lot ini (%(pct)s%%). Pastikan jumlah dan lotnya benar."
+msgstr "Warning: more than 50%% of what is left in this lot (%(pct)s%%). Check the amount and the lot."
+
+#: templates\farm\spoilage.html
 msgid "Susut "
 msgstr "Spoilage of "
 
@@ -4619,6 +4711,10 @@ msgid "Hapus poligon"
 msgstr "Delete boundary"
 
 #: templates\geo\map.html
+msgid "Hapus poligon %(name)s?"
+msgstr "Delete polygon %(name)s?"
+
+#: templates\geo\map.html
 msgid "Hujan"
 msgstr "Rain"
 
@@ -4659,6 +4755,10 @@ msgid "Kehijauan tanaman, 0–1. Makin tinggi makin rimbun."
 msgstr "Crop greenness, 0–1. Higher means denser foliage."
 
 #: templates\geo\map.html
+msgid "Ketik minimal 3 huruf."
+msgstr "Type at least 3 letters."
+
+#: templates\geo\map.html
 msgid "Klik ikon ⬠ di kiri peta untuk menggambar lahan."
 msgstr "Click the ⬠ button on the left of the map to draw a field."
 
@@ -4673,6 +4773,10 @@ msgstr "Low"
 #: templates\geo\map.html
 msgid "Lahan "
 msgstr "Field "
+
+#: templates\geo\map.html
+msgid "Lihat peta lahan, kondisi tanaman dari satelit, dan prakiraan hujan sebelum bekerja."
+msgstr "Check the field map, crop condition from satellite and the rain forecast before work."
 
 #: templates\geo\map.html
 msgid "Lintasan"
@@ -4697,6 +4801,10 @@ msgstr "Can't get your location — allow location access in the browser."
 #: templates\geo\map.html
 msgid "Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon."
 msgstr "Area is calculated on the server (0.02–1,000 ha). NDVI is only for open fields ≥ 1 ha; soil data is available for every boundary."
+
+#: templates\geo\map.html
+msgid "Luas tercatat %(element)s diganti menjadi %(area)s m². Angka ini dipakai untuk analitik kg/m²."
+msgstr "The recorded area of %(element)s becomes %(area)s m². This figure is used for the kg/m² analytics."
 
 #: templates\geo\map.html
 msgid "Memuat data satelit…"
@@ -4761,6 +4869,10 @@ msgstr "Map (OpenStreetMap)"
 #: templates\geo\map.html
 msgid "Peta lahan"
 msgstr "Field map"
+
+#: templates\geo\map.html
+msgid "Petakan lahan, pantau indeks vegetasi (NDVI/EVI/NDWI), kondisi tanah, waktu semprot, kebutuhan air, dan prakiraan cuaca."
+msgstr "Map fields and follow vegetation indices (NDVI/EVI/NDWI), soil conditions, spray windows, water need and the weather forecast."
 
 #: templates\geo\map.html
 msgid "Poligon lahan"
@@ -5319,6 +5431,10 @@ msgid "PPN %(rate)s%%"
 msgstr "VAT %(rate)s%%"
 
 #: templates\invoicing\invoice_editor.html
+msgid "Pilih produk…"
+msgstr "Choose a product…"
+
+#: templates\invoicing\invoice_editor.html
 msgid "Setelah disimpan, terbitkan dari halaman invoice. Stok baru dipotong saat terbit."
 msgstr "After saving, issue it from the invoice page. Stock is only deducted when issued."
 
@@ -5341,10 +5457,6 @@ msgstr "Total above Rp5,000,000."
 #: templates\invoicing\invoice_editor.html
 msgid "wajib"
 msgstr "required"
-
-#: templates\invoicing\invoice_editor.html
-msgid "— pilih —"
-msgstr "Select"
 
 #: templates\invoicing\invoice_print.html
 msgid "Cetak atau simpan sebagai PDF"
@@ -5421,6 +5533,10 @@ msgstr "Invoices are for wholesale: stock is deducted only when an invoice is is
 #: templates\invoicing\invoices.html
 msgid "Lihat"
 msgstr "View"
+
+#: templates\invoicing\invoices.html
+msgid "Penjualan grosir ke pembeli tetap: draf, terbitkan (potong stok FIFO), catat pembayaran, pantau piutang."
+msgstr "Wholesale to regular buyers: draft, issue (FIFO stock deduction), record payments, track receivables."
 
 #: templates\invoicing\invoices.html
 msgid "Terbit bulan ini"
@@ -5787,6 +5903,10 @@ msgid "Catatan (opsional)"
 msgstr "Notes (optional)"
 
 #: templates\pos\shift.html
+msgid "Catatan tinjauan"
+msgstr "Review note"
+
+#: templates\pos\shift.html
 msgid "Dibuka"
 msgstr "Opened"
 
@@ -5957,14 +6077,6 @@ msgstr "Wrong username or password."
 #: templates\registration\login.html
 msgid "Selamat datang kembali"
 msgstr "Welcome back"
-
-#: templates\registration\login.html
-msgid "Sembunyikan kata sandi"
-msgstr "Hide password"
-
-#: templates\registration\login.html
-msgid "Tampilkan kata sandi"
-msgstr "Show password"
 
 #: templates\reports\dashboard.html
 msgid "AOV"
@@ -6437,3 +6549,9 @@ msgstr "by"
 #: templates\reports\trace_order.html
 msgid "· kasir"
 msgstr "· cashier"
+
+msgid "Durasi (menit)"
+msgstr "Duration (minutes)"
+
+msgid "— pilih —"
+msgstr "Select"

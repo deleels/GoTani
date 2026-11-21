@@ -41,6 +41,7 @@ ICONS = {
     "logout": '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
     "key": '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
     "leaf": '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.9-5.4 5.2-6.1C9.6 14.4 12 13 13 12"/>',
+    "eye-off": '<path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.9 3.9M6.6 6.6A17.4 17.4 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/>',
     "eye": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
     "globe": '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     "lock": '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
@@ -127,6 +128,7 @@ JS_MSGIDS = [
     _l("%(item)s: %(cost)s per %(unit)s, %(pct)s lebih mahal dari rata-rata %(avg)s."),
     _l("%(item)s: %(cost)s per %(unit)s, %(pct)s lebih murah dari rata-rata %(avg)s."),
     _l("Harga ini mengubah biaya rata-rata input dan biaya pemakaian berikutnya. Periksa satuan dan angkanya."),
+    _l("Pilih…"), _l("Cari…"), _l("Tidak ada yang cocok"),  # D121 select (select.js)
     _l("Simpan pembelian"), _l("Wajib diisi."), _l("Angka tidak valid."), _l("Periksa kolom yang ditandai."),
     _l("Tutup"), _l("Email tidak valid."), _l("Minimal %(min)s."), _l("Maksimal %(max)s."),
     _l("Minimal %(n)s karakter."), _l("Maksimal %(n)s karakter."), _l("Format tidak sesuai."),
@@ -163,6 +165,29 @@ def js_i18n():
             keys = [str(m) for m in JS_MSGIDS]
         data = {k: gettext(k) for k in keys}
     return mark_safe("<script>window.GT_LANG=%s;window.GT_I18N=%s;</script>" % (json.dumps(lang), json.dumps(data, ensure_ascii=False).replace("</", "<\\/")))
+
+
+@register.simple_tag
+def pw_toggle(size="sm"):
+    """Show/hide button for the password field before it, inside a div.app-field-wrap (D121). forms.js switches the
+    input type, aria-pressed and the label; CSS swaps eye / eye-off and draws the pressed state."""
+    from django.utils.translation import gettext
+
+    show, hide = gettext("Tampilkan kata sandi"), gettext("Sembunyikan kata sandi")
+    return format_html(
+        '<button type="button" class="gt-iconbtn gt-iconbtn--sm gt-iconbtn--sunken app-pwtoggle" data-pw-toggle '
+        'aria-pressed="false" aria-label="{}" data-label-show="{}" data-label-hide="{}" title="{}">{}{}</button>',
+        show, show, hide, show, icon("eye", 16, "app-pwtoggle__on"), icon("eye-off", 16, "app-pwtoggle__off"),
+    )
+
+
+@register.filter
+def boundfield(form, name):
+    """`form|boundfield:"unit"` — a form's bound field by a name held in a variable."""
+    try:
+        return form[name]
+    except KeyError:
+        return None
 
 
 @register.simple_tag

@@ -10,7 +10,7 @@
 <div class="gt-pagehead app-home__head">
   <div class="app-pagehead__text">
     <h1>{{ greeting }}, {{ user.first_name|default:user.username }}</h1>
-    <p class="app-pagehead__sub">{{ today_label }} {% subtitle "Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar." worker="Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan." as sub %}{% info_tip sub %}</p>
+    <p class="app-pagehead__sub">{{ today_label }} {% subtitle _("Kondisi kebun, pekerjaan minggu ini, dan posisi keuangan dalam satu layar.") worker=_("Selamat bekerja! Ini pekerjaan minggu ini dan tanaman yang perlu diperhatikan.") as sub %}{% info_tip sub %}</p>
   </div>
   <div class="gt-pagehead__actions"><a href="{% url 'farm:activities' %}?new=1" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Catat kerja" %}</a></div>
 </div>

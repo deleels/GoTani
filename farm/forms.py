@@ -7,6 +7,7 @@ from decimal import Decimal
 from django import forms
 from django.utils import timezone
 
+from core.forms import apply_select_prompts
 from core.numbers import IDDecimalField
 from inventory.models import SpoilageRecord, StockLot
 
@@ -40,9 +41,8 @@ class StyledForm(forms.Form):
         for name, cond in self.show_when.items():
             if name in self.fields:
                 self.fields[name].show_when = cond
+        apply_select_prompts(self)
         for field in self.fields.values():
-            if isinstance(field, forms.ModelChoiceField) and field.empty_label in ("---------", "- Select an option -"):
-                field.empty_label = ""  # Phase 7: blank first option, no "pilih" text
             if isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect, forms.CheckboxSelectMultiple)):
                 continue
             field.widget.attrs.setdefault("class", INPUT_CSS)
@@ -57,6 +57,25 @@ def money_field(label, required=True, kind="money"):
     """`kind="money"` = whole-Rupiah input (D81); `"money2"` also allows `,xx` (input purchase costs)."""
     return IDDecimalField(label=label, max_digits=14, decimal_places=2, min_value=Decimal("0.01"),
                           required=required, kind=kind)
+
+
+# D121: short unit names shown next to a quantity (the stored values stay L / mL / KG / G).
+UNIT_SHORT = {Unit.L: "L", Unit.ML: "mL", Unit.KG: "kg", Unit.G: "g"}
+
+
+def follow_unit(field, select_id, items):
+    """The quantity's unit suffix follows the chosen input item (its own unit; no conversion, rule 11)."""
+    field.widget.unit = None
+    field.widget.unit_from = select_id
+    field.widget.units = {str(i.pk): UNIT_SHORT.get(i.unit, i.unit) for i in items}
+
+
+def join_unit(form, number, unit):
+    """Draw a choosable unit as a compact select joined to the number field (_form_fields.html)."""
+    form.fields[number].widget.unit = None
+    form.fields[number].unit_field = unit
+    form.fields[unit].joined_into = number
+    form.fields[unit].widget.attrs.update({"class": "app-field app-field--unit", "aria-label": str(form.fields[unit].label)})
 
 
 class DateTimeInput(forms.DateTimeInput):
@@ -128,9 +147,9 @@ class ActivityForm(StyledForm):
         label=_l("Input (opsional)"), queryset=InputItem.objects.all(), required=False
     )
     quantity = qty_field(_l("Jumlah"), required=False, min_value=Decimal("0"))
-    unit = forms.ChoiceField(label=_l("Satuan"), choices=[("", "-")] + list(Unit.choices), required=False)
+    unit = forms.ChoiceField(label=_l("Satuan"), choices=[("", "-")] + list(UNIT_SHORT.items()), required=False)
     application_method = forms.CharField(label=_l("Metode aplikasi"), max_length=100, required=False)
-    duration_minutes = forms.IntegerField(label=_l("Durasi (menit)"), min_value=1, required=False)
+    duration_minutes = forms.IntegerField(label=_l("Durasi"), min_value=1, required=False)
     photo = forms.ImageField(label=_l("Foto"), required=False)
     notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
 
@@ -160,12 +179,19 @@ class ActivityForm(StyledForm):
                 if name not in keep:
                     del self.fields[name]
             if "input_item" in self.fields:
-                self.fields["input_item"].queryset = InputItem.objects.filter(item_type=self.INPUT_TYPE[activity_type])
-                self.fields["input_item"].label = "Input"
+                items = InputItem.objects.filter(item_type=self.INPUT_TYPE[activity_type])
+                self.fields["input_item"].queryset = items
+                self.fields["input_item"].label = _("Input")
                 self.fields["input_item"].required = activity_type == ActivityLog.ActivityType.SEEDING
+                follow_unit(self.fields["quantity"], "id_input_item", items)
             if activity_type == ActivityLog.ActivityType.IRRIGATION:
-                self.fields["quantity"].label = "Volume air"
+                self.fields["quantity"].label = _("Volume air")
                 self.fields["unit"].initial = Unit.L
+        if "unit" in self.fields and "quantity" in self.fields:
+            join_unit(self, "quantity", "unit")
+        if "duration_minutes" in self.fields:
+            self.fields["duration_minutes"].suffix = _("menit")
+        apply_select_prompts(self)  # again: the fields above changed after StyledForm ran
 
     def clean(self):
         data = super().clean()
@@ -186,6 +212,10 @@ class PurchaseForm(StyledForm):
     qty = qty_field(_l("Jumlah"))
     cost_per_unit_idr = money_field(_l("Harga per satuan (Rp)"), kind="money2")
     supplier = forms.CharField(label=_l("Pemasok"), max_length=150, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        follow_unit(self.fields["qty"], "id_item", self.fields["item"].queryset)
 
 
 class ExpenseForm(StyledForm):

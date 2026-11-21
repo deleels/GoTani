@@ -878,3 +878,75 @@ html { scrollbar-gutter: stable; }
 /* One light (bundle.css): the glow's corner follows where a green surface sits. The document bar above an invoice
    print is a top-of-page place the design system doesn't know. */
 .app-docbar .gt-btn--primary { --gt-lit-at: 100% 100%; }
+
+/* ---------- D121 select, password toggle, unit addons ----------
+   Select (core/select.js): the button is a pill .app-field with a chevron; the list floats in <body> (radius-lg,
+   shadow-float) so nothing clips it. Hover/keyboard row = surface, chosen row = green-100 with a check. */
+.app-select { position: relative; display: block; min-width: 0; }
+.app-select--auto { display: inline-block; width: auto; vertical-align: middle; }
+.app-select--grow { flex: 1; }
+.gt-root .app-select__native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; margin: 0; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); opacity: 0; pointer-events: none; white-space: nowrap; }
+.gt-root .app-select__btn { display: flex; align-items: center; gap: var(--space-2); width: 100%; padding-right: var(--space-3);
+  text-align: left; cursor: pointer; transition: border-color var(--dur-fast) ease, background-color var(--dur-fast) ease; }
+.gt-root .app-select--auto .app-select__btn { width: auto; }
+.gt-root .app-select__btn:hover:not(:disabled) { border-color: var(--ink-muted); }
+.gt-root .app-select__btn.is-open { border-color: var(--green-600); }
+.gt-root .app-select__btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.gt-root .app-select__btn:disabled { background: var(--surface); color: var(--ink-muted); cursor: not-allowed; }
+.gt-root .app-select__btn[aria-invalid="true"] { border-color: var(--danger); }
+.app-select__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-select__value.is-placeholder { color: var(--ink-subtle); }
+.app-select__chev { flex: none; color: var(--ink-muted); transition: transform var(--dur-fast) var(--ease-out); }
+.app-select__btn.is-open .app-select__chev { transform: rotate(180deg); }
+.app-select__pop { position: fixed; z-index: 90; display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2);
+  background: var(--surface-raised); border-radius: var(--radius-lg); box-shadow: var(--shadow-float); font: 400 14px/20px var(--font-sans);
+  color: var(--ink); animation: app-select-in var(--dur-fast) var(--ease-out) both; transform-origin: top center; }
+.app-select__pop.is-up { transform-origin: bottom center; }
+@keyframes app-select-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.app-select__pop.is-up { animation-name: app-select-in-up; }
+@keyframes app-select-in-up { from { opacity: 0; transform: translateY(4px) scale(.98); } }
+.app-select__search { display: flex; align-items: center; gap: var(--space-2); height: 36px; padding: 0 var(--space-3); margin-bottom: var(--space-1);
+  border-radius: var(--radius-pill); background: var(--surface); color: var(--ink-muted); }
+.gt-root .app-select__search input { flex: 1; min-width: 0; height: 34px; padding: 0; border: 0; background: none; font-size: 14px; color: var(--ink); }
+.gt-root .app-select__search input:focus { outline: none; }
+.app-select__search:focus-within { box-shadow: inset 0 0 0 1.5px var(--green-600); }
+.app-select__list { max-height: min(18rem, 50vh); overflow-y: auto; margin: 0; padding: 0; list-style: none; overscroll-behavior: contain; }
+.app-select__opt { display: flex; align-items: center; gap: var(--space-2); min-height: 40px; padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md); cursor: pointer; }
+.app-select__text { flex: 1; min-width: 0; }
+.app-select__opt.is-active { background: var(--surface); }
+.app-select__opt.is-selected { background: var(--green-100); color: var(--green-800); font-weight: 500; }
+.app-select__opt.is-selected.is-active { box-shadow: inset 0 0 0 1.5px var(--green-600); }
+.app-select__opt.is-empty .app-select__text { color: var(--ink-muted); }
+.app-select__opt[aria-disabled="true"] { color: var(--ink-subtle); cursor: not-allowed; background: none; }
+.app-select__check { flex: none; color: var(--green-700); visibility: hidden; }
+.app-select__opt.is-selected .app-select__check { visibility: visible; }
+.app-select__none { padding: var(--space-4) var(--space-3); color: var(--ink-muted); text-align: center; }
+@media (prefers-reduced-motion: reduce) { .app-select__pop { animation: none; } .app-select__chev { transition: none; } }
+
+/* Password eye: eye-off while the password is visible, and a pressed (green-100) state so on/off is clear. */
+.gt-root .app-pwtoggle .app-pwtoggle__off { display: none; }
+.gt-root .app-pwtoggle[aria-pressed="true"] .app-pwtoggle__on { display: none; }
+.gt-root .app-pwtoggle[aria-pressed="true"] .app-pwtoggle__off { display: block; }
+.gt-root .app-pwtoggle[aria-pressed="true"] { background: var(--green-100); color: var(--green-800); box-shadow: inset 0 0 0 1.5px var(--green-600); }
+.gt-root .app-pwtoggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.app-field-wrap:has(.app-field--sm) .app-pwtoggle { top: 4px; width: 28px; height: 28px; }
+.app-field-wrap:has(.app-field--sm) .app-field { padding-right: 40px; }
+
+/* Units next to the number (D121): a fixed unit is a suffix inside the field (.app-unit[data-unit], like the "Rp"
+   prefix of .app-money); a unit that can be chosen is a compact select joined to the field (.app-joined). */
+.app-unit { position: relative; display: block; }
+.app-unit--sm, td .app-unit, .app-rowform .app-unit { display: inline-block; }
+.app-unit::after { content: attr(data-unit); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--ink-muted);
+  pointer-events: none; font-size: 14px; }
+.app-unit[data-unit=""]::after { content: none; }
+.gt-root .app-unit:not([data-unit=""]) > input { padding-right: 3.25rem; }
+.app-unit:has(> .app-field--sm)::after { right: 12px; font-size: 13px; }
+.gt-root .app-unit:not([data-unit=""]) > .app-field--sm { padding-right: 2.6rem; }
+.app-joined { display: flex; align-items: stretch; min-width: 0; }
+.app-joined > :first-child { flex: 1; min-width: 0; }
+.gt-root .app-joined > :first-child, .gt-root .app-joined > :first-child > input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.app-joined > :last-child { flex: none; width: 7.5rem; margin-left: -1.5px; }
+.gt-root .app-joined > :last-child .app-select__btn, .gt-root .app-joined > select:last-child { border-top-left-radius: 0; border-bottom-left-radius: 0; background: var(--surface); }
+.app-joined > :first-child:focus-within, .app-joined > :first-child > input:focus { position: relative; z-index: 1; }

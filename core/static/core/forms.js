@@ -78,14 +78,16 @@
     p.innerHTML = '<svg class="gt-ico" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">' + ICON.error + '</svg><span></span>';
     p.lastChild.textContent = message(el);
     // flatpickr: the visible field is the alt input right after the hidden real one.
-    var anchor = el._flatpickr && el._flatpickr.altInput ? el._flatpickr.altInput : (el.closest('.app-money') || el);
+    // The message goes under the whole field: the "Rp"/unit wrapper, a number + unit pair, or the custom select.
+    var ctl = el._flatpickr && el._flatpickr.altInput ? el._flatpickr.altInput : el;
+    var anchor = el.closest('.app-joined') || el.closest('.app-money, .app-unit, .app-select, .app-field-wrap') || ctl;
     var host = el.closest('[data-errors-at-end]');  // e.g. an input + button row: the message goes under both
     if (host) host.appendChild(p);
     else if (el.type === 'radio' || el.type === 'checkbox') row.appendChild(p);
     else anchor.insertAdjacentElement('afterend', p);
-    var described = (anchor.getAttribute('aria-describedby') || '').split(' ').filter(function (x) { return x && x !== id; });
+    var described = (ctl.getAttribute('aria-describedby') || '').split(' ').filter(function (x) { return x && x !== id; });
     described.push(id);
-    anchor.setAttribute('aria-describedby', described.join(' '));
+    ctl.setAttribute('aria-describedby', described.join(' '));
   }
   function visible(el) { return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length) || (el._flatpickr && el._flatpickr.altInput); }
 
@@ -141,6 +143,36 @@
       var el = e.target;
       if (el && el.getAttribute && el.getAttribute('aria-invalid') === 'true' && el.checkValidity && el.checkValidity()) clear(el);
     });
+  });
+
+  /* ---------- password show/hide ({% pw_toggle %}, D121) ---------- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-pw-toggle]');
+    if (!b) return;
+    var input = b.parentElement.querySelector('input');
+    if (!input) return;
+    var on = input.type === 'password';
+    input.type = on ? 'text' : 'password';
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var label = b.getAttribute(on ? 'data-label-hide' : 'data-label-show');
+    b.setAttribute('aria-label', label); b.title = label;
+  });
+  // A submitted password field goes back to dots (the browser keeps the page in the back/forward cache).
+  document.addEventListener('submit', function (e) {
+    e.target.querySelectorAll && e.target.querySelectorAll('[data-pw-toggle][aria-pressed="true"]').forEach(function (b) { b.click(); });
+  });
+
+  /* ---------- unit that follows a select: <span class="app-unit" data-unit-from="id_item" data-units='{"3":"kg"}'> ---------- */
+  function applyUnits(root) {
+    (root || document).querySelectorAll('[data-unit-from]').forEach(function (w) {
+      var src = document.getElementById(w.getAttribute('data-unit-from')), map = {};
+      try { map = JSON.parse(w.getAttribute('data-units') || '{}'); } catch (err) { /* ignore */ }
+      w.setAttribute('data-unit', src && map[src.value] ? map[src.value] : '');
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function () { applyUnits(); });
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.id && document.querySelector('[data-unit-from="' + e.target.id + '"]')) applyUnits();
   });
 
   /* ---------- conditional rows: data-show-when="field=A|B" ---------- */
