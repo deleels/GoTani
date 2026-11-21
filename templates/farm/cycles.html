@@ -33,8 +33,8 @@
         {# Phase 7: the current stage is the headline; "Majukan tahap" below is a small secondary button. #}
         <div class="app-element__cycle">
           <div class="app-stagehead"><span class="app-stagehead__label">{% translate "Tahap sekarang" %}</span><span class="app-stagehead__value">{{ c.get_stage_display }}</span></div>
-          <a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a><span class="app-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"d-m-Y" }} {% translate "· hari ke-" %}{{ c.days }}</span>
-          {% if c.expected_harvest_date %}{% if c.overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}<span class="app-row__meta">{% translate "Perkiraan panen" %} {{ c.expected_harvest_date|date:"d-m-Y" }}</span>{% endif %}
+          <a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a><span class="app-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"SHORT_DATE_FORMAT" }} {% translate "· hari ke-" %}{{ c.days }}</span>
+          {% if c.expected_harvest_date %}{% if c.overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}<span class="app-row__meta">{% translate "Perkiraan panen" %} {{ c.expected_harvest_date|date:"SHORT_DATE_FORMAT" }}</span>{% endif %}
           {% if roles.finance %}<a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">{% translate "Telusuri" %}</a>{% endif %}
         </div>
         {% if c.panel.stages or c.panel.undo %}{% include "farm/_stage_form.html" with cycle=c panel=c.panel wrap_class="app-element__stage" %}{% endif %}
@@ -51,7 +51,7 @@
         <thead><tr><th>{% translate "Siklus" %}</th><th>{% translate "Ditutup" %}</th><th class="num">{% translate "Panen" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya tak terserap" %}</th><th></th>{% endif %}</tr></thead>
         <tbody>
         {% for c in closed_cycles %}
-          <tr><td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }} @ {{ c.element }}</a></td><td>{{ c.closed_at|date:"d-m-Y"|default:"-" }}</td><td class="num">{{ c.n_harvests }}</td>
+          <tr><td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }} @ {{ c.element }}</a></td><td>{{ c.closed_at|date:"SHORT_DATE_FORMAT"|default:"-" }}</td><td class="num">{{ c.n_harvests }}</td>
           {% if roles.finance %}<td class="num">{{ c.unabsorbed|rupiah }}</td><td class="num"><a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'reports:trace_cycle' c.pk %}">{% translate "Telusuri" %}</a></td>{% endif %}</tr>
         {% empty %}<tr><td class="app-empty-cell app-muted" colspan="5">{% translate "Belum ada siklus selesai." %}</td></tr>{% endfor %}
         </tbody>

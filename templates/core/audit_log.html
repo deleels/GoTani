@@ -19,7 +19,7 @@
       <tbody>
       {% for e in page.object_list %}
         <tr>
-          <td class="app-muted app-nowrap">{{ e.created_at|date:"d M Y" }}<span class="app-sub">{{ e.created_at|date:"H:i" }}</span></td>
+          <td class="app-muted app-nowrap">{{ e.created_at|date:"SHORT_DATE_FORMAT" }}<span class="app-sub">{{ e.created_at|date:"TIME_FORMAT" }}</span></td>
           <td>{{ e.actor.get_full_name|default:e.actor.username|default:"Sistem" }}</td>
           <td><span class="gt-chip gt-chip--sm">{{ e.action_label }}</span><span class="app-block app-strong">{{ e.summary }}</span></td>
           <td>{% if e.changes %}<dl class="gt-kv gt-kv--compact app-audit__kv">{% for key, old, new in e.changes %}<div><dt>{{ key }}</dt><dd>{{ old|default_if_none:"—" }} → {{ new|default_if_none:"—" }}</dd></div>{% endfor %}</dl>{% else %}<span class="app-muted">—</span>{% endif %}</td>

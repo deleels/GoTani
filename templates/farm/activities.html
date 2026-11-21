@@ -42,7 +42,7 @@
         <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th>{% translate "Kelengkapan" %}</th><th>{% translate "Butir terpenuhi" %}</th><th>{% translate "Oleh" %}</th></tr></thead>
         <tbody>
         {% for c in activities %}
-          <tr><td class="whitespace-nowrap">{{ c.recorded_at|date:"d M Y H:i" }}</td>
+          <tr><td class="whitespace-nowrap">{{ c.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' c.cycle_id %}">{{ c.cycle.variety }} @ {{ c.cycle.element }}</a></td>
             <td>{% if c.completed_pct == 100 %}{% pill _("100%") tone="green" %}{% else %}{% pill c.completed_pct|pct:0 tone="yellow" %}{% endif %}</td>
             <td class="app-muted">{% for i in c.checked_items.all %}{{ i.text }}{% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}{% if c.notes %}<p class="app-row__meta">{{ c.notes }}</p>{% endif %}</td>
@@ -53,7 +53,7 @@
         <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th class="num">HIGH</th><th class="num">LOW</th><th class="num">{% translate "Susut panen" %}</th><th>{% translate "Karung" %}</th><th>{% translate "Oleh" %}</th></tr></thead>
         <tbody>
         {% for b in activities %}
-          <tr><td class="whitespace-nowrap">{{ b.harvested_at|date:"d M Y H:i" }}</td>
+          <tr><td class="whitespace-nowrap">{{ b.harvested_at|date:"SHORT_DATETIME_FORMAT" }}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
             <td class="num">{{ b.high_quality_kg|kg }} kg</td><td class="num">{{ b.low_quality_kg|kg }} kg</td>
             <td class="num">{{ b.harvest_loss_kg|kg }} kg</td>
@@ -65,7 +65,7 @@
         <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Lot" %}</th><th class="num">{% translate "Kg" %}</th><th>{% translate "Alasan" %}</th><th>{% translate "Catatan" %}</th><th>{% translate "Oleh" %}</th></tr></thead>
         <tbody>
         {% for r in activities %}
-          <tr><td class="whitespace-nowrap">{{ r.recorded_at|date:"d M Y H:i" }}</td><td>{% translate "Lot #" %}{{ r.lot_id }} · {{ r.lot.product }}</td>
+          <tr><td class="whitespace-nowrap">{{ r.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</td><td>{% translate "Lot #" %}{{ r.lot_id }} · {{ r.lot.product }}</td>
             <td class="num">{{ r.qty_kg|kg }}</td><td>{{ r.get_reason_display }}</td><td class="app-muted">{{ r.notes|default:"—" }}</td><td>{{ r.recorded_by|default:"—" }}</td></tr>
         {% empty %}{% include "farm/_empty_row.html" with cols=6 msg="Belum ada susut tercatat. Catat produk busuk, rusak, atau menyusut dari lot tertentu." %}{% endfor %}
         </tbody>
@@ -79,7 +79,7 @@
         <tbody>
         {% for a in activities %}
           <tr>
-            <td class="whitespace-nowrap">{{ a.logged_at|date:"d M Y H:i" }}</td>
+            <td class="whitespace-nowrap">{{ a.logged_at|date:"SHORT_DATETIME_FORMAT" }}</td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' a.cycle_id %}">{{ a.cycle.variety }} @ {{ a.cycle.element }}</a></td>
             <td>{{ a.get_stage_at_activity_display }}</td>
             {% if report_tab == 'irigasi' %}<td class="num">{% if a.quantity %}{{ a.quantity|kg }} {{ a.unit }}{% else %}—{% endif %}</td><td class="num">{% if a.duration_minutes %}{{ a.duration_minutes }} {% translate "mnt" %}{% else %}—{% endif %}</td>

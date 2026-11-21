@@ -50,10 +50,10 @@
     <div>
       <div class="app-doc__label">{% translate "Kasir" %}</div>
       <div class="app-doc__strong">{{ order.cashier.get_full_name|default:order.cashier.username }}</div>
-      {% if order.status == 'VOIDED' %}<div class="app-doc__muted">{% translate "Dibatalkan" %} {{ order.voided_at|date:"d-m-Y H:i" }} · {{ order.get_void_reason_display }}{% if order.void_note %}: {{ order.void_note }}{% endif %}</div>{% endif %}
+      {% if order.status == 'VOIDED' %}<div class="app-doc__muted">{% translate "Dibatalkan" %} {{ order.voided_at|date:"SHORT_DATETIME_FORMAT" }} · {{ order.get_void_reason_display }}{% if order.void_note %}: {{ order.void_note }}{% endif %}</div>{% endif %}
     </div>
     <dl class="gt-kv gt-kv--compact app-doc__dates">
-      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ order.created_at|date:"d F Y H:i" }}</dd></div>
+      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ order.created_at|date:"DATETIME_FORMAT" }}</dd></div>
       <div><dt>{% translate "Bayar" %}</dt><dd>{{ order.get_payment_method_display }}</dd></div>
     </dl>
   </section>
@@ -83,9 +83,9 @@
   </div>
   <hr style="border-top:1px dashed #000;margin:6px 0">
   <div class="rcpt-kv"><span>{% translate "No" %}</span><span>: {{ order.order_number }}</span></div>
-  <div class="rcpt-kv"><span>{% translate "Tgl" %}</span><span>: {{ order.created_at|date:"d-m-Y H:i" }}</span></div>
+  <div class="rcpt-kv"><span>{% translate "Tgl" %}</span><span>: {{ order.created_at|date:"SHORT_DATETIME_FORMAT" }}</span></div>
   <div class="rcpt-kv"><span>{% translate "Kasir" %}</span><span>: {{ order.cashier.get_full_name|default:order.cashier.username }}</span></div>
-  {% if order.status == 'VOIDED' %}<div class="void-stamp">{% translate "DIBATALKAN" %} {{ order.voided_at|date:"d-m-Y H:i" }}<br>{{ order.get_void_reason_display }}{% if order.void_note %}: {{ order.void_note }}{% endif %}</div>{% endif %}
+  {% if order.status == 'VOIDED' %}<div class="void-stamp">{% translate "DIBATALKAN" %} {{ order.voided_at|date:"SHORT_DATETIME_FORMAT" }}<br>{{ order.get_void_reason_display }}{% if order.void_note %}: {{ order.void_note }}{% endif %}</div>{% endif %}
   <hr style="border-top:1px dashed #000;margin:6px 0">
   {% for line in order.lines.all %}
   <div>{{ line.product.variety.name }} ({{ line.product.grade }})</div>

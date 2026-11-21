@@ -8,7 +8,7 @@
   <div class="app-pagehead__text">
     <a href="{% url 'invoicing:invoices' %}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Invoice" %}</a>
     <h1 class="app-pagehead__title"><span class="app-mono-head">{{ invoice }}</span> {% pill invoice.pay_label invoice.pill_key %}</h1>
-    <p><a class="app-link--plain" href="{% url 'invoicing:buyer_detail' invoice.buyer_id %}">{{ invoice.buyer }}</a>{% if invoice.issue_date %} {% translate "· terbit" %} {{ invoice.issue_date|date:"d M Y" }}{% endif %}</p>
+    <p><a class="app-link--plain" href="{% url 'invoicing:buyer_detail' invoice.buyer_id %}">{{ invoice.buyer }}</a>{% if invoice.issue_date %} {% translate "· terbit" %} {{ invoice.issue_date|date:"SHORT_DATE_FORMAT" }}{% endif %}</p>
   </div>
   <div class="gt-pagehead__actions">
     {% if invoice.status == 'DRAFT' %}
@@ -44,7 +44,7 @@
   {% include "components/kpi.html" with stat=True featured=True label=_("Total") value=invoice.total_idr|rupiah %}
   {% include "components/kpi.html" with stat=True label=_("Dibayar") value=paid|rupiah %}
   {% if outstanding %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah tone="danger" %}{% else %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah %}{% endif %}
-  {% include "components/kpi.html" with stat=True compact=True label=_("Jatuh tempo") value=invoice.due_date|date:"d/m/Y" %}
+  {% include "components/kpi.html" with stat=True compact=True label=_("Jatuh tempo") value=invoice.due_date|date:"SHORT_DATE_FORMAT" %}
 </div>
 {% endif %}
 
@@ -59,7 +59,7 @@
         <tr>
           <td><b>{{ ln.product }}</b>
             {% for a in ln.allocations.all %}
-            <span class="app-sub">{{ a.qty_kg|kg }} {% translate "kg dari LOT-" %}{{ a.lot_id }} {% translate "· panen" %} {{ a.lot.harvested_at|date:"d M" }} · {{ a.lot.harvest_batch.cycle.element }} {% translate "· HPP" %} {{ a.unit_cogs_idr|rupiah }}{% translate "/kg ·" %} <a class="app-link" href="{% url 'reports:trace_cycle' a.lot.harvest_batch.cycle_id %}">{% translate "telusuri" %}</a></span>
+            <span class="app-sub">{{ a.qty_kg|kg }} {% translate "kg dari LOT-" %}{{ a.lot_id }} {% translate "· panen" %} {{ a.lot.harvested_at|date:"MONTH_DAY_FORMAT" }} · {{ a.lot.harvest_batch.cycle.element }} {% translate "· HPP" %} {{ a.unit_cogs_idr|rupiah }}{% translate "/kg ·" %} <a class="app-link" href="{% url 'reports:trace_cycle' a.lot.harvest_batch.cycle_id %}">{% translate "telusuri" %}</a></span>
             {% endfor %}
           </td>
           <td class="num">{{ ln.qty_kg|kg }}</td>
@@ -100,7 +100,7 @@
       <ul class="gt-list gt-list--divided">
       {% for a in invoice.allocations.all %}
         <li class="gt-row">
-          <span class="gt-row__body"><span class="gt-row__title">{{ a.amount_idr|rupiah }}</span><span class="app-row__meta">{{ a.payment.paid_on|date:"d M Y" }} · {{ a.payment.get_method_display }}</span></span>
+          <span class="gt-row__body"><span class="gt-row__title">{{ a.amount_idr|rupiah }}</span><span class="app-row__meta">{{ a.payment.paid_on|date:"SHORT_DATE_FORMAT" }} · {{ a.payment.get_method_display }}</span></span>
           {% if invoice.status == 'ISSUED' %}<span class="gt-row__trail">{% blocktranslate asvar t_data_confirm_11 with v1=a.amount_idr|rupiah v2=invoice v3=invoice.buyer %}{{ v1 }} dilepas dari {{ v2 }} dan kembali menjadi kredit {{ v3 }}. Status pembayaran invoice ikut berubah.{% endblocktranslate %}<form method="post" action="{% url 'invoicing:allocation_remove' a.pk %}" data-confirm-title="{% translate 'Lepas pembayaran ini?' %}" data-confirm="{{ t_data_confirm_11 }}" data-confirm-action="{% translate 'Lepas pembayaran' %}" data-confirm-reason="Alasan">{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Lepas" %}</button></form></span>{% endif %}
         </li>
       {% endfor %}
@@ -111,9 +111,9 @@
     <section class="gt-card" aria-labelledby="h-hist">
       <div class="gt-card__head"><h2 class="gt-card__title" id="h-hist">{% translate "Riwayat" %}</h2></div>
       <ul class="gt-list app-history">
-        <li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--muted"></i></span><span class="gt-row__body"><span class="gt-row__title">{% translate "Dibuat" %}</span><span class="app-row__meta">{{ invoice.created_at|date:"d M Y H:i" }} · {{ invoice.created_by }}</span></span></li>
-        {% if invoice.issued_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot"></i></span><span class="gt-row__body"><span class="gt-row__title">{% translate "Terbit" %}</span><span class="app-row__meta">{{ invoice.issued_at|date:"d M Y H:i" }} · {{ invoice.issued_by }}</span></span></li>{% endif %}
-        {% if invoice.voided_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--danger"></i></span><span class="gt-row__body"><span class="gt-row__title app-value--danger">{% translate "Dibatalkan" %}</span><span class="app-row__meta">{{ invoice.voided_at|date:"d M Y H:i" }} · {{ invoice.voided_by }}</span></span></li>{% endif %}
+        <li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--muted"></i></span><span class="gt-row__body"><span class="gt-row__title">{% translate "Dibuat" %}</span><span class="app-row__meta">{{ invoice.created_at|date:"SHORT_DATETIME_FORMAT" }} · {{ invoice.created_by }}</span></span></li>
+        {% if invoice.issued_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot"></i></span><span class="gt-row__body"><span class="gt-row__title">{% translate "Terbit" %}</span><span class="app-row__meta">{{ invoice.issued_at|date:"SHORT_DATETIME_FORMAT" }} · {{ invoice.issued_by }}</span></span></li>{% endif %}
+        {% if invoice.voided_at %}<li class="gt-row"><span class="gt-row__lead"><i class="gt-dot gt-dot--danger"></i></span><span class="gt-row__body"><span class="gt-row__title app-value--danger">{% translate "Dibatalkan" %}</span><span class="app-row__meta">{{ invoice.voided_at|date:"SHORT_DATETIME_FORMAT" }} · {{ invoice.voided_by }}</span></span></li>{% endif %}
       </ul>
     </section>
   </aside>

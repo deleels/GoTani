@@ -10,7 +10,7 @@
   <div class="app-pagehead__text">
     <a href="{% url 'reports:trace_index' %}" class="app-back no-print">{% icon "chevron-left" 16 %} {% translate "Telusuri" %}</a>
     <h1>{{ c.variety }} <span class="app-muted">@ {{ c.element }}</span></h1>
-    <p class="app-chips"><span class="gt-chip gt-chip--sm">{{ c.element.get_element_type_display }}</span><span class="gt-chip gt-chip--sm">{{ c.element.area_m2|kg }} m²</span><span class="gt-chip gt-chip--sm">{% translate "mulai" %} {{ c.planting_start_date|date:"d M Y" }}</span><span class="gt-chip gt-chip--sm">{{ c.get_stage_display }}</span>{% if c.closed_at %}{% with d=c.closed_at|date:"d M Y" %}{% blocktranslate asvar closed_lbl %}Ditutup {{ d }}{% endblocktranslate %}{% pill closed_lbl tone="gray" %}{% endwith %}{% endif %}</p>
+    <p class="app-chips"><span class="gt-chip gt-chip--sm">{{ c.element.get_element_type_display }}</span><span class="gt-chip gt-chip--sm">{{ c.element.area_m2|kg }} m²</span><span class="gt-chip gt-chip--sm">{% translate "mulai" %} {{ c.planting_start_date|date:"SHORT_DATE_FORMAT" }}</span><span class="gt-chip gt-chip--sm">{{ c.get_stage_display }}</span>{% if c.closed_at %}{% with d=c.closed_at|date:"SHORT_DATE_FORMAT" %}{% blocktranslate asvar closed_lbl %}Ditutup {{ d }}{% endblocktranslate %}{% pill closed_lbl tone="gray" %}{% endwith %}{% endif %}</p>
   </div>
   <div class="gt-pagehead__actions no-print">
     <a href="?format=csv" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Unduh CSV" %}</a>
@@ -37,7 +37,7 @@
       <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Kegiatan" %}</th><th>{% translate "Tahap" %}</th><th>{% translate "Input" %}</th><th class="num">{% translate "Biaya input" %}</th></tr></thead>
       <tbody>
       {% for a in trace.activities %}
-        <tr><td class="app-muted">{{ a.logged_at|date:"d M Y" }}<span class="app-sub">{{ a.logged_at|date:"H:i" }}</span></td><td>{{ a.get_activity_type_display }}</td><td><span class="gt-chip gt-chip--sm">{{ a.get_stage_at_activity_display }}</span></td><td>{% if a.input_item %}{{ a.input_item.name }} <span class="app-muted">{{ a.quantity|kg }} {{ a.unit }}</span>{% else %}—{% endif %}</td>
+        <tr><td class="app-muted">{{ a.logged_at|date:"SHORT_DATE_FORMAT" }}<span class="app-sub">{{ a.logged_at|date:"TIME_FORMAT" }}</span></td><td>{{ a.get_activity_type_display }}</td><td><span class="gt-chip gt-chip--sm">{{ a.get_stage_at_activity_display }}</span></td><td>{% if a.input_item %}{{ a.input_item.name }} <span class="app-muted">{{ a.quantity|kg }} {{ a.unit }}</span>{% else %}—{% endif %}</td>
         <td class="num">{% for e in a.usage_expenses.all %}{{ e.amount_idr|rupiah }}{% empty %}—{% endfor %}</td></tr>
       {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Tidak ada kegiatan." %}</td></tr>{% endfor %}
       </tbody>
@@ -50,7 +50,7 @@
   {% for bt in trace.batches %}{% with b=bt.batch %}
   <div class="app-batch">
     <div class="app-batch__head">
-      <span class="app-strong">{% translate "Batch #" %}{{ b.pk }} <span class="app-muted">· {{ b.harvested_at|date:"d M Y H:i" }}</span></span>
+      <span class="app-strong">{% translate "Batch #" %}{{ b.pk }} <span class="app-muted">· {{ b.harvested_at|date:"SHORT_DATETIME_FORMAT" }}</span></span>
       <span class="app-chips"><span class="gt-chip gt-chip--sm">HIGH {{ b.high_quality_kg|kg }} kg</span><span class="gt-chip gt-chip--sm">LOW {{ b.low_quality_kg|kg }} kg</span><span class="gt-chip gt-chip--sm">{% translate "susut panen" %} {{ b.harvest_loss_kg|kg }} kg</span></span>
     </div>
     <dl class="gt-kv gt-kv--compact">
@@ -61,7 +61,7 @@
       <summary>{% translate "Biaya yang diserap" %} <span class="app-tab__count">{{ bt.expenses|length }}</span></summary>
       <div class="app-table-wrap"><table class="gt-table">
         <tbody>
-        {% for e in bt.expenses %}<tr><td class="app-muted">{{ e.date_incurred|date:"d M Y" }}</td><td>{{ e.category }}</td><td class="app-muted">{{ e.narration|default:e.vendor }}</td><td class="num">{{ e.amount_idr|rupiah }}</td></tr>
+        {% for e in bt.expenses %}<tr><td class="app-muted">{{ e.date_incurred|date:"SHORT_DATE_FORMAT" }}</td><td>{{ e.category }}</td><td class="app-muted">{{ e.narration|default:e.vendor }}</td><td class="num">{{ e.amount_idr|rupiah }}</td></tr>
         {% empty %}<tr><td class="app-muted">{% translate "Tidak ada." %}</td></tr>{% endfor %}
         </tbody>
       </table></div>
@@ -79,14 +79,14 @@
         <li><span>{% translate "Sisa" %}</span><b>{{ lot.qty_remaining_kg|kg }} kg</b></li>
       </ol>
       {% if lt.spoilages %}
-      <ul class="gt-list app-lot__spoil">{% for s in lt.spoilages %}<li>{% pill _("Susut") tone="orange" %} {{ s.recorded_at|date:"d M Y" }} · {{ s.qty_kg|kg }} {% translate "kg (" %}{{ s.get_reason_display }}{% translate ") · kerugian" %} <b>{{ s.loss_idr|rupiah }}</b></li>{% endfor %}</ul>
+      <ul class="gt-list app-lot__spoil">{% for s in lt.spoilages %}<li>{% pill _("Susut") tone="orange" %} {{ s.recorded_at|date:"SHORT_DATE_FORMAT" }} · {{ s.qty_kg|kg }} {% translate "kg (" %}{{ s.get_reason_display }}{% translate ") · kerugian" %} <b>{{ s.loss_idr|rupiah }}</b></li>{% endfor %}</ul>
       {% endif %}
       {% if lt.allocations %}
       <div class="app-table-wrap"><table class="gt-table">
         <thead><tr><th>{% translate "Order" %}</th><th>{% translate "Tanggal" %}</th><th class="num">{% translate "Kg" %}</th><th class="num">{% translate "Harga/kg" %}</th><th>{% translate "Status" %}</th></tr></thead>
         <tbody>
         {% for a in lt.allocations %}
-        <tr{% if a.line.order.status == 'VOIDED' %} class="app-row--void"{% endif %}><td><a class="app-link app-mono" href="{% url 'reports:trace_order' a.line.order.order_number %}">{{ a.line.order.order_number }}</a></td><td class="app-muted">{{ a.line.order.created_at|date:"d M Y H:i" }}</td><td class="num">{{ a.qty_kg|kg }}</td><td class="num">{{ a.line.unit_price_idr|rupiah }}</td><td>{% pill a.line.order.get_status_display a.line.order.status %}</td></tr>
+        <tr{% if a.line.order.status == 'VOIDED' %} class="app-row--void"{% endif %}><td><a class="app-link app-mono" href="{% url 'reports:trace_order' a.line.order.order_number %}">{{ a.line.order.order_number }}</a></td><td class="app-muted">{{ a.line.order.created_at|date:"SHORT_DATETIME_FORMAT" }}</td><td class="num">{{ a.qty_kg|kg }}</td><td class="num">{{ a.line.unit_price_idr|rupiah }}</td><td>{% pill a.line.order.get_status_display a.line.order.status %}</td></tr>
         {% endfor %}
         </tbody>
       </table></div>
@@ -114,7 +114,7 @@
   <div class="app-table-wrap">
     <table class="gt-table">
       <tbody>
-      {% for e in trace.unabsorbed_expenses %}<tr><td class="app-muted">{{ e.date_incurred|date:"d M Y" }}</td><td>{{ e.category }}</td><td class="app-muted">{{ e.narration|default:e.vendor }}</td><td class="num">{{ e.amount_idr|rupiah }}</td></tr>
+      {% for e in trace.unabsorbed_expenses %}<tr><td class="app-muted">{{ e.date_incurred|date:"SHORT_DATE_FORMAT" }}</td><td>{{ e.category }}</td><td class="app-muted">{{ e.narration|default:e.vendor }}</td><td class="num">{{ e.amount_idr|rupiah }}</td></tr>
       {% empty %}<tr><td class="app-empty-cell app-muted">{% translate "Tidak ada." %}</td></tr>{% endfor %}
       </tbody>
     </table>

@@ -19,8 +19,8 @@
 
 <section class="gt-card app-section" aria-label="{% translate 'Ringkasan order' %}">
   <div class="gt-metrics app-metrics4">
-    <div class="gt-metric"><span class="gt-metric__label">{% translate "Waktu" %}</span><span class="gt-metric__value">{{ order.created_at|date:"d M Y" }}</span><span class="gt-metric__note">{{ order.created_at|date:"H:i" }} {% translate "· kasir" %} {{ order.cashier }}</span></div>
-    <div class="gt-metric"><span class="gt-metric__label">{% translate "Pembayaran" %}</span><span class="gt-metric__value">{{ order.get_payment_method_display }}</span>{% if order.voided_at %}<span class="gt-metric__note">{% translate "Dibatalkan" %} {{ order.voided_at|date:"d M Y H:i" }} {% translate "oleh" %} {{ order.voided_by }}</span>{% endif %}</div>
+    <div class="gt-metric"><span class="gt-metric__label">{% translate "Waktu" %}</span><span class="gt-metric__value">{{ order.created_at|date:"SHORT_DATE_FORMAT" }}</span><span class="gt-metric__note">{{ order.created_at|date:"TIME_FORMAT" }} {% translate "· kasir" %} {{ order.cashier }}</span></div>
+    <div class="gt-metric"><span class="gt-metric__label">{% translate "Pembayaran" %}</span><span class="gt-metric__value">{{ order.get_payment_method_display }}</span>{% if order.voided_at %}<span class="gt-metric__note">{% translate "Dibatalkan" %} {{ order.voided_at|date:"SHORT_DATETIME_FORMAT" }} {% translate "oleh" %} {{ order.voided_by }}</span>{% endif %}</div>
     <div class="gt-metric"><span class="gt-metric__label">{% translate "Total" %}</span><span class="gt-metric__value">{{ order.total_revenue_idr|rupiah }}</span></div>
     <div class="gt-metric"><span class="gt-metric__label">{% translate "HPP" %}</span><span class="gt-metric__value">{{ order.total_cogs_idr|rupiah }}</span></div>
   </div>
@@ -38,8 +38,8 @@
           <td class="app-mono">#{{ a.lot_id }}</td>
           <td class="num">{{ a.qty_kg|kg }}</td>
           <td class="num">{{ a.unit_cogs_idr|rupiah }}</td>
-          <td>#{{ b.pk }}<span class="app-sub">{{ b.harvested_at|date:"d M Y" }}</span></td>
-          <td><a class="app-link" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }}</a><span class="app-sub">{% translate "mulai" %} {{ b.cycle.planting_start_date|date:"d M Y" }} · {{ b.cycle.get_stage_display }}</span></td>
+          <td>#{{ b.pk }}<span class="app-sub">{{ b.harvested_at|date:"SHORT_DATE_FORMAT" }}</span></td>
+          <td><a class="app-link" href="{% url 'reports:trace_cycle' b.cycle_id %}">{{ b.cycle.variety }}</a><span class="app-sub">{% translate "mulai" %} {{ b.cycle.planting_start_date|date:"SHORT_DATE_FORMAT" }} · {{ b.cycle.get_stage_display }}</span></td>
           <td>{{ b.cycle.element }}<span class="app-sub">{{ b.cycle.element.get_element_type_display }}</span></td>
         </tr>
       {% endwith %}{% endfor %}

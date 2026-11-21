@@ -28,7 +28,7 @@
     <ul class="gt-list gt-list--divided">
       {% for c in cycles %}
       <li><a class="gt-row" href="{% url 'reports:trace_cycle' c.pk %}">
-        <span class="gt-row__body"><span class="gt-row__title">{{ c.variety }} <span class="app-muted">@ {{ c.element }}</span></span><span class="gt-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"d M Y" }}</span></span>
+        <span class="gt-row__body"><span class="gt-row__title">{{ c.variety }} <span class="app-muted">@ {{ c.element }}</span></span><span class="gt-row__meta">{% translate "mulai" %} {{ c.planting_start_date|date:"SHORT_DATE_FORMAT" }}</span></span>
         <span class="gt-row__trail">{% if c.is_active %}<span class="gt-chip gt-chip--sm">{{ c.get_stage_display }}</span>{% else %}{% pill _("Ditutup") tone="gray" %}{% endif %}{% icon "chevron-right" 16 %}</span></a></li>
       {% empty %}<li class="app-muted app-trace__empty">{% translate "Belum ada siklus." %}</li>{% endfor %}
     </ul>

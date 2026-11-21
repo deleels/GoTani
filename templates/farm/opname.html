@@ -40,7 +40,7 @@
         <thead><tr><th>{% translate "Waktu" %}</th><th>{% translate "Produk" %}</th><th class="num">{% translate "Sistem" %}</th><th class="num">{% translate "Fisik" %}</th><th class="num">{% translate "Selisih" %}</th>{% if roles.finance %}<th class="num">{% translate "Kerugian" %}</th>{% endif %}<th>{% translate "Status" %}</th></tr></thead>
         <tbody>
         {% for c in page.object_list %}
-          <tr><td class="whitespace-nowrap">{{ c.counted_at|date:"d-m-Y H:i" }}<p class="app-row__meta">{{ c.counted_by.username }}</p></td>
+          <tr><td class="whitespace-nowrap">{{ c.counted_at|date:"SHORT_DATETIME_FORMAT" }}<p class="app-row__meta">{{ c.counted_by.username }}</p></td>
             <td>{{ c.product }}{% if c.note %}<p class="app-row__meta">{{ c.note }}</p>{% endif %}</td>
             <td class="num">{{ c.system_kg|kg }}</td><td class="num">{{ c.counted_kg|kg }}</td>
             <td class="num {% if c.difference_kg < 0 %}app-value--danger{% elif c.difference_kg > 0 %}app-value--late{% endif %}">{{ c.difference_kg|kg }} kg</td>

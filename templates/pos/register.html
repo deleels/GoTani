@@ -8,7 +8,7 @@
 <div class="gt-pagehead">
   <div class="app-pagehead__text">
     <h1>{% translate "Kasir (POS)" %}</h1>
-    <p class="app-pagehead__sub">{% if shift %}{% translate "Shift dibuka" %} {{ shift.opened_at|date:"H:i" }}{% else %}{% translate "Shift belum dibuka" %}{% endif %} {% info_tip _("Stok diperbarui otomatis tiap 15 detik. Total final dihitung server dengan harga resmi.") %}</p>
+    <p class="app-pagehead__sub">{% if shift %}{% translate "Shift dibuka" %} {{ shift.opened_at|date:"TIME_FORMAT" }}{% else %}{% translate "Shift belum dibuka" %}{% endif %} {% info_tip _("Stok diperbarui otomatis tiap 15 detik. Total final dihitung server dengan harga resmi.") %}</p>
   </div>
   <div class="gt-pagehead__actions"><a href="{% url 'pos:orders' %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Riwayat penjualan" %}</a></div>
 </div>

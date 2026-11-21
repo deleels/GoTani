@@ -10,7 +10,7 @@
       <h1 class="app-pagehead__title">{{ cycle.variety }}
         {% if cycle.is_active %}{% pill cycle.get_stage_display tone="green" %}{% else %}{% pill _("Ditutup") tone="gray" %}{% endif %}
         {% if overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}</h1>
-      <p>{{ cycle.element }} {% translate "· mulai" %} {{ cycle.planting_start_date|date:"d M Y" }} · {{ days }} {% translate "hari" %}{% if not cycle.is_active %} {% translate "· ditutup" %} {{ cycle.closed_at|date:"d M Y" }}{% endif %}</p>
+      <p>{{ cycle.element }} {% translate "· mulai" %} {{ cycle.planting_start_date|date:"SHORT_DATE_FORMAT" }} · {{ days }} {% translate "hari" %}{% if not cycle.is_active %} {% translate "· ditutup" %} {{ cycle.closed_at|date:"SHORT_DATE_FORMAT" }}{% endif %}</p>
     </div>
     <div class="gt-pagehead__actions">
       {% if cycle.is_active %}
@@ -36,7 +36,7 @@
     <div class="gt-card__head"><h2 class="gt-card__title" id="h-short">{% translate "Ringkas" %}</h2></div>
     <div class="gt-metrics app-metrics4">
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Perkiraan panen" %}{% if cycle.variety.days_to_harvest %} {% with t=cycle.variety.days_to_harvest|stringformat:"d" %}{% blocktranslate asvar tip_age %}Umur panen varietas {{ t }} hari.{% endblocktranslate %}{% info_tip tip_age %}{% endwith %}{% endif %}</span>
-        <span class="gt-metric__value {% if overdue %}app-value--late{% endif %}">{{ cycle.expected_harvest_date|date:"d/m/Y"|default:"—" }}</span></div>
+        <span class="gt-metric__value {% if overdue %}app-value--late{% endif %}">{{ cycle.expected_harvest_date|date:"SHORT_DATE_FORMAT"|default:"—" }}</span></div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Hasil layak jual" %}</span>
         <span class="gt-metric__value">{{ ys.actual_kg|kg }} kg</span>
         {% if ys.pct is not None %}<span class="gt-seg app-yield" aria-hidden="true"><i class="ok" style="flex: 0 0 {% if ys.pct > 100 %}100{% else %}{{ ys.pct|stringformat:'.1f' }}{% endif %}%"></i><i class="todo"></i></span>
@@ -45,7 +45,7 @@
         <span class="gt-metric__value">{{ cycle.planted_qty|default:"—" }}</span>
         {% if ys.per_plant_kg is not None %}<span class="gt-metric__note">{{ ys.per_plant_kg|kg }} {% translate "kg per tanaman" %}</span>{% endif %}</div>
       <div class="gt-metric"><span class="gt-metric__label">{% translate "Cek pra-panen" %}</span>
-        {% if latest_check %}<span class="gt-metric__value {% if latest_check.completed_pct < 100 %}app-value--late{% else %}app-value--positive{% endif %}">{{ latest_check.completed_pct|pct:0 }}</span><span class="gt-metric__note">{{ latest_check.recorded_at|date:"d M Y H:i" }}</span>
+        {% if latest_check %}<span class="gt-metric__value {% if latest_check.completed_pct < 100 %}app-value--late{% else %}app-value--positive{% endif %}">{{ latest_check.completed_pct|pct:0 }}</span><span class="gt-metric__note">{{ latest_check.recorded_at|date:"SHORT_DATETIME_FORMAT" }}</span>
         {% else %}<span class="gt-metric__value app-muted">—</span><span class="gt-metric__note">{% translate "Belum ada" %}</span>{% endif %}</div>
     </div>
   </section>
@@ -67,7 +67,7 @@
         <span class="gt-step__mark"></span>
         <div class="app-step__body">
           <span class="gt-step__title">{{ e.title }}</span>{% if e.body %} <span class="app-muted">{{ e.body }}</span>{% endif %}
-          <span class="gt-step__meta app-block">{{ e.at|date:"d M Y H:i" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</span>
+          <span class="gt-step__meta app-block">{{ e.at|date:"SHORT_DATETIME_FORMAT" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</span>
           {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-photo"></a>{% endif %}
         </div>
       </li>

@@ -29,7 +29,7 @@
       {% for o in orders %}
         <tr{% if o.status == 'VOIDED' %} class="app-row--void"{% endif %}>
           <td class="app-mono">{{ o.order_number }}</td>
-          <td>{{ o.created_at|date:"H:i" }}</td>
+          <td>{{ o.created_at|date:"TIME_FORMAT" }}</td>
           <td>{{ o.cashier }}</td>
           <td>{{ o.get_payment_method_display }}</td>
           <td class="num"><b>{{ o.total_gross_idr|rupiah }}</b></td>

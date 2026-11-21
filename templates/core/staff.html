@@ -33,7 +33,7 @@
             <td><div class="gt-person"><span class="gt-avatar gt-avatar--sm" aria-hidden="true">{{ u.get_full_name|default:u.username|first|upper }}</span>
               <span class="gt-person__text"><span class="gt-person__name app-strong">{{ u.get_full_name|default:u.username }}</span><span class="gt-person__meta">@{{ u.username }}{% if u.pk == user.pk %} {% translate "· Anda" %}{% endif %}</span></span></div></td>
             <td>{% if u.role %}<span class="gt-chip gt-chip--sm">{{ u.role }}</span>{% else %}—{% endif %}{% if u.is_superuser %} <span class="gt-chip gt-chip--sm">{% translate "superuser" %}</span>{% endif %}</td>
-            <td class="app-muted">{{ u.date_joined|date:"d M Y" }}</td>
+            <td class="app-muted">{{ u.date_joined|date:"SHORT_DATE_FORMAT" }}</td>
             <td>{% if not u.is_active %}{% pill _("Nonaktif") "INACTIVE" %}{% elif u.profile.must_change_password %}{% pill _("Ganti sandi") tone="yellow" %}{% else %}{% pill _("Aktif") "ACTIVE" %}{% endif %}</td>
             <td class="num">
               <div class="relative inline-block text-left" x-data="{ open: false, pw: false }" @click.outside="open=false" @keydown.escape="open=false">

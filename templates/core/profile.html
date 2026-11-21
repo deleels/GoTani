@@ -18,7 +18,7 @@
     </div>
     <dl class="gt-kv gt-kv--compact app-section-gap">
       <div><dt>{% translate "Peran" %}</dt><dd>{% if role %}<span class="gt-chip gt-chip--sm">{{ role }}</span>{% else %}—{% endif %}</dd></div>
-      <div><dt>{% translate "Bergabung" %}</dt><dd>{{ user.date_joined|date:"d M Y" }}</dd></div>
+      <div><dt>{% translate "Bergabung" %}</dt><dd>{{ user.date_joined|date:"SHORT_DATE_FORMAT" }}</dd></div>
     </dl>
     <a href="{% url 'core:password_change' %}" class="gt-btn gt-btn--outline gt-btn--md gt-btn--block app-section-gap">{% translate "Ganti sandi" %}</a>
   </aside>

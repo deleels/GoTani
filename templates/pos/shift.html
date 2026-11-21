@@ -22,7 +22,7 @@
   <div class="app-shift__main">
     <section class="gt-card" aria-labelledby="h-shift">
       <div class="gt-card__head"><h2 class="gt-card__title" id="h-shift">{{ shift }} {% pill _("Terbuka") tone="green" %}</h2>
-        <span class="gt-card__hint">{% translate "Dibuka" %} {{ shift.opened_by.get_full_name|default:shift.opened_by.username }} · {{ shift.opened_at|date:"d M H:i" }}</span></div>
+        <span class="gt-card__hint">{% translate "Dibuka" %} {{ shift.opened_by.get_full_name|default:shift.opened_by.username }} · {{ shift.opened_at|date:"SHORT_DATETIME_FORMAT" }}</span></div>
       <div class="gt-metrics app-shift__metrics">
         <div class="gt-metric"><span class="gt-metric__label">{% translate "Modal awal" %}</span><span class="gt-metric__value">{{ summary.opening|rupiah }}</span></div>
         <div class="gt-metric"><span class="gt-metric__label">{% translate "Order" %}</span><span class="gt-metric__value">{{ summary.orders }}</span>{% if summary.voided %}<span class="gt-metric__note app-value--danger">{{ summary.voided }} {% translate "batal" %}</span>{% endif %}</div>
@@ -38,7 +38,7 @@
         <table class="gt-table">
           <tbody>
           {% for m in summary.movements %}
-            <tr><td class="app-muted">{{ m.created_at|date:"H:i" }}</td><td>{{ m.get_kind_display }}</td><td class="app-muted">{{ m.note }}</td>
+            <tr><td class="app-muted">{{ m.created_at|date:"TIME_FORMAT" }}</td><td>{{ m.get_kind_display }}</td><td class="app-muted">{{ m.note }}</td>
               <td class="num {% if m.signed_idr < 0 %}app-value--danger{% else %}app-value--positive{% endif %}"><b>{{ m.signed_idr|rupiah }}</b></td></tr>
           {% empty %}<tr><td class="app-empty-cell app-muted">{% translate "Belum ada mutasi selain penjualan." %}</td></tr>{% endfor %}
           </tbody>
@@ -98,7 +98,7 @@
     {% for s in page.object_list %}
       <tr>
         <td>{{ s }}<span class="app-row__meta app-block">{{ s.opened_by.username }}{% if s.force_closed %} {% translate "· tutup paksa oleh" %} {{ s.closed_by.username }}{% endif %}</span></td>
-        <td>{{ s.closed_at|date:"d M H:i" }}</td>
+        <td>{{ s.closed_at|date:"SHORT_DATETIME_FORMAT" }}</td>
         <td class="num">{{ s.expected_idr|rupiah }}</td><td class="num">{{ s.counted_idr|rupiah }}</td>
         <td class="num {% if s.difference_idr < 0 %}app-value--danger{% elif s.difference_idr > 0 %}app-value--warning{% endif %}"><b>{{ s.difference_idr|rupiah }}</b></td>
         <td>

@@ -58,7 +58,7 @@
       <li class="gt-row">
         <span class="gt-row__body">
           <a class="gt-row__title app-link--plain" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a>
-          <span class="app-row__meta">{{ c.element }} {% translate "· hari ke-" %}{{ c.days }}{% if c.expected_harvest_date %} {% translate "· panen" %} {{ c.expected_harvest_date|date:"d M Y" }}{% endif %}</span>
+          <span class="app-row__meta">{{ c.element }} {% translate "· hari ke-" %}{{ c.days }}{% if c.expected_harvest_date %} {% translate "· panen" %} {{ c.expected_harvest_date|date:"SHORT_DATE_FORMAT" }}{% endif %}</span>
           {% if c.overdue %}<span class="app-row__meta app-value--danger">{% translate "Perkiraan panen terlewat, tahap belum Panen" %}</span>{% endif %}
         </span>
         <span class="gt-row__trail">{% pill c.get_stage_display tone="green" %}</span>

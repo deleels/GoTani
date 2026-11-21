@@ -26,7 +26,7 @@
       {% for inv in open_invoices %}
         <tr>
           <td class="app-mono">{{ inv }}</td>
-          <td class="app-muted">{{ inv.due_date|date:"d M Y" }}</td>
+          <td class="app-muted">{{ inv.due_date|date:"SHORT_DATE_FORMAT" }}</td>
           <td class="num">{{ inv.outstanding|rupiah }}</td>
           <td><div class="app-alloc" data-errors-at-end>{% blocktranslate asvar t_aria_label_12 with v1=inv %}Dibayar untuk {{ v1 }}{% endblocktranslate %}
             <span class="app-money app-money--sm"><input name="alloc_{{ inv.pk }}" data-num="money" inputmode="decimal" autocomplete="off" data-alloc

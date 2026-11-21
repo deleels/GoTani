@@ -114,6 +114,8 @@ LANGUAGE_CODE = "id"
 # else the language cookie, else LANGUAGE_CODE — never the browser's Accept-Language.
 LANGUAGES = [("id", "Bahasa Indonesia"), ("en", "English")]
 LOCALE_PATHS = [BASE_DIR / "locale"]
+# App date formats per language (D119): templates use the named formats, e.g. |date:"SHORT_DATE_FORMAT".
+FORMAT_MODULE_PATH = ["core.formats"]
 TIME_ZONE = "Asia/Jakarta"
 USE_I18N = True
 USE_TZ = True

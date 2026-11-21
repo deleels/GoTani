@@ -51,7 +51,7 @@
         <tbody>
         {% for b in batches %}
           <tr>
-            <td><b>#{{ b.pk }}</b><span class="app-cellsub"><span class="whitespace-nowrap">{{ b.harvested_at|date:"d M Y" }}</span> {{ b.harvested_at|date:"H:i" }}</span></td>
+            <td><b>#{{ b.pk }}</b><span class="app-cellsub"><span class="whitespace-nowrap">{{ b.harvested_at|date:"SHORT_DATE_FORMAT" }}</span> {{ b.harvested_at|date:"TIME_FORMAT" }}</span></td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
             <td class="num"><span class="whitespace-nowrap">HIGH {{ b.high_quality_kg|kg }} kg</span><span class="app-cellsub"><span class="whitespace-nowrap">LOW {{ b.low_quality_kg|kg }} kg</span> · <span class="whitespace-nowrap">{% translate "Susut" %} {{ b.harvest_loss_kg|kg }} kg</span></span></td>
             {% if roles.finance %}

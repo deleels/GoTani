@@ -226,3 +226,9 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   one; Urungkan / Backspace / Ctrl+Z undo, Esc cancels, Enter finishes. It shows corner count and live area, and
   blocks saving while edges cross. Every action sits in the panel under the map; on the map there is only an
   icon button. Leaflet objects never enter Alpine state. OSM tiles send the origin as Referer (their policy).
+- **D119 One date style, named formats.** Screens write dates as `21 Nov 2026` (`SHORT_DATE_FORMAT`, with time
+  `SHORT_DATETIME_FORMAT`), printed documents as `21 November 2026` (`DATE_FORMAT`), chart axes as `21 Nov`
+  (`MONTH_DAY_FORMAT`). The patterns live in `core/formats/<lang>/formats.py` (`FORMAT_MODULE_PATH`) and are the
+  same day-first form in both languages; only month names follow the user's language. Templates never use a
+  literal pattern (tested), and Python uses `django.utils.formats.date_format`, never `strftime`, for text a user
+  reads (the bell used `strftime`, which printed English months in Indonesian).

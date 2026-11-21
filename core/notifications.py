@@ -11,6 +11,7 @@ from datetime import datetime, time, timedelta
 from django.db.models import Max, Min
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from farm.models import CropCycle, Expense, InputItem
 from inventory.models import Product
@@ -99,7 +100,7 @@ def notifications_payload(user, roles, today=None):
     items = build_notifications(roles, today)
     for n in items:
         n["unread"] = seen is None or n["at"] > seen
-        n["at"] = timezone.localtime(n["at"]).strftime("%d %b %Y %H:%M")
+        n["at"] = date_format(timezone.localtime(n["at"]), "SHORT_DATETIME_FORMAT")  # month name in the user's language (D119)
     return {"items": items, "unread": sum(1 for n in items if n["unread"])}
 
 

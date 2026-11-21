@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -100,7 +101,7 @@ class DashboardView(RoleRequiredMixin, TemplateView):
         f = float
         return {
             "daily": {
-                "labels": [d["date"].strftime("%d/%m") for d in m["daily"]],
+                "labels": [date_format(d["date"], "MONTH_DAY_FORMAT") for d in m["daily"]],
                 "revenue": [f(d["revenue"]) for d in m["daily"]],
                 "cogs": [f(d["cogs"]) for d in m["daily"]],
             },

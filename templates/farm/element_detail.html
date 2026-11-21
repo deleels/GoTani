@@ -35,7 +35,7 @@
       <thead><tr><th>{% translate "Varietas" %}</th><th>{% translate "Mulai" %}</th><th>{% translate "Tahap" %}</th><th class="num">{% translate "Hari" %}</th><th class="num">{% translate "Hasil (kg)" %}</th><th class="num">{% translate "Perkiraan" %}</th><th class="num">kg/m²</th></tr></thead>
       <tbody>
       {% for c in cycles %}
-        <tr><td><a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a></td><td>{{ c.planting_start_date|date:"d M Y" }}</td>
+        <tr><td><a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a></td><td>{{ c.planting_start_date|date:"SHORT_DATE_FORMAT" }}</td>
           <td>{% if c.is_active %}{{ c.get_stage_display }}{% else %}{% translate "Ditutup" %}{% endif %}</td><td class="num">{{ c.days }}</td>
           <td class="num">{{ c.summary.actual_kg|kg }}</td><td class="num">{{ c.expected_yield_kg|kg }}</td><td class="num">{{ c.kg_per_m2|kg }}</td></tr>
       {% empty %}{% include "farm/_empty_row.html" with cols=7 msg="Elemen ini belum pernah ditanami. Mulai siklus untuk mencatat kegiatan dan panen." %}{% endfor %}
@@ -47,7 +47,7 @@
   <section class="gt-card" aria-labelledby="h-recent">
     <div class="gt-card__head"><h2 class="gt-card__title" id="h-recent">{% translate "Kegiatan terbaru" %}</h2></div>
     <ul class="gt-list gt-list--divided">
-      {% for a in recent_activities %}<li class="gt-row"><span class="gt-row__body"><span class="gt-row__title">{{ a.get_activity_type_display }}</span><span class="app-row__meta">{{ a.cycle.variety }}{% if a.input_item %} · {{ a.input_item.name }} {{ a.quantity|kg }} {{ a.unit }}{% endif %}</span></span><span class="gt-row__trail app-row__meta">{{ a.logged_at|date:"d M Y H:i" }}</span></li>
+      {% for a in recent_activities %}<li class="gt-row"><span class="gt-row__body"><span class="gt-row__title">{{ a.get_activity_type_display }}</span><span class="app-row__meta">{{ a.cycle.variety }}{% if a.input_item %} · {{ a.input_item.name }} {{ a.quantity|kg }} {{ a.unit }}{% endif %}</span></span><span class="gt-row__trail app-row__meta">{{ a.logged_at|date:"SHORT_DATETIME_FORMAT" }}</span></li>
       {% empty %}<li class="app-muted app-empty-cell">{% translate "Belum ada kegiatan." %}</li>{% endfor %}
     </ul>
   </section>

@@ -18,7 +18,7 @@
         <tbody>
         {% for e in pending %}
           <tr>
-            <td class="whitespace-nowrap">{{ e.date_incurred|date:"d-m-Y" }}</td>
+            <td class="whitespace-nowrap">{{ e.date_incurred|date:"SHORT_DATE_FORMAT" }}</td>
             <td>{{ e.category }}<span class="app-sub">{% if e.scope == 'GENERAL' %}{% translate "Umum" %}{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% endif %}{% endif %}</span></td>
             <td>{{ e.narration|default:"-" }}{% if e.vendor %}<span class="app-sub">{{ e.vendor }}</span>{% endif %}{% if e.receipt %}<a class="app-sub app-link" href="{{ e.receipt.url }}">{% translate "Bukti" %}</a>{% endif %}</td>
             <td class="num">{{ e.amount_idr|rupiah }}</td>
@@ -44,7 +44,7 @@
         <tbody>
         {% for e in recent %}
           <tr>
-            <td class="whitespace-nowrap">{{ e.date_incurred|date:"d-m-Y" }}</td>
+            <td class="whitespace-nowrap">{{ e.date_incurred|date:"SHORT_DATE_FORMAT" }}</td>
             <td>{{ e.category }}{% if e.source == 'INPUT_USAGE' %} <span class="app-row__meta">{% translate "(pemakaian input)" %}</span>{% endif %}</td>
             <td>{% if e.scope == 'GENERAL' %}{% translate "Umum (overhead)" %}{% else %}{{ e.element }}{% if e.cycle %} · {{ e.cycle.variety }}{% else %} {% translate "· overhead" %}{% endif %}{% endif %}</td>
             <td>

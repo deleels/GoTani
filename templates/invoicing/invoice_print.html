@@ -35,8 +35,8 @@
       {% if invoice.buyer.address %}<div class="app-doc__muted app-doc__pre">{{ invoice.buyer.address }}</div>{% endif %}
     </div>
     <dl class="gt-kv gt-kv--compact app-doc__dates">
-      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ invoice.issue_date|date:"d F Y"|default:"—" }}</dd></div>
-      <div><dt>{% translate "Jatuh tempo" %}</dt><dd>{{ invoice.due_date|date:"d F Y"|default:"—" }}</dd></div>
+      <div><dt>{% translate "Tanggal" %}</dt><dd>{{ invoice.issue_date|date:"DATE_FORMAT"|default:"—" }}</dd></div>
+      <div><dt>{% translate "Jatuh tempo" %}</dt><dd>{{ invoice.due_date|date:"DATE_FORMAT"|default:"—" }}</dd></div>
     </dl>
   </section>
 

@@ -12,7 +12,7 @@
 <div class="gt-pagehead app-dash__head">
   <div class="app-pagehead__text">
     <h1>{% translate "Analitik" %} {% if farm_is_pkp %}{% info_tip _("Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual).") "Cara menghitung" %}{% else %}{% info_tip _("Semua angka bersih dari diskon invoice. Invoice dihitung pada tanggal terbit (akrual).") "Cara menghitung" %}{% endif %}</h1>
-    <p>{{ m.start|date:"d/m/Y" }} – {{ m.end|date:"d/m/Y" }}</p>
+    <p>{{ m.start|date:"SHORT_DATE_FORMAT" }} – {{ m.end|date:"SHORT_DATE_FORMAT" }}</p>
   </div>
   <div class="gt-pagehead__actions app-dash__range">
     <nav class="gt-tabs gt-tabs--boxed" aria-label="{% translate 'Rentang cepat' %}">

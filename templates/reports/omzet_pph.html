@@ -32,7 +32,7 @@
       {% for r in d.rows %}
         <tr{% if not r.omzet %} class="app-muted"{% endif %}><td>{{ r.label }}</td><td class="num">{{ r.pos|rupiah }}</td><td class="num">{{ r.invoice|rupiah }}</td>
           <td class="num app-strong">{{ r.omzet|rupiah }}</td><td class="num">{{ r.cumulative|rupiah }}</td>
-          <td class="num">{{ r.taxable|rupiah }}</td><td class="num"><b>{{ r.pph|rupiah }}</b></td><td>{% if r.pph %}{{ r.due|date:"d M Y" }}{% else %}—{% endif %}</td></tr>
+          <td class="num">{{ r.taxable|rupiah }}</td><td class="num"><b>{{ r.pph|rupiah }}</b></td><td>{% if r.pph %}{{ r.due|date:"SHORT_DATE_FORMAT" }}{% else %}—{% endif %}</td></tr>
       {% endfor %}
         <tr class="app-row--total"><td><b>{% translate "Total" %}</b></td><td class="num">{{ d.totals.pos|rupiah }}</td><td class="num">{{ d.totals.invoice|rupiah }}</td><td class="num"><b>{{ d.totals.omzet|rupiah }}</b></td><td></td><td class="num">{{ d.totals.taxable|rupiah }}</td><td class="num"><b>{{ d.totals.pph|rupiah }}</b></td><td></td></tr>
       </tbody>

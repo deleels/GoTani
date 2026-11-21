@@ -89,3 +89,36 @@ class FeedbackUiTests(TestCase):
         r = self.client.get(reverse("core:password_change"))
         self.assertContains(r, 'id="forced-notice"')
         self.assertNotContains(r, 'href="%s" class="app-back"' % reverse("core:profile"))
+
+
+class DateFormatTests(TestCase):
+    """D119: named date formats, same day-first pattern in both languages, month names follow the language."""
+
+    def test_named_formats_follow_language(self):
+        from datetime import datetime
+
+        from django.utils.formats import date_format
+
+        dt = datetime(2026, 8, 5, 14, 7)
+        with translation.override("id"):
+            self.assertEqual(date_format(dt, "SHORT_DATE_FORMAT"), "05 Agu 2026")
+            self.assertEqual(date_format(dt, "SHORT_DATETIME_FORMAT"), "05 Agu 2026 14:07")
+            self.assertEqual(date_format(dt, "DATE_FORMAT"), "05 Agustus 2026")
+            self.assertEqual(date_format(dt, "MONTH_DAY_FORMAT"), "05 Agu")
+        with translation.override("en"):
+            self.assertEqual(date_format(dt, "SHORT_DATE_FORMAT"), "05 Aug 2026")
+            self.assertEqual(date_format(dt, "DATE_FORMAT"), "05 August 2026")
+
+    def test_templates_use_named_formats_only(self):
+        import re
+        from pathlib import Path
+
+        from django.conf import settings
+
+        allowed = {"Y-m-d", "l, j F Y"}  # <input type=date> values; the Orders page heading
+        bad = []
+        for path in (Path(settings.BASE_DIR) / "templates").rglob("*.html"):
+            for fmt in re.findall(r"\|date:[\"']([^\"']*)[\"']", path.read_text(encoding="utf-8")):
+                if not fmt.endswith("_FORMAT") and fmt not in allowed:
+                    bad.append(f"{path.name}: {fmt}")
+        self.assertEqual(bad, [], "Use a named format, e.g. |date:\"SHORT_DATE_FORMAT\" (D119).")
