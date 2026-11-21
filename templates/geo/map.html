@@ -271,7 +271,11 @@ function geoPage() {
       this.addLocateControl();
       group = new L.FeatureGroup().addTo(map);
       this.polygons.forEach((p) => this.addLayer(p));
-      if (this.polygons.length) map.fitBounds(group.getBounds(), { padding: [30, 30] });
+      // Open on the farm: fit only the fields within 2 km of the farm location (one far-away field must not zoom the
+      // map out to a whole district); with none nearby, show the farm itself at field zoom.
+      const home = L.latLng(data.center), near = L.latLngBounds([]);
+      this.polygons.forEach((p) => { const b = layers[p.id].getBounds(); if (home.distanceTo(b.getCenter()) <= 2000) near.extend(b); });
+      if (near.isValid()) map.fitBounds(near, { padding: [30, 30], maxZoom: 18 }); else map.setView(home, 17);
       if (this.canEdit && window.gtPolyEditor) {
         editor = gtPolyEditor(map, {
           style: { color: this.css("--green-600"), weight: 2.5, fillColor: this.css("--green-400"), fillOpacity: 0.22, lineJoin: "round" },
