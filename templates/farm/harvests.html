@@ -46,23 +46,20 @@
     <div class="gt-card__head"><h2 class="gt-card__title">{% translate "Batch panen" %}</h2></div>
     <div>
       <table class="gt-table">
-        <thead><tr><th>#</th><th>{% translate "Waktu" %}</th><th>{% translate "Siklus" %}</th><th class="num">HIGH</th><th class="num">LOW</th><th class="num">{% translate "Susut" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya terserap" %}</th><th class="num">{% translate "HPP/kg H · L" %}</th><th></th>{% endif %}</tr></thead>
+        {# Phase 7: five columns with stacked details, so the table fits its card without a side scrollbar. #}
+        <thead><tr><th>{% translate "Batch" %}</th><th>{% translate "Siklus" %}</th><th class="num">{% translate "Hasil" %}</th>{% if roles.finance %}<th class="num">{% translate "Biaya terserap" %}</th><th></th>{% endif %}</tr></thead>
         <tbody>
         {% for b in batches %}
           <tr>
-            <td>{{ b.pk }}</td>
-            <td class="whitespace-nowrap">{{ b.harvested_at|date:"d-m-Y H:i" }}</td>
+            <td><b>#{{ b.pk }}</b><span class="app-cellsub"><span class="whitespace-nowrap">{{ b.harvested_at|date:"d M Y" }}</span> {{ b.harvested_at|date:"H:i" }}</span></td>
             <td><a class="app-link--plain" href="{% url 'farm:cycle_detail' b.cycle_id %}">{{ b.cycle.variety }} @ {{ b.cycle.element }}</a></td>
-            <td class="num">{{ b.high_quality_kg|kg }} kg</td>
-            <td class="num">{{ b.low_quality_kg|kg }} kg</td>
-            <td class="num app-muted">{{ b.harvest_loss_kg|kg }} kg</td>
+            <td class="num"><span class="whitespace-nowrap">HIGH {{ b.high_quality_kg|kg }} kg</span><span class="app-cellsub"><span class="whitespace-nowrap">LOW {{ b.low_quality_kg|kg }} kg</span> · <span class="whitespace-nowrap">{% translate "Susut" %} {{ b.harvest_loss_kg|kg }} kg</span></span></td>
             {% if roles.finance %}
-            <td class="num">{{ b.absorbed_cost_idr|rupiah }}</td>
-            <td class="whitespace-nowrap num">{{ b.unit_cogs_high_idr|rupiah }} · {{ b.unit_cogs_low_idr|rupiah }}</td>
-            <td>{% blocktranslate asvar t_data_confirm_title_3 with v1=b.pk %}Hapus batch panen #{{ v1 }}?{% endblocktranslate %}<form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="{{ t_data_confirm_title_3 }}" data-confirm="{% translate 'Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut.' %}" data-confirm-action="{% translate 'Hapus batch' %}" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="gt-btn gt-btn--outline-danger gt-btn--sm">{% translate "Hapus" %}</button></form></td>
+            <td class="num"><span class="whitespace-nowrap">{{ b.absorbed_cost_idr|rupiah }}</span><span class="app-cellsub">HPP/kg <span class="whitespace-nowrap">H {{ b.unit_cogs_high_idr|rupiah }}</span> · <span class="whitespace-nowrap">L {{ b.unit_cogs_low_idr|rupiah }}</span></span></td>
+            <td class="num">{% blocktranslate asvar t_data_confirm_title_3 with v1=b.pk %}Hapus batch panen #{{ v1 }}?{% endblocktranslate %}<form method="post" action="{% url 'farm:harvest_delete' b.pk %}" data-confirm-title="{{ t_data_confirm_title_3 }}" data-confirm="{% translate 'Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut.' %}" data-confirm-action="{% translate 'Hapus batch' %}" data-confirm-level="2" data-confirm-danger>{% csrf_token %}<button class="gt-iconbtn gt-iconbtn--sm app-iconbtn--danger" aria-label="{{ t_data_confirm_title_3 }}" title="{% translate "Hapus" %}">{% icon "trash" 16 %}</button></form></td>
             {% endif %}
           </tr>
-        {% empty %}<tr><td colspan="9" class="app-empty-cell app-muted">{% translate "Belum ada panen." %}</td></tr>{% endfor %}
+        {% empty %}<tr><td colspan="5" class="app-empty-cell app-muted">{% translate "Belum ada panen." %}</td></tr>{% endfor %}
         </tbody>
       </table>
       {% include "components/pagination.html" %}

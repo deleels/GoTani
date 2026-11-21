@@ -62,7 +62,7 @@
 {{ charts|json_script:"chart-data" }}
 <div class="app-dash__charts">
   <section class="gt-card app-dash__wide" aria-labelledby="h-daily">
-    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">{% translate "Pendapatan &amp; HPP harian" %}</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>{% translate "Laba kotor" %}</span><span><i class="app-legend__cogs"></i>{% translate "HPP" %}</span>{% info_tip _("Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Hari terakhir berwarna paling gelap.") %}</span></div>
+    <div class="gt-card__head"><h2 class="gt-card__title" id="h-daily">{% translate "Pendapatan &amp; HPP harian" %}</h2><span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-400)"></i>{% translate "Pendapatan" %}</span><span><i class="app-legend__line"></i>{% translate "HPP" %}</span>{% info_tip _("Batang = pendapatan hari itu, garis putus-putus = HPP. Jarak antara puncak batang dan garis adalah laba kotor.") %}</span></div>
     <div class="relative h-72"><canvas id="chart-daily" role="img" aria-label="{% translate 'Pendapatan dan HPP harian' %}"></canvas></div>
   </section>
   <section class="gt-card" aria-labelledby="h-margin">
@@ -140,34 +140,26 @@
     return true;
   };
 
-  // Daily bars, one pill per day: the hatched bottom is HPP (capped at revenue), the solid top is gross profit;
-  // the latest day is darkest and carries the revenue tag. Small days keep a minimum height so they stay visible.
-  const rev = data.daily.revenue, cogs = data.daily.cogs;
-  const covered = rev.map((r, i) => Math.min(cogs[i] || 0, r || 0));
-  const profit = rev.map((r, i) => Math.max((r || 0) - (cogs[i] || 0), 0));
+  // Daily revenue as solid light pill bars (latest a step darker, with its tag); HPP as a dashed line over them, so the gap
+  // between bar top and line is the day's gross profit.
+  const rev = data.daily.revenue.map((v) => v || 0), cogs = data.daily.cogs.map((v) => v || 0);
   const last = rev.reduce((at, v, i) => (v > 0 ? i : at), rev.length - 1);
-  const top = (i) => (profit[i] > 0 ? 1 : 0);
-  const radius = (k) => (ctx) => {
-    const i = ctx.dataIndex, R = 999, isTop = k === top(i), isBottom = k === (covered[i] > 0 ? 0 : 1);
-    return { topLeft: isTop ? R : 0, topRight: isTop ? R : 0, bottomLeft: isBottom ? R : 0, bottomRight: isBottom ? R : 0 };
-  };
-  const seg = { borderSkipped: false, maxBarThickness: 48, categoryPercentage: 0.86, barPercentage: 0.94, stack: 'day' };
   if (!empty('chart-daily', data.daily.labels)) new Chart(document.getElementById('chart-daily'), {
-    type: 'bar',
     data: { labels: data.daily.labels, datasets: [
-      { label: '{% jt "HPP" %}', data: covered, backgroundColor: G.hatch(T('--green-600'), T('--green-100')),
-        borderColor: T('--green-600'), borderWidth: (ctx) => (covered[ctx.dataIndex] > 0 ? 1 : 0), borderRadius: radius(0), ...seg },
-      { label: '{% jt "Laba kotor" %}', data: profit, minBarLength: 4,
-        backgroundColor: profit.map((_, i) => (i === last ? T('--green-800') : T('--green-600'))), borderRadius: radius(1), ...seg },
+      { type: 'line', label: '{% jt "HPP" %}', data: cogs, order: 0, borderColor: T('--green-900'), borderWidth: 2, borderDash: [6, 5],
+        pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: T('--green-900'), pointBorderWidth: 2,
+        tension: 0.3, cubicInterpolationMode: 'monotone', fill: false },
+      { type: 'bar', label: '{% jt "Pendapatan" %}', data: rev, order: 1, backgroundColor: rev.map((_, i) => (i === last ? T('--green-600') : T('--green-400'))), minBarLength: 3,
+        ...G.BAR, categoryPercentage: 0.8 },
     ] },
     options: { interaction: { mode: 'index', intersect: false }, layout: { padding: { top: 30 } },
-               scales: { y: { ...moneyAxis, stacked: true }, x: { ...flat, stacked: true, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
+               scales: { y: moneyAxis, x: { ...flat, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } },
                plugins: { ...noLegend,
-                 tooltip: { filter: (it) => it.parsed.y > 0, callbacks: {
+                 tooltip: { callbacks: {
                    title: (items) => data.daily.labels[items[0].dataIndex],
-                   beforeBody: (items) => '{% jt "Pendapatan " %}' + rp(rev[items[0].dataIndex] || 0) + ' · HPP ' + rp(cogs[items[0].dataIndex] || 0),
-                   label: (ctx) => (ctx.datasetIndex === 1 ? '{% jt "Laba kotor " %}' : '{% jt "HPP tertutup " %}') + rp(ctx.parsed.y) } },
-                 gtTag: { dataset: top(last), index: last, text: G.rpShort(rev[last] || 0) } } },
+                   label: (ctx) => (ctx.dataset.type === 'line' ? '{% jt "HPP " %}' : '{% jt "Pendapatan " %}') + rp(ctx.parsed.y),
+                   footer: (items) => '{% jt "Laba kotor " %}' + rp(rev[items[0].dataIndex] - cogs[items[0].dataIndex]) } },
+                 gtTag: { dataset: 1, index: last, text: G.rpShort(rev[last] || 0) } } },
   });
 
   if (!empty('chart-margin', data.margin.labels)) new Chart(document.getElementById('chart-margin'), {

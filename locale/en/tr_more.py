@@ -291,4 +291,12 @@ TR = {
     'Ubah batas': 'Edit boundary',
     'Isi nama poligon.': 'Enter a field name.',
     "← Kembali ke aplikasi": "← Back to the app",
+    'Batch': 'Batch',
+    'Hasil': 'Yield',
+    'Tarik titik putih untuk memindahkan · klik tanda + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus.': 'Drag a white point to move it · click a + on an edge to add a point · right-click (or long-press) a point to remove it.',
+    'Klik Gambar lahan di peta, lalu klik sudut-sudut lahan. Saat menggambar, Backspace menghapus titik terakhir.': "Click Draw field on the map, then click the field's corners. While drawing, Backspace removes the last point.",
+    'Gambar lahan': 'Draw field',
+    'Gambar batas lahan': 'Draw a field boundary',
+    'Batang = pendapatan hari itu, garis putus-putus = HPP. Jarak antara puncak batang dan garis adalah laba kotor.': "Bars = that day's revenue, dashed line = COGS. The gap between a bar's top and the line is gross profit.",
+    'HPP ': 'COGS ',
 }

@@ -43,9 +43,9 @@
             <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="cancelEdit()">{% translate "Batal" %}</button>
             <button type="button" class="gt-btn gt-btn--solid gt-btn--sm" @click="saveEdit()">{% translate "Simpan" %}</button>
           </div>
-          <p class="app-row__meta">{% translate "Tarik titik untuk memindahkan · tarik titik kecil di tengah sisi untuk menambah · klik kanan (atau tekan lama) titik untuk menghapus." %}</p>
+          <p class="app-row__meta">{% translate "Tarik titik putih untuk memindahkan · klik tanda + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus." %}</p>
         </div>
-        <p class="app-row__meta app-maphint" x-show="canEdit && !draft && !editing">{% translate "Gambar poligon dengan ikon ⬠ di peta. Saat menggambar, Backspace menghapus titik terakhir." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
+        <p class="app-row__meta app-maphint" x-show="canEdit && !draft && !editing">{% translate "Klik Gambar lahan di peta, lalu klik sudut-sudut lahan. Saat menggambar, Backspace menghapus titik terakhir." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
       </section>
 
       <section class="gt-card" x-data="forecastPanel()" @weather-loaded.window="set($event.detail)" x-show="w" x-cloak aria-labelledby="h-48">
@@ -245,26 +245,43 @@ function geoPage() {
     init() {
       if (window.L && L.Edit && L.Edit.PolyVerticesEdit && !L.Edit.PolyVerticesEdit._gt) {
         // A plain click no longer deletes a point (too easy to hit while dragging); right-click or long-press does.
-        const P = L.Edit.PolyVerticesEdit.prototype, make = P._createMarker;
+        const P = L.Edit.PolyVerticesEdit.prototype, make = P._createMarker, remove = P._onMarkerClick;
+        P._onMarkerClick = function (e) {
+          if (e.type !== "contextmenu" || this._markers.indexOf(e.target) < 0) return;   // only right-click, only real points
+          remove.call(this, e);
+        };
         P._createMarker = function (latlng, index) {
           const m = make.call(this, latlng, index);
-          m.off("click", this._onMarkerClick, this);
           m.on("contextmenu", (e) => { if (e.originalEvent) e.originalEvent.preventDefault(); this._onMarkerClick(e); });
           return m;
+        };
+        // A tap on a "+" midpoint adds the point there (Leaflet's drag handling swallows the plain click).
+        const mid = P._createMiddleMarker;
+        P._createMiddleMarker = function (a, b) {
+          mid.call(this, a, b);
+          const m = a._middleRight, el = m && m._icon; if (!el) return;
+          // Leaflet retargets the release to the map, so listen for it on the document once the "+" is pressed.
+          L.DomEvent.on(el, "pointerdown", (e) => {
+            const at = [e.clientX, e.clientY];
+            document.addEventListener("pointerup", (u) => {
+              if (Math.hypot(u.clientX - at[0], u.clientY - at[1]) < 5 && el.style.opacity === "0.6") m.fire("click");
+            }, { once: true, capture: true });
+          });
         };
         L.Edit.PolyVerticesEdit._gt = true;
       }
       if (!window.L) { document.getElementById("map").innerHTML = '<p class="app-muted app-empty-cell">{% jt "Tidak dapat memuat peta · muat ulang halaman." %}</p>'; return; }
       map = L.map("map").setView(data.center, 16);
       const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/";
-      // D92: three base maps. OSM shows local (Indonesian) place and road names.
+      // D92: three base maps. OSM shows local (Indonesian) place and road names. OSM's tile policy needs a Referer, and
+      // the site default (same-origin) sends none, so its tiles ask for the origin explicitly.
       const sat = () => L.tileLayer(esri + "World_Imagery/MapServer/tile/{z}/{y}/{x}",
         { maxZoom: 19, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" });
       const labels = L.tileLayer(esri + "Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
         { maxZoom: 19, attribution: "Label © Esri" });
       const satLabel = L.layerGroup([sat(), labels]).addTo(map);
       const streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { maxZoom: 19, attribution: "© kontributor OpenStreetMap" });
+        { maxZoom: 19, attribution: "© kontributor OpenStreetMap", referrerPolicy: "strict-origin-when-cross-origin" });
       L.control.layers({ "{% jt "Satelit + label" %}": satLabel, "{% jt "Satelit" %}": sat(), "{% jt "Peta (OpenStreetMap)" %}": streets }, null, { position: "topright" }).addTo(map);
       L.control.scale({ imperial: false }).addTo(map);
       this.addLocateControl();
@@ -278,6 +295,8 @@ function geoPage() {
           draw: { polygon: { allowIntersection: false, showArea: true, shapeOptions: shape }, polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false },
         });
         map.addControl(draw);
+        const drawBtn = map.getContainer().querySelector(".leaflet-draw-draw-polygon");
+        if (drawBtn) { drawBtn.dataset.label = "{% jt "Gambar lahan" %}"; drawBtn.title = "{% jt "Gambar batas lahan" %}"; }
         const drawing = () => { const h = draw._toolbars.draw._modes.polygon.handler; return h && h.enabled() ? h : null; };
         // Backspace removes the last point while drawing (same as the toolbar's "Delete last point").
         document.addEventListener("keydown", (e) => {
@@ -298,11 +317,10 @@ function geoPage() {
       const Locate = L.Control.extend({
         options: { position: "topleft" },
         onAdd: () => {
-          const a = L.DomUtil.create("a", "leaflet-bar");
+          const box = L.DomUtil.create("div", "leaflet-bar"), a = L.DomUtil.create("a", "app-locate", box);
           a.href = "#"; a.title = "{% jt "Lokasi saya" %}"; a.setAttribute("role", "button"); a.setAttribute("aria-label", "{% jt "Lokasi saya" %}");
-          a.innerHTML = "◎"; a.style.cssText = "display:block;width:30px;height:30px;line-height:30px;text-align:center;background:#fff;color:#1c1917;font-size:18px";
           L.DomEvent.on(a, "click", (e) => { L.DomEvent.stop(e); map.locate({ setView: true, maxZoom: 18, enableHighAccuracy: true }); });
-          return a;
+          return box;
         },
       });
       new Locate().addTo(map);

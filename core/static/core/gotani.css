@@ -235,7 +235,9 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 
 /* Tables: base style for gt-table inside a gt-card (pages convert in Phases 4–5). */
 .gt-card > .gt-table, .gt-card .app-table-wrap { margin: 0; }
+/* Scrollers clip what sticks out, so keep room for the 2px + 2px focus ring of fields inside them. */
 .app-table-wrap { overflow-x: auto; }
+.gt-card .app-table-wrap:not(.app-batch *, .app-lot *) { padding: 6px; margin: -6px; }
 .gt-table th.num, .gt-table td.num { text-align: right; }
 
 /* ---- Phase 4a: Ringkasan ---- */
@@ -305,6 +307,7 @@ input:disabled, select:disabled, textarea:disabled { background: var(--surface);
 .app-legend { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: 13px; color: var(--ink-muted); }
 .app-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .app-legend__dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.app-legend i.app-legend__line { display: inline-block; width: 18px; height: 0; border-radius: 0; background: none; border-top: 2px dashed var(--green-900); }
 .app-chart-empty { padding-top: 5rem; text-align: center; }
 .app-muted { color: var(--ink-muted); }
 .gt-root .app-subhead { margin: var(--space-4) 0 var(--space-2); font: 500 16px/22px var(--font-sans); }
@@ -527,13 +530,14 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-main__inner > .gt-callout, .app-main__inner > form.gt-callout, .app-pos__shift, .app-issue { background: var(--surface-raised); }
 .app-issue, .app-credit, .app-pos__shift { align-items: flex-start; }
 .app-legend i.hatch { width: 12px; height: 12px; border-radius: 50%; background: var(--gt-hatch); background-size: 6px 6px; border: 1px solid var(--hatch); }
-.app-legend i.app-legend__cogs { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--green-600);
-  background: repeating-linear-gradient(135deg, var(--green-600) 0 1.5px, var(--green-100) 1.5px 4px); }
 
 /* ---- Phase 5a: Farm ---- */
 .app-section-gap { margin-bottom: var(--space-3); }
 .app-sectionhead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .app-tablecard { overflow-x: auto; }
+.app-iconbtn--danger { color: var(--danger); background: var(--surface); }
+.app-iconbtn--danger:hover { background: #fdecec; }
+.app-cellsub { display: block; margin-top: 2px; white-space: normal; font-size: 12px; line-height: 16px; color: var(--ink-muted); font-weight: 400; }
 .app-strong { font-weight: 500; }
 .app-element { gap: var(--space-3); }
 .app-element--off { opacity: .6; }
@@ -595,13 +599,42 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-map .leaflet-editing-icon { background: #fff !important; border: 2px solid var(--green-600) !important; border-radius: 50% !important;
   box-shadow: 0 1px 3px rgb(0 0 0 / .35); cursor: grab; }
 .app-map .leaflet-editing-icon:active { cursor: grabbing; }
-.app-map .leaflet-editing-icon[style*="opacity: 0.6"] { scale: .7; }
+/* Midpoints are "+" buttons: click (or drag) one to add a point on that edge. */
+.app-map .leaflet-editing-icon[style*="opacity: 0.6"] { opacity: 1 !important; background: var(--green-600) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M5 2v6M2 5h6'/%3E%3C/svg%3E") center / 70% no-repeat !important;
+  border-color: #fff !important; cursor: copy; }
+.app-map .leaflet-editing-icon[style*="opacity: 0.6"]:hover { background-color: var(--green-800) !important; scale: 1.2; }
 .app-map .leaflet-editing-icon:hover { opacity: 1 !important; border-color: var(--green-800) !important; }
 .app-map .leaflet-draw-tooltip { background: var(--green-900); border: 0; border-radius: 8px; font: 500 12px var(--font-sans); padding: 6px 10px; }
 .app-map .leaflet-draw-tooltip:before { border-right-color: var(--green-900); }
-.app-map .leaflet-draw-actions a { background: var(--green-700); font: 500 12px var(--font-sans); }
+.app-map .leaflet-draw-actions { left: calc(100% + 8px) !important; top: 2px; }
+.app-map .leaflet-draw-actions a { background: var(--green-700); font: 500 12px var(--font-sans); height: 32px; line-height: 32px; border-radius: 0; }
+.app-map .leaflet-draw-actions li:first-child a { border-radius: 999px 0 0 999px; }
+.app-map .leaflet-draw-actions li:last-child a { border-radius: 0 999px 999px 0; }
+/* Map controls: white rounded buttons with a soft shadow, one size, lined up on the left edge. */
+.app-map .leaflet-control-zoom, .app-map .leaflet-bar, .app-map .leaflet-control-layers {
+  border: 0 !important; border-radius: 12px !important; box-shadow: 0 2px 8px rgb(0 0 0 / .22) !important; overflow: visible; background: #fff; }
+.app-map .leaflet-top.leaflet-left .leaflet-control { margin: 10px 0 0 10px; clear: both; }
+.app-map .leaflet-bar a, .app-map .leaflet-bar a:hover {
+  width: 38px !important; height: 38px !important; line-height: 38px !important; color: var(--green-800); font: 500 20px/38px var(--font-sans);
+  background-color: #fff; border-bottom: 1px solid var(--divider); transition: background-color var(--dur-fast); }
+.app-map .leaflet-bar a:first-child { border-radius: 12px 12px 0 0; }
+.app-map .leaflet-bar a:last-child { border-radius: 0 0 12px 12px; border-bottom: 0; }
+.app-map .leaflet-bar a:only-child { border-radius: 12px; }
+.app-map .leaflet-bar a:hover { background-color: var(--green-100); }
+.app-map .leaflet-bar a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.app-map a.app-locate { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2313452d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='7'/%3E%3Ccircle cx='12' cy='12' r='2.5' fill='%2313452d'/%3E%3Cpath d='M12 2v3M12 19v3M2 12h3M19 12h3'/%3E%3C/svg%3E") center / 20px no-repeat; }
+.app-map a.app-locate:hover { background-color: var(--green-100); }
+/* The draw button carries its label so it reads as a button. */
+.app-map .leaflet-draw-toolbar a.leaflet-draw-draw-polygon { width: auto !important; padding: 0 14px 0 38px; white-space: nowrap;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2313452d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l8.5 6.2-3.2 10H6.7L3.5 9.2z'/%3E%3Ccircle cx='12' cy='3' r='1.6' fill='%23fff'/%3E%3C/svg%3E") 11px center / 20px no-repeat !important; font: 600 13px/38px var(--font-sans) !important; color: var(--green-800); border-radius: 12px !important; border: 0; }
+.app-map .leaflet-draw-toolbar a.leaflet-draw-draw-polygon::after { content: attr(data-label); }
+.app-map .leaflet-draw-toolbar a.leaflet-draw-draw-polygon:hover { background-color: var(--green-100) !important; }
+.app-map .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled { background-color: var(--green-100) !important; }
+.app-map .leaflet-draw-section { margin: 0; }
+.app-map .leaflet-control-layers-toggle { width: 38px; height: 38px; border-radius: 12px; background-size: 20px; }
+.app-map .leaflet-control-layers-expanded { padding: 10px 12px; font: 400 13px var(--font-sans); }
 .app-mapedit { display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: 12px;
-  background: var(--green-100); border: 1px solid var(--green-400); margin-top: var(--space-3); }
+  background: var(--green-100); border: 1px solid var(--green-400); margin: var(--space-3) var(--space-3) 0; }
 .app-ndvi-legend { display: grid; grid-template-columns: auto 1fr auto; column-gap: var(--space-2); row-gap: 2px; align-items: center; font-size: 12px; color: var(--ink-muted); }
 .app-ndvi-legend i { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #d7191c, #fdae61 30%, #ffffbf 50%, #a6d96a 70%, #1a9641); }
 .app-ndvi-legend small { grid-row: 2; grid-column: 2; font-size: 11px; }

@@ -40,7 +40,9 @@
       g.save();
       g.font = "500 11px " + t("--font-sans");
       const w = g.measureText(o.text).width + 16, h = 20;
-      const x = horiz ? el.x + 10 : el.x - w / 2, y = horiz ? el.y - h / 2 : el.y - h - 12;
+      // Keep the tag inside the canvas: a tag on the first/last bar slides inward instead of being cut off.
+      const maxX = chart.width - w - 2;
+      const x = Math.max(2, Math.min(horiz ? el.x + 10 : el.x - w / 2, maxX)), y = Math.max(2, horiz ? el.y - h / 2 : el.y - h - 12);
       g.beginPath(); g.roundRect(x, y, w, h, h / 2);
       g.fillStyle = t("--surface-raised"); g.fill();
       g.lineWidth = 1; g.strokeStyle = t("--green-400"); g.stroke();

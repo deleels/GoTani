@@ -3759,6 +3759,10 @@ msgid "(tanpa perkiraan)"
 msgstr "(no estimate)"
 
 #: templates\farm\harvests.html
+msgid "Batch"
+msgstr "Batch"
+
+#: templates\farm\harvests.html
 msgid "Batch panen"
 msgstr "Harvest batches"
 
@@ -3787,10 +3791,6 @@ msgid "Grade LOW"
 msgstr "Grade LOW"
 
 #: templates\farm\harvests.html
-msgid "HPP/kg H · L"
-msgstr "COGS/kg H · L"
-
-#: templates\farm\harvests.html
 msgid "HPP/kg HIGH · LOW"
 msgstr "COGS/kg HIGH · LOW"
 
@@ -3801,6 +3801,10 @@ msgstr "Delete batch"
 #: templates\farm\harvests.html
 msgid "Hapus batch panen #%(v1)s?"
 msgstr "Delete harvest batch #%(v1)s?"
+
+#: templates\farm\harvests.html
+msgid "Hasil"
+msgstr "Yield"
 
 #: templates\farm\harvests.html
 msgid "Lot dan stoknya dihapus, dan biaya yang terserap kembali ke kumpulan biaya siklus. Hanya bisa selama lot belum terjual atau susut."
@@ -4455,12 +4459,16 @@ msgid "Gagal menyimpan."
 msgstr "Couldn't save."
 
 #: templates\geo\map.html
+msgid "Gambar batas lahan"
+msgstr "Draw a field boundary"
+
+#: templates\geo\map.html
 msgid "Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI."
 msgstr "Draw field boundaries on the map to measure area and track NDVI."
 
 #: templates\geo\map.html
-msgid "Gambar poligon dengan ikon ⬠ di peta. Saat menggambar, Backspace menghapus titik terakhir."
-msgstr "Draw a boundary with the ⬠ icon on the map. While drawing, Backspace removes the last point."
+msgid "Gambar lahan"
+msgstr "Draw field"
 
 #: templates\geo\map.html
 msgid "Ganti nama"
@@ -4509,6 +4517,10 @@ msgstr "Water needed today"
 #: templates\geo\map.html
 msgid "Kehijauan tanaman, 0–1. Makin tinggi makin rimbun."
 msgstr "Crop greenness, 0–1. Higher means denser foliage."
+
+#: templates\geo\map.html
+msgid "Klik Gambar lahan di peta, lalu klik sudut-sudut lahan. Saat menggambar, Backspace menghapus titik terakhir."
+msgstr "Click Draw field on the map, then click the field's corners. While drawing, Backspace removes the last point."
 
 #: templates\geo\map.html
 msgid "Kurang"
@@ -4639,8 +4651,8 @@ msgid "Skala NDVI: merah jarang, kuning sedang, hijau rimbun"
 msgstr "NDVI scale: red sparse, yellow moderate, green dense"
 
 #: templates\geo\map.html
-msgid "Tarik titik untuk memindahkan · tarik titik kecil di tengah sisi untuk menambah · klik kanan (atau tekan lama) titik untuk menghapus."
-msgstr "Drag a point to move it · drag a small mid-edge point to add one · right-click (or long-press) a point to remove it."
+msgid "Tarik titik putih untuk memindahkan · klik tanda + di tengah sisi untuk menambah titik · klik kanan (atau tekan lama) titik untuk menghapus."
+msgstr "Drag a white point to move it · click a + on an edge to add a point · right-click (or long-press) a point to remove it."
 
 #: templates\geo\map.html
 msgid "Terpetakan"
@@ -5815,6 +5827,10 @@ msgid "Bagian pendapatan periode ini dari kasir (POS) dan dari invoice."
 msgstr "Share of this period's revenue from the POS and from invoices."
 
 #: templates\reports\dashboard.html
+msgid "Batang = pendapatan hari itu, garis putus-putus = HPP. Jarak antara puncak batang dan garis adalah laba kotor."
+msgstr "Bars = that day's revenue, dashed line = COGS. The gap between a bar's top and the line is gross profit."
+
+#: templates\reports\dashboard.html
 msgid "Belum ada uang masuk pada periode ini."
 msgstr "No cash in during this period."
 
@@ -5851,8 +5867,8 @@ msgid "Grade"
 msgstr "Grade"
 
 #: templates\reports\dashboard.html
-msgid "HPP tertutup "
-msgstr "COGS covered "
+msgid "HPP "
+msgstr "COGS "
 
 #: templates\reports\dashboard.html
 msgid "Hanya biaya yang sudah disetujui."
@@ -6013,10 +6029,6 @@ msgstr "No data for this period."
 #: templates\reports\dashboard.html
 msgid "Tidak ada penjualan pada periode ini."
 msgstr "No sales this period."
-
-#: templates\reports\dashboard.html
-msgid "Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Hari terakhir berwarna paling gelap."
-msgstr "Bar height = that day's revenue. The hatched part is COGS and the green part on top is gross profit. The latest day is the darkest."
 
 #: templates\reports\dashboard.html
 msgid "Total sisa tagihan invoice per hari ini, tidak terikat rentang tanggal."

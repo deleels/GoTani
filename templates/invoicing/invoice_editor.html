@@ -102,7 +102,8 @@ function invoiceEditor() {
     },
     add() { this.lines.push(mk({})); },
     prod(ln) { return this.products.find(p => p.id === Number(ln.product)); },
-    defaultPrice(ln) { const p = this.prod(ln); if (p && !ln.price && p.price) ln.price = idNum.format(p.price, 'money'); },
+    // A new product always brings its own price (an old price must never stay on a different product).
+    defaultPrice(ln) { const p = this.prod(ln); ln.price = p && p.price ? idNum.format(p.price, 'money') : ''; },
     price(ln) { const p = this.prod(ln); return (ln.price ? idNum.parse(ln.price) : Number(p && p.price)) || 0; },
     sub(ln) { return Math.round((idNum.parse(ln.qty) || 0) * this.price(ln) * 100) / 100; },
     totals() {
