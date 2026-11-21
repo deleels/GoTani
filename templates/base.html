@@ -122,12 +122,27 @@
       collapsed: document.documentElement.classList.contains("sb-rail"), mobile: false,
       save() { try { localStorage.setItem("gotani-sidebar", this.collapsed ? "collapsed" : "open"); } catch (e) {} },
       toggle() { if (window.innerWidth >= 768) this.setCollapsed(!this.collapsed); },
-      // The sidebar and the rail share one view-transition name, so the browser morphs one into the other.
+      // The incoming panel starts at the outgoing panel's width and eases to its own, pushing the main panel.
       setCollapsed(value) {
-        const apply = () => { this.collapsed = value; document.documentElement.classList.toggle("sb-rail", value); this.save(); };
+        if (value === this.collapsed) return Promise.resolve();
+        const frame = this.$root;
+        const from = frame.querySelector(this.collapsed ? ".app-rail" : ".app-sidebar");
+        const startWidth = from.getBoundingClientRect().width;
+        this.collapsed = value;
+        document.documentElement.classList.toggle("sb-rail", value);
+        this.save();
+        const to = frame.querySelector(value ? ".app-rail" : ".app-sidebar");
         const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (!document.startViewTransition || calm || value === this.collapsed) { apply(); return Promise.resolve(); }
-        return document.startViewTransition(apply).updateCallbackDone;
+        if (calm || !to.animate || window.innerWidth < 768 || !startWidth) return Promise.resolve();
+        const endWidth = to.getBoundingClientRect().width;
+        if (this.anim) this.anim.cancel();
+        to.classList.add("is-resizing");
+        // Fast start, long soft landing; collapsing is a touch quicker than opening.
+        const easing = "cubic-bezier(.32, .72, 0, 1)";
+        const anim = this.anim = to.animate([{ width: `${startWidth}px` }, { width: `${endWidth}px` }], { duration: value ? 260 : 320, easing });
+        for (const child of to.children) child.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 160, easing: "ease-out" });
+        const done = () => { to.classList.remove("is-resizing"); if (this.anim === anim) this.anim = null; };
+        return anim.finished.then(done, done);
       },
     };
   }

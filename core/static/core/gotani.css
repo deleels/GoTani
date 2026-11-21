@@ -74,24 +74,13 @@ html body:has(> .app-frame) { background: var(--canvas); }
   .app-sidebar, .app-rail { position: sticky; top: calc(2 * var(--space-3)); align-self: start; max-height: calc(100vh - 4 * var(--space-3)); }
   html.sb-rail .app-frame > .app-sidebar { display: none; }
   html.sb-rail .app-frame > .app-rail { display: flex; }
-  /* Collapse/expand animation (View Transitions): the panel morphs between 248px and 80px, its content
-     cross-fades unscaled and clipped, and the main panel slides into its new width. */
-  .app-sidebar, .app-rail { view-transition-name: gt-nav; }
-  .gt-shell { view-transition-name: gt-shell; }
 }
-::view-transition-group(gt-nav), ::view-transition-group(gt-shell) { animation-duration: var(--dur-base); animation-timing-function: var(--ease-out); }
-::view-transition-image-pair(gt-nav), ::view-transition-image-pair(gt-shell) { overflow: clip; border-radius: var(--radius-lg); }
-::view-transition-old(gt-nav), ::view-transition-new(gt-nav),
-::view-transition-old(gt-shell), ::view-transition-new(gt-shell) {
-  height: 100%; width: auto; object-fit: none; object-position: left top; animation-duration: var(--dur-base); }
-/* The outgoing panel fades out quickly, then the incoming one fades in, so labels and icons never overlap. */
-::view-transition-old(gt-nav) { animation: app-vt-out 100ms ease-out both; }
-::view-transition-new(gt-nav) { animation: app-vt-in 160ms ease-out 90ms both; }
-@keyframes app-vt-out { to { opacity: 0; } }
-@keyframes app-vt-in { from { opacity: 0; } }
-::view-transition-old(gt-shell) { animation: none; opacity: 0; }
-::view-transition-new(gt-shell) { animation: none; }
-::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+/* Collapse/expand (base.html setCollapsed): the incoming panel's width animates from the old panel's width,
+   so the main panel is pushed across as its column grows or shrinks. Rail icons sit on the left edge
+   (same spot as centred at 80px) so they do not drift while the rail is wider. */
+.app-rail { align-items: flex-start; padding-left: var(--space-4); padding-right: var(--space-4); }
+.app-sidebar.is-resizing, .app-rail.is-resizing { overflow: hidden; }
+.app-sidebar.is-resizing :is(.gt-nav__item, .gt-nav__label, .app-brand) { white-space: nowrap; }
 
 /* Top-bar sidebar toggle: desktop only (phones use the hamburger). */
 .app-topbar__toggle { display: none; }
