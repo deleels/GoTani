@@ -1,0 +1,12 @@
+{% load i18n %}
+{# D125: one sidebar link per area; the area's pages share this strip. Kasir shows the shift status beside it. #}
+<div class="app-sectiontabs">
+  <nav class="gt-tabs" aria-label="{% translate "Bagian" %}">
+    {% for t in section_tabs.tabs %}
+    <a href="{{ t.url }}" class="gt-tab app-tab{% if t.active %} gt-tab--active{% endif %}"{% if t.active %} aria-current="page"{% endif %}>{{ t.label }}</a>
+    {% endfor %}
+  </nav>
+  {% if section_tabs.key == "kasir" %}
+  <span class="gt-chip"><i class="gt-dot {% if not section_tabs.shift_open %}gt-dot--warning{% endif %}"></i>{% if section_tabs.shift_open %}{% translate "Shift terbuka" %}{% else %}{% translate "Shift belum dibuka" %}{% endif %}</span>
+  {% endif %}
+</div>

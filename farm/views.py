@@ -545,6 +545,33 @@ class HarvestDeleteView(ActionView):
 # --- Spoilage (rule 14, D14) ---------------------------------------------------------------
 
 
+class ProduceStockView(RoleRequiredMixin, View):
+    """Stok Hasil Panen (D125): kg per product, open lots, age of the oldest lot, low-stock flag."""
+
+    allowed_roles = FARM_ROLES
+
+    def get(self, request):
+        from django.db.models import Min
+
+        today = timezone.localdate()
+        rows = []
+        products = (Product.objects.select_related("variety")
+                    .annotate(kg=Sum("lots__qty_remaining_kg", filter=Q(lots__qty_remaining_kg__gt=0)),
+                              open_lots=Count("lots", filter=Q(lots__qty_remaining_kg__gt=0)),
+                              oldest=Min("lots__harvested_at", filter=Q(lots__qty_remaining_kg__gt=0)))
+                    .order_by("variety__name", "grade"))
+        for p in products:
+            p.kg = p.kg or Decimal("0")
+            p.oldest_days = (today - timezone.localtime(p.oldest).date()).days if p.oldest else None
+            p.low = p.min_alert_kg is not None and p.kg <= p.min_alert_kg
+            rows.append(p)
+        return render(request, "farm/produce.html", {
+            "products": rows, "tab": "produce",
+            "total_kg": sum((p.kg for p in rows), Decimal("0")),
+            "low_count": sum(1 for p in rows if p.low),
+        })
+
+
 class SpoilageView(FarmPage):
     template_name = "farm/spoilage.html"
     form_class = SpoilageForm

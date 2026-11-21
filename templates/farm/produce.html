@@ -1,0 +1,25 @@
+{% extends "farm/_layout.html" %}
+{% load i18n %}
+{% load gotani ui %}
+{% block title %}{% translate "Stok Hasil Panen" %}{% endblock %}
+{% block content %}
+{% include "components/page_header.html" with title=_("Stok Hasil Panen") subtitle=_("Stok per produk dari lot yang masih terbuka. Lot tertua dijual lebih dulu (FIFO).") %}
+<div class="gt-grid app-kpis">
+  {% include "components/kpi.html" with stat=True featured=True label=_("Total stok (kg)") value=total_kg|kg %}
+  {% include "components/kpi.html" with stat=True label=_("Stok menipis") value=low_count %}
+</div>
+<div class="gt-card app-tablecard">
+  <table class="gt-table">
+    <thead><tr><th>{% translate "Produk" %}</th><th class="num">{% translate "Stok (kg)" %}</th><th class="num">{% translate "Lot terbuka" %}</th><th class="num">{% translate "Umur lot tertua (hari)" %}</th><th></th></tr></thead>
+    <tbody>
+      {% for p in products %}
+      <tr><td class="app-strong">{{ p }} {% if p.low %}{% pill _("Stok menipis") tone="yellow" %}{% endif %}</td>
+        <td class="num">{{ p.kg|kg }}</td><td class="num">{{ p.open_lots }}</td><td class="num">{{ p.oldest_days|default_if_none:"-" }}</td>
+        <td class="num">{% if p.kg %}<a class="gt-btn gt-btn--outline gt-btn--sm" href="{% url 'farm:spoilage' %}?product={{ p.pk }}">{% translate "Catat susut" %}</a>{% endif %}</td></tr>
+      {% empty %}
+      <tr><td colspan="5" class="app-muted app-empty-cell">{% translate "Belum ada hasil panen. Produk muncul di sini setelah panen pertama dicatat." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

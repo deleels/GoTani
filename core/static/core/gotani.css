@@ -954,3 +954,7 @@ html { scrollbar-gutter: stable; }
 /* D124: farm location search row on Pengaturan */
 .app-searchrow { display: flex; gap: .5rem; }
 .app-searchrow > .app-field { flex: 1; min-width: 0; }
+
+/* D125: in-page tab strip of an area (Kasir, Grosir, Stok Hasil Panen, Analitik) */
+.app-sectiontabs { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.app-sectiontabs .gt-tabs { overflow-x: auto; max-width: 100%; }

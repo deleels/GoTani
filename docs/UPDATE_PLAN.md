@@ -12,7 +12,7 @@ Decisions D123 to D137 in `DECISIONS.md` are the binding record; this file is th
 
 ---
 
-## 1. Lock down Django admin (D123)
+## 1. Lock down Django admin (D123) ✅
 - Read-only (view only, no add/change/delete) for transaction data: `HarvestBatch`, `ActivityLog`,
   `SpoilageRecord`, `Invoice` + lines, `InvoicePayment`, `PaymentAllocation`, `InvoiceLineLotAllocation`;
   `CropCycle.stage` read-only.
@@ -21,7 +21,7 @@ Decisions D123 to D137 in `DECISIONS.md` are the binding record; this file is th
 - Setup tables stay editable: Variety, FarmElement, Tax, ExpenseCategory, PreHarvestChecklistItem, Buyer.
 - Test: walks every registered ModelAdmin and fails if a transaction model allows add/change/delete.
 
-## 2. In-app setup (D124)
+## 2. In-app setup (D124) ✅
 - Inventaris Input: "+ Input baru" (name, type, unit, low-stock level, optional supplier), optional first
   purchase in the same form. OWNER/MANAGER.
 - Start-cycle form: "+ Varietas baru" opens a small sheet (name, crop, days to harvest, optional Kc).
@@ -31,7 +31,7 @@ Decisions D123 to D137 in `DECISIONS.md` are the binding record; this file is th
 - Pengaturan: farm location picked on a small Leaflet map (click to drop a pin + existing Nominatim
   search); latitude/longitude fields stay as a fallback.
 
-## 3. Navigation restructure (D125)
+## 3. Navigation restructure (D125) ✅
 ```
 DASBOR     Ringkasan · Laporan Kerja · Cuaca & Satelit
 KEBUN      Elemen & Siklus · Inventaris Input · Stok Hasil Panen
@@ -45,7 +45,8 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - **Stok Hasil Panen** (new page): tabs Stok (per product: kg, open lots, oldest lot age, low-stock flag) ·
   Susut · Opname · Harga (OWNER/MANAGER only). Harga Produk leaves KEUANGAN.
 - Panen and Susut leave the old Aset Kebun dropdown (Panen stays in Laporan Kerja and on the cycle page).
-- Omzet & PPh becomes an Analitik tab (`?tab=omzet`); the old URL redirects.
+- Omzet & PPh becomes an Analitik tab (built as a shared tab strip over the existing URLs, so no redirects
+  were needed).
 - Elemen & Siklus stays one combined page.
 - Old URLs keep working (redirects); role filtering unchanged (a WORKER still reaches Susut and Opname).
 - Update the shell section of `CLAUDE.md`.

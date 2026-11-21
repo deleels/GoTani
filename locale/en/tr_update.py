@@ -38,4 +38,17 @@ TR = {
     "Ubah varietas %(name)s": "Edit variety %(name)s",
     "Umur panen mengisi perkiraan tanggal panen siklus baru. Kc dipakai untuk kebutuhan air di Cuaca & Satelit.": "Days to harvest fills in the expected harvest date of new cycles. Kc is used for water need on Weather & Satellite.",
     "Ubah elemen %(name)s": "Edit element %(name)s",
+    # D125 navigation
+    "Bagian": "Section",
+    "Shift terbuka": "Shift open",
+    "Stok Hasil Panen": "Produce Stock",
+    "Stok per produk dari lot yang masih terbuka. Lot tertua dijual lebih dulu (FIFO).": "Stock per product from the open lots. The oldest lot sells first (FIFO).",
+    "Total stok (kg)": "Total stock (kg)",
+    "Stok (kg)": "Stock (kg)",
+    "Lot terbuka": "Open lots",
+    "Umur lot tertua (hari)": "Oldest lot age (days)",
+    "Belum ada hasil panen. Produk muncul di sini setelah panen pertama dicatat.": "No produce yet. Products show here once the first harvest is recorded.",
+    "KEBUN": "FARM",
+    "Grosir": "Wholesale",
+    "Opname": "Stock count",
 }

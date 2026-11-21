@@ -136,10 +136,12 @@ An engineering programming class project modeling end-to-end agricultural produc
 - **Brand:** GoTani-design-system (tokens + CSS components, `gt-` classes), light theme only (D104). Button hierarchy, info-tip footnotes, themed date picker, varied bars and gauge: D107. Source of truth: the GoTani design-system artifact https://claude.ai/artifact/25DsxzDss5aQCsGom2HahT — read its `project/README.md` before UI work.
 - **Language (Phase 7):** English UI with a per-user Indonesian option; Indonesian is the source text (msgid), English lives in `locale/en/tr_*.py` (run `python manage.py i18n`). Money, numbers and dates follow the user's language (`Rp15,000` in English, `Rp15.000` in Indonesian); dates use named formats only (D119); built-in categories/checklist lines translate until renamed (D120).
 - **Shell:** left sidebar 16rem, collapses to a 3rem icon rail (Ctrl/⌘+B, state in localStorage); mobile = slide-in sheet from a hamburger. Header slot shows FarmProfile name/logo + user's role. Groups (role-filtered):
-  - **DASBOR:** Ringkasan · Laporan Kerja · Aset Kebun ▾ (Elemen, Siklus Tanam, Inventaris Input) · Cuaca & Satelit
-  - **PENJUALAN:** Kasir (POS) · Pesanan · Shift & Kas · Invoice · Pembeli
-  - **KEUANGAN:** Biaya · Harga Produk · Analitik · Omzet & PPh
+  - **DASBOR:** Ringkasan · Laporan Kerja · Cuaca & Satelit
+  - **KEBUN:** Elemen & Siklus · Inventaris Input · Stok Hasil Panen
+  - **PENJUALAN:** Kasir · Grosir
+  - **KEUANGAN:** Biaya · Analitik
   - **ALAT:** Telusuri · Log aktivitas (OWNER/MANAGER, D82) · Staf · Pengaturan
+  - **Area tab strips (D125, `core/nav.py` SECTIONS, rendered by base.html):** Kasir · Pesanan · Shift & Kas (+ shift status chip); Invoice · Pembeli; Stok · Susut · Opname · Harga (Harga finance only); Analitik · Omzet & PPh. Panen is reached from Laporan Kerja and the cycle page. Setup in the app (D124): Input baru, Varietas baru/Ubah (list in Pengaturan), element Ubah, farm location pin.
 - **Top bar** (h-16, translucent blur): sidebar toggle left; right: 🔔 bell, divider, 👤 menu (Profil, Ganti Password, Keluar).
 - **Page anatomy** (reusable template includes + Alpine): title + role-specific subtitle; primary action top-right; KPI stat cards; status tabs synced to `?tab=`; toolbar (search, date range, "Atur kolom" column visibility in localStorage); table with ⋯ row menu; footer "Baris per halaman · Halaman x dari y · « ‹ › »", default 10.
 - **Forms:** short create/edit forms open in a right-side sheet (server validation errors reopen it); invoice editor, payment allocation, harvest entry and POS are full pages.

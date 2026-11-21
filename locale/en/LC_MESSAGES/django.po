@@ -275,12 +275,20 @@ msgid "ALAT"
 msgstr "TOOLS"
 
 #: core\nav.py
-msgid "Aset Kebun"
-msgstr "Farm assets"
-
-#: core\nav.py
 msgid "DASBOR"
 msgstr "DASHBOARD"
+
+#: core\nav.py
+msgid "Grosir"
+msgstr "Wholesale"
+
+#: core\nav.py
+msgid "Harga"
+msgstr "Price"
+
+#: core\nav.py
+msgid "KEBUN"
+msgstr "FARM"
 
 #: core\nav.py
 msgid "KEUANGAN"
@@ -289,6 +297,10 @@ msgstr "FINANCE"
 #: core\nav.py
 msgid "Omzet & PPh"
 msgstr "Revenue & tax"
+
+#: core\nav.py
+msgid "Opname"
+msgstr "Stock count"
 
 #: core\nav.py
 msgid "PENJUALAN"
@@ -597,10 +609,6 @@ msgstr "Account %(username)s created. Give them the temporary password."
 #: core\views.py
 msgid "Alokasi dilepas"
 msgstr "Payment unapplied"
-
-#: core\views.py
-msgid "Harga"
-msgstr "Price"
 
 #: core\views.py
 msgid "Kata sandi berhasil diganti."
@@ -3194,6 +3202,18 @@ msgstr "Previous"
 msgid "dari"
 msgstr "of"
 
+#: templates\components\section_tabs.html
+msgid "Bagian"
+msgstr "Section"
+
+#: templates\components\section_tabs.html
+msgid "Shift belum dibuka"
+msgstr "Shift not open"
+
+#: templates\components\section_tabs.html
+msgid "Shift terbuka"
+msgstr "Shift open"
+
 #: templates\core\audit_log.html
 msgid "Alasan"
 msgstr "Reason"
@@ -4570,6 +4590,38 @@ msgstr "Set price / kg"
 msgid "mis. 25.000"
 msgstr "e.g. 25,000"
 
+#: templates\farm\produce.html
+msgid "Belum ada hasil panen. Produk muncul di sini setelah panen pertama dicatat."
+msgstr "No produce yet. Products show here once the first harvest is recorded."
+
+#: templates\farm\produce.html
+msgid "Catat susut"
+msgstr "Log spoilage"
+
+#: templates\farm\produce.html
+msgid "Lot terbuka"
+msgstr "Open lots"
+
+#: templates\farm\produce.html
+msgid "Stok (kg)"
+msgstr "Stock (kg)"
+
+#: templates\farm\produce.html
+msgid "Stok Hasil Panen"
+msgstr "Produce Stock"
+
+#: templates\farm\produce.html
+msgid "Stok per produk dari lot yang masih terbuka. Lot tertua dijual lebih dulu (FIFO)."
+msgstr "Stock per product from the open lots. The oldest lot sells first (FIFO)."
+
+#: templates\farm\produce.html
+msgid "Total stok (kg)"
+msgstr "Total stock (kg)"
+
+#: templates\farm\produce.html
+msgid "Umur lot tertua (hari)"
+msgstr "Oldest lot age (days)"
+
 #: templates\farm\spoilage.html
 msgid " (sisa "
 msgstr " ("
@@ -4605,10 +4657,6 @@ msgstr "No spoilage recorded."
 #: templates\farm\spoilage.html
 msgid "Catat produk busuk, rusak, atau menyusut dari lot tertentu; kerugiannya dihitung dari HPP lot."
 msgstr "Log produce that rotted, was damaged or shrank from a specific lot; the loss is valued at the lot's COGS."
-
-#: templates\farm\spoilage.html
-msgid "Catat susut"
-msgstr "Log spoilage"
 
 #: templates\farm\spoilage.html
 msgid "Catat susut/rusak?"
@@ -5975,10 +6023,6 @@ msgid "Riwayat penjualan"
 msgstr "Sales history"
 
 #: templates\pos\register.html
-msgid "Shift belum dibuka"
-msgstr "Shift not open"
-
-#: templates\pos\register.html
 msgid "Shift dibuka"
 msgstr "Shift opened"
 
@@ -6692,6 +6736,9 @@ msgstr "· cashier"
 
 msgid "-"
 msgstr ""
+
+msgid "Aset Kebun"
+msgstr "Farm assets"
 
 msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
 msgstr "About %(round)s mm expected — hold off spraying and check drainage."
