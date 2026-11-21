@@ -749,7 +749,7 @@ TR = {
     "Semua angka bersih dari PPN dan diskon invoice. Invoice dihitung pada tanggal terbit (akrual).": "All figures exclude VAT and invoice discounts. Invoices count on their issue date (accrual).",
     "Semua angka bersih dari diskon invoice. Invoice dihitung pada tanggal terbit (akrual).": "All figures exclude invoice discounts. Invoices count on their issue date (accrual).",
     "Tidak ada penjualan pada periode ini.": "No sales this period.",
-    "Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Bila HPP lebih besar dari pendapatan, kelebihannya bergaris merah di atas batang.": "Bar height = that day's revenue. The hatched part is COGS and the green part on top is gross profit. When COGS exceeds revenue, the excess shows as red hatching on top.",
+    "Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Hari terakhir berwarna paling gelap.": "Bar height = that day's revenue. The hatched part is COGS and the green part on top is gross profit. The latest day is the darkest.",
     "Total sisa tagihan invoice per hari ini, tidak terikat rentang tanggal.": "Total unpaid invoice balance as of today, regardless of the date range.",
     "Uang masuk per metode": "Cash in by method",
     "Untung pada periode ini": "Profit this period",

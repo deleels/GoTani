@@ -531,6 +531,8 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-main__inner > .gt-callout, .app-main__inner > form.gt-callout, .app-pos__shift, .app-issue { background: var(--surface-raised); }
 .app-issue, .app-credit, .app-pos__shift { align-items: flex-start; }
 .app-legend i.hatch { width: 12px; height: 12px; border-radius: 50%; background: var(--gt-hatch); background-size: 6px 6px; border: 1px solid var(--hatch); }
+.app-legend i.app-legend__cogs { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--green-600);
+  background: repeating-linear-gradient(135deg, var(--green-600) 0 1.5px, var(--green-100) 1.5px 4px); }
 .app-legend__loss { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--danger);
   background: repeating-linear-gradient(135deg, var(--pending-bg) 0 2px, var(--danger) 2px 3px); }
 
