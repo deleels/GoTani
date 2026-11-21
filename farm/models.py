@@ -114,7 +114,7 @@ class CropCycle(models.Model):
     planted_qty = models.PositiveIntegerField(_l("jumlah tanaman"), null=True, blank=True)
 
     class PlantedUnit(models.TextChoices):  # D136: a label for the count; no conversion
-        PLANT = "PLANT", _l("tanaman")
+        PLANT = "PLANT", _l("batang")
         TRAY = "TRAY", _l("tray")
         POLYBAG = "POLYBAG", _l("polybag")
         HOLE = "HOLE", _l("lubang")

@@ -637,7 +637,7 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-mapedit__head, .app-mapedit__actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .app-mapedit__head .app-field { min-width: 10rem; }
 .app-ndvi-legend { display: grid; grid-template-columns: auto 1fr auto; column-gap: var(--space-2); row-gap: 2px; align-items: center; font-size: 12px; color: var(--ink-muted); }
-.app-ndvi-legend i { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #d7191c, #fdae61 30%, #ffffbf 50%, #a6d96a 70%, #1a9641); }
+.app-ndvi-legend i { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #d7191c, #fdae61 30%, #ffffbf 50%, #a6d96a 70%, #1a9641); } /* taste-skill-ignore: the NDVI image colour scale, a data legend */
 .app-ndvi-legend small { grid-row: 2; grid-column: 2; font-size: 11px; }
 .app-ndvi-legend small:nth-of-type(2) { justify-self: center; }
 .app-ndvi-legend small:nth-of-type(3) { justify-self: end; }
@@ -988,3 +988,25 @@ html { scrollbar-gutter: stable; }
 .app-satbar .app-label { margin: 0; }
 .app-field--sm { height: 36px; width: auto; padding-right: 2rem; }
 .app-satbar .gt-btn { margin-left: auto; }
+
+/* Design pass (2026-11-21): one-row weekly strip, readable small greys (ink-subtle is 18px+ only per the
+   design system), app-sized titles on phones. */
+.app-weekstrip { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(7.25rem, 1fr);
+  overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+.gt-root .gt-table th { color: var(--ink-muted); }
+.app-weektile__value small, .app-stages__labels { color: var(--ink-muted); }
+.gt-pagehead__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+@media (max-width: 639.98px) {
+  .gt-root .gt-pagehead h1, .gt-root .app-pagehead__title { font-size: 24px; line-height: 30px; letter-spacing: -0.3px; }
+}
+/* Design pass: every grey that carries words reaches 4.5:1 (ink-muted was 4.4:1 on the sidebar grey;
+   the yellow pill ink and select prompts were 1.8-3.2:1). */
+.gt-root { --ink-muted: #666b69; }
+.gt-root .gt-pill--progress { color: var(--warning-text); }
+.app-select__value.is-placeholder, .gt-root .app-field::placeholder { color: var(--ink-muted); }
+.app-weekstrip { grid-auto-columns: minmax(6.5rem, 1fr); }
+.app-rowactions { display: flex; justify-content: flex-end; align-items: center; gap: var(--space-2); }
+.app-rowactions > *, .app-rowactions form { display: inline-flex; margin: 0; }
+@media (max-width: 639.98px) {
+  .app-empty-cell .app-empty { position: sticky; left: 0; max-width: calc(100vw - 6.5rem); }
+}

@@ -178,4 +178,13 @@ TR = {
     "lintasan": "passes",
     "Ekspor CSV": "Export CSV",
     "NDVI min / median / rata / maks": "NDVI min / median / mean / max",
+    # Design pass: empty-state lines now translated
+    "Belum ada cek pra-panen. Lakukan sebelum memajukan siklus ke tahap Panen agar tidak muncul peringatan.": "No pre-harvest checks yet. Do one before moving the cycle to Harvest so no warning shows.",
+    "Belum ada panen. Panen hanya bisa dicatat saat siklus di tahap Panen; tiap grade menjadi lot stok.": "No harvests yet. A harvest can only be recorded while the cycle is at Harvest; each grade becomes a stock lot.",
+    "Belum ada susut tercatat. Catat produk busuk, rusak, atau menyusut dari lot tertentu.": "No spoilage recorded yet. Record rotten, damaged or shrunk produce from a specific lot.",
+    "Belum ada laporan jenis ini. Klik “Laporan baru” untuk mencatat pekerjaan lapangan.": "No reports of this type yet. Click “New entry” to record field work.",
+    "Elemen ini belum pernah ditanami. Mulai siklus untuk mencatat kegiatan dan panen.": "Nothing has been planted on this element yet. Start a cycle to record work and harvests.",
+    "Belum ada mutasi. Pembelian menambah stok; pemakaian di Laporan Kerja menguranginya.": "No movements yet. Purchases add stock; use in the work log deducts it.",
+    "Cari laporan": "Search reports",
+    "batang": "plants",
 }

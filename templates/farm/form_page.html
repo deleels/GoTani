@@ -5,7 +5,7 @@
 {% block content %}
 {# Single-form page on the CheckoutPage template: back link + title, form card with a Batal · Simpan footer, help on the right (D104). #}
 {% if not back_href %}{% url back_url as back_href %}{% endif %}
-<div class="gt-pagehead">
+<div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
     <a href="{{ back_href }}{{ back_query }}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
     <h1>{{ page_title }}{% if page_help %} {% info_tip page_help %}{% endif %}</h1>

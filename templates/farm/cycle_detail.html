@@ -8,7 +8,7 @@
     <div class="app-pagehead__text">
       <a href="{% url 'farm:element_detail' cycle.element_id %}" class="app-back">{% icon "chevron-left" 16 %} {{ cycle.element }}</a>
       <h1 class="app-pagehead__title">{{ cycle.variety }}
-        {% if cycle.is_active %}{% pill cycle.get_stage_display tone="green" %}{% else %}{% pill _("Ditutup") tone="gray" %}{% endif %}
+        {% if not cycle.is_active %}{% pill _("Ditutup") tone="gray" %}{% endif %}
         {% if overdue %}{% pill _("Panen terlewat") tone="orange" %}{% endif %}</h1>
       <p>{{ cycle.element }} {% translate "· mulai" %} {{ cycle.planting_start_date|date:"SHORT_DATE_FORMAT" }} · {{ days }} {% translate "hari" %}{% if not cycle.is_active %} {% translate "· ditutup" %} {{ cycle.closed_at|date:"SHORT_DATE_FORMAT" }}{% endif %}</p>
     </div>

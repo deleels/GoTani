@@ -346,7 +346,8 @@ class MultiActivityForm(StyledForm):
         self.rows = []
         for i in range(MULTI_MAX_ROWS):
             row = {"cycle": f"cycle_{i}", "qty": f"qty_{i}", "dur": f"dur_{i}"}
-            self.fields[row["cycle"]] = forms.ModelChoiceField(label=_("Siklus"), queryset=cycles, required=False)
+            self.fields[row["cycle"]] = forms.ModelChoiceField(label=_("Siklus"), queryset=cycles, required=False,
+                                                              empty_label=_("Pilih siklus…"))
             if self.uses_qty:
                 self.fields[row["qty"]] = qty_field(_l("Jumlah"), required=False, min_value=Decimal("0"))
                 self.fields[row["qty"]].widget.unit = None

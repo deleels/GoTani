@@ -1171,6 +1171,10 @@ msgid "Vegetatif"
 msgstr "Vegetative"
 
 #: farm\models.py
+msgid "batang"
+msgstr "plants"
+
+#: farm\models.py
 msgid "batas peringatan stok"
 msgstr "stock alert level"
 
@@ -3987,6 +3991,22 @@ msgid "Beberapa siklus"
 msgstr "Several cycles"
 
 #: templates\farm\activities.html
+msgid "Belum ada cek pra-panen. Lakukan sebelum memajukan siklus ke tahap Panen agar tidak muncul peringatan."
+msgstr "No pre-harvest checks yet. Do one before moving the cycle to Harvest so no warning shows."
+
+#: templates\farm\activities.html
+msgid "Belum ada laporan jenis ini. Klik “Laporan baru” untuk mencatat pekerjaan lapangan."
+msgstr "No reports of this type yet. Click “New entry” to record field work."
+
+#: templates\farm\activities.html
+msgid "Belum ada panen. Panen hanya bisa dicatat saat siklus di tahap Panen; tiap grade menjadi lot stok."
+msgstr "No harvests yet. A harvest can only be recorded while the cycle is at Harvest; each grade becomes a stock lot."
+
+#: templates\farm\activities.html
+msgid "Belum ada susut tercatat. Catat produk busuk, rusak, atau menyusut dari lot tertentu."
+msgstr "No spoilage recorded yet. Record rotten, damaged or shrunk produce from a specific lot."
+
+#: templates\farm\activities.html
 msgid "Butir terpenuhi"
 msgstr "Items met"
 
@@ -4323,6 +4343,10 @@ msgid "Elemen &amp; Siklus"
 msgstr "Plots &amp; cycles"
 
 #: templates\farm\element_detail.html
+msgid "Elemen ini belum pernah ditanami. Mulai siklus untuk mencatat kegiatan dan panen."
+msgstr "Nothing has been planted on this element yet. Start a cycle to record work and harvests."
+
+#: templates\farm\element_detail.html
 msgid "Elemen sedang kosong"
 msgstr "Plot is empty"
 
@@ -4633,6 +4657,10 @@ msgstr "kg ("
 #: templates\farm\input_detail.html
 msgid "Batas peringatan "
 msgstr "Alert level "
+
+#: templates\farm\input_detail.html
+msgid "Belum ada mutasi. Pembelian menambah stok; pemakaian di Laporan Kerja menguranginya."
+msgstr "No movements yet. Purchases add stock; use in the work log deducts it."
 
 #: templates\farm\input_detail.html
 msgid "Belum dipakai."

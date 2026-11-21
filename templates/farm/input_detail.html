@@ -30,7 +30,7 @@
           <tr><td class="whitespace-nowrap">{{ r.timestamp|date:"SHORT_DATETIME_FORMAT" }}</td><td>{{ r.get_movement_type_display }}</td>
             <td>{% if r.activity %}<a class="app-link--plain" href="{% url 'farm:cycle_detail' r.activity.cycle_id %}">{{ r.activity.cycle.variety }} @ {{ r.activity.cycle.element }}</a> <span class="app-row__meta">{{ r.activity.get_activity_type_display }}</span>{% else %}<span class="app-muted">{{ r.reference|default:"-" }}</span>{% endif %}</td>
             <td class="num {% if r.qty < 0 %}app-value--danger{% else %}app-value--positive{% endif %}">{{ r.qty|kg }}</td><td class="num">{{ r.balance|kg }}</td></tr>
-        {% empty %}{% include "farm/_empty_row.html" with cols=5 msg="Belum ada mutasi. Pembelian menambah stok; pemakaian di Laporan Kerja menguranginya." %}{% endfor %}
+        {% empty %}{% include "farm/_empty_row.html" with cols=5 msg=_("Belum ada mutasi. Pembelian menambah stok; pemakaian di Laporan Kerja menguranginya.") %}{% endfor %}
         </tbody>
       </table>
       </div>

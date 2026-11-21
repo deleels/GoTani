@@ -351,7 +351,7 @@ class ActivitiesView(FarmPage):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         tab = self.current_tab()
-        ctx.update(multi_tabs=[k for k, t in TAB_TYPES.items() if t in services.MULTI_TYPES],
+        ctx.update(multi_tabs=[k for k, t in TAB_TYPES.items() if t in services.MULTI_TYPES], search_tabs=list(TAB_TYPES),
                    report_groups=report_picker(), report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
                    report_label=next((l for k, l, _ in REPORT_TABS if k == tab), ""),
                    sheet_open=self.request.method == "POST" or self.request.GET.get("new") == "1")

@@ -4,7 +4,7 @@
 {% block title %}{{ page_title }}{% endblock %}
 {% block content %}
 {# D131: shared fields once, one row per cycle; all rows save together or none do. #}
-<div class="gt-pagehead">
+<div class="gt-pagehead app-pagehead--sm">
   <div class="app-pagehead__text">
     <a href="{% url 'farm:activities' %}?tab={{ key }}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
     <h1>{{ page_title }} {% info_tip _("Isi data bersama sekali, lalu satu baris per siklus (paling banyak 10). Semua baris disimpan bersama: jika satu gagal, tidak ada yang tersimpan.") %}</h1>

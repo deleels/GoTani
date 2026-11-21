@@ -38,7 +38,7 @@
         <tr><td><a class="app-link--plain app-strong" href="{% url 'farm:cycle_detail' c.pk %}">{{ c.variety }}</a></td><td>{{ c.planting_start_date|date:"SHORT_DATE_FORMAT" }}</td>
           <td>{% if c.is_active %}{{ c.get_stage_display }}{% else %}{% translate "Ditutup" %}{% endif %}</td><td class="num">{{ c.days }}</td>
           <td class="num">{{ c.summary.actual_kg|kg }}</td><td class="num">{{ c.expected_yield_kg|kg }}</td><td class="num">{{ c.kg_per_m2|kg }}</td></tr>
-      {% empty %}{% include "farm/_empty_row.html" with cols=7 msg="Elemen ini belum pernah ditanami. Mulai siklus untuk mencatat kegiatan dan panen." %}{% endfor %}
+      {% empty %}{% include "farm/_empty_row.html" with cols=7 msg=_("Elemen ini belum pernah ditanami. Mulai siklus untuk mencatat kegiatan dan panen.") %}{% endfor %}
       </tbody>
     </table>
     </div>
