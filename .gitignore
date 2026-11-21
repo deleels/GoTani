@@ -8,3 +8,7 @@ media/
 .coverage
 htmlcov/
 docs/redesign-shots/
+
+# Local Claude Code tooling (installed skills, launch configs)
+.agents/
+.claude/
