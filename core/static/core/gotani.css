@@ -875,19 +875,11 @@ html { scrollbar-gutter: stable; }
   :is(.app-dash__stats, .app-buyer__value) .gt-stat__value, :is(.app-dash__stats, .app-buyer__value) .gt-stat__value.app-stat__money { font-size: 20px; }
 }
 
-/* Primary (gradient) button as in the design-system reference shots. One light source at the lower right: the
-   gradient brightens toward that corner, the glow sits in it, and only the bottom/right edges catch a rim of light
-   (no top highlight, which would imply a second light from above). Overrides bundle.css (copied, never edited). */
-.gt-btn--primary {
-  background:
-    radial-gradient(85% 160% at 100% 100%, rgb(95 189 146 / .42), transparent 62%),
-    linear-gradient(115deg, var(--green-900) 0%, var(--green-800) 35%, var(--green-700) 65%, var(--green-600) 100%);
-  color: #fff; font-weight: 500; letter-spacing: -.01em; gap: 12px;
-  box-shadow: inset -1px -1px 0 rgb(255 255 255 / .14), 0 8px 18px -10px rgb(19 69 45 / .6);
-}
-.gt-btn--primary:hover {
-  background:
-    radial-gradient(85% 160% at 100% 100%, rgb(95 189 146 / .55), transparent 64%),
-    linear-gradient(115deg, var(--green-900) 0%, var(--green-800) 30%, var(--green-700) 60%, var(--green-600) 100%);
-}
+/* One light for every green surface: the featured stat card's glow from the bottom-left corner (bundle.css
+   .gt-stat--featured) is reused for the hero panel and the primary button, so cards, panel and buttons read as lit
+   from the same place. Flat: no drop shadow, no rim highlight. Overrides bundle.css (copied, never edited). */
+:root { --gt-lit: radial-gradient(130% 160% at 0% 100%, #3f9d6b 0%, var(--green-600) 28%, var(--green-800) 72%, var(--green-900) 100%); }
+.gt-hero { background: var(--gt-lit); }
+.gt-btn--primary { background: var(--gt-lit); color: #fff; font-weight: 500; letter-spacing: -.01em; gap: 12px; box-shadow: none; }
+.gt-btn--primary:hover { background: radial-gradient(130% 160% at 0% 100%, #4aab78 0%, var(--green-600) 32%, var(--green-800) 76%, var(--green-900) 100%); }
 .gt-btn--primary:disabled, .gt-btn--primary[aria-disabled=true] { background: var(--surface); color: var(--ink-subtle); box-shadow: none; }
