@@ -98,7 +98,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - Purchase form gets payment method (Tunai / QRIS / Transfer) and an optional receipt file, like Biaya.
   No link to the cash drawer.
 
-## 12. Three-day correction window (D134)
+## 12. Three-day correction window (D134) ✅
 - Spoilage reversal and stage undo: allowed up to 3 calendar days (Asia/Jakarta) after the event,
   OWNER/MANAGER, reason required. Stage undo still needs "nothing recorded since".
 - Spoilage reversal is blocked when an approved opname for that product is newer than the spoilage

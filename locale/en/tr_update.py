@@ -144,4 +144,9 @@ TR = {
     "Laporan diperbarui.": "Report updated.",
     "Jumlah, input dan siklus tidak bisa diubah karena memengaruhi stok dan biaya: hapus lalu catat ulang. Setiap perubahan tercatat di Log aktivitas.": "Quantity, input and cycle cannot change because they affect stock and cost: delete and record again. Every change goes to the activity log.",
     "Ubah laporan: %(what)s": "Edit report: %(what)s",
+    # D134 three-day correction window
+    "Pembatalan hanya bisa sampai %(days)s hari setelah perpindahan tahap.": "Undo is only possible up to %(days)s days after the stage change.",
+    "Catatan susut hanya bisa dibatalkan sampai %(days)s hari setelah dicatat.": "A spoilage entry can only be reversed up to %(days)s days after it was recorded.",
+    "Tidak bisa dibatalkan: opname %(product)s tanggal %(date)s sudah disetujui setelah susut ini.": "Cannot reverse: the %(product)s stock count of %(date)s was approved after this spoilage.",
+    "Pembatalan hanya bisa oleh OWNER/MANAGER sampai 3 hari, selama belum ada catatan baru.": "Only an OWNER/MANAGER can undo this, up to 3 days, while nothing new has been logged.",
 }

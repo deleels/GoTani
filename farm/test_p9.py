@@ -325,8 +325,10 @@ class StageAdvanceUndoTests(TestCase):
 
     def test_undo_blocked_after_new_record_or_next_day(self):
         services.advance_cycle_stage(self.cycle, CropCycle.Stage.SPROUTING, actor=self.worker)
-        _, blocked = services.stage_undo_block(self.cycle, today=date.today() + timedelta(days=1))
-        self.assertIn("hari yang sama", blocked)
+        _, blocked = services.stage_undo_block(self.cycle, today=date.today() + timedelta(days=3))
+        self.assertIsNone(blocked)  # D134: 3-day window
+        _, blocked = services.stage_undo_block(self.cycle, today=date.today() + timedelta(days=4))
+        self.assertIn("3 hari", blocked)
         services.log_activity(self.cycle, ActivityLog.ActivityType.SCOUTING, quantity=0, unit="L")
         with self.assertRaises(ValidationError):
             services.undo_last_advance(self.cycle, self.manager, "salah")

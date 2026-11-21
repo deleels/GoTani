@@ -515,8 +515,8 @@ msgid "Pakai untuk %(invoices)s (jatuh tempo paling awal dulu)"
 msgstr "Apply to %(invoices)s (earliest due first)"
 
 #: core\templatetags\ui.py
-msgid "Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru."
-msgstr "Only an OWNER/MANAGER can undo this, on the same day, while nothing new has been logged."
+msgid "Pembatalan hanya bisa oleh OWNER/MANAGER sampai 3 hari, selama belum ada catatan baru."
+msgstr "Only an OWNER/MANAGER can undo this, up to 3 days, while nothing new has been logged."
 
 #: core\templatetags\ui.py
 msgid "Pembersihan menutup siklus; tidak ada panen lagi setelah ini."
@@ -1719,8 +1719,8 @@ msgid "Panen hanya dapat dicatat saat siklus berada pada tahap Panen."
 msgstr "Harvests can only be logged while the cycle is in the Harvest stage."
 
 #: farm\services.py
-msgid "Pembatalan hanya bisa di hari yang sama dengan perpindahan tahap."
-msgstr "A stage change can only be undone on the same day."
+msgid "Pembatalan hanya bisa sampai %(days)s hari setelah perpindahan tahap."
+msgstr "Undo is only possible up to %(days)s days after the stage change."
 
 #: farm\services.py
 msgid "Pembelian tidak dapat dihapus karena input ini sudah dipakai setelah pembelian tersebut."
@@ -2499,8 +2499,8 @@ msgid "Batas stok tidak boleh negatif."
 msgstr "The stock level can't be negative."
 
 #: inventory\services.py
-msgid "Catatan susut hanya bisa dibatalkan di hari yang sama."
-msgstr "Spoilage can only be reversed on the same day."
+msgid "Catatan susut hanya bisa dibatalkan sampai %(days)s hari setelah dicatat."
+msgstr "A spoilage entry can only be reversed up to %(days)s days after it was recorded."
 
 #: inventory\services.py
 msgid "Catatan susut ini sudah dibatalkan."
@@ -2557,6 +2557,10 @@ msgstr "Wrong sign for movement %(movement_type)s."
 #: inventory\services.py
 msgid "Tarif pajak harus 0–100%."
 msgstr "Tax rate must be 0–100%."
+
+#: inventory\services.py
+msgid "Tidak bisa dibatalkan: opname %(product)s tanggal %(date)s sudah disetujui setelah susut ini."
+msgstr "Cannot reverse: the %(product)s stock count of %(date)s was approved after this spoilage."
 
 #: invoicing\apps.py
 msgid "Invoice & Pembeli"
@@ -4687,6 +4691,10 @@ msgid "Pemasok"
 msgstr "Supplier"
 
 #: templates\farm\inputs.html
+msgid "Pembayaran"
+msgstr "Payments"
+
+#: templates\farm\inputs.html
 msgid "Pembelian terbaru"
 msgstr "Recent purchases"
 
@@ -4709,6 +4717,10 @@ msgstr "Input stock"
 #: templates\farm\inputs.html
 msgid "Total"
 msgstr "Total"
+
+#: templates\farm\inputs.html
+msgid "bukti"
+msgstr "receipt"
 
 #: templates\farm\opname.html
 msgid "Aman"
@@ -5575,10 +5587,6 @@ msgid "Pakai kredit"
 msgstr "Use credit"
 
 #: templates\invoicing\buyer_detail.html
-msgid "Pembayaran"
-msgstr "Payments"
-
-#: templates\invoicing\buyer_detail.html
 msgid "Pembayaran yang belum dialokasikan ini dibatalkan dan tidak dihitung lagi sebagai kredit. Catatannya tetap disimpan (arsip 10 tahun)."
 msgstr "This unapplied payment is cancelled and no longer counts as credit. The record is kept (10-year archive)."
 
@@ -5645,10 +5653,6 @@ msgstr "Change status"
 #: templates\invoicing\buyer_detail.html
 msgid "Ubah status pembeli?"
 msgstr "Change customer status?"
-
-#: templates\invoicing\buyer_detail.html
-msgid "bukti"
-msgstr "receipt"
 
 #: templates\invoicing\buyer_detail.html
 msgid "saat diterima"
@@ -7043,6 +7047,9 @@ msgstr "Farm assets"
 msgid "Butir yang sudah dipenuhi"
 msgstr "Items completed"
 
+msgid "Catatan susut hanya bisa dibatalkan di hari yang sama."
+msgstr "Spoilage can only be reversed on the same day."
+
 msgid "Cek"
 msgstr "Check"
 
@@ -7081,6 +7088,12 @@ msgstr "Name, address, coordinates and logo are used for weather, the map, recei
 
 msgid "Panen #%(pk)s — %(cycle)s (%(date)s)"
 msgstr "Harvest #%(pk)s — %(cycle)s (%(date)s)"
+
+msgid "Pembatalan hanya bisa di hari yang sama dengan perpindahan tahap."
+msgstr "A stage change can only be undone on the same day."
+
+msgid "Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru."
+msgstr "Only an OWNER/MANAGER can undo this, on the same day, while nothing new has been logged."
 
 msgid "Selisih %(diff)s — menunggu tinjauan manajer."
 msgstr "Difference %(diff)s — waiting for a manager's review."

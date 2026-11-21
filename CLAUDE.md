@@ -74,7 +74,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 ## Business Rules (enforce in `services.py`, test each)
 
 ### Farm & cost pool
-1. `CropCycle.stage` only advances forward in the listed order — one stage at a time unless "Lewati tahap" is ticked; backward transitions are rejected, except the same-day undo of the last advance by OWNER/MANAGER with a reason while nothing was recorded since (D84).
+1. `CropCycle.stage` only advances forward in the listed order — one stage at a time unless "Lewati tahap" is ticked; backward transitions are rejected, except the undo of the last advance by OWNER/MANAGER with a reason, up to 3 calendar days after it (Asia/Jakarta), while nothing was recorded since (D84, D134).
 2. A `HarvestBatch` may be recorded only when `cycle.stage == HARVESTING`. Validate `high_quality_kg > 0`; `low_quality_kg, harvest_loss_kg >= 0`. Entry goes through a review step (cost/kg, expected vs actual, warnings > 150% expected or > 3× batch average — D85).
 3. **Incremental cost pool:** on save, a batch absorbs every APPROVED expense of its cycle with `absorbed_by IS NULL` (set `absorbed_by = batch`). Absorbed cost is never re-spread; earlier lots' COGS never change. First-harvest cost skew is an accepted, documented limitation.
 4. **Grade split — relative sales value:** cost share per grade ∝ `kg × selling_price` (catalog price; invoice price overrides never affect it). If either grade's product lacks a price, fall back to equal per-kg COGS. `unit_cogs_<grade> = share / kg_of_grade`.
@@ -92,7 +92,7 @@ An engineering programming class project modeling end-to-end agricultural produc
 
 ### Inventory & tax
 16. **All stock mutations go through** `inventory.services.move_lot_stock()` and `farm.services.move_input_stock()`: `select_for_update` the row, validate, mutate, append ledger. Nothing else touches quantities.
-17. **Spoilage** targets a specific lot (UI preselects the oldest); cost is `qty × lot.unit_cogs_idr`, reported as spoilage loss. Lot unit COGS is unchanged. Level-2 confirmation (warns > 50% of the lot); OWNER/MANAGER may reverse it the same day with a reason as a `SPOILAGE_REVERSAL` movement (D86).
+17. **Spoilage** targets a specific lot (UI preselects the oldest); cost is `qty × lot.unit_cogs_idr`, reported as spoilage loss. Lot unit COGS is unchanged. Level-2 confirmation (warns > 50% of the lot); OWNER/MANAGER may reverse it up to 3 calendar days later with a reason as a `SPOILAGE_REVERSAL` movement, unless an approved opname of that product is newer (D86, D134). POS void stays same-day.
 18. **Invariants** (tests + `python manage.py check_mass_balance`): `lot.qty_remaining_kg == Σ StockLedger.qty_kg` per lot; `lot.qty_initial_kg` matches its batch grade kg; no negative stock; input `stock_qty == Σ InputLedger.qty`.
 19. **Tax snapshot:** each POS/invoice line copies `tax_rate_pct` from `product.tax` at sale time (0 if none, inactive, or the farm is not PKP — D80). Later rate changes never rewrite history. Tax per line is rounded to 2 dp `ROUND_HALF_UP`.
 

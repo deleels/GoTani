@@ -325,7 +325,7 @@ class SpoilageReversalTests(TestCase):
         with self.assertRaises(ValidationError):
             reverse_spoilage(rec, self.manager, "lagi")
 
-    def test_only_same_day(self):
+    def test_three_day_window_and_opname_guard(self):
         from datetime import timedelta
 
         from django.core.exceptions import ValidationError
@@ -333,9 +333,19 @@ class SpoilageReversalTests(TestCase):
 
         from inventory.services import record_spoilage, reverse_spoilage
 
-        rec = record_spoilage(self.lot, 1, "ROT", recorded_at=timezone.now() - timedelta(days=1))
+        rec = record_spoilage(self.lot, 1, "ROT", recorded_at=timezone.now() - timedelta(days=4))
         with self.assertRaises(ValidationError):
             reverse_spoilage(rec, self.manager, "telat")
+        # D134: up to 3 days back is fine, unless an approved opname of that product came after it.
+        ok = record_spoilage(self.lot, 1, "ROT", recorded_at=timezone.now() - timedelta(days=2))
+        from inventory.models import StockCount
+
+        StockCount.objects.create(product=self.lot.product, system_kg=1, counted_kg=1, status="APPROVED",
+                                  counted_by=self.manager, decided_by=self.manager, decided_at=timezone.now())
+        with self.assertRaisesMessage(ValidationError, "opname"):
+            reverse_spoilage(ok, self.manager, "salah lot")
+        StockCount.objects.all().delete()
+        reverse_spoilage(ok, self.manager, "salah lot")
 
     def test_view_and_analytics_exclude_reversed(self):
         from django.urls import reverse

@@ -24,7 +24,7 @@ function stageForm(dataId) {
             : gtT('Tidak ada biaya yang belum terserap.'));
         }
       }
-      lines.push(gtT('Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru.'));
+      lines.push(gtT('Pembatalan hanya bisa oleh OWNER/MANAGER sampai 3 hari, selama belum ada catatan baru.'));
       gtConfirm({ title: gtT('Majukan tahap?'), body: lines.join('\n'), action: gtT('Majukan ke %(stage)s', { stage: this.label(target) }), level: level })
         .then(function (ok) { if (ok) form.submit(); });
     },

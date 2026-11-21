@@ -120,7 +120,7 @@ JS_MSGIDS = [
     _l("Pembersihan menutup siklus; tidak ada panen lagi setelah ini."),
     _l("Biaya belum terserap %(amount)s dicatat sebagai biaya siklus tak terserap (write-off)."),
     _l("Tidak ada biaya yang belum terserap."),
-    _l("Pembatalan hanya bisa oleh OWNER/MANAGER di hari yang sama, selama belum ada catatan baru."),
+    _l("Pembatalan hanya bisa oleh OWNER/MANAGER sampai 3 hari, selama belum ada catatan baru."),
     _l("Majukan tahap?"), _l("Majukan ke %(stage)s"),
     _l("Harga naik %(pct)s: %(old)s → %(new)s per kg."), _l("Harga turun %(pct)s: %(old)s → %(new)s per kg."),
     _l("Harga di bawah HPP rata-rata lot yang masih ada (%(cogs)s/kg); setiap kg terjual merugi."),

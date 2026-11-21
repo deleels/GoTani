@@ -740,7 +740,7 @@ class SpoilageView(FarmPage):
         today = timezone.localdate()
         for r in ctx["records"]:
             r.can_reverse = (self.roles.finance and not r.reversed_at
-                             and timezone.localtime(r.recorded_at).date() == today)
+                             and inventory_services.within_correction_window(r.recorded_at, today))
         return ctx
 
 

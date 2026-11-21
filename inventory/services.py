@@ -20,6 +20,15 @@ QTY_STEP = Decimal("0.001")
 MONEY_STEP = Decimal("0.01")
 
 
+# D134: spoilage reversal and stage undo may be corrected up to 3 calendar days (Asia/Jakarta) after the event.
+CORRECTION_DAYS = 3
+
+
+def within_correction_window(moment, today=None) -> bool:
+    today = today or timezone.localdate()
+    return (today - timezone.localtime(moment).date()).days <= CORRECTION_DAYS
+
+
 @transaction.atomic
 def move_lot_stock(
     lot_id: int, qty_kg: Decimal, movement_type: str, reference: str = "", timestamp=None
@@ -123,8 +132,14 @@ def reverse_spoilage(record: SpoilageRecord, actor, reason: str) -> SpoilageReco
     record = SpoilageRecord.objects.select_for_update().get(pk=record.pk)
     if record.reversed_at:
         raise ValidationError(_("Catatan susut ini sudah dibatalkan."))
-    if timezone.localtime(record.recorded_at).date() != timezone.localdate():
-        raise ValidationError(_("Catatan susut hanya bisa dibatalkan di hari yang sama."))
+    if not within_correction_window(record.recorded_at):
+        raise ValidationError(_("Catatan susut hanya bisa dibatalkan sampai %(days)s hari setelah dicatat.")
+                              % {"days": CORRECTION_DAYS})
+    newer = (StockCount.objects.filter(product_id=record.lot.product_id, status=StockCount.Status.APPROVED,
+                                       decided_at__gt=record.recorded_at).order_by("-decided_at").first())
+    if newer is not None:
+        raise ValidationError(_("Tidak bisa dibatalkan: opname %(product)s tanggal %(date)s sudah disetujui setelah susut ini.")
+                              % {"product": newer.product, "date": timezone.localtime(newer.decided_at).strftime("%d-%m-%Y")})
     now = timezone.now()
     move_lot_stock(record.lot_id, record.qty_kg, StockLedger.MovementType.SPOILAGE_REVERSAL,
                    reference=f"SPL-{record.pk}-BATAL", timestamp=now)

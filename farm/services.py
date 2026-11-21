@@ -299,8 +299,10 @@ def stage_undo_block(cycle: CropCycle, today=None):
     if entry is None or entry.action != "STAGE_ADVANCE":
         return None, _("Tidak ada perpindahan tahap yang bisa dibatalkan.")
     today = today or timezone.localdate()
-    if timezone.localtime(entry.created_at).date() != today:
-        return entry, _("Pembatalan hanya bisa di hari yang sama dengan perpindahan tahap.")
+    from inventory.services import CORRECTION_DAYS, within_correction_window
+
+    if not within_correction_window(entry.created_at, today):
+        return entry, _("Pembatalan hanya bisa sampai %(days)s hari setelah perpindahan tahap.") % {"days": CORRECTION_DAYS}
     if _cycle_marks(cycle) != entry.after.get("marks"):
         return entry, _("Sudah ada catatan baru (kegiatan, panen, cek pra-panen, atau biaya) sejak tahap dimajukan.")
     if not cycle.is_active:
