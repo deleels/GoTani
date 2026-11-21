@@ -73,4 +73,17 @@ TR = {
     "Nama pekerjaan paling banyak 80 huruf.": "The task name can be at most 80 characters.",
     "Jumlah pekerja harus lebih dari 0.": "Number of workers must be more than 0.",
     "Nama pekerjaan dan jumlah pekerja hanya untuk kegiatan lainnya.": "Task name and number of workers are only for other work.",
+    # D128 grouped picker
+    "Perawatan": "Care",
+    "Pemantauan": "Monitoring",
+    "Panen & Lainnya": "Harvest & other",
+    "Pupuk yang diberikan; memotong stok input.": "Fertilizer applied; deducts input stock.",
+    "Penyemprotan; memotong stok input, cek waktu semprot.": "Spraying; deducts input stock, check the spray window.",
+    "Volume air dan durasi penyiraman.": "Water volume and watering time.",
+    "Benih yang ditanam; memotong stok benih.": "Seed sown; deducts seed stock.",
+    "Hama, penyakit dan kondisi tanaman, dengan foto.": "Pests, disease and plant condition, with a photo.",
+    "Daftar periksa sebelum panen.": "Checklist before harvest.",
+    "Hasil grade A dan B; menjadi lot stok.": "Grade A and B yield; becomes stock lots.",
+    "Produk busuk, rusak atau menyusut dari lot.": "Rotten, damaged or shrunk produce from a lot.",
+    "Pekerjaan lain: penyiangan, pemangkasan, pasang ajir.": "Other work: weeding, pruning, staking.",
 }

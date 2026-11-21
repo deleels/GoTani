@@ -1,0 +1,12 @@
+{% load i18n %}
+{# D128: grouped "Laporan baru" picker. Needs `report_groups` (views.report_picker) and an Alpine `picker` flag. #}
+<div x-show="picker" x-cloak class="app-menu app-picker" role="menu">
+  {% for g in report_groups %}
+  <div class="app-picker__group">
+    <p class="app-picker__title">{{ g.label }}</p>
+    {% for it in g.items %}
+    <a href="{{ it.url }}" class="app-menu__item app-picker__item" role="menuitem"><span class="app-strong">{{ it.label }}</span><span class="app-picker__help">{{ it.help }}</span></a>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>

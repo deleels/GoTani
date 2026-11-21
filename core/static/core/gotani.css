@@ -958,3 +958,10 @@ html { scrollbar-gutter: stable; }
 /* D125: in-page tab strip of an area (Kasir, Grosir, Stok Hasil Panen, Analitik) */
 .app-sectiontabs { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .app-sectiontabs .gt-tabs { overflow-x: auto; max-width: 100%; }
+
+/* D128: grouped report picker */
+.app-picker { width: min(22rem, calc(100vw - 2rem)); right: 0; max-height: 70vh; overflow-y: auto; }
+.app-picker__group + .app-picker__group { border-top: 1px solid var(--line-strong); margin-top: .25rem; padding-top: .25rem; }
+.app-picker__title { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-subtle); padding: .375rem .75rem .125rem; }
+.app-picker__item { display: flex; flex-direction: column; align-items: flex-start; gap: .125rem; white-space: normal; }
+.app-picker__help { font-size: .8125rem; color: var(--ink-subtle); }

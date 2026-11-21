@@ -3,7 +3,7 @@
 {% load ui gotani %}
 {% block title %}{{ cycle.variety }} @ {{ cycle.element }}{% endblock %}
 {% block content %}
-<div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }} }">
+<div x-data="{ sheet: {{ sheet_open|yesno:'true,false' }}, picker: false }">
   <div class="gt-pagehead app-pagehead--sm">
     <div class="app-pagehead__text">
       <a href="{% url 'farm:element_detail' cycle.element_id %}" class="app-back">{% icon "chevron-left" 16 %} {{ cycle.element }}</a>
@@ -15,7 +15,10 @@
     <div class="gt-pagehead__actions">
       {% if cycle.is_active %}
       <button type="button" @click="sheet=true" class="gt-btn gt-btn--outline gt-btn--md" title="{% translate 'Ubah perkiraan siklus' %}">{% translate "Perkiraan" %}</button>
-      <a href="{% url 'farm:preharvest_new' %}?cycle={{ cycle.pk }}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Cek pra-panen" %}</a>
+      <span class="relative" @click.outside="picker=false" @keydown.escape="picker=false">
+        <button type="button" @click="picker=!picker" :aria-expanded="picker" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Laporan baru" %} {% icon "chevron" 16 %}</button>
+        {% include "farm/_report_picker.html" %}
+      </span>
       {% endif %}
       {% if roles.finance %}<a href="{% url 'reports:trace_cycle' cycle.pk %}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Telusuri" %}</a>{% endif %}
     </div>

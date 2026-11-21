@@ -63,7 +63,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
   including CLEARING. Own "Lainnya" tab in Laporan Kerja. Labour cost stays a manual TENAGA_KERJA expense.
 - Update rule 15 in `CLAUDE.md`.
 
-## 6. Grouped report picker (D128)
+## 6. Grouped report picker (D128) ✅
 - "Laporan Baru" picker in groups with one-line descriptions: Perawatan (Pemupukan, Pestisida, Irigasi,
   Penanaman) · Pemantauan (Scouting, Pra-panen) · Panen & Lainnya (Panen, Susut, Lainnya).
 - Same picker on the cycle page, preset to that cycle.

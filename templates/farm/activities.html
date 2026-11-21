@@ -11,14 +11,7 @@
     </div>
     <div class="gt-pagehead__actions relative" @click.outside="picker=false" @keydown.escape="picker=false">
       <button type="button" @click="picker=!picker" :aria-expanded="picker" class="gt-btn gt-btn--primary gt-btn--md">{% icon "plus" 16 %} {% translate "Laporan baru" %} {% icon "chevron" 16 %}</button>
-      <div x-show="picker" x-cloak class="app-menu app-menu--sm">
-        {% for key, label, t in report_tabs %}
-          {% if key == 'panen' %}<a href="{% url 'farm:harvests' %}" class="app-menu__item">{{ label }}</a>
-          {% elif key == 'susut' %}<a href="{% url 'farm:spoilage' %}" class="app-menu__item">{{ label }}</a>
-          {% elif key == 'prapanen' %}<a href="{% url 'farm:preharvest_new' %}" class="app-menu__item">{% translate "Cek" %} {{ label }}</a>
-          {% else %}<a href="?tab={{ key }}&new=1" class="app-menu__item">{{ label }}</a>{% endif %}
-        {% endfor %}
-      </div>
+      {% include "farm/_report_picker.html" %}
     </div>
   </div>
 

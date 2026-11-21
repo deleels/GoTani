@@ -1707,6 +1707,10 @@ msgid "Batch panen dihapus; biayanya kembali ke pool siklus."
 msgstr "Harvest batch deleted; its costs returned to the cycle pool."
 
 #: farm\views.py
+msgid "Benih yang ditanam; memotong stok benih."
+msgstr "Seed sown; deducts seed stock."
+
+#: farm\views.py
 msgid "Biaya dicatat dan menunggu persetujuan."
 msgstr "Expense logged and waiting for approval."
 
@@ -1743,6 +1747,10 @@ msgid "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengka
 msgstr "Tick the checks done before harvest. The completion percentage is saved with the cycle."
 
 #: farm\views.py
+msgid "Daftar periksa sebelum panen."
+msgstr "Checklist before harvest."
+
+#: farm\views.py
 msgid "Elemen adalah satu bedengan, bak hidroponik atau area tanam. Luasnya dipakai untuk hasil per m² dan untuk membagi biaya."
 msgstr "A plot is one bed, hydroponic tank or growing area. Its area is used for yield per m² and to split costs."
 
@@ -1759,6 +1767,10 @@ msgid "HIGH %(high)s kg · LOW %(low)s kg · susut %(loss)s kg"
 msgstr "HIGH %(high)s kg · LOW %(low)s kg · loss %(loss)s kg"
 
 #: farm\views.py
+msgid "Hama, penyakit dan kondisi tanaman, dengan foto."
+msgstr "Pests, disease and plant condition, with a photo."
+
+#: farm\views.py
 msgid "Harga %(product)s dihapus; produk disembunyikan dari POS."
 msgstr "Price of %(product)s removed; the product is hidden from the POS."
 
@@ -1769,6 +1781,10 @@ msgstr "Price of %(product)s saved."
 #: farm\views.py
 msgid "Harga tidak valid."
 msgstr "Invalid price."
+
+#: farm\views.py
+msgid "Hasil grade A dan B; menjadi lot stok."
+msgstr "Grade A and B yield; becomes stock lots."
 
 #: farm\views.py
 msgid "Input baru ditambahkan."
@@ -1807,12 +1823,32 @@ msgid "Panen #%(pk)s"
 msgstr "Harvest #%(pk)s"
 
 #: farm\views.py
+msgid "Panen & Lainnya"
+msgstr "Harvest & other"
+
+#: farm\views.py
 msgid "Panen dicatat; lot stok dibuat."
 msgstr "Harvest logged; stock lots created."
 
 #: farm\views.py
+msgid "Pekerjaan lain: penyiangan, pemangkasan, pasang ajir."
+msgstr "Other work: weeding, pruning, staking."
+
+#: farm\views.py
+msgid "Pemantauan"
+msgstr "Monitoring"
+
+#: farm\views.py
 msgid "Pembelian input dicatat."
 msgstr "Input purchase logged."
+
+#: farm\views.py
+msgid "Penyemprotan; memotong stok input, cek waktu semprot."
+msgstr "Spraying; deducts input stock, check the spray window."
+
+#: farm\views.py
+msgid "Perawatan"
+msgstr "Care"
 
 #: farm\views.py
 msgid "Perkiraan siklus disimpan."
@@ -1821,6 +1857,14 @@ msgstr "Cycle estimates saved."
 #: farm\views.py
 msgid "Perpindahan tahap dibatalkan."
 msgstr "Stage change undone."
+
+#: farm\views.py
+msgid "Produk busuk, rusak atau menyusut dari lot."
+msgstr "Rotten, damaged or shrunk produce from a lot."
+
+#: farm\views.py
+msgid "Pupuk yang diberikan; memotong stok input."
+msgstr "Fertilizer applied; deducts input stock."
 
 #: farm\views.py
 msgid "Satuan tidak bisa diubah nanti: setiap laporan kerja memakai satuan input ini. Pembelian pertama boleh dikosongkan."
@@ -1889,6 +1933,10 @@ msgstr "Variety updated."
 #: farm\views.py
 msgid "Varietas ditambahkan."
 msgstr "Variety added."
+
+#: farm\views.py
+msgid "Volume air dan durasi penyiraman."
+msgstr "Water volume and watering time."
 
 #: farm\views.py
 msgid "di %(element)s"
@@ -3749,10 +3797,6 @@ msgstr "Log today's field work: fertilising, spraying, irrigation, scouting, har
 #: templates\farm\activities.html
 msgid "Catatan"
 msgstr "Notes"
-
-#: templates\farm\activities.html
-msgid "Cek"
-msgstr "Check"
 
 #: templates\farm\activities.html
 msgid "Durasi"
@@ -6807,6 +6851,9 @@ msgstr ""
 
 msgid "Aset Kebun"
 msgstr "Farm assets"
+
+msgid "Cek"
+msgstr "Check"
 
 msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
 msgstr "About %(round)s mm expected — hold off spraying and check drainage."

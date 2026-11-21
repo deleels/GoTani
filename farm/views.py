@@ -274,6 +274,42 @@ REPORT_TABS = [
 ]
 TAB_TYPES = {key: t for key, _, t in REPORT_TABS if t}
 
+# D128: the "Laporan baru" picker, grouped, with one line per report type.
+REPORT_GROUPS = [
+    (_l("Perawatan"), [
+        ("pemupukan", _l("Pupuk yang diberikan; memotong stok input.")),
+        ("pestisida", _l("Penyemprotan; memotong stok input, cek waktu semprot.")),
+        ("irigasi", _l("Volume air dan durasi penyiraman.")),
+        ("penanaman", _l("Benih yang ditanam; memotong stok benih.")),
+    ]),
+    (_l("Pemantauan"), [
+        ("scouting", _l("Hama, penyakit dan kondisi tanaman, dengan foto.")),
+        ("prapanen", _l("Daftar periksa sebelum panen.")),
+    ]),
+    (_l("Panen & Lainnya"), [
+        ("panen", _l("Hasil grade A dan B; menjadi lot stok.")),
+        ("susut", _l("Produk busuk, rusak atau menyusut dari lot.")),
+        ("lainnya", _l("Pekerjaan lain: penyiangan, pemangkasan, pasang ajir.")),
+    ]),
+]
+
+
+def report_picker(cycle_id=None):
+    """Picker groups with links; `cycle_id` presets the cycle (cycle page)."""
+    labels = {k: label for k, label, _ in REPORT_TABS}
+    extra = f"&cycle={cycle_id}" if cycle_id else ""
+    q = f"?cycle={cycle_id}" if cycle_id else ""
+    special = {"panen": reverse("farm:harvests") + q, "susut": reverse("farm:spoilage"),
+               "prapanen": reverse("farm:preharvest_new") + q}
+    return [
+        {"label": group, "items": [
+            {"label": labels[key], "help": help_text,
+             "url": special.get(key) or f"{reverse('farm:activities')}?tab={key}&new=1{extra}"}
+            for key, help_text in items
+        ]}
+        for group, items in REPORT_GROUPS
+    ]
+
 
 class ActivitiesView(FarmPage):
     """Laporan Kerja (D62): one tab per report type; "Laporan Baru" opens the per-type form in a sheet."""
@@ -292,6 +328,9 @@ class ActivitiesView(FarmPage):
         kwargs["activity_type"] = TAB_TYPES.get(self.current_tab())
         return kwargs
 
+    def get_initial(self):
+        return {"cycle": self.request.GET.get("cycle")}
+
     def get_success_url(self):
         return f"{reverse('farm:activities')}?tab={self.current_tab()}"
 
@@ -308,7 +347,7 @@ class ActivitiesView(FarmPage):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         tab = self.current_tab()
-        ctx.update(report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
+        ctx.update(report_groups=report_picker(), report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
                    report_label=next((l for k, l, _ in REPORT_TABS if k == tab), ""),
                    sheet_open=self.request.method == "POST" or self.request.GET.get("new") == "1")
         week_ago = timezone.now() - timedelta(days=7)
@@ -496,6 +535,9 @@ class HarvestsView(FarmPage):
 
     REVIEW_FIELDS = ("cycle", "high_quality_kg", "low_quality_kg", "harvest_loss_kg", "number_of_bags",
                      "weight_per_bag_kg", "harvested_at")
+
+    def get_initial(self):
+        return {"cycle": self.request.GET.get("cycle")}
 
     def review_signature(self, data) -> str:
         import hashlib
@@ -793,6 +835,7 @@ class CycleDetailView(FarmPage):
         c = self.cycle
         trace, events = cycle_timeline(c, finance=self.roles.finance)
         today = timezone.localdate()
+        ctx["report_groups"] = report_picker(self.cycle.pk)
         ctx.update(
             cycle=c, trace=trace, events=events, yield_summary=services.cycle_yield_summary(c),
             days=c.days_growing(today), overdue=c.is_harvest_overdue(today),

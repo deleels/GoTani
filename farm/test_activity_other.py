@@ -57,3 +57,28 @@ class OtherActivityTests(TestCase):
         self.assertEqual(r.status_code, 302)
         self.assertEqual(ActivityLog.objects.get().activity_type, "OTHER")
         self.assertContains(self.client.get(url), "Pemangkasan")
+
+
+class ReportPickerTests(TestCase):
+    """D128: grouped picker, preset to the cycle on the cycle page."""
+
+    def test_groups_and_cycle_preset(self):
+        from farm.views import report_picker
+
+        groups = report_picker(7)
+        self.assertEqual([str(g["label"]) for g in groups], ["Perawatan", "Pemantauan", "Panen & Lainnya"])
+        urls = [it["url"] for g in groups for it in g["items"]]
+        self.assertEqual(len(urls), 9)
+        self.assertTrue(all("cycle=7" in u for u in urls if "spoilage" not in u))
+
+    def test_pages_render_picker(self):
+        worker = make_user("w", ROLE_WORKER)
+        el = FarmElement.objects.create(name="GH", element_type="GREENHOUSE", area_m2=10)
+        cycle = CropCycle.objects.create(element=el, variety=Variety.objects.create(name="M", crop="M"),
+                                         stage="VEGETATIVE", is_active=True, planting_start_date=timezone.localdate())
+        self.client.force_login(worker)
+        self.assertContains(self.client.get(reverse("farm:activities")), "Pemantauan")
+        r = self.client.get(reverse("farm:cycle_detail", args=[cycle.pk]))
+        self.assertContains(r, f"tab=lainnya&amp;new=1&amp;cycle={cycle.pk}")
+        r = self.client.get(reverse("farm:activities") + f"?tab=lainnya&new=1&cycle={cycle.pk}")
+        self.assertEqual(str(r.context["form"]["cycle"].value()), str(cycle.pk))
