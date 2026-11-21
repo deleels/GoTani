@@ -283,6 +283,81 @@ class ActivityForm(StyledForm):
         return data
 
 
+class MultiActivityForm(StyledForm):
+    """D131: shared fields once, then up to 10 rows of cycle + quantity (+ duration). Blank rows are skipped."""
+
+    input_item = forms.ModelChoiceField(label=_l("Input"), queryset=InputItem.objects.none(), required=False)
+    unit = forms.ChoiceField(label=_l("Satuan air"), choices=list(UNIT_SHORT.items()), required=False)
+    task_name = forms.CharField(label=_l("Pekerjaan"), max_length=80, required=False)
+    application_method = forms.CharField(label=_l("Metode aplikasi"), max_length=100, required=False)
+    logged_at = forms.DateTimeField(label=_l("Waktu kegiatan"), required=False, widget=DateTimeInput(),
+                                    help_text=_l("Kosongkan untuk sekarang. Paling lama 3 hari ke belakang."))
+    notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+
+    def __init__(self, *args, activity_type=None, **kwargs):
+        from .services import MULTI_MAX_ROWS
+
+        super().__init__(*args, **kwargs)
+        self.activity_type = activity_type
+        A = ActivityLog.ActivityType
+        self.uses_input = activity_type in ActivityForm.INPUT_TYPE
+        self.uses_qty = activity_type != A.OTHER
+        self.uses_duration = activity_type in (A.IRRIGATION, A.OTHER)
+        if self.uses_input:
+            self.fields["input_item"].queryset = InputItem.objects.filter(item_type=ActivityForm.INPUT_TYPE[activity_type])
+            self.fields["input_item"].required = True
+        else:
+            del self.fields["input_item"]
+        if activity_type != A.IRRIGATION:
+            del self.fields["unit"]
+        else:
+            self.fields["unit"].initial = Unit.L
+        if activity_type != A.OTHER:
+            del self.fields["task_name"]
+        else:
+            self.fields["task_name"].required = True
+            del self.fields["application_method"]
+        cycles = CropCycle.objects.filter(is_active=True).select_related("element", "variety")
+        self.rows = []
+        for i in range(MULTI_MAX_ROWS):
+            row = {"cycle": f"cycle_{i}", "qty": f"qty_{i}", "dur": f"dur_{i}"}
+            self.fields[row["cycle"]] = forms.ModelChoiceField(label=_("Siklus"), queryset=cycles, required=False)
+            if self.uses_qty:
+                self.fields[row["qty"]] = qty_field(_l("Jumlah"), required=False, min_value=Decimal("0"))
+                self.fields[row["qty"]].widget.unit = None
+            if self.uses_duration:
+                self.fields[row["dur"]] = forms.IntegerField(label=_("Durasi (menit)"), min_value=1, required=False)
+            self.rows.append(row)
+        apply_select_prompts(self)
+        for name, field in self.fields.items():
+            field.widget.attrs.setdefault("class", INPUT_CSS)
+
+    def shared_fields(self):
+        return [self[n] for n in ("input_item", "unit", "task_name", "application_method", "logged_at", "notes")
+                if n in self.fields]
+
+    def row_fields(self):
+        return [[self[r[k]] for k in ("cycle", "qty", "dur") if r[k] in self.fields] for r in self.rows]
+
+    def clean(self):
+        data = super().clean()
+        rows = []
+        for r in self.rows:
+            cycle = data.get(r["cycle"])
+            qty, dur = data.get(r["qty"]), data.get(r["dur"])
+            if cycle is None:
+                if qty or dur:
+                    raise forms.ValidationError(_("Pilih siklus untuk setiap baris yang diisi."))
+                continue
+            if self.uses_qty and not qty and self.activity_type != ActivityLog.ActivityType.IRRIGATION:
+                raise forms.ValidationError(_("Isi jumlah untuk %(cycle)s.") % {"cycle": cycle})
+            rows.append((cycle, qty, dur))
+        data["rows"] = rows
+        item = data.get("input_item")
+        data["unit"] = item.unit if item else (data.get("unit") or "")
+        return data
+
+
 class PurchaseForm(StyledForm):
     item = forms.ModelChoiceField(label=_l("Input"), queryset=InputItem.objects.all())
     qty = qty_field(_l("Jumlah"))

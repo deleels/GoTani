@@ -863,6 +863,10 @@ msgid "Input (opsional)"
 msgstr "Input (optional)"
 
 #: farm\forms.py
+msgid "Isi jumlah untuk %(cycle)s."
+msgstr "Fill in the quantity for %(cycle)s."
+
+#: farm\forms.py
 msgid "Jawab Ya atau Tidak."
 msgstr "Answer Yes or No."
 
@@ -943,8 +947,16 @@ msgid "Perkiraan hasil (kg)"
 msgstr "Expected yield (kg)"
 
 #: farm\forms.py
+msgid "Pilih siklus untuk setiap baris yang diisi."
+msgstr "Choose a cycle for every filled row."
+
+#: farm\forms.py
 msgid "Satuan"
 msgstr "Unit"
+
+#: farm\forms.py
+msgid "Satuan air"
+msgstr "Water unit"
 
 #: farm\forms.py
 msgid "Siklus (opsional)"
@@ -1579,6 +1591,10 @@ msgid "Isi jumlah dan harga pembelian pertama, atau kosongkan keduanya."
 msgstr "Fill in both the first purchase quantity and price, or leave both empty."
 
 #: farm\services.py
+msgid "Isi minimal satu baris siklus."
+msgstr "Fill in at least one cycle row."
+
+#: farm\services.py
 msgid "Isi nama pekerjaan."
 msgstr "Fill in the task name."
 
@@ -1589,6 +1605,10 @@ msgstr "Answer every line with Yes or No."
 #: farm\services.py
 msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif."
 msgstr "The element type can only change while no crop cycle is active."
+
+#: farm\services.py
+msgid "Jenis laporan ini tidak bisa dicatat untuk banyak siklus sekaligus."
+msgstr "This report type cannot be recorded for several cycles at once."
 
 #: farm\services.py
 msgid "Jenis mutasi input tidak dikenal: %(movement_type)s."
@@ -1675,6 +1695,10 @@ msgid "Nama varietas sudah dipakai."
 msgstr "That variety name is already used."
 
 #: farm\services.py
+msgid "Paling banyak %(n)s baris sekaligus."
+msgstr "At most %(n)s rows at once."
+
+#: farm\services.py
 msgid "Panen hanya dapat dicatat saat siklus berada pada tahap Panen."
 msgstr "Harvests can only be logged while the cycle is in the Harvest stage."
 
@@ -1719,6 +1743,10 @@ msgid "Satuan kegiatan (%(v)s) harus sama dengan satuan input (%(unit)s)."
 msgstr "The activity unit (%(v)s) must match the input unit (%(unit)s)."
 
 #: farm\services.py
+msgid "Setiap siklus hanya boleh muncul sekali."
+msgstr "Each cycle may appear only once."
+
+#: farm\services.py
 msgid "Siklus sudah ditutup."
 msgstr "This cycle is already closed."
 
@@ -1729,6 +1757,10 @@ msgstr "This cycle is closed; its stage can't change."
 #: farm\services.py
 msgid "Siklus tidak berada pada elemen yang dipilih."
 msgstr "That cycle isn't on the selected plot."
+
+#: farm\services.py
+msgid "Stok %(name)s kurang %(short)s %(unit)s (dibutuhkan %(total)s, tersedia %(stock)s)."
+msgstr "%(name)s stock is %(short)s %(unit)s short (needed %(total)s, available %(stock)s)."
 
 #: farm\services.py
 msgid "Stok %(name)s tidak cukup untuk membatalkan pembelian ini."
@@ -1791,8 +1823,16 @@ msgid "%(completed_pct)s%% lengkap"
 msgstr "%(completed_pct)s%% complete"
 
 #: farm\views.py
+msgid "%(n)s laporan dicatat."
+msgstr "%(n)s reports recorded."
+
+#: farm\views.py
 msgid "%(qty_kg)s kg · %(reason)s"
 msgstr "%(qty_kg)s kg · %(reason)s"
+
+#: farm\views.py
+msgid "%(type)s untuk beberapa siklus"
+msgstr "%(type)s for several cycles"
 
 #: farm\views.py
 msgid "Batch panen dihapus; biayanya kembali ke pool siklus."
@@ -1893,6 +1933,10 @@ msgstr "Entry deleted; input stock returned."
 #: farm\views.py
 msgid "Laporan kerja dicatat."
 msgstr "Work logged."
+
+#: farm\views.py
+msgid "Laporan untuk beberapa siklus dicatat."
+msgstr "Reports for several cycles recorded."
 
 #: farm\views.py
 msgid "Mulai tanam %(variety)s"
@@ -3879,6 +3923,10 @@ msgid "100%"
 msgstr "100%"
 
 #: templates\farm\activities.html
+msgid "Beberapa siklus"
+msgstr "Several cycles"
+
+#: templates\farm\activities.html
 msgid "Butir terpenuhi"
 msgstr "Items met"
 
@@ -4013,6 +4061,18 @@ msgstr "photo"
 #: templates\farm\activities.html
 msgid "mnt"
 msgstr "min"
+
+#: templates\farm\activity_multi.html
+msgid "Durasi (menit)"
+msgstr "Duration (minutes)"
+
+#: templates\farm\activity_multi.html
+msgid "Isi data bersama sekali, lalu satu baris per siklus (paling banyak 10). Semua baris disimpan bersama: jika satu gagal, tidak ada yang tersimpan."
+msgstr "Fill the shared data once, then one row per cycle (at most 10). All rows save together: if one fails, nothing is saved."
+
+#: templates\farm\activity_multi.html
+msgid "Simpan semua"
+msgstr "Save all"
 
 #: templates\farm\cycle_detail.html
 msgid "Belum terserap"
@@ -6963,9 +7023,6 @@ msgstr "Tick the checks done before harvest. The completion percentage is saved 
 
 msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
 msgstr "About %(round)s mm expected — hold off spraying and check drainage."
-
-msgid "Durasi (menit)"
-msgstr "Duration (minutes)"
 
 msgid "Durasi hanya untuk kegiatan irigasi."
 msgstr "Duration is only for irrigation."

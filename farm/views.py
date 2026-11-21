@@ -28,6 +28,7 @@ from .forms import (
     ElementEditForm,
     ElementForm,
     InputItemForm,
+    MultiActivityForm,
     VarietyForm,
     EstimatesForm,
     PreHarvestForm,
@@ -348,7 +349,8 @@ class ActivitiesView(FarmPage):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         tab = self.current_tab()
-        ctx.update(report_groups=report_picker(), report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
+        ctx.update(multi_tabs=[k for k, t in TAB_TYPES.items() if t in services.MULTI_TYPES],
+                   report_groups=report_picker(), report_tab=tab, report_tabs=REPORT_TABS, tabs=[(k, l) for k, l, _ in REPORT_TABS], tab_key=tab,
                    report_label=next((l for k, l, _ in REPORT_TABS if k == tab), ""),
                    sheet_open=self.request.method == "POST" or self.request.GET.get("new") == "1")
         week_ago = timezone.now() - timedelta(days=7)
@@ -373,6 +375,43 @@ class ActivitiesView(FarmPage):
         ctx["page"] = paginate(self.request, qs)
         ctx["activities"] = ctx["page"].object_list
         return ctx
+
+
+class MultiActivityView(FarmPage):
+    """D131: one report for several cycles (Pemupukan, Pestisida, Irigasi, Penanaman, Lainnya)."""
+
+    template_name = "farm/activity_multi.html"
+    form_class = MultiActivityForm
+    success_message = _l("Laporan untuk beberapa siklus dicatat.")
+
+    def dispatch(self, request, *args, **kwargs):
+        self.key = request.GET.get("tab") or request.POST.get("tab") or "pemupukan"
+        self.activity_type = TAB_TYPES.get(self.key)
+        if self.activity_type not in services.MULTI_TYPES:
+            return redirect(f"{reverse('farm:activities')}?tab={self.key}")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["activity_type"] = self.activity_type
+        return kwargs
+
+    def get_success_url(self):
+        return f"{reverse('farm:activities')}?tab={self.key}"
+
+    def get_context_data(self, **kwargs):
+        label = next(str(l) for k, l, _t in REPORT_TABS if k == self.key)
+        kwargs.update(key=self.key, page_title=_("%(type)s untuk beberapa siklus") % {"type": label})
+        return super().get_context_data(**kwargs)
+
+    def perform(self, form):
+        d = form.cleaned_data
+        acts = services.log_activities_multi(
+            self.activity_type, d["rows"], input_item=d.get("input_item"), unit=d["unit"],
+            application_method=d.get("application_method") or "", notes=d.get("notes") or "",
+            logged_at=d.get("logged_at"), task_name=d.get("task_name") or "", user=self.request.user)
+        self.success_message = _("%(n)s laporan dicatat.") % {"n": len(acts)}
+        return acts
 
 
 class PreHarvestCheckView(FarmPage):

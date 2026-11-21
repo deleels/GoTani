@@ -525,6 +525,45 @@ def severe_scouting_cycles(now=None):
     return out
 
 
+MULTI_MAX_ROWS = 10
+MULTI_TYPES = ("FERTILIZER", "PESTICIDE", "IRRIGATION", "SEEDING", "OTHER")
+
+
+@transaction.atomic
+def log_activities_multi(activity_type: str, rows, *, input_item=None, unit="", application_method="", notes="",
+                         logged_at=None, task_name="", user=None):
+    """D131: one report for several cycles. `rows` = [(cycle, quantity, duration_minutes)]. All or nothing:
+    each row runs the normal log_activity rules; a short input stock rejects the whole batch with the shortfall."""
+    if activity_type not in MULTI_TYPES:
+        raise ValidationError(_("Jenis laporan ini tidak bisa dicatat untuk banyak siklus sekaligus."))
+    rows = list(rows)
+    if not rows:
+        raise ValidationError(_("Isi minimal satu baris siklus."))
+    if len(rows) > MULTI_MAX_ROWS:
+        raise ValidationError(_("Paling banyak %(n)s baris sekaligus.") % {"n": MULTI_MAX_ROWS})
+    cycle_ids = [c.pk for c, _q, _d in rows]
+    if len(set(cycle_ids)) != len(cycle_ids):
+        raise ValidationError(_("Setiap siklus hanya boleh muncul sekali."))
+    if input_item is not None:
+        total = sum((q_qty(q or 0) for _c, q, _d in rows), ZERO)
+        stock = InputItem.objects.select_for_update().get(pk=input_item.pk).stock_qty
+        if total > stock:
+            raise ValidationError(
+                _("Stok %(name)s kurang %(short)s %(unit)s (dibutuhkan %(total)s, tersedia %(stock)s).")
+                % {"name": input_item.name, "short": f"{(total - stock).normalize():f}", "unit": input_item.unit,
+                   "total": f"{total.normalize():f}", "stock": f"{stock.normalize():f}"})
+    out = []
+    for cycle, quantity, duration in rows:
+        try:
+            out.append(log_activity(
+                cycle, activity_type, quantity=quantity or ZERO, unit=unit, input_item=input_item,
+                application_method=application_method, notes=notes, logged_at=logged_at, user=user,
+                duration_minutes=duration, task_name=task_name))
+        except ValidationError as exc:
+            raise ValidationError(f"{cycle}: {' '.join(exc.messages)}")
+    return out
+
+
 def other_allowed_on_closed(cycle: CropCycle) -> bool:
     """D127: Lainnya work (clean-up after the last harvest) may still be logged on a cycle closed at CLEARING
     within the back-dating window."""

@@ -82,7 +82,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
   no sick workers, clean containers) next to the current ones.
 - Update rule 14 in `CLAUDE.md`.
 
-## 9. Several reports in one form (D131)
+## 9. Several reports in one form (D131) ✅
 - Types: Pemupukan, Pestisida, Irigasi, Penanaman, Lainnya (not Scouting, Panen, Pra-panen).
 - Shared fields once (type, time, input item, method, notes); one row per cycle with its quantity
   (plus duration for irrigation); at most 10 rows.

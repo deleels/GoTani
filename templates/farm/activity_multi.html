@@ -1,0 +1,41 @@
+{% extends "farm/_layout.html" %}
+{% load i18n %}
+{% load ui %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+{# D131: shared fields once, one row per cycle; all rows save together or none do. #}
+<div class="gt-pagehead">
+  <div class="app-pagehead__text">
+    <a href="{% url 'farm:activities' %}?tab={{ key }}" class="app-back">{% icon "chevron-left" 16 %} {% translate "Kembali" %}</a>
+    <h1>{{ page_title }} {% info_tip _("Isi data bersama sekali, lalu satu baris per siklus (paling banyak 10). Semua baris disimpan bersama: jika satu gagal, tidak ada yang tersimpan.") %}</h1>
+  </div>
+</div>
+<div class="app-formpage">
+  <form method="post" class="gt-card app-formpage__main">{% csrf_token %}
+    <input type="hidden" name="tab" value="{{ key }}">
+    {% if form.non_field_errors %}<div class="gt-callout gt-callout--danger mb-4" role="alert">{% icon "alert" 18 %}<div>{% for e in form.non_field_errors %}<span class="gt-callout__title">{{ e }}</span>{% endfor %}</div></div>{% endif %}
+    <div class="grid gap-4 sm:grid-cols-2">
+      {% for field in form.shared_fields %}
+      <div class="app-formrow{% if field.name == 'notes' %} sm:col-span-full{% endif %}{% if field.errors %} app-formrow--error{% endif %}">
+        <div class="app-labelrow"><label class="app-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="app-req" aria-hidden="true">*</span>{% endif %}</label>{% if field.help_text %}{% info_tip field.help_text %}{% endif %}</div>{{ field }}
+        {% for e in field.errors %}<p class="app-error">{{ e }}</p>{% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="app-table-wrap">
+      <table class="gt-table app-multirows">
+        <thead><tr><th>{% translate "Siklus" %}</th>{% if form.uses_qty %}<th>{% translate "Jumlah" %}</th>{% endif %}{% if form.uses_duration %}<th>{% translate "Durasi (menit)" %}</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for row in form.row_fields %}
+          <tr>{% for f in row %}<td>{{ f }}{% for e in f.errors %}<p class="app-error">{{ e }}</p>{% endfor %}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="gt-footer app-formpage__foot">
+      <a href="{% url 'farm:activities' %}?tab={{ key }}" class="gt-btn gt-btn--outline gt-btn--md">{% translate "Batal" %}</a>
+      <button class="gt-btn gt-btn--solid gt-btn--md">{% translate "Simpan semua" %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

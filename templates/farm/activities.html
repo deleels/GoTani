@@ -28,6 +28,7 @@
   <div class="gt-card">
     <div class="app-toolbar">
       {% include "components/tabs.html" with tab=report_tab %}
+      {% if report_tab in multi_tabs %}<a href="{% url 'farm:activities_multi' %}?tab={{ report_tab }}" class="gt-btn gt-btn--outline gt-btn--sm">{% translate "Beberapa siklus" %}</a>{% endif %}
     </div>
     <div class="app-table-wrap">
       <table class="gt-table">
