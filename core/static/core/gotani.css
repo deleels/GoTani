@@ -882,4 +882,7 @@ html { scrollbar-gutter: stable; }
 .gt-hero { background: var(--gt-lit); }
 .gt-btn--primary { background: var(--gt-lit); color: #fff; font-weight: 500; letter-spacing: -.01em; gap: 12px; box-shadow: none; }
 .gt-btn--primary:hover { background: radial-gradient(130% 160% at 0% 100%, #4aab78 0%, var(--green-600) 32%, var(--green-800) 76%, var(--green-900) 100%); }
+/* The gradient is painted from the outer edge (border-box), so the 1.5px transparent border doesn't show a
+   repeated sliver of the gradient along the edges. */
+.gt-btn--primary, .gt-btn--primary:hover, .gt-hero, .gt-stat--featured { background-origin: border-box !important; border-color: transparent; }
 .gt-btn--primary:disabled, .gt-btn--primary[aria-disabled=true] { background: var(--surface); color: var(--ink-subtle); box-shadow: none; }
