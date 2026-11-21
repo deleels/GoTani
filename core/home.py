@@ -66,26 +66,26 @@ def finance_card():
             "expenses_general": general, "expenses_element": element}
 
 
-ID_DAYS = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
-ID_MONTHS_LONG = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September",
-                  "Oktober", "November", "Desember"]
+DAYS = [_l("Senin"), _l("Selasa"), _l("Rabu"), _l("Kamis"), _l("Jumat"), _l("Sabtu"), _l("Minggu")]
+MONTHS_LONG = [_l("Januari"), _l("Februari"), _l("Maret"), _l("April"), _l("Mei"), _l("Juni"), _l("Juli"),
+               _l("Agustus"), _l("September"), _l("Oktober"), _l("November"), _l("Desember")]
 
 
-def id_day_label(day):
-    """"Kamis 19 November" — always Indonesian (LocaleMiddleware may follow an English browser)."""
-    return f"{ID_DAYS[day.weekday()]} {day.day} {ID_MONTHS_LONG[day.month - 1]}"
+def day_label(day):
+    """"Kamis 19 November" / "Thursday 19 November", in the user's language."""
+    return f"{DAYS[day.weekday()]} {day.day} {MONTHS_LONG[day.month - 1]}"
 
 
 def greeting(now=None):
-    """Indonesian greeting by Jakarta local hour (Ringkasan page head)."""
+    """Greeting by Jakarta local hour (Ringkasan page head), in the user's language."""
     hour = timezone.localtime(now).hour
     if hour < 11:
-        return "Selamat pagi"
+        return _("Selamat pagi")
     if hour < 15:
-        return "Selamat siang"
+        return _("Selamat siang")
     if hour < 18:
-        return "Selamat sore"
-    return "Selamat malam"
+        return _("Selamat sore")
+    return _("Selamat malam")
 
 
 def staff_list(limit=6):
@@ -110,7 +110,7 @@ def home_summary(roles):
         "work": weekly_work(), "stages": cycles_by_stage(), "elements": element_counters(),
         "staff_count": get_user_model().objects.filter(is_active=True).count(),
         "active_cycles": sorted(active, key=lambda c: (c.expected_harvest_date or today + timedelta(days=3650))),
-        "low_stock": [], "today": today, "greeting": greeting(), "today_label": id_day_label(today), "staff": staff_list(),
+        "low_stock": [], "today": today, "greeting": greeting(), "today_label": day_label(today), "staff": staff_list(),
     }
     work = ctx["work"]
     field = [w for w in work if w["key"] not in ("prapanen", "panen", "susut")]

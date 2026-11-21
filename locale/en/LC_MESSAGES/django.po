@@ -27,8 +27,64 @@ msgid "Pengguna wajib menggantinya saat pertama masuk."
 msgstr "The user must change it at first login."
 
 #: core\home.py
+msgid "Agustus"
+msgstr "August"
+
+#: core\home.py
+msgid "April"
+msgstr "April"
+
+#: core\home.py
+msgid "Desember"
+msgstr "December"
+
+#: core\home.py
+msgid "Februari"
+msgstr "February"
+
+#: core\home.py
 msgid "Irigasi"
 msgstr "Irrigation"
+
+#: core\home.py
+msgid "Januari"
+msgstr "January"
+
+#: core\home.py
+msgid "Juli"
+msgstr "July"
+
+#: core\home.py
+msgid "Jumat"
+msgstr "Friday"
+
+#: core\home.py
+msgid "Juni"
+msgstr "June"
+
+#: core\home.py
+msgid "Kamis"
+msgstr "Thursday"
+
+#: core\home.py
+msgid "Maret"
+msgstr "March"
+
+#: core\home.py
+msgid "Mei"
+msgstr "May"
+
+#: core\home.py
+msgid "Minggu"
+msgstr "Sunday"
+
+#: core\home.py
+msgid "November"
+msgstr "November"
+
+#: core\home.py
+msgid "Oktober"
+msgstr "October"
 
 #: core\home.py
 msgid "Pemupukan"
@@ -47,8 +103,44 @@ msgid "Pra-panen"
 msgstr "Pre-harvest"
 
 #: core\home.py
+msgid "Rabu"
+msgstr "Wednesday"
+
+#: core\home.py
+msgid "Sabtu"
+msgstr "Saturday"
+
+#: core\home.py
 msgid "Scouting"
 msgstr "Scouting"
+
+#: core\home.py
+msgid "Selamat malam"
+msgstr "Good evening"
+
+#: core\home.py
+msgid "Selamat pagi"
+msgstr "Good morning"
+
+#: core\home.py
+msgid "Selamat siang"
+msgstr "Good afternoon"
+
+#: core\home.py
+msgid "Selamat sore"
+msgstr "Good afternoon"
+
+#: core\home.py
+msgid "Selasa"
+msgstr "Tuesday"
+
+#: core\home.py
+msgid "Senin"
+msgstr "Monday"
+
+#: core\home.py
+msgid "September"
+msgstr "September"
 
 #: core\models.py
 msgid "Aktifkan hanya bila kebun terdaftar sebagai PKP dan wajib memungut PPN."
