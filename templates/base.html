@@ -5,16 +5,20 @@
 {% if user.is_authenticated %}
 {# Framed design-system shell (D104): grey sidebar + grey main panel inside a white frame. #}
 <div x-data="shell()" @keydown.window.ctrl.b.prevent="toggle()" @keydown.window.meta.b.prevent="toggle()" @keydown.escape.window="mobile=false"
-     class="gt-app gt-app--framed app-frame" :class="[collapsed && 'app-frame--rail', mobile && 'app-frame--mobile']">
+     class="gt-app gt-app--framed app-frame" :class="mobile && 'app-frame--mobile'">
   <div x-show="mobile" x-cloak class="app-scrim no-print md:hidden" @click="mobile=false"></div>
 
   {# Sidebar: full width; on phones a slide-in sheet. #}
   <aside class="gt-sidebar app-sidebar no-print" aria-label="{% translate 'Navigasi utama' %}">
-    <a class="gt-brand app-brand" href="{% url 'home' %}">
-      {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="app-brand__logo">
-      {% else %}<img src="{% static 'core/ds/logos/gotani-mark.svg' %}" alt="">{% endif %}
-      <span class="app-brand__text"><span class="app-brand__name">{{ farm_profile.name }}</span><span class="app-brand__role">{{ roles.label|lower|capfirst }}</span></span>
-    </a>
+    <div class="app-brandrow">
+      <a class="gt-brand app-brand" href="{% url 'home' %}">
+        {% if farm_profile.logo %}<img src="{{ farm_profile.logo.url }}" alt="" class="app-brand__logo">
+        {% else %}<img src="{% static 'core/ds/logos/gotani-mark.svg' %}" alt="">{% endif %}
+        <span class="app-brand__text"><span class="app-brand__name">{{ farm_profile.name }}</span><span class="app-brand__role">{{ roles.label|lower|capfirst }}</span></span>
+      </a>
+      <button type="button" class="gt-iconbtn gt-iconbtn--sm app-brandrow__toggle" @click="setCollapsed(true)"
+              aria-label="{% translate 'Ciutkan sidebar' %}" data-tip="{% translate 'Ciutkan sidebar (Ctrl/⌘ + B)' %}" data-tip-pos="bottom">{% icon "panel" 20 "gt-ico" %}</button>
+    </div>
     {% for group in nav_groups %}
     <div>
       <div class="gt-nav__label">{{ group.title }}</div>
@@ -52,13 +56,15 @@
 
   {# Collapsed (Ctrl/⌘ + B): an 80px icon rail. #}
   <nav class="gt-rail app-rail no-print" aria-label="{% translate 'Navigasi utama (ringkas)' %}">
-    <a href="{% url 'home' %}" aria-label="{{ farm_profile.name }}"><img class="gt-rail__logo" src="{% static 'core/ds/logos/gotani-app-icon.svg' %}" alt=""></a>
+    {# The logo is the expand control; Ringkasan stays one icon below for home. #}
+    <button type="button" class="app-rail__logo" @click="setCollapsed(false)" aria-label="{% translate 'Lebarkan sidebar' %}" data-tip="{% translate 'Lebarkan sidebar (Ctrl/⌘ + B)' %}">
+      <img class="gt-rail__logo" src="{% static 'core/ds/logos/gotani-app-icon.svg' %}" alt=""><span class="app-rail__expand" aria-hidden="true">{% icon "panel" 22 "gt-ico" %}</span></button>
     {% for group in nav_groups %}{% for item in group.items %}
       {% if item.children %}
-      <button type="button" class="gt-rail__item app-rail__btn{% if item.active %} gt-rail__item--active{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}"
-              @click="collapsed = false; save(); $nextTick(() => $dispatch('nav-open', '{{ item.label|escapejs }}'))">{% icon item.icon 22 "gt-ico" %}</button>
+      <button type="button" class="gt-rail__item app-rail__btn{% if item.active %} gt-rail__item--active{% endif %}" data-tip="{{ item.label }}" aria-label="{{ item.label }}"
+              @click="setCollapsed(false).then(() => $dispatch('nav-open', '{{ item.label|escapejs }}'))">{% icon item.icon 22 "gt-ico" %}</button>
       {% else %}
-      <a href="{{ item.url }}" class="gt-rail__item{% if item.active %} gt-rail__item--active{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}"{% if item.active %} aria-current="page"{% endif %}>{% icon item.icon 22 "gt-ico" %}</a>
+      <a href="{{ item.url }}" class="gt-rail__item{% if item.active %} gt-rail__item--active{% endif %}" data-tip="{{ item.label }}" aria-label="{{ item.label }}"{% if item.active %} aria-current="page"{% endif %}>{% icon item.icon 22 "gt-ico" %}</a>
       {% endif %}
     {% endfor %}{% endfor %}
   </nav>
@@ -66,8 +72,6 @@
   <div class="gt-shell">
     <header class="gt-topbar app-topbar no-print">
       <button type="button" class="gt-iconbtn gt-iconbtn--md md:hidden" @click="mobile=true" aria-label="{% translate 'Buka menu' %}">{% icon "menu" 22 "gt-ico" %}</button>
-      <button type="button" class="gt-iconbtn gt-iconbtn--md hidden md:inline-grid" @click="toggle()"
-              :aria-label="collapsed ? '{% jt "Lebarkan sidebar" %}' : '{% jt "Ciutkan sidebar" %}'" title="{% translate 'Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)' %}">{% icon "panel" 22 "gt-ico" %}</button>
       <span class="flex-1"></span>
       {% include "components/bell.html" %}
       <div class="relative" x-data="{ open: false }" @click.outside="open=false" @keydown.escape="open=false">
@@ -118,12 +122,44 @@
   }
   function shell() {
     return {
-      collapsed: false, mobile: false,
-      init() { try { this.collapsed = localStorage.getItem("gotani-sidebar") === "collapsed"; } catch (e) {} },
+      collapsed: document.documentElement.classList.contains("sb-rail"), mobile: false,
       save() { try { localStorage.setItem("gotani-sidebar", this.collapsed ? "collapsed" : "open"); } catch (e) {} },
-      toggle() { this.collapsed = !this.collapsed; this.save(); },
+      toggle() { if (window.innerWidth >= 768) this.setCollapsed(!this.collapsed); },
+      // The sidebar and the rail share one view-transition name, so the browser morphs one into the other.
+      setCollapsed(value) {
+        const apply = () => { this.collapsed = value; document.documentElement.classList.toggle("sb-rail", value); this.save(); };
+        const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (!document.startViewTransition || calm || value === this.collapsed) { apply(); return Promise.resolve(); }
+        return document.startViewTransition(apply).updateCallbackDone;
+      },
     };
   }
+  // Styled hover/focus labels for [data-tip] (the browser's own title tooltip looks out of place).
+  (function () {
+    const tip = document.createElement("div");
+    tip.className = "app-tip"; tip.setAttribute("role", "tooltip"); tip.hidden = true;
+    document.body.appendChild(tip);
+    let current = null;
+    function show(el) {
+      current = el; tip.textContent = el.dataset.tip; tip.hidden = false;
+      const r = el.getBoundingClientRect(), t = tip.getBoundingClientRect(), gap = 8;
+      let x, y;
+      if (el.dataset.tipPos === "bottom") { x = r.left + r.width / 2 - t.width / 2; y = r.bottom + gap; }
+      else { x = r.right + gap; y = r.top + r.height / 2 - t.height / 2; }
+      x = Math.max(8, Math.min(x, window.innerWidth - t.width - 8));
+      tip.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+      tip.dataset.pos = el.dataset.tipPos || "right";
+    }
+    function hide() { current = null; tip.hidden = true; }
+    document.addEventListener("pointerover", (e) => {
+      if (e.pointerType !== "mouse") return;
+      const el = e.target.closest("[data-tip]");
+      if (el && el !== current) show(el); else if (!el && current) hide();
+    });
+    document.addEventListener("focusin", (e) => { const el = e.target.closest("[data-tip]"); el && el.matches(":focus-visible") ? show(el) : hide(); });
+    for (const ev of ["focusout", "pointerdown", "scroll"]) document.addEventListener(ev, hide, true);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
+  })();
   function installCard() {
     return {
       can: !!window.gtInstallPrompt,

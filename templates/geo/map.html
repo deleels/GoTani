@@ -57,7 +57,7 @@
       </section>
 
       <section class="gt-card" x-data="forecastPanel()" @weather-loaded.window="set($event.detail)" x-show="w" x-cloak aria-labelledby="h-48">
-        <div class="gt-card__head"><h2 class="gt-card__title" id="h-48">{% translate "48 jam ke depan" %} {% info_tip _("Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, oranye cukup, merah buruk.") %}</h2>
+        <div class="gt-card__head"><h2 class="gt-card__title" id="h-48">{% translate "48 jam ke depan" %} {% info_tip _("Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, kuning cukup, merah buruk.") %}</h2>
           <span class="gt-legend app-legend" aria-hidden="true"><span><i class="app-legend__dot" style="background:var(--green-600)"></i>{% translate "Baik" %}</span><span><i class="app-legend__dot" style="background:var(--warning-ink)"></i>{% translate "Cukup" %}</span><span><i class="app-legend__dot" style="background:var(--danger)"></i>{% translate "Buruk" %}</span></span></div>
         <div class="app-hours">
             <template x-for="h in (w ? w.hours : [])" :key="h.time">

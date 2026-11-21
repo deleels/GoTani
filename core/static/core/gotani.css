@@ -72,10 +72,46 @@ html body:has(> .app-frame) { background: var(--canvas); }
 @media (min-width: 768px) {
   .app-frame { margin: var(--space-3); min-height: calc(100vh - 2 * var(--space-3)); }
   .app-sidebar, .app-rail { position: sticky; top: calc(2 * var(--space-3)); align-self: start; max-height: calc(100vh - 4 * var(--space-3)); }
-  .app-frame--rail > .app-sidebar { display: none; }
-  .app-frame--rail > .app-rail { display: flex; }
+  html.sb-rail .app-frame > .app-sidebar { display: none; }
+  html.sb-rail .app-frame > .app-rail { display: flex; }
+  /* Collapse/expand animation (View Transitions): the panel morphs between 248px and 80px, its content
+     cross-fades unscaled and clipped, and the main panel slides into its new width. */
+  .app-sidebar, .app-rail { view-transition-name: gt-nav; }
+  .gt-shell { view-transition-name: gt-shell; }
 }
-@media (prefers-reduced-motion: reduce) { .app-sidebar, .gt-app--framed > .gt-sidebar.app-sidebar, .app-nav__chev { transition: none; } }
+::view-transition-group(gt-nav), ::view-transition-group(gt-shell) { animation-duration: var(--dur-base); animation-timing-function: var(--ease-out); }
+::view-transition-image-pair(gt-nav), ::view-transition-image-pair(gt-shell) { overflow: clip; border-radius: var(--radius-lg); }
+::view-transition-old(gt-nav), ::view-transition-new(gt-nav),
+::view-transition-old(gt-shell), ::view-transition-new(gt-shell) {
+  height: 100%; width: auto; object-fit: none; object-position: left top; animation-duration: var(--dur-base); }
+/* The outgoing panel fades out quickly, then the incoming one fades in, so labels and icons never overlap. */
+::view-transition-old(gt-nav) { animation: app-vt-out 100ms ease-out both; }
+::view-transition-new(gt-nav) { animation: app-vt-in 160ms ease-out 90ms both; }
+@keyframes app-vt-out { to { opacity: 0; } }
+@keyframes app-vt-in { from { opacity: 0; } }
+::view-transition-old(gt-shell) { animation: none; opacity: 0; }
+::view-transition-new(gt-shell) { animation: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+
+/* Sidebar head: brand + collapse button. Collapsed rail: the logo turns into the expand control on hover. */
+.app-brandrow { display: flex; align-items: center; gap: var(--space-2); }
+.app-brandrow .app-brand { flex: 1; }
+.app-brandrow__toggle { flex: none; display: none; color: var(--ink-muted); background: none; }
+.app-brandrow__toggle:hover { background: var(--surface-raised); color: var(--ink); }
+@media (min-width: 768px) { .app-brandrow__toggle { display: inline-grid; } }
+.app-rail__logo { position: relative; flex: none; padding: 0; border: 0; background: none; cursor: pointer; border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.app-rail .app-rail__logo .gt-rail__logo { margin: 0; display: block; }
+.app-rail__expand { position: absolute; inset: 0; display: grid; place-items: center; border-radius: var(--radius-md);
+  background: var(--surface-raised); color: var(--ink); opacity: 0; transition: opacity var(--dur-fast) ease; }
+.app-rail__logo:hover .app-rail__expand, .app-rail__logo:focus-visible .app-rail__expand { opacity: 1; }
+
+/* Hover/focus label for [data-tip] (one floating element, positioned by base.html). */
+.app-tip { position: fixed; left: 0; top: 0; z-index: 80; pointer-events: none; max-width: 16rem; padding: 6px 10px;
+  border-radius: var(--radius-md); background: var(--green-900); color: var(--ink-inverse);
+  font: 500 13px/18px var(--font-sans); box-shadow: var(--shadow-float); white-space: nowrap; animation: app-tip-in var(--dur-fast) var(--ease-out); }
+.app-tip[hidden] { display: none; }
+@keyframes app-tip-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .app-tip, .app-rail__expand { animation: none; transition: none; } .app-sidebar, .gt-app--framed > .gt-sidebar.app-sidebar, .app-nav__chev { transition: none; } }
 
 /* Menus (bell, account): raised, radius-lg, shadow-float; rows are gt-row. */
 .app-menu { position: absolute; right: 0; top: calc(100% + var(--space-2)); z-index: 30; width: 15rem; padding: var(--space-2);
@@ -643,10 +679,10 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-ndvi-legend small:nth-of-type(3) { justify-self: end; }
 .app-maphint { display: flex; align-items: center; gap: 2px; padding: var(--space-2) var(--space-4); }
 .app-hours { display: flex; gap: var(--space-1); overflow-x: auto; padding-bottom: var(--space-2); }
-.app-hour { flex: none; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) 0; border-radius: var(--radius-md); background: var(--surface); font-size: 11px; line-height: 15px; }
+.app-hour { flex: none; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) 0; border-radius: var(--radius-md); background: var(--surface); font-size: 12px; line-height: 16px; }
 .app-hour__t { color: var(--ink-muted); }
 .app-hour__temp { font-weight: 500; font-size: 13px; }
-.app-hour__rain, .app-hour__wind { color: var(--ink-subtle); }
+.app-hour__rain, .app-hour__wind { color: var(--ink-muted); }
 .app-hour__rain.is-wet { color: var(--info-ink); font-weight: 500; }
 .app-hour__spray { width: 26px; height: 6px; margin-top: 4px; border-radius: var(--radius-pill); }
 .app-hour__spray.is-good { background: var(--green-600); }

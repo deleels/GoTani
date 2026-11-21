@@ -31,6 +31,8 @@
   <link rel="stylesheet" href="{% static 'core/tailwind.css' %}">
   {# D112: fetch a page's HTML when the pointer rests on its link (or on touch), so the click lands on a warm cache. #}
   <script type="speculationrules">{"prefetch":[{"where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/accounts/*","/admin/*","/akun/bahasa/*","/*?*format=*"]}},{"not":{"selector_matches":"[download],[target=_blank],[data-no-prefetch]"}}]},"eagerness":"moderate"}]}</script>
+  {# The collapsed sidebar is applied before first paint, so a page never draws wide and then snaps to the rail. #}
+  <script>try { if (localStorage.getItem("gotani-sidebar") === "collapsed") document.documentElement.classList.add("sb-rail"); } catch (e) {}</script>
   {% block head %}{% endblock %}
 </head>
 <body class="gt-root min-h-screen bg-surface text-ink antialiased" data-motion="{% block motion %}calm{% endblock %}">

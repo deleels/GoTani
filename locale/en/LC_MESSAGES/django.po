@@ -3387,12 +3387,12 @@ msgid "Buka menu"
 msgstr "Open menu"
 
 #: templates\base.html
-msgid "Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)"
-msgstr "Collapse or expand the sidebar (Ctrl/⌘ + B)"
-
-#: templates\base.html
 msgid "Ciutkan sidebar"
 msgstr "Collapse sidebar"
+
+#: templates\base.html
+msgid "Ciutkan sidebar (Ctrl/⌘ + B)"
+msgstr "Collapse sidebar (Ctrl/⌘ + B)"
 
 #: templates\base.html
 msgid "Ganti Kata Sandi"
@@ -3405,6 +3405,10 @@ msgstr "Log out"
 #: templates\base.html
 msgid "Lebarkan sidebar"
 msgstr "Expand sidebar"
+
+#: templates\base.html
+msgid "Lebarkan sidebar (Ctrl/⌘ + B)"
+msgstr "Expand sidebar (Ctrl/⌘ + B)"
 
 #: templates\base.html
 msgid "Menu akun"
@@ -5231,8 +5235,8 @@ msgid "Baik"
 msgstr "Good"
 
 #: templates\geo\map.html
-msgid "Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, oranye cukup, merah buruk."
-msgstr "Rows: hour · temperature · chance of rain · wind km/h. The underline is the spray window: green good, orange fair, red not recommended."
+msgid "Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, kuning cukup, merah buruk."
+msgstr "Rows: hour · temperature · chance of rain · wind km/h. The underline is the spray window: green good, yellow fair, red not recommended."
 
 #: templates\geo\map.html
 msgid "Batas di peta dan riwayat data satelitnya dihapus. Elemen kebun tidak terpengaruh."
@@ -7164,6 +7168,9 @@ msgstr ""
 msgid "Aset Kebun"
 msgstr "Farm assets"
 
+msgid "Baris: jam · suhu · peluang hujan · angin km/j. Garis bawah = waktu semprot: hijau baik, oranye cukup, merah buruk."
+msgstr "Rows: hour · temperature · chance of rain · wind km/h. The underline is the spray window: green good, orange fair, red not recommended."
+
 msgid "Butir yang sudah dipenuhi"
 msgstr "Items completed"
 
@@ -7175,6 +7182,9 @@ msgstr "Check"
 
 msgid "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya."
 msgstr "Tick the checks done before harvest. The completion percentage is saved with the cycle."
+
+msgid "Ciutkan atau lebarkan sidebar (Ctrl/⌘ + B)"
+msgstr "Collapse or expand the sidebar (Ctrl/⌘ + B)"
 
 msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
 msgstr "About %(round)s mm expected — hold off spraying and check drainage."
