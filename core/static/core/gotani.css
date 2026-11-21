@@ -875,13 +875,23 @@ html { scrollbar-gutter: stable; }
   :is(.app-dash__stats, .app-buyer__value) .gt-stat__value, :is(.app-dash__stats, .app-buyer__value) .gt-stat__value.app-stat__money { font-size: 20px; }
 }
 
-/* One light for every green surface: the featured stat card's glow from the bottom-left corner (bundle.css
-   .gt-stat--featured) is reused for the hero panel and the primary button, so cards, panel and buttons read as lit
-   from the same place. Flat: no drop shadow, no rim highlight. Overrides bundle.css (copied, never edited). */
-:root { --gt-lit: radial-gradient(130% 160% at 0% 100%, #3f9d6b 0%, var(--green-600) 28%, var(--green-800) 72%, var(--green-900) 100%); }
-.gt-hero { background: var(--gt-lit); }
+/* One light for every green surface (primary button, hero panel, featured stat card). The light sits on the right
+   of the page, so the glow's corner follows where the surface sits: at the top of a page (page head, hero, featured
+   stat, document bar) from the bottom right; at the bottom (full-width pay and sign-in buttons) from the top right;
+   in between from the right edge. Flat: no drop shadow, no rim highlight. Overrides bundle.css (copied, never edited).
+   --gt-lit is declared on the element itself so var(--gt-lit-at) resolves per element. */
+.gt-btn--primary, .gt-hero, .gt-stat--featured {
+  --gt-lit-at: 100% 50%;
+  --gt-lit: radial-gradient(130% 160% at var(--gt-lit-at), #3f9d6b 0%, var(--green-600) 28%, var(--green-800) 72%, var(--green-900) 100%);
+  --gt-lit-hover: radial-gradient(130% 160% at var(--gt-lit-at), #4aab78 0%, var(--green-600) 32%, var(--green-800) 76%, var(--green-900) 100%); }
+.gt-hero, .gt-stat--featured, :is(.gt-pagehead, .app-docbar, .gt-hero, .gt-dark) .gt-btn--primary, .gt-lit--top { --gt-lit-at: 100% 100%; }
+.gt-btn--block.gt-btn--primary, .gt-lit--bottom { --gt-lit-at: 100% 0%; }
+.gt-btn--primary.gt-lit--middle, .gt-lit--middle { --gt-lit-at: 100% 50%; }
+.gt-hero, .gt-stat--featured { background: var(--gt-lit); }
 .gt-btn--primary { background: var(--gt-lit); color: #fff; font-weight: 500; letter-spacing: -.01em; gap: 12px; box-shadow: none; }
-.gt-btn--primary:hover { background: radial-gradient(130% 160% at 0% 100%, #4aab78 0%, var(--green-600) 32%, var(--green-800) 76%, var(--green-900) 100%); }
+.gt-btn--primary:hover { background: var(--gt-lit-hover); }
+/* Trend chips never shrink or wrap in a narrow card. */
+.gt-stat__chip { flex: none; white-space: nowrap; line-height: 1; }
 /* The gradient is painted from the outer edge (border-box), so the 1.5px transparent border doesn't show a
    repeated sliver of the gradient along the edges. */
 .gt-btn--primary, .gt-btn--primary:hover, .gt-hero, .gt-stat--featured { background-origin: border-box !important; border-color: transparent; }
