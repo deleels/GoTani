@@ -18,8 +18,17 @@
 /* ---------- Button ---------- */
 .gt-btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);height:56px;padding:0 var(--space-6);border-radius:var(--radius-pill);font:400 18px/1 var(--font-sans);border:1.5px solid transparent;cursor:pointer;white-space:nowrap;text-decoration:none}
 .gt-btn .gt-ico{width:20px;height:20px}
-.gt-btn--primary{background:linear-gradient(180deg,var(--green-600),var(--green-800));color:var(--ink-inverse);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
-.gt-btn--primary:hover{background:linear-gradient(180deg,var(--green-700),var(--green-900))}
+/* One light: the primary button, HeroCard and featured StatCard share one glow (--gt-lit). The light sits on the
+   right of the page, so the glow's corner follows where the surface sits: at the top of a page it glows from the
+   bottom right, at the bottom from the top right, in between from the right edge. Override with gt-lit--top /
+   --middle / --bottom. Flat: no shadow, no rim highlight. Painted from the border edge so no seam shows. */
+.gt-btn--primary,.gt-hero,.gt-stat--featured{--gt-lit-at:100% 50%;--gt-lit:radial-gradient(130% 160% at var(--gt-lit-at),#3f9d6b 0%,var(--green-600) 28%,var(--green-800) 72%,var(--green-900) 100%);--gt-lit-hover:radial-gradient(130% 160% at var(--gt-lit-at),#4aab78 0%,var(--green-600) 32%,var(--green-800) 76%,var(--green-900) 100%)}
+.gt-hero,.gt-stat--featured,:is(.gt-pagehead,.gt-topbar,.gt-hero,.gt-dark) .gt-btn--primary,.gt-lit--top{--gt-lit-at:100% 100%}
+.gt-btn--block.gt-btn--primary,:is(.gt-bottombar,.gt-footer) .gt-btn--primary,.gt-lit--bottom{--gt-lit-at:100% 0%}
+.gt-btn--primary.gt-lit--middle,.gt-lit--middle{--gt-lit-at:100% 50%}
+.gt-btn--primary{background:var(--gt-lit);background-origin:border-box;border-color:transparent;color:var(--ink-inverse);font-weight:500;letter-spacing:-.01em;gap:12px}
+.gt-btn--primary:hover{background:var(--gt-lit-hover);background-origin:border-box}
+.gt-btn--primary:disabled,.gt-btn--primary[aria-disabled=true]{background:var(--surface);color:var(--ink-subtle)}
 .gt-btn--outline{background:transparent;color:var(--ink);border-color:var(--outline)}
 .gt-btn--outline:hover{background:var(--green-100)}
 .gt-btn--ghost{background:var(--surface-raised);color:var(--ink)}
@@ -141,7 +150,7 @@ a.gt-btn{text-decoration:none}
 .gt-stat__chip{display:inline-flex;align-items:center;gap:2px;padding:0 4px;height:16px;border:1px solid currentColor;border-radius:var(--radius-xs);font-size:10px}
 .gt-stat__arrow{position:absolute;top:var(--space-5);right:var(--space-5);width:36px;height:36px;border-radius:var(--radius-pill);border:1.5px solid var(--outline);display:grid;place-items:center;background:var(--surface-raised);color:var(--ink)}
 .gt-stat__arrow .gt-ico{width:16px;height:16px;stroke-width:1.8}
-.gt-stat--featured{background:radial-gradient(120% 130% at 0% 100%,#3f9d6b 0%,var(--green-600) 28%,var(--green-800) 72%,var(--green-900) 100%);color:var(--ink-inverse);overflow:hidden}
+.gt-stat--featured{background:var(--gt-lit);background-origin:border-box;border-color:transparent;color:var(--ink-inverse);overflow:hidden}
 .gt-stat--featured .gt-stat__trend{color:var(--lime-400)}
 .gt-stat--featured .gt-stat__arrow{border-color:var(--surface-raised)}
 
@@ -201,6 +210,8 @@ a.gt-btn{text-decoration:none}
 .gt-legend span{display:inline-flex;align-items:center;gap:6px}
 .gt-legend i{width:12px;height:12px;border-radius:50%;background:var(--green-600)}
 .gt-legend i.dark{background:var(--green-800)}.gt-legend i.light{background:var(--green-400)}
+.gt-legend i.line{width:18px;height:0;border-radius:0;background:none;border-top:2px dashed var(--green-900)}
+.gt-legend i.fair{background:var(--warning-ink)}.gt-legend i.poor{background:var(--danger)}
 .gt-legend i.hatch{background:var(--gt-hatch);background-size:6px 6px;border:1px solid var(--hatch)}
 
 /* ---------- Gauge ---------- */
@@ -600,3 +611,68 @@ span.flatpickr-weekday{color:var(--ink-subtle);font:500 12px/16px var(--font-san
 .flatpickr-time input,.flatpickr-time .flatpickr-am-pm{color:var(--ink);font:500 16px var(--font-sans)}
 .flatpickr-time input:hover,.flatpickr-time input:focus{background:var(--green-100)}
 .flatpickr-calendar.hasTime .flatpickr-time{height:44px;line-height:44px}
+
+/* ---------- One light: the HeroCard uses the same glow as the button and featured card ---------- */
+.gt-hero{background:var(--gt-lit);background-origin:border-box;border-color:transparent}
+
+/* ---------- Tables: a quiet second line inside a cell (LOW and spoilage under HIGH, HPP/kg under cost) ---------- */
+.gt-cellsub{display:block;margin-top:2px;white-space:normal;font:400 12px/16px var(--font-sans);color:var(--ink-muted)}
+/* Scroll containers clip what sticks out: keep room for the 2px + 2px focus ring of fields inside them. */
+.gt-scroll{overflow-x:auto;padding:6px;margin:-6px}
+.gt-iconbtn--danger-soft{color:var(--danger);background:var(--surface)}
+.gt-iconbtn--danger-soft:hover{background:var(--pending-bg);color:var(--danger)}
+
+/* ---------- MapEditor: map controls, polygon corners, the edit panel under the map ----------
+   Controls are 38px white rounded buttons with a soft shadow, stacked on the left edge; nothing else sits on the map.
+   Works with Leaflet 1.9: add gt-map to the map container. */
+.gt-map{position:relative;min-height:360px;border-radius:var(--radius-lg);overflow:hidden;z-index:0;background:var(--surface)}
+.gt-map--drawing,.gt-map--drawing .leaflet-interactive{cursor:crosshair!important}
+.gt-mapctl,.gt-map .leaflet-bar,.gt-map .leaflet-control-layers{display:flex;flex-direction:column;border:0!important;border-radius:12px!important;box-shadow:0 2px 8px rgba(0,0,0,.22)!important;background:var(--surface-raised);overflow:hidden}
+.gt-map .leaflet-top.leaflet-left .leaflet-control{margin:10px 0 0 10px;clear:both}
+.gt-mapctl>a,.gt-mapctl>button,.gt-map .leaflet-bar a{display:grid;place-items:center;width:38px!important;height:38px!important;padding:0;border:0;border-bottom:1px solid var(--divider);background:var(--surface-raised);color:var(--green-800);font:500 20px/38px var(--font-sans);text-decoration:none;cursor:pointer;transition:background-color var(--dur-fast) ease}
+.gt-mapctl>:last-child,.gt-map .leaflet-bar a:last-child{border-bottom:0}
+.gt-mapctl>:hover,.gt-map .leaflet-bar a:hover{background-color:var(--green-100)}
+.gt-mapctl>:focus-visible,.gt-map .leaflet-bar a:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.gt-mapctl>.is-on{background-color:var(--green-100);box-shadow:inset 0 0 0 2px var(--green-600)}
+.gt-mapctl .gt-ico{width:20px;height:20px}
+/* Tile credit: one quiet 10px line in the corner, cut short on narrow maps, full text on hover. */
+.gt-mapcredit,.gt-map .leaflet-control-attribution{max-width:min(320px,55vw);margin:0!important;padding:1px 6px;border-radius:6px 0 0 0;background:rgba(255,255,255,.6)!important;color:var(--ink-muted);font:400 10px/16px var(--font-sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt-mapcredit:hover,.gt-map .leaflet-control-attribution:hover{white-space:normal;background:rgba(255,255,255,.9)!important}
+/* Polygon corners: a 26px touch box with the visible dot inside, so hover sizing never fights the map's transforms. */
+.gt-vx{display:grid;place-items:center;width:26px;height:26px;background:none;border:0;cursor:grab}
+.gt-vx:active{cursor:grabbing}
+.gt-vx span{display:block;width:14px;height:14px;border-radius:50%;background:var(--surface-raised);border:2.5px solid var(--green-600);box-shadow:0 1px 3px rgba(0,0,0,.4);transition:width var(--dur-fast),height var(--dur-fast)}
+.gt-vx:hover span{width:18px;height:18px;border-color:var(--green-800)}
+.gt-vx--close span{width:18px;height:18px;background:var(--green-600);border-color:var(--surface-raised)}
+.gt-vx--mid{cursor:copy}
+.gt-vx--mid span{width:16px;height:16px;background:var(--green-600) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M5 2v6M2 5h6'/%3E%3C/svg%3E") center/10px no-repeat;border:2px solid var(--surface-raised);opacity:.9}
+.gt-vx--mid:hover span{width:20px;height:20px;opacity:1;background-color:var(--green-800)}
+/* The edit panel sits under the map, never on it: name, live area, hints, then the actions. */
+.gt-mapedit{display:grid;gap:var(--space-2);padding:var(--space-3);margin:var(--space-3) var(--space-3) 0;border-radius:var(--radius-md);background:var(--green-100);border:1px solid var(--green-400);font-size:14px;line-height:20px}
+.gt-mapedit__head,.gt-mapedit__actions{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.gt-mapedit__actions{justify-content:flex-end}
+.gt-mapedit__stat{font-weight:500;font-variant-numeric:tabular-nums}
+.gt-mapedit__hint{color:var(--ink-muted);font-size:13px}
+.gt-mapedit__error{color:var(--danger);font-weight:500}
+/* NDVI: a continuous red to green ramp with its ends labelled. */
+.gt-ramp{display:grid;grid-template-columns:auto 1fr auto;column-gap:var(--space-2);align-items:center;font-size:12px;color:var(--ink-muted)}
+.gt-ramp i{height:10px;border-radius:var(--radius-pill);background:linear-gradient(90deg,#d7191c,#fdae61 30%,#ffffbf 50%,#a6d96a 70%,#1a9641)}
+
+/* Trend chips and value tags keep their shape in narrow cards. */
+.gt-stat__chip{flex:none;white-space:nowrap;line-height:1}
+.gt-stat__trend{align-items:flex-start}.gt-stat__trend .gt-stat__chip{margin-top:2px}
+.gt-bar__tip{white-space:nowrap}
+
+/* ---------- ComboChart: revenue bars with a cost line on top (inline SVG) ----------
+   The line is drawn over a white under-stroke so it stays readable across the bars. */
+.gt-combo{width:100%;height:auto;overflow:visible;font:400 11px var(--font-sans)}
+.gt-combo__grid{stroke:var(--hatch);opacity:.35;stroke-dasharray:3 4}
+.gt-combo__axis{fill:var(--ink-subtle)}
+.gt-combo__bar{fill:var(--green-400)}.gt-combo__bar--now{fill:var(--green-600)}
+.gt-combo__under{fill:none;stroke:var(--surface-raised);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.gt-combo__line{fill:none;stroke:var(--green-900);stroke-width:2.5;stroke-dasharray:7 5;stroke-linecap:round;stroke-linejoin:round}
+.gt-combo__pt{fill:var(--surface-raised);stroke:var(--green-900);stroke-width:2}
+.gt-combo__pt--now{fill:var(--green-900);stroke:var(--surface-raised);stroke-width:2.5}
+.gt-combo__tip rect{fill:var(--surface-raised);stroke:var(--green-400)}
+.gt-combo__tip text{fill:var(--ink);font:500 11px var(--font-sans)}
+.gt-legend i.line{border-top-width:2.5px}
