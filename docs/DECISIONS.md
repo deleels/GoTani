@@ -255,3 +255,46 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   (`Melon Golden · Grade A (HIGH)`, `Lot #3 · … · sisa 12 kg`); an empty value shows "-"; the empty select choice
   reads "Tidak ada" / "None". Applies to both languages. Every toast fades out by itself: success/info after 5 s,
   warnings/errors after 7 s; the countdown pauses while the pointer or focus is on it, and × still closes it at once.
+
+## FarmCloud comparison follow-up (2026-11-21, accepted, build order in `docs/UPDATE_PLAN.md`)
+
+- **D123 Django admin is read-only for transaction data.** HarvestBatch, ActivityLog, SpoilageRecord, Invoice and its
+  lines, InvoicePayment, PaymentAllocation and InvoiceLineLotAllocation can be viewed but not added, changed or
+  deleted; CropCycle.stage, Product.selling_price_idr and User/Group are read-only too. Admin edits skipped the
+  services (stock ledger, cost pool, credit, audit log, last-OWNER rule). Setup tables stay editable. A test fails if
+  a transaction model becomes editable again.
+- **D124 Setup work moves into the app.** New input items (with optional first purchase), new varieties (inline in
+  the start-cycle form, list in Pengaturan), element edit (name, area; type only without an active cycle; audited)
+  and the farm location picked on a map with the place search, number fields kept as fallback.
+- **D125 Navigation: one home per area.** Groups DASBOR (Ringkasan, Laporan Kerja, Cuaca & Satelit), KEBUN (Elemen &
+  Siklus, Inventaris Input, Stok Hasil Panen), PENJUALAN (Kasir, Grosir), KEUANGAN (Biaya, Analitik), ALAT. Kasir has
+  in-page tabs Kasir · Pesanan · Shift & Kas; Grosir has Invoice · Pembeli; Stok Hasil Panen has Stok · Susut ·
+  Opname · Harga (finance only); Omzet & PPh is an Analitik tab. Removes the double Panen/Susut entries; a sidebar
+  parent was rejected because it costs a click on the most-used screen. Old URLs redirect.
+- **D126 Work reports record when the work was done.** "Waktu kegiatan" defaults to now, may go back 3 days, never
+  into the future or before the cycle start; the table shows "dicatat" time when different. The stage snapshot stays
+  the cycle's current stage.
+- **D127 "Lainnya" activity type.** OTHER with required task name, optional duration, worker count and photo, any
+  stage, never an input item. Labour cost stays a manual expense.
+- **D128 Grouped report picker.** Perawatan · Pemantauan · Panen & Lainnya, one line of description per type, same
+  picker preset to the cycle on its page.
+- **D129 Structured scouting.** Required finding (Normal/Hama/Penyakit/Gulma/Kekurangan hara/Lainnya), severity and
+  observation unless Normal. A "Berat" finding alerts OWNER/MANAGER while it is under 3 days old and not followed by a
+  Normal or Ringan scouting of that cycle.
+- **D130 Pre-harvest lines are answered Ya or Tidak.** All active lines must be answered; completed_pct = Ya / active
+  lines. An explicit Tidak replaces the ambiguous unticked box. Food-safety lines are seeded.
+- **D131 Several reports in one save.** Pemupukan, Pestisida, Irigasi, Penanaman and Lainnya: shared header, up to
+  10 cycle rows, atomic, each row through the normal stock and usage-expense rules.
+- **D132 Reports are edited only where stock and cost are untouched.** Method, notes, photo, scouting finding and
+  severity, task name; quantity/input/cycle still need delete and re-enter; edits are audited.
+- **D133 Input purchases carry payment method and receipt**, like expenses; no cash-drawer link.
+- **D134 Three-day window for spoilage reversal and stage undo** (OWNER/MANAGER, reason). A spoilage reversal is
+  refused when a newer approved opname exists for that product. POS void stays same-day because the shift is closed.
+  Supersedes the same-day limit in D84 and D86.
+- **D135 First-harvest cost is flagged, not changed.** Analitik and the harvest review warn when a cycle has one batch
+  or its first batch absorbed over 60% of the cycle's cost (rule 3 limitation made visible).
+- **D136 Small UX additions.** Variety notes card, planted unit label (count stays integer, no conversion), Telusuri
+  button and search on Laporan Kerja, "Catat Panen" card at HARVESTING.
+- **D137 Satellite history range and CSV export; D79 reconfirmed.** NDVI history gets a date range (default 60 days),
+  per-pass stats get median and count and a CSV export. A live test on 2026-11-21 got HTTP 422 "must be from 1 to 3000
+  ha" for 0.65 ha and 0.10 ha polygons, so plots under 1 ha keep the explicit "too small" reason.
