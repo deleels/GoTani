@@ -166,15 +166,26 @@ class EstimatesForm(StyledForm):
 
 class PreHarvestForm(StyledForm):
     cycle = forms.ModelChoiceField(label=_l("Siklus"), queryset=CropCycle.objects.none())
-    items = forms.ModelMultipleChoiceField(label=_l("Butir yang sudah dipenuhi"), required=False,
-                                           queryset=PreHarvestChecklistItem.objects.filter(is_active=True),
-                                           widget=forms.CheckboxSelectMultiple)
     notes = forms.CharField(label=_l("Catatan"), required=False, widget=forms.Textarea(attrs={"rows": 2}))
+    YES, NO = "YES", "NO"
 
     def __init__(self, *args, **kwargs):
+        """D130: one required Ya / Tidak question per active checklist line."""
         super().__init__(*args, **kwargs)
         self.fields["cycle"].queryset = CropCycle.objects.filter(is_active=True).select_related("element", "variety")
-        self.fields["items"].queryset = PreHarvestChecklistItem.objects.filter(is_active=True)
+        notes = self.fields.pop("notes")
+        self.lines = list(PreHarvestChecklistItem.objects.filter(is_active=True))
+        for line in self.lines:
+            self.fields[f"line_{line.pk}"] = forms.ChoiceField(
+                label=str(line), choices=[(self.YES, _("Ya")), (self.NO, _("Tidak"))], widget=forms.RadioSelect,
+                error_messages={"required": _("Jawab Ya atau Tidak.")})
+        self.fields["notes"] = notes
+
+    def clean(self):
+        data = super().clean()
+        data["items"] = [line for line in self.lines if data.get(f"line_{line.pk}") == self.YES]
+        data["failed_items"] = [line for line in self.lines if data.get(f"line_{line.pk}") == self.NO]
+        return data
 
 
 class ActivityForm(StyledForm):

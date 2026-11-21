@@ -965,3 +965,6 @@ html { scrollbar-gutter: stable; }
 .app-picker__title { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-subtle); padding: .375rem .75rem .125rem; }
 .app-picker__item { display: flex; flex-direction: column; align-items: flex-start; gap: .125rem; white-space: normal; }
 .app-picker__help { font-size: .8125rem; color: var(--ink-subtle); }
+
+/* D130: Tidak answers on the pre-harvest check */
+.app-text-danger { color: var(--danger); }

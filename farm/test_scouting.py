@@ -70,3 +70,22 @@ class ScoutingTests(TestCase):
         self.assertContains(self.client.get(url), "Sedang")
         r = self.client.post(url, {"cycle": self.cycle.pk, "finding": "PEST", "severity": "", "notes": "Thrips"})
         self.assertEqual(r.status_code, 200)  # re-rendered with the error
+
+
+class PreHarvestAnswerTests(TestCase):
+    """D130: every active line is answered Ya or Tidak."""
+
+    def test_answers(self):
+        from farm.models import PreHarvestChecklistItem
+
+        el = FarmElement.objects.create(name="GH", element_type="GREENHOUSE", area_m2=10)
+        cycle = CropCycle.objects.create(element=el, variety=Variety.objects.create(name="M", crop="M"),
+                                         stage="FRUITING", is_active=True, planting_start_date=timezone.localdate())
+        items = list(PreHarvestChecklistItem.objects.filter(is_active=True))
+        with self.assertRaises(ValidationError):
+            services.record_preharvest_check(cycle, items[:1], failed_items=items[1:2])
+        with self.assertRaises(ValidationError):
+            services.record_preharvest_check(cycle, items[:2], failed_items=items[1:])
+        check = services.record_preharvest_check(cycle, items[:-1], failed_items=items[-1:])
+        self.assertEqual(list(check.failed_items.all()), items[-1:])
+        self.assertLess(check.completed_pct, 100)

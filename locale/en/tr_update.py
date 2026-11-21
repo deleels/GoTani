@@ -106,4 +106,18 @@ TR = {
     "Pengamatan": "Observation",
     "Sedang": "Medium",
     "Hama": "Pests",
+    # D130 pre-harvest Ya / Tidak
+    "Tidak:": "No:",
+    "Air untuk mencuci dan menyemprot bersih": "Water for washing and spraying is clean",
+    "Toilet dan tempat cuci tangan tersedia untuk pekerja": "Toilets and handwashing are available for workers",
+    "Tidak ada pekerja sakit yang ikut memanen": "No sick workers take part in the harvest",
+    "Wadah panen bersih dan tidak dipakai untuk bahan kimia": "Harvest containers are clean and never used for chemicals",
+    "Jawab Ya atau Tidak.": "Answer Yes or No.",
+    "butir dijawab tidak": "lines answered no",
+    "Satu butir hanya bisa dijawab Ya atau Tidak.": "A line can only be answered Yes or No.",
+    "Jawab setiap butir dengan Ya atau Tidak.": "Answer every line with Yes or No.",
+    "Jawab setiap butir Ya atau Tidak sebelum panen. Persentase Ya dicatat bersama siklusnya; jawaban Tidak tampil merah.": "Answer every line Yes or No before harvest. The share of Yes answers is saved with the cycle; No answers show in red.",
+    "Tidak: %(lines)s": "No: %(lines)s",
+    "Ya": "Yes",
+    "Tidak": "No",
 }

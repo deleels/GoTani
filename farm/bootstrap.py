@@ -56,7 +56,13 @@ PREHARVEST_CHECKLIST = [
     _("Alat panen, keranjang dan timbangan bersih"),
     _("Area sortir dan gudang siap"),
     _("Tenaga panen terjadwal"),
+    # D130: basic food safety
+    _("Air untuk mencuci dan menyemprot bersih"),
+    _("Toilet dan tempat cuci tangan tersedia untuk pekerja"),
+    _("Tidak ada pekerja sakit yang ikut memanen"),
+    _("Wadah panen bersih dan tidak dipakai untuk bahan kimia"),
 ]
+FOOD_SAFETY_LINES = PREHARVEST_CHECKLIST[5:]
 
 BUILTIN_TEXTS = frozenset([name for _code, name in EXPENSE_CATEGORIES] + PREHARVEST_CHECKLIST)
 

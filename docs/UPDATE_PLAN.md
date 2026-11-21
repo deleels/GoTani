@@ -75,7 +75,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - Bell alert for OWNER/MANAGER while a cycle has a "Berat" finding in the last 3 days and no newer
   Normal or Ringan scouting on that cycle.
 
-## 8. Pre-harvest Ya / Tidak (D130)
+## 8. Pre-harvest Ya / Tidak (D130) ✅
 - Each active checklist line is answered Ya or Tidak; unanswered lines block saving.
 - `completed_pct` = Ya answers / active lines × 100. Tidak answers show red on the check and in the cycle
   timeline. The list stays admin-editable; seed food-safety lines (clean water, toilets and handwashing,

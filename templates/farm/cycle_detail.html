@@ -69,7 +69,7 @@
       <li class="gt-step gt-step--done app-step app-step--{{ e.kind }}">
         <span class="gt-step__mark"></span>
         <div class="app-step__body">
-          <span class="gt-step__title">{{ e.title }}</span>{% if e.body %} <span class="app-muted">{{ e.body }}</span>{% endif %}
+          <span class="gt-step__title">{{ e.title }}</span>{% if e.body %} <span class="{% if e.danger %}app-text-danger{% else %}app-muted{% endif %}">{{ e.body }}</span>{% endif %}
           <span class="gt-step__meta app-block">{{ e.at|date:"SHORT_DATETIME_FORMAT" }}{% if e.who %} · {{ e.who }}{% endif %}{% if e.money is not None and e.money %} · {{ e.money|rupiah }}{% endif %}</span>
           {% if e.photo %}<a href="{{ e.photo.url }}" target="_blank"><img src="{{ e.photo.url }}" alt="{% translate 'Foto pengamatan' %}" class="app-photo"></a>{% endif %}
         </div>

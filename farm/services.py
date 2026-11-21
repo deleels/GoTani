@@ -196,7 +196,10 @@ def cycle_yield_summary(cycle: CropCycle) -> dict:
 
 
 @transaction.atomic
-def record_preharvest_check(cycle: CropCycle, checked_items, user=None, notes="", recorded_at=None) -> PreHarvestCheck:
+def record_preharvest_check(cycle: CropCycle, checked_items, user=None, notes="", recorded_at=None,
+                            failed_items=None) -> PreHarvestCheck:
+    """D130: each active line is answered Ya (`checked_items`) or Tidak (`failed_items`). Leaving
+    `failed_items` out answers every line that is not Ya with Tidak."""
     if not cycle.is_active:
         raise ValidationError(_("Siklus sudah ditutup."))
     active = list(PreHarvestChecklistItem.objects.filter(is_active=True))
@@ -204,12 +207,18 @@ def record_preharvest_check(cycle: CropCycle, checked_items, user=None, notes=""
         raise ValidationError(_("Belum ada butir cek pra-panen yang aktif."))
     active_ids = {i.pk for i in active}
     chosen = {int(getattr(i, "pk", i)) for i in checked_items}
-    if chosen - active_ids:
+    failed = active_ids - chosen if failed_items is None else {int(getattr(i, "pk", i)) for i in failed_items}
+    if (chosen | failed) - active_ids:
         raise ValidationError(_("Butir cek tidak dikenal atau tidak aktif."))
+    if chosen & failed:
+        raise ValidationError(_("Satu butir hanya bisa dijawab Ya atau Tidak."))
+    if active_ids - chosen - failed:
+        raise ValidationError(_("Jawab setiap butir dengan Ya atau Tidak."))
     pct = (Decimal(len(chosen)) / Decimal(len(active)) * 100).quantize(MONEY_STEP, rounding=ROUND_HALF_UP)
     check = PreHarvestCheck.objects.create(cycle=cycle, completed_pct=pct, notes=notes, recorded_by=user,
                                            recorded_at=recorded_at or timezone.now())
     check.checked_items.set(chosen)
+    check.failed_items.set(failed)
     return check
 
 

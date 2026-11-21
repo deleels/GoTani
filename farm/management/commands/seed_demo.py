@@ -356,7 +356,7 @@ class Command(BaseCommand):
 
     def _check(self, key, days_ago, n_items):
         def run(ts):
-            items = list(PreHarvestChecklistItem.objects.filter(is_active=True))[:n_items]
+            items = list(PreHarvestChecklistItem.objects.filter(is_active=True))[:n_items]  # None = all
             farm.record_preharvest_check(self.cycles[key], items, user=self.users[ROLE_WORKER], recorded_at=ts)
 
         self.on(days_ago, 7, run)
@@ -382,7 +382,7 @@ class Command(BaseCommand):
         for days in (90, 60, 33):
             self._activity(MELON_OLD, days, A.IRRIGATION, qty="1500", method="Tetes")
         self._activity(MELON_OLD, 55, A.SCOUTING, notes="Kutu kebul ringan di sisi timur", finding="PEST", severity="LIGHT")
-        self._check(MELON_OLD, 37, 5)
+        self._check(MELON_OLD, 37, None)  # every line Ya
         self._close(MELON_OLD, 27)
 
         # Fresh Melon Golden cycle in the same greenhouse.

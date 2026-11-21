@@ -80,19 +80,20 @@ class EstimateTests(P9Fixtures):
 
 class ChecklistTests(P9Fixtures):
     def test_default_items_seeded_by_migration(self):
-        self.assertEqual(len(self.items), 5)
+        self.assertEqual(len(self.items), 9)  # 5 original + 4 food-safety lines (D130)
 
     def test_pct_snapshot_and_latest_counts(self):
         c1 = services.record_preharvest_check(self.cycle, self.items[:2], user=self.worker)
-        self.assertEqual(c1.completed_pct, D("40.00"))
-        self.assertIn("40", services.harvest_readiness_warning(self.cycle, CropCycle.Stage.HARVESTING))
+        self.assertEqual(c1.completed_pct, D("22.22"))
+        self.assertEqual(c1.failed_items.count(), 7)  # lines not answered Ya are Tidak (D130)
+        self.assertIn("22", services.harvest_readiness_warning(self.cycle, CropCycle.Stage.HARVESTING))
         services.record_preharvest_check(self.cycle, [i.pk for i in self.items])
         self.assertIsNone(services.harvest_readiness_warning(self.cycle, CropCycle.Stage.HARVESTING))
         # Snapshot: deactivating an item later does not rewrite history.
         self.items[0].is_active = False
         self.items[0].save()
         c1.refresh_from_db()
-        self.assertEqual(c1.completed_pct, D("40.00"))
+        self.assertEqual(c1.completed_pct, D("22.22"))
 
     def test_warning_without_check_but_never_blocks(self):
         self.assertIn("belum ada", services.harvest_readiness_warning(self.cycle, CropCycle.Stage.HARVESTING))
@@ -166,10 +167,16 @@ class P9ViewTests(P9Fixtures):
 
     def test_preharvest_view(self):
         self.client.force_login(self.worker)
-        r = self.client.post(reverse("farm:preharvest_new"), {"cycle": self.cycle.pk, "items": [i.pk for i in self.items[:3]]})
+        answers = {f"line_{i.pk}": "YES" for i in self.items[:3]}
+        r = self.client.post(reverse("farm:preharvest_new"), {"cycle": self.cycle.pk, **answers})
+        self.assertEqual(r.status_code, 200)  # every line must be answered (D130)
+        answers.update({f"line_{i.pk}": "NO" for i in self.items[3:]})
+        r = self.client.post(reverse("farm:preharvest_new"), {"cycle": self.cycle.pk, **answers})
         self.assertRedirects(r, reverse("farm:activities") + "?tab=prapanen")
-        self.assertEqual(services.latest_preharvest_check(self.cycle).completed_pct, D("60.00"))
-        self.assertContains(self.client.get(reverse("farm:activities"), {"tab": "prapanen"}), "60%")
+        self.assertEqual(services.latest_preharvest_check(self.cycle).completed_pct, D("33.33"))
+        page = self.client.get(reverse("farm:activities"), {"tab": "prapanen"})
+        self.assertContains(page, "33%")
+        self.assertContains(page, "app-text-danger")
         self.assertEqual(self.client.get(reverse("farm:preharvest_new"), {"cycle": self.cycle.pk}).status_code, 200)
 
     def test_detail_pages_and_money_hiding(self):

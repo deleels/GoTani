@@ -364,7 +364,7 @@ class ActivitiesView(FarmPage):
             qs = ActivityLog.objects.filter(activity_type=TAB_TYPES[tab]).select_related(
                 "cycle__element", "cycle__variety", "input_item", "recorded_by")
         elif tab == "prapanen":
-            qs = PreHarvestCheck.objects.select_related("cycle__element", "cycle__variety", "recorded_by").prefetch_related("checked_items")
+            qs = PreHarvestCheck.objects.select_related("cycle__element", "cycle__variety", "recorded_by").prefetch_related("checked_items", "failed_items")
             ctx["preharvest_form"] = PreHarvestForm()
         elif tab == "panen":
             qs = HarvestBatch.objects.select_related("cycle__element", "cycle__variety", "recorded_by").order_by("-harvested_at", "-id")
@@ -380,7 +380,7 @@ class PreHarvestCheckView(FarmPage):
     form_class = PreHarvestForm
     success_message = _l("Cek pra-panen dicatat.")
     extra_context = {"page_title": _l("Cek pra-panen"), "back_url": "farm:activities", "back_query": "?tab=prapanen",
-                     "page_help": _l("Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya.")}
+                     "page_help": _l("Jawab setiap butir Ya atau Tidak sebelum panen. Persentase Ya dicatat bersama siklusnya; jawaban Tidak tampil merah.")}
 
     def get_initial(self):
         return {"cycle": self.request.GET.get("cycle")}
@@ -390,7 +390,8 @@ class PreHarvestCheckView(FarmPage):
 
     def perform(self, form):
         d = form.cleaned_data
-        check = services.record_preharvest_check(d["cycle"], d["items"], user=self.request.user, notes=d["notes"])
+        check = services.record_preharvest_check(d["cycle"], d["items"], failed_items=d["failed_items"],
+                                                 user=self.request.user, notes=d["notes"])
         self.success_message = _("Cek pra-panen dicatat (%(pct)s%% lengkap).") % {"pct": f"{check.completed_pct.normalize():f}"}
         return check
 
@@ -793,8 +794,12 @@ def cycle_timeline(cycle, finance=False):
         events.append({"at": a.logged_at, "kind": a.activity_type.lower(), "title": a.get_activity_type_display(),
                        "body": body, "who": a.recorded_by, "photo": a.photo})
     for check in cycle.preharvest_checks.all():
-        events.append({"at": check.recorded_at, "kind": "check", "title": _("Cek pra-panen"),
-                       "body": _("%(completed_pct)s%% lengkap") % {"completed_pct": format(check.completed_pct.normalize(), 'f')}, "who": check.recorded_by})
+        failed = [str(i) for i in check.failed_items.all()]
+        body = _("%(completed_pct)s%% lengkap") % {"completed_pct": format(check.completed_pct.normalize(), 'f')}
+        if failed:
+            body = f"{body} · " + _("Tidak: %(lines)s") % {"lines": "; ".join(failed)}
+        events.append({"at": check.recorded_at, "kind": "check", "title": _("Cek pra-panen"), "body": body,
+                       "who": check.recorded_by, "danger": bool(failed)})
     for bt in trace.batches:
         b = bt.batch
         body = _("HIGH %(high)s kg · LOW %(low)s kg · susut %(loss)s kg") % {"high": f"{b.high_quality_kg.normalize():f}", "low": f"{b.low_quality_kg.normalize():f}", "loss": f"{b.harvest_loss_kg.normalize():f}"}

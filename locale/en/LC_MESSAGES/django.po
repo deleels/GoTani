@@ -755,6 +755,10 @@ msgid "Anda tidak memiliki akses ke halaman ini."
 msgstr "You don't have access to this page."
 
 #: farm\bootstrap.py
+msgid "Air untuk mencuci dan menyemprot bersih"
+msgstr "Water for washing and spraying is clean"
+
+#: farm\bootstrap.py
 msgid "Alat panen, keranjang dan timbangan bersih"
 msgstr "Harvest tools, crates and scales are clean"
 
@@ -795,8 +799,20 @@ msgid "Tenaga panen terjadwal"
 msgstr "Harvest crew is scheduled"
 
 #: farm\bootstrap.py
+msgid "Tidak ada pekerja sakit yang ikut memanen"
+msgstr "No sick workers take part in the harvest"
+
+#: farm\bootstrap.py
+msgid "Toilet dan tempat cuci tangan tersedia untuk pekerja"
+msgstr "Toilets and handwashing are available for workers"
+
+#: farm\bootstrap.py
 msgid "Utilitas"
 msgstr "Utilities"
+
+#: farm\bootstrap.py
+msgid "Wadah panen bersih dan tidak dipakai untuk bahan kimia"
+msgstr "Harvest containers are clean and never used for chemicals"
 
 #: farm\forms.py
 msgid "Batas stok menipis"
@@ -809,10 +825,6 @@ msgstr "Weight per sack (kg)"
 #: farm\forms.py
 msgid "Bukti (opsional)"
 msgstr "Receipt (optional)"
-
-#: farm\forms.py
-msgid "Butir yang sudah dipenuhi"
-msgstr "Items completed"
 
 #: farm\forms.py
 msgid "Contoh: cabai 1,05 · melon 1,0 · kakao 1,0 (FAO-56, fase tengah)."
@@ -849,6 +861,10 @@ msgstr "Price per unit (Rp)"
 #: farm\forms.py
 msgid "Input (opsional)"
 msgstr "Input (optional)"
+
+#: farm\forms.py
+msgid "Jawab Ya atau Tidak."
+msgstr "Answer Yes or No."
 
 #: farm\forms.py
 msgid "Jenis kegiatan"
@@ -1165,6 +1181,10 @@ msgstr "item"
 #: farm\models.py
 msgid "butir cek pra-panen"
 msgstr "pre-harvest check item"
+
+#: farm\models.py
+msgid "butir dijawab tidak"
+msgstr "lines answered no"
 
 #: farm\models.py
 msgid "butir tercentang"
@@ -1563,6 +1583,10 @@ msgid "Isi nama pekerjaan."
 msgstr "Fill in the task name."
 
 #: farm\services.py
+msgid "Jawab setiap butir dengan Ya atau Tidak."
+msgstr "Answer every line with Yes or No."
+
+#: farm\services.py
 msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif."
 msgstr "The element type can only change while no crop cycle is active."
 
@@ -1687,6 +1711,10 @@ msgid "Pilih tingkat temuan (ringan, sedang atau berat)."
 msgstr "Choose a severity (light, medium or severe)."
 
 #: farm\services.py
+msgid "Satu butir hanya bisa dijawab Ya atau Tidak."
+msgstr "A line can only be answered Yes or No."
+
+#: farm\services.py
 msgid "Satuan kegiatan (%(v)s) harus sama dengan satuan input (%(unit)s)."
 msgstr "The activity unit (%(v)s) must match the input unit (%(unit)s)."
 
@@ -1807,10 +1835,6 @@ msgid "Cek pra-panen dicatat."
 msgstr "Pre-harvest check logged."
 
 #: farm\views.py
-msgid "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya."
-msgstr "Tick the checks done before harvest. The completion percentage is saved with the cycle."
-
-#: farm\views.py
 msgid "Daftar periksa sebelum panen."
 msgstr "Checklist before harvest."
 
@@ -1853,6 +1877,10 @@ msgstr "Grade A and B yield; becomes stock lots."
 #: farm\views.py
 msgid "Input baru ditambahkan."
 msgstr "New input added."
+
+#: farm\views.py
+msgid "Jawab setiap butir Ya atau Tidak sebelum panen. Persentase Ya dicatat bersama siklusnya; jawaban Tidak tampil merah."
+msgstr "Answer every line Yes or No before harvest. The share of Yes answers is saved with the cycle; No answers show in red."
 
 #: farm\views.py
 msgid "Jenis elemen hanya bisa diubah saat tidak ada siklus tanam aktif. Setiap perubahan tercatat di Log aktivitas."
@@ -1977,6 +2005,10 @@ msgstr "Invalid stage."
 #: farm\views.py
 msgid "Tambah elemen kebun"
 msgstr "Add plot"
+
+#: farm\views.py
+msgid "Tidak: %(lines)s"
+msgstr "No: %(lines)s"
 
 #: farm\views.py
 msgid "Ubah elemen %(name)s"
@@ -3961,6 +3993,10 @@ msgstr "Stage"
 #: templates\farm\activities.html
 msgid "Temuan"
 msgstr "Finding"
+
+#: templates\farm\activities.html
+msgid "Tidak:"
+msgstr "No:"
 
 #: templates\farm\activities.html
 msgid "Volume"
@@ -6916,8 +6952,14 @@ msgstr ""
 msgid "Aset Kebun"
 msgstr "Farm assets"
 
+msgid "Butir yang sudah dipenuhi"
+msgstr "Items completed"
+
 msgid "Cek"
 msgstr "Check"
+
+msgid "Centang pemeriksaan yang sudah dilakukan sebelum panen. Persentase lengkap dicatat bersama siklusnya."
+msgstr "Tick the checks done before harvest. The completion percentage is saved with the cycle."
 
 msgid "Diperkirakan %(round)s mm — tunda penyemprotan, cek drainase."
 msgstr "About %(round)s mm expected — hold off spraying and check drainage."

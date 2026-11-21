@@ -380,6 +380,9 @@ class PreHarvestCheck(models.Model):
                               verbose_name=_l("siklus"))
     checked_items = models.ManyToManyField(PreHarvestChecklistItem, blank=True, related_name="+",
                                            verbose_name=_l("butir tercentang"))
+    # D130: every active line is answered; checked_items = "Ya", failed_items = "Tidak".
+    failed_items = models.ManyToManyField(PreHarvestChecklistItem, blank=True, related_name="+",
+                                          verbose_name=_l("butir dijawab tidak"))
     completed_pct = models.DecimalField(_l("persen selesai"), max_digits=5, decimal_places=2, default=0)
     notes = models.TextField(_l("catatan"), blank=True)
     recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
