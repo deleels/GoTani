@@ -253,17 +253,19 @@ function geoPage() {
     },
     init() {
       if (!window.L) { document.getElementById("map").innerHTML = '<p class="app-muted app-empty-cell">{% jt "Tidak dapat memuat peta · muat ulang halaman." %}</p>'; return; }
+      // Tile credits are required by Esri / OSM terms, so they stay as one small line; the Leaflet link is optional.
       map = L.map("map").setView(data.center, 16);
+      map.attributionControl.setPrefix(false);
       const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/";
       // D92: three base maps. OSM shows local (Indonesian) place and road names. OSM's tile policy needs a Referer, and
       // the site default (same-origin) sends none, so its tiles ask for the origin explicitly.
       const sat = () => L.tileLayer(esri + "World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 19, attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics" });
+        { maxZoom: 19, attribution: "© Esri, Maxar, Earthstar Geographics" });
       const labels = L.tileLayer(esri + "Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-        { maxZoom: 19, attribution: "Label © Esri" });
+        { maxZoom: 19 });
       const satLabel = L.layerGroup([sat(), labels]).addTo(map);
       const streets = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { maxZoom: 19, attribution: "© kontributor OpenStreetMap", referrerPolicy: "strict-origin-when-cross-origin" });
+        { maxZoom: 19, attribution: "© OpenStreetMap", referrerPolicy: "strict-origin-when-cross-origin" });
       L.control.layers({ "{% jt "Satelit + label" %}": satLabel, "{% jt "Satelit" %}": sat(), "{% jt "Peta (OpenStreetMap)" %}": streets }, null, { position: "topright" }).addTo(map);
       L.control.scale({ imperial: false }).addTo(map);
       this.addLocateControl();
