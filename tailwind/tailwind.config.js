@@ -24,11 +24,6 @@ module.exports = {
                  600: "var(--green-600)", 400: "var(--green-400)", 100: "var(--green-100)" },
         lime: { 400: "var(--lime-400)" },
         danger: "var(--danger)", "warning-text": "var(--warning-text)", highlight: "var(--highlight)",
-        /* Temporary alias layer (remove in Phase 6 once no template uses stone-* or emerald-*). */
-        stone: { 50: "#f7f7f7", 100: "#eef0ef", 200: "#e9ebea", 300: "#d4d8d6", 400: "#8c918f",
-                 500: "#737373", 600: "#5c605e", 700: "#3a3d3c", 800: "#000000", 900: "#000000" },
-        emerald: { 50: "#edf6ee", 100: "#edf6ee", 200: "#cfe6d7", 500: "#5fbd92",
-                   600: "#227d53", 700: "#175738", 800: "#13452d" },
       },
       borderRadius: { xs: "var(--radius-xs)", tile: "var(--radius-md)", card: "var(--radius-lg)",
                       frame: "var(--radius-xl)", pill: "var(--radius-pill)" },

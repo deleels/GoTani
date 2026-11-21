@@ -14,7 +14,7 @@
 
 <div class="gt-grid app-kpis">
   {% include "components/kpi.html" with stat=True featured=True label=_("Piutang berjalan") value=stats.outstanding|rupiah %}
-  {% include "components/kpi.html" with stat=True label=_("Jatuh tempo") value=stats.overdue|rupiah cls="text-red-700" %}
+  {% include "components/kpi.html" with stat=True label=_("Jatuh tempo") value=stats.overdue|rupiah tone="danger" %}
   {% with n=stats.month_count %}{% blocktranslate asvar h %}{{ n }} invoice terbit{% endblocktranslate %}{% include "components/kpi.html" with stat=True label=_("Terbit bulan ini") value=stats.month_total|rupiah hint=h %}{% endwith %}
   {% include "components/kpi.html" with stat=True label=_("Draf") value=stats.drafts %}
 </div>

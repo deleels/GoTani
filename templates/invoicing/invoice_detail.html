@@ -43,7 +43,7 @@
 <div class="gt-grid app-kpis">
   {% include "components/kpi.html" with stat=True featured=True label=_("Total") value=invoice.total_idr|rupiah %}
   {% include "components/kpi.html" with stat=True label=_("Dibayar") value=paid|rupiah %}
-  {% if outstanding %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah cls="text-red-700" %}{% else %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah %}{% endif %}
+  {% if outstanding %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah tone="danger" %}{% else %}{% include "components/kpi.html" with stat=True label=_("Sisa tagihan") value=outstanding|rupiah %}{% endif %}
   {% include "components/kpi.html" with stat=True compact=True label=_("Jatuh tempo") value=invoice.due_date|date:"d/m/Y" %}
 </div>
 {% endif %}

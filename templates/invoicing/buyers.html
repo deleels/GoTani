@@ -12,7 +12,7 @@
 
   <div class="gt-grid app-kpis">
     {% include "components/kpi.html" with stat=True featured=True label=_("Piutang berjalan") value=stats.outstanding|rupiah %}
-    {% include "components/kpi.html" with stat=True label=_("Jatuh tempo") value=stats.overdue|rupiah cls="text-red-700" %}
+    {% include "components/kpi.html" with stat=True label=_("Jatuh tempo") value=stats.overdue|rupiah tone="danger" %}
     {% include "components/kpi.html" with stat=True label=_("Pembeli aktif") value=stats.buyers %}
   </div>
 

@@ -89,17 +89,6 @@ def pill(text, status=None, tone=None):
     )
 
 
-# KPI value tone from the old colour utility passed as `cls` (Phase 3).
-@register.filter
-def value_tone(cls):
-    cls = str(cls or "")
-    if "red-" in cls:
-        return "app-value--danger"
-    if "amber-" in cls:
-        return "app-value--warning"
-    return ""
-
-
 @register.simple_tag(takes_context=True)
 def subtitle(context, owner, manager=None, worker=None, cashier=None):
     """Role-specific page subtitle (D68)."""
