@@ -281,4 +281,13 @@ TR = {
     "AOV": "AOV",
     "Average order value: rata-rata nilai satu transaksi. Rumus: Pendapatan ÷ jumlah transaksi (order kasir + invoice).": "Average order value: what one sale is worth on average. Formula: Revenue ÷ transactions (POS orders + invoices).",
     "Laba setelah semua biaya. Rumus: Laba kotor + pendapatan lain − susut − biaya siklus tak terserap − overhead.": "Profit after every cost. Formula: Gross profit + other income − spoilage − unabsorbed cycle cost − overhead.",
+    'Ubah batas poligon': 'Edit field boundary',
+    'Tarik titik untuk memindahkan · tarik titik kecil di tengah sisi untuk menambah · klik kanan (atau tekan lama) titik untuk menghapus.': 'Drag a point to move it · drag a small mid-edge point to add one · right-click (or long-press) a point to remove it.',
+    'Gambar poligon dengan ikon ⬠ di peta. Saat menggambar, Backspace menghapus titik terakhir.': 'Draw a boundary with the ⬠ icon on the map. While drawing, Backspace removes the last point.',
+    'Skala NDVI: merah jarang, kuning sedang, hijau rimbun': 'NDVI scale: red sparse, yellow moderate, green dense',
+    'Jarang': 'Sparse',
+    'Sedang': 'Moderate',
+    'Rimbun': 'Dense',
+    'Ubah batas': 'Edit boundary',
+    'Isi nama poligon.': 'Enter a field name.',
 }

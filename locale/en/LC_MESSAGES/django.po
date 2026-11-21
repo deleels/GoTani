@@ -4455,8 +4455,8 @@ msgid "Gambar batas lahan di peta untuk menghitung luas dan memantau NDVI."
 msgstr "Draw field boundaries on the map to measure area and track NDVI."
 
 #: templates\geo\map.html
-msgid "Gambar poligon dengan ikon ⬠ di peta."
-msgstr "Draw a boundary with the ⬠ icon on the map."
+msgid "Gambar poligon dengan ikon ⬠ di peta. Saat menggambar, Backspace menghapus titik terakhir."
+msgstr "Draw a boundary with the ⬠ icon on the map. While drawing, Backspace removes the last point."
 
 #: templates\geo\map.html
 msgid "Ganti nama"
@@ -4481,6 +4481,14 @@ msgstr "Rain, last 30 days"
 #: templates\geo\map.html
 msgid "Isi lintang/bujur di Pengaturan"
 msgstr "Set latitude/longitude in Settings"
+
+#: templates\geo\map.html
+msgid "Isi nama poligon."
+msgstr "Enter a field name."
+
+#: templates\geo\map.html
+msgid "Jarang"
+msgstr "Sparse"
 
 #: templates\geo\map.html
 msgid "Kandungan air daun. Negatif = lebih kering."
@@ -4563,10 +4571,6 @@ msgid "Nama poligon"
 msgstr "Boundary name"
 
 #: templates\geo\map.html
-msgid "Nama poligon:"
-msgstr "Boundary name:"
-
-#: templates\geo\map.html
 msgid "Pakai luas"
 msgstr "Use area"
 
@@ -4599,6 +4603,10 @@ msgid "Poligon lahan"
 msgstr "Field boundaries"
 
 #: templates\geo\map.html
+msgid "Rimbun"
+msgstr "Dense"
+
+#: templates\geo\map.html
 msgid "Riwayat NDVI rata-rata"
 msgstr "Average NDVI history"
 
@@ -4615,8 +4623,20 @@ msgid "Satelit melihat atap, bukan tanaman"
 msgstr "The satellite sees the roof, not the crop"
 
 #: templates\geo\map.html
+msgid "Sedang"
+msgstr "Moderate"
+
+#: templates\geo\map.html
 msgid "Seperti NDVI, lebih peka pada tajuk yang rapat."
 msgstr "Like NDVI, more sensitive in dense canopy."
+
+#: templates\geo\map.html
+msgid "Skala NDVI: merah jarang, kuning sedang, hijau rimbun"
+msgstr "NDVI scale: red sparse, yellow moderate, green dense"
+
+#: templates\geo\map.html
+msgid "Tarik titik untuk memindahkan · tarik titik kecil di tengah sisi untuk menambah · klik kanan (atau tekan lama) titik untuk menghapus."
+msgstr "Drag a point to move it · drag a small mid-edge point to add one · right-click (or long-press) a point to remove it."
 
 #: templates\geo\map.html
 msgid "Terpetakan"
@@ -4633,6 +4653,14 @@ msgstr "Can't reach the server."
 #: templates\geo\map.html
 msgid "Tidak ditautkan"
 msgstr "Not linked"
+
+#: templates\geo\map.html
+msgid "Ubah batas"
+msgstr "Edit boundary"
+
+#: templates\geo\map.html
+msgid "Ubah batas poligon"
+msgstr "Edit field boundary"
 
 #: templates\geo\map.html
 msgid "agar prakiraan cuaca tepat."
@@ -5819,10 +5847,6 @@ msgid "Grade"
 msgstr "Grade"
 
 #: templates\reports\dashboard.html
-msgid "HPP di atas pendapatan"
-msgstr "COGS above revenue"
-
-#: templates\reports\dashboard.html
 msgid "HPP tertutup "
 msgstr "COGS covered "
 
@@ -5963,14 +5987,6 @@ msgid "Rincian laba"
 msgstr "Profit breakdown"
 
 #: templates\reports\dashboard.html
-msgid "Rugi"
-msgstr "Loss"
-
-#: templates\reports\dashboard.html
-msgid "Rugi "
-msgstr "Loss "
-
-#: templates\reports\dashboard.html
 msgid "Rugi pada periode ini"
 msgstr "Loss this period"
 
@@ -5995,8 +6011,8 @@ msgid "Tidak ada penjualan pada periode ini."
 msgstr "No sales this period."
 
 #: templates\reports\dashboard.html
-msgid "Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Bila HPP lebih besar dari pendapatan, kelebihannya bergaris merah di atas batang."
-msgstr "Bar height = that day's revenue. The hatched part is COGS and the green part on top is gross profit. When COGS exceeds revenue, the excess shows as red hatching on top."
+msgid "Tinggi batang = pendapatan hari itu. Bagian bergaris = HPP, bagian hijau di atasnya = laba kotor. Hari terakhir berwarna paling gelap."
+msgstr "Bar height = that day's revenue. The hatched part is COGS and the green part on top is gross profit. The latest day is the darkest."
 
 #: templates\reports\dashboard.html
 msgid "Total sisa tagihan invoice per hari ini, tidak terikat rentang tanggal."

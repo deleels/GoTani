@@ -598,6 +598,22 @@ a.app-chiplink:hover { border-color: var(--green-600); }
 .app-mapsearch { position: relative; display: flex; gap: var(--space-2); padding: var(--space-3); }
 .app-mapsearch__results { left: var(--space-3); right: var(--space-3); width: auto; z-index: 1000; max-height: 16rem; overflow-y: auto; list-style: none; margin: 0; }
 .app-map { height: 60vh; min-height: 360px; width: 100%; z-index: 0; }
+/* Phase 7 map editing: white round handles with a green ring; midpoint handles smaller until hovered. */
+.app-map .leaflet-editing-icon { background: #fff !important; border: 2px solid var(--green-600) !important; border-radius: 50% !important;
+  box-shadow: 0 1px 3px rgb(0 0 0 / .35); cursor: grab; }
+.app-map .leaflet-editing-icon:active { cursor: grabbing; }
+.app-map .leaflet-editing-icon[style*="opacity: 0.6"] { scale: .7; }
+.app-map .leaflet-editing-icon:hover { opacity: 1 !important; border-color: var(--green-800) !important; }
+.app-map .leaflet-draw-tooltip { background: var(--green-900); border: 0; border-radius: 8px; font: 500 12px var(--font-sans); padding: 6px 10px; }
+.app-map .leaflet-draw-tooltip:before { border-right-color: var(--green-900); }
+.app-map .leaflet-draw-actions a { background: var(--green-700); font: 500 12px var(--font-sans); }
+.app-mapedit { display: grid; gap: var(--space-2); padding: var(--space-3); border-radius: 12px;
+  background: var(--green-100); border: 1px solid var(--green-400); margin-top: var(--space-3); }
+.app-ndvi-legend { display: grid; grid-template-columns: auto 1fr auto; column-gap: var(--space-2); row-gap: 2px; align-items: center; font-size: 12px; color: var(--ink-muted); }
+.app-ndvi-legend i { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #d7191c, #fdae61 30%, #ffffbf 50%, #a6d96a 70%, #1a9641); }
+.app-ndvi-legend small { grid-row: 2; grid-column: 2; font-size: 11px; }
+.app-ndvi-legend small:nth-of-type(2) { justify-self: center; }
+.app-ndvi-legend small:nth-of-type(3) { justify-self: end; }
 .app-maphint { display: flex; align-items: center; gap: 2px; padding: var(--space-2) var(--space-4); }
 .app-hours { display: flex; gap: var(--space-1); overflow-x: auto; padding-bottom: var(--space-2); }
 .app-hour { flex: none; width: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--space-2) 0; border-radius: var(--radius-md); background: var(--surface); font-size: 11px; line-height: 15px; }

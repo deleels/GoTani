@@ -35,7 +35,17 @@
           </ul>
         </form>
         <div id="map" class="app-map"></div>
-        <p class="app-row__meta app-maphint" x-show="canEdit">{% translate "Gambar poligon dengan ikon ⬠ di peta." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
+        {# Phase 7: a drawn or edited shape is only saved on Simpan; until then its points can be dragged, added and removed. #}
+        <div class="app-mapedit" x-show="draft || editing" x-cloak role="region" aria-label="{% translate 'Ubah batas poligon' %}">
+          <div class="app-rowform">
+            <input x-show="draft" x-model="draftName" class="app-field app-field--sm app-grow" aria-label="{% translate 'Nama poligon' %}">
+            <b x-show="editing" x-text="editing && editing.name" class="app-grow"></b>
+            <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="cancelEdit()">{% translate "Batal" %}</button>
+            <button type="button" class="gt-btn gt-btn--solid gt-btn--sm" @click="saveEdit()">{% translate "Simpan" %}</button>
+          </div>
+          <p class="app-row__meta">{% translate "Tarik titik untuk memindahkan · tarik titik kecil di tengah sisi untuk menambah · klik kanan (atau tekan lama) titik untuk menghapus." %}</p>
+        </div>
+        <p class="app-row__meta app-maphint" x-show="canEdit && !draft && !editing">{% translate "Gambar poligon dengan ikon ⬠ di peta. Saat menggambar, Backspace menghapus titik terakhir." %} {% info_tip _("Luas dihitung di server (0,02–1.000 ha). NDVI hanya untuk lahan terbuka ≥ 1 ha; data tanah tersedia untuk semua poligon.") %}</p>
       </section>
 
       <section class="gt-card" x-data="forecastPanel()" @weather-loaded.window="set($event.detail)" x-show="w" x-cloak aria-labelledby="h-48">
@@ -102,6 +112,8 @@
               <div class="gt-metric"><span class="gt-metric__label">{% translate "EVI rata-rata" %} {% info_tip _("Seperti NDVI, lebih peka pada tajuk yang rapat.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].evi ? n3(sat.passes[0].evi.mean) : '—'"></span></div>
               <div class="gt-metric"><span class="gt-metric__label">{% translate "NDWI rata-rata" %} {% info_tip _("Kandungan air daun. Negatif = lebih kering.") %}</span><span class="gt-metric__value" x-text="sat && sat.passes[0] && sat.passes[0].ndwi ? n3(sat.passes[0].ndwi.mean) : '—'"></span></div>
             </div>
+            <div class="app-ndvi-legend" x-show="showNdvi" role="img" aria-label="{% translate 'Skala NDVI: merah jarang, kuning sedang, hijau rimbun' %}"><span>0</span><i></i><span>1</span>
+              <small>{% translate "Jarang" %}</small><small>{% translate "Sedang" %}</small><small>{% translate "Rimbun" %}</small></div>
             <div class="relative h-48 app-chartbox"><canvas id="ndvi-chart" role="img" aria-label="{% translate 'Riwayat NDVI rata-rata' %}"></canvas></div>
             <div class="app-table-wrap">
               <table class="gt-table">
@@ -154,6 +166,7 @@
                     <div class="app-rowform"><select class="app-field app-field--sm" aria-label="{% translate 'Elemen tertaut' %}" x-model="p.element_id" @change="save(p, { element_id: p.element_id || null })"><option value="">{% translate "Tidak ditautkan" %}</option>
                       <template x-for="e in elements" :key="e.id"><option :value="e.id" x-text="e.name" :selected="e.id == p.element_id"></option></template></select></div>
                     <div class="app-rowform">
+                      <button type="button" class="gt-btn gt-btn--outline gt-btn--sm" @click="startEdit(p)" :disabled="!!(draft || editing)">{% translate "Ubah batas" %}</button>
                       <button type="button" x-show="p.element && p.area_m2 !== p.element_area_m2" class="gt-btn gt-btn--solid gt-btn--sm" @click="useArea(p)" title="{% translate 'Pakai luas terpetakan sebagai luas elemen' %}">{% translate "Pakai luas" %}</button>
                       <button type="button" class="gt-btn gt-btn--outline-danger gt-btn--sm" @click="remove(p)">{% translate "Hapus" %}</button>
                     </div>
@@ -213,6 +226,7 @@ function geoPage() {
     polygons: data.polygons, elements: data.elements, canEdit: data.can_edit, agroEnabled: data.agro_enabled,
     selected: null, sat: null, soil: null, message: null, reason: null, loading: false, dataError: false, showNdvi: false, error: "",
     query: "", places: [], searchMsg: "", searching: false,
+    draft: null, draftName: "", editing: null,
     async search() {
       if (this.query.trim().length < 3) { this.searchMsg = "Ketik minimal 3 huruf."; return; }
       this.searching = true; this.places = []; this.searchMsg = "";
@@ -229,6 +243,17 @@ function geoPage() {
       else map.setView([pl.lat, pl.lon], 16);
     },
     init() {
+      if (window.L && L.Edit && L.Edit.PolyVerticesEdit && !L.Edit.PolyVerticesEdit._gt) {
+        // A plain click no longer deletes a point (too easy to hit while dragging); right-click or long-press does.
+        const P = L.Edit.PolyVerticesEdit.prototype, make = P._createMarker;
+        P._createMarker = function (latlng, index) {
+          const m = make.call(this, latlng, index);
+          m.off("click", this._onMarkerClick, this);
+          m.on("contextmenu", (e) => { if (e.originalEvent) e.originalEvent.preventDefault(); this._onMarkerClick(e); });
+          return m;
+        };
+        L.Edit.PolyVerticesEdit._gt = true;
+      }
       if (!window.L) { document.getElementById("map").innerHTML = '<p class="app-muted app-empty-cell">{% jt "Tidak dapat memuat peta · muat ulang halaman." %}</p>'; return; }
       map = L.map("map").setView(data.center, 16);
       const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/";
@@ -247,22 +272,25 @@ function geoPage() {
       this.polygons.forEach((p) => this.addLayer(p));
       if (this.polygons.length) map.fitBounds(group.getBounds(), { padding: [30, 30] });
       if (this.canEdit && L.Control.Draw) {
-        map.addControl(new L.Control.Draw({
-          edit: { featureGroup: group },
-          draw: { polygon: { allowIntersection: false, showArea: true }, polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false },
-        }));
-        map.on(L.Draw.Event.CREATED, async (e) => {
-          const name = prompt("{% jt "Nama poligon:" %}", "{% jt "Lahan " %}" + (this.polygons.length + 1));
-          if (!name) return;
-          const r = await this.post(base, { name, geojson: e.layer.toGeoJSON().geometry });
-          if (r) { this.polygons.push(r); this.addLayer(r); this.select(r.id); }
+        const shape = { color: this.css("--green-600"), weight: 2.5, fillColor: this.css("--green-400"), fillOpacity: 0.2 };
+        const draw = new L.Control.Draw({
+          edit: false,
+          draw: { polygon: { allowIntersection: false, showArea: true, shapeOptions: shape }, polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false },
         });
-        map.on(L.Draw.Event.EDITED, (e) => e.layers.eachLayer(async (layer) => {
-          const p = this.polygons.find((x) => x.id === layer.polygonId);
-          const r = await this.post(`${base}${p.id}/`, { geojson: layer.toGeoJSON().geometry });
-          if (r) { Object.assign(p, r); this.refreshLayer(p); if (this.selected && this.selected.id === p.id) this.loadData(); } else layer.setLatLngs(L.GeoJSON.coordsToLatLngs(p.geojson.coordinates, 1));
-        }));
-        map.on(L.Draw.Event.DELETED, (e) => e.layers.eachLayer((layer) => this.remove(this.polygons.find((x) => x.id === layer.polygonId), true)));
+        map.addControl(draw);
+        const drawing = () => { const h = draw._toolbars.draw._modes.polygon.handler; return h && h.enabled() ? h : null; };
+        // Backspace removes the last point while drawing (same as the toolbar's "Delete last point").
+        document.addEventListener("keydown", (e) => {
+          if (e.key !== "Backspace" || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+          const h = drawing(); if (h) { e.preventDefault(); h.deleteLastVertex(); }
+        });
+        // A finished shape stays a draft: its points can still be moved until Simpan.
+        map.on(L.Draw.Event.CREATED, (e) => {
+          if (this.draft || this.editing) return;
+          const layer = e.layer; layer.setStyle(shape); group.addLayer(layer); layer.editing.enable();
+          this.draft = layer; this.draftName = "{% jt "Lahan " %}" + (this.polygons.length + 1);
+        });
+        map.on(L.Draw.Event.DRAWSTART, () => { if (this.draft || this.editing) this.cancelEdit(); });
       }
     },
     addLocateControl() {
@@ -285,10 +313,40 @@ function geoPage() {
       });
       map.on("locationerror", () => { this.error = "{% jt "Lokasi tidak dapat diakses — izinkan akses lokasi di browser." %}"; });
     },
+    css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); },
+    // Green outline with a soft fill; the selected shape is bolder. Shapes without NDVI are dashed.
     styleFor(p) {
       const active = this.selected && this.selected.id === p.id;
-      const color = p.satellite_ok ? "#10b981" : "#f59e0b";
-      return { color, weight: active ? 4 : 2, fillOpacity: active ? 0.3 : 0.15, dashArray: p.satellite_ok ? null : "6 4" };
+      return { color: active ? this.css("--green-700") : this.css("--green-600"), weight: active ? 3.5 : 2.5,
+               fillColor: this.css("--green-400"), fillOpacity: active ? 0.28 : 0.16, dashArray: p.satellite_ok ? null : "6 5", lineJoin: "round" };
+    },
+    startEdit(p) {
+      const layer = layers[p.id]; if (!layer || this.draft || this.editing) return;
+      if (!this.selected || this.selected.id !== p.id) this.select(p.id);
+      this.editing = p; layer.editing.enable();
+    },
+    cancelEdit() {
+      if (this.draft) { this.draft.editing.disable(); group.removeLayer(this.draft); this.draft = null; }
+      if (this.editing) {
+        const layer = layers[this.editing.id];
+        layer.editing.disable(); layer.setLatLngs(L.GeoJSON.coordsToLatLngs(this.editing.geojson.coordinates, 1)); layer.setStyle(this.styleFor(this.editing));
+        this.editing = null;
+      }
+    },
+    async saveEdit() {
+      if (this.draft) {
+        const name = this.draftName.trim(); if (!name) { this.error = "{% jt "Isi nama poligon." %}"; return; }
+        const r = await this.post(base, { name, geojson: this.draft.toGeoJSON().geometry });
+        if (!r) return;
+        this.draft.editing.disable(); group.removeLayer(this.draft); this.draft = null;
+        this.polygons.push(r); this.addLayer(r); this.select(r.id);
+      } else if (this.editing) {
+        const p = this.editing, layer = layers[p.id];
+        const r = await this.post(`${base}${p.id}/`, { geojson: layer.toGeoJSON().geometry });
+        if (!r) return;
+        layer.editing.disable(); this.editing = null;
+        Object.assign(p, r); this.refreshLayer(p); if (this.selected && this.selected.id === p.id) this.loadData();
+      }
     },
     restyle() { this.polygons.forEach((p) => layers[p.id] && layers[p.id].setStyle(this.styleFor(p))); },
     tooltipFor(p) { return `${p.name} · ${this.fmtArea(p)}${p.satellite_ok ? "" : " · " + "{% jt "tanpa NDVI" %}"}`; },
@@ -347,17 +405,26 @@ function geoPage() {
     toggleOverlay() {
       if (overlay) { map.removeLayer(overlay); overlay = null; }
       if (this.showNdvi && this.selected && layers[this.selected.id]) {
-        overlay = L.imageOverlay(`${base}${this.selected.id}/ndvi.png`, layers[this.selected.id].getBounds(), { opacity: 0.85 }).addTo(map);
+        overlay = L.imageOverlay(`${base}${this.selected.id}/ndvi.png`, layers[this.selected.id].getBounds(), { opacity: 0.9, className: "app-ndvi-img" }).addTo(map);
       }
     },
     drawChart() {
       if (!window.Chart || !this.sat) return;
       if (chart) chart.destroy();
-      const h = this.sat.history;
-      chart = new Chart(document.getElementById("ndvi-chart"), {
+      const h = this.sat.history, G = window.gtCharts, c = this.css("--green-600");
+      const cv = document.getElementById("ndvi-chart"), fill = cv.getContext("2d").createLinearGradient(0, 0, 0, cv.clientHeight || 190);
+      fill.addColorStop(0, c + "40"); fill.addColorStop(1, c + "00");
+      // Clean timeline: one green line over a soft area, the latest pass tagged with its value.
+      chart = new Chart(cv, {
         type: "line",
-        data: { labels: h.map((x) => this.fmtDate(x.dt)), datasets: [{ label: "{% jt "NDVI rata-rata" %}", data: h.map((x) => x.mean), borderColor: "#10b981", backgroundColor: "#10b981", pointRadius: 2, tension: 0.3 }] },
-        options: { maintainAspectRatio: false, scales: { y: { min: 0, max: 1 } }, plugins: { legend: { display: false } } },
+        data: { labels: h.map((x) => this.fmtDate(x.dt)), datasets: [{ label: "{% jt "NDVI rata-rata" %}", data: h.map((x) => x.mean),
+                borderColor: c, backgroundColor: fill, fill: true, borderWidth: 2.5, cubicInterpolationMode: "monotone",
+                pointRadius: h.map((_, i) => (i === h.length - 1 ? 4 : 0)), pointHoverRadius: 5, pointBackgroundColor: "#fff", pointBorderColor: c, pointBorderWidth: 2 }] },
+        options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { top: 30, right: 8 } },
+                   scales: { y: G ? G.axis({ min: 0, max: 1, ticks: { padding: 8, stepSize: 0.25, callback: (v) => this.fmtNum(v, 2) } }) : { min: 0, max: 1 },
+                             x: { grid: { display: false }, border: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } } },
+                   plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => "NDVI " + this.n3(ctx.parsed.y) } },
+                              gtTag: { index: h.length - 1, text: h.length ? "NDVI " + this.fmtNum(h[h.length - 1].mean, 2) : "" } } },
       });
     },
     fmtDate(dt) { return dt ? new Date(dt * 1000).toLocaleDateString(window.GT_LOCALE, { day: "2-digit", month: "short" }) : "—"; },

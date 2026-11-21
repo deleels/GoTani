@@ -626,6 +626,8 @@ def fetch_ndvi_image(polygon: FieldPolygon):
     url = sat and sat.get("latest_image")
     if not url:
         return None
+    # Phase 7: palette 4 is Agromonitoring's continuous red-yellow-green ramp (the map legend matches it).
+    url += ("&" if "?" in url else "?") + "paletteid=4"
 
     def fetch():
         try:
