@@ -106,7 +106,7 @@ ALAT       Telusuri · Log aktivitas · Staf · Pengaturan
 - POS void stays same-day only.
 - Update rules 1 and 17 in `CLAUDE.md`.
 
-## 13. First-harvest cost warning (D135)
+## 13. First-harvest cost warning (D135) ✅
 - On Analitik's margin by variety × grade and on the harvest review: "Biaya awal siklus terbebankan ke
   panen pertama" when a cycle has one harvest batch, or its first batch absorbed more than 60% of the
   cycle's absorbed cost. Warning only; COGS math unchanged.

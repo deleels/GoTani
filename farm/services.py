@@ -989,6 +989,28 @@ HARVEST_OVER_EXPECTED_PCT = Decimal("150")
 HARVEST_OVER_BATCH_AVG = Decimal("3")
 
 
+FIRST_HARVEST_SHARE = Decimal("0.6")
+
+
+def first_harvest_skewed(cycle: CropCycle) -> bool:
+    """D135 (warning only, COGS unchanged): the cycle has one harvest batch that absorbed cost, or its first batch
+    absorbed more than 60% of the cycle's absorbed cost."""
+    batches = list(cycle.harvests.order_by("harvested_at", "id").values_list("absorbed_cost_idr", flat=True))
+    total = sum(batches, ZERO)
+    if not batches or total <= 0:
+        return False
+    return len(batches) == 1 or batches[0] > total * FIRST_HARVEST_SHARE
+
+
+def first_harvest_skewed_varieties() -> set:
+    """Variety ids with at least one skewed cycle (Analitik margin by variety x grade)."""
+    ids = set()
+    for cycle in CropCycle.objects.filter(harvests__isnull=False).distinct():
+        if first_harvest_skewed(cycle):
+            ids.add(cycle.variety_id)
+    return ids
+
+
 def preview_harvest(cycle: CropCycle, high_quality_kg, low_quality_kg=ZERO) -> dict:
     """Read-only review before saving a harvest (D85): what the batch would absorb and cost per kg,
     expected vs actual yield after it, and soft warnings (> 150% of expected, > 3× the batch average)."""
@@ -1008,6 +1030,12 @@ def preview_harvest(cycle: CropCycle, high_quality_kg, low_quality_kg=ZERO) -> d
     if expected and after > expected * HARVEST_OVER_EXPECTED_PCT / 100:
         warnings.append(_("Total panen siklus menjadi %(after)s kg, lebih dari 150%% perkiraan (%(expected)s kg). Periksa angka atau satuan.")
                         % {"after": fmt_kg(after), "expected": fmt_kg(expected)})
+    if not batches and total > 0:
+        from farm.templatetags.gotani import rupiah
+
+        warnings.append(_("Biaya awal siklus terbebankan ke panen pertama: batch ini menyerap seluruh biaya siklus "
+                          "sampai sekarang (%(pool)s), jadi HPP per kg-nya tinggi dan panen berikutnya lebih murah.")
+                        % {"pool": rupiah(total)})
     avg = (summary["actual_kg"] / batches) if batches else None
     if avg and sellable > avg * HARVEST_OVER_BATCH_AVG:
         warnings.append(_("Batch ini %(kg)s kg, lebih dari 3× rata-rata batch sebelumnya (%(avg)s kg).")

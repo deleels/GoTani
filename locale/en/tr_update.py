@@ -149,4 +149,8 @@ TR = {
     "Catatan susut hanya bisa dibatalkan sampai %(days)s hari setelah dicatat.": "A spoilage entry can only be reversed up to %(days)s days after it was recorded.",
     "Tidak bisa dibatalkan: opname %(product)s tanggal %(date)s sudah disetujui setelah susut ini.": "Cannot reverse: the %(product)s stock count of %(date)s was approved after this spoilage.",
     "Pembatalan hanya bisa oleh OWNER/MANAGER sampai 3 hari, selama belum ada catatan baru.": "Only an OWNER/MANAGER can undo this, up to 3 days, while nothing new has been logged.",
+    # D135 first-harvest cost warning
+    "Biaya awal siklus terbebankan ke panen pertama. HPP panen pertama tinggi dan panen berikutnya lebih murah; COGS tidak diubah.": "Early cycle costs land on the first harvest. The first harvest's COGS is high and later harvests are cheaper; COGS is not changed.",
+    "Biaya awal siklus terbebankan ke panen pertama": "Early cycle costs land on the first harvest",
+    "Biaya awal siklus terbebankan ke panen pertama: batch ini menyerap seluruh biaya siklus sampai sekarang (%(pool)s), jadi HPP per kg-nya tinggi dan panen berikutnya lebih murah.": "Early cycle costs land on the first harvest: this batch absorbs every cycle cost so far (%(pool)s), so its COGS per kg is high and later harvests are cheaper.",
 }

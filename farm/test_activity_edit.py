@@ -70,3 +70,29 @@ class PurchasePaymentTests(TestCase):
         self.assertTrue(p.receipt.name.endswith(".pdf"))
         self.assertContains(self.client.get(reverse("farm:inputs")), "QRIS")
         p.receipt.delete(save=False)
+
+
+class FirstHarvestSkewTests(TestCase):
+    """D135: warning only; COGS unchanged."""
+
+    def test_skew_rules(self):
+        from decimal import Decimal as D
+
+        from farm.models import HarvestBatch
+
+        el = FarmElement.objects.create(name="GH", element_type="GREENHOUSE", area_m2=10)
+        cycle = CropCycle.objects.create(element=el, variety=Variety.objects.create(name="M", crop="M"),
+                                         stage="HARVESTING", is_active=True, planting_start_date=timezone.localdate())
+        self.assertFalse(services.first_harvest_skewed(cycle))
+
+        def batch(cost):
+            return HarvestBatch.objects.create(cycle=cycle, high_quality_kg=10, low_quality_kg=0, harvest_loss_kg=0,
+                                               absorbed_cost_idr=D(cost), unit_cogs_high_idr=0, unit_cogs_low_idr=0,
+                                               harvested_at=timezone.now())
+        batch(1000)
+        self.assertTrue(services.first_harvest_skewed(cycle))
+        batch(500)
+        self.assertTrue(services.first_harvest_skewed(cycle))  # 1000 of 1500 > 60%
+        batch(500)
+        self.assertFalse(services.first_harvest_skewed(cycle))  # 1000 of 2000 = 50%
+        self.assertEqual(services.first_harvest_skewed_varieties(), set())

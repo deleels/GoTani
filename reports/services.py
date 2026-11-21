@@ -391,8 +391,13 @@ def dashboard_metrics(start, end) -> dict:
         row["kg"] += line.qty_kg
         row["revenue"] += line.net_revenue_idr
         row["cogs"] += sum((a.qty_kg * a.unit_cogs_idr for a in line.allocations.all()), ZERO)
+    from farm.models import Variety
+    from farm.services import first_harvest_skewed_varieties
+
+    skewed = {str(v) for v in Variety.objects.filter(pk__in=first_harvest_skewed_varieties())}
     margin_rows = []
     for row in sorted(by_product.values(), key=lambda r: (r["variety"], r["grade"])):
+        row["first_harvest_skew"] = str(row["variety"]) in skewed  # D135
         row["revenue"], row["cogs"] = _money(row["revenue"]), _money(row["cogs"])
         row["margin"] = row["revenue"] - row["cogs"]
         row["margin_pct"] = (row["margin"] / row["revenue"] * 100) if row["revenue"] else None

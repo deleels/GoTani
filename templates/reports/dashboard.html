@@ -106,7 +106,7 @@
       <thead><tr><th>{% translate "Varietas" %}</th><th>{% translate "Grade" %}</th><th class="num">{% translate "Kg terjual" %}</th><th class="num">{% translate "Pendapatan" %}</th><th class="num">{% translate "HPP" %}</th><th class="num">{% translate "Margin" %}</th><th class="num">%</th></tr></thead>
       <tbody>
       {% for r in m.margin_by_product %}
-        <tr><td>{{ r.variety }}</td><td>{{ r.grade }}</td><td class="num">{{ r.kg|kg }}</td><td class="num">{{ r.revenue|rupiah }}</td><td class="num">{{ r.cogs|rupiah }}</td><td class="num"><b>{{ r.margin|rupiah }}</b></td><td class="num">{{ r.margin_pct|pct }}</td></tr>
+        <tr><td>{{ r.variety }}{% if r.first_harvest_skew %} <span class="app-text-warn" title="{% translate "Biaya awal siklus terbebankan ke panen pertama. HPP panen pertama tinggi dan panen berikutnya lebih murah; COGS tidak diubah." %}">⚠ {% translate "Biaya awal siklus terbebankan ke panen pertama" %}</span>{% endif %}</td><td>{{ r.grade }}</td><td class="num">{{ r.kg|kg }}</td><td class="num">{{ r.revenue|rupiah }}</td><td class="num">{{ r.cogs|rupiah }}</td><td class="num"><b>{{ r.margin|rupiah }}</b></td><td class="num">{{ r.margin_pct|pct }}</td></tr>
       {% empty %}<tr><td colspan="7" class="app-muted">{% translate "Tidak ada penjualan pada periode ini." %}</td></tr>{% endfor %}
       </tbody>
     </table>

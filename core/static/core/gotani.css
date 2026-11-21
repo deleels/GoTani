@@ -972,3 +972,6 @@ html { scrollbar-gutter: stable; }
 /* D132: Ubah + Hapus side by side */
 .app-rowactions { white-space: nowrap; }
 .app-rowactions > * { display: inline-block; margin-left: .25rem; }
+
+/* D135: first-harvest cost skew note */
+.app-text-warn { display: block; font-size: .8125rem; color: var(--warning-ink); }

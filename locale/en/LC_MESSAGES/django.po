@@ -1491,6 +1491,10 @@ msgid "Berat per karung harus lebih dari 0 kg."
 msgstr "Weight per sack must be more than 0 kg."
 
 #: farm\services.py
+msgid "Biaya awal siklus terbebankan ke panen pertama: batch ini menyerap seluruh biaya siklus sampai sekarang (%(pool)s), jadi HPP per kg-nya tinggi dan panen berikutnya lebih murah."
+msgstr "Early cycle costs land on the first harvest: this batch absorbs every cycle cost so far (%(pool)s), so its COGS per kg is high and later harvests are cheaper."
+
+#: farm\services.py
 msgid "Biaya elemen harus memilih elemen."
 msgstr "A plot expense needs a plot."
 
@@ -6593,6 +6597,14 @@ msgstr "No cash in during this period."
 #: templates\reports\dashboard.html
 msgid "Berjalan"
 msgstr "Running"
+
+#: templates\reports\dashboard.html
+msgid "Biaya awal siklus terbebankan ke panen pertama"
+msgstr "Early cycle costs land on the first harvest"
+
+#: templates\reports\dashboard.html
+msgid "Biaya awal siklus terbebankan ke panen pertama. HPP panen pertama tinggi dan panen berikutnya lebih murah; COGS tidak diubah."
+msgstr "Early cycle costs land on the first harvest. The first harvest's COGS is high and later harvests are cheaper; COGS is not changed."
 
 #: templates\reports\dashboard.html
 msgid "Biaya disetujui per kategori"
