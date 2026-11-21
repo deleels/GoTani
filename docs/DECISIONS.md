@@ -204,3 +204,11 @@ Decided by comparing GoTani against the FarmCloud reverse-engineering report (`f
   average days between orders, last order and an "At risk" flag when they have not ordered for more than 2× their
   usual gap (needs two orders). The customers list shows LTGP and last order and sorts by either. Every metric has
   an info chip with its meaning and formula. CAC and LTGP:CAC are left out: there is no marketing-spend data.
+- **D116 Map editing, NDVI and admin look (Phase 7 step 6).** A drawn polygon stays a draft with its name field and
+  Simpan / Batal under the map; "Ubah batas" puts a saved one in the same mode. Points drag, mid-edge handles add a
+  point, right-click (long-press) removes one (a plain click no longer does), Backspace removes the last point while
+  drawing; nothing is sent until Simpan. Shapes are a green outline with a soft fill and white round handles. The
+  NDVI image uses Agromonitoring's continuous palette (paletteid=4) with a labelled red→green legend; the NDVI
+  timeline is one green line over a soft area. The daily revenue chart drops the loss series (COGS is capped at
+  revenue) and uses solid greens. The Django admin keeps its own templates, restyled by templates/admin/base_site.html
+  and core/admin.css (Django's CSS variables mapped to design tokens), light only like the app.

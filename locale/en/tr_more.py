@@ -290,4 +290,5 @@ TR = {
     'Rimbun': 'Dense',
     'Ubah batas': 'Edit boundary',
     'Isi nama poligon.': 'Enter a field name.',
+    "← Kembali ke aplikasi": "← Back to the app",
 }

@@ -2746,6 +2746,10 @@ msgstr "Access denied"
 msgid "Ke beranda"
 msgstr "Go home"
 
+#: templates\admin\base_site.html
+msgid "← Kembali ke aplikasi"
+msgstr "← Back to the app"
+
 #: templates\base.html
 msgid "Admin Django"
 msgstr "Django admin"

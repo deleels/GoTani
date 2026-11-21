@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+{# Phase 7: the Django admin wears the GoTani design system (tokens + font) through core/admin.css; no admin library. #}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} · GoTani admin{% endblock %}
+{# Light only, like the app: drop the admin's dark stylesheet and theme switcher. #}
+{% block dark-mode-vars %}{% endblock %}
+{% block extrastyle %}{{ block.super }}
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'core/icons/favicon-32.png' %}">
+<link rel="preload" href="{% static 'core/ds/fonts/PlusJakartaSans-400.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{% static 'core/ds/fonts/PlusJakartaSans-600.woff2' %}" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{% static 'core/ds/tokens.css' %}">
+<link rel="stylesheet" href="{% static 'core/admin.css' %}">
+{% endblock %}
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}" class="gt-admin-brand"><img src="{% static 'core/icons/favicon-32.png' %}" alt="" width="28" height="28"> GoTani <span>admin</span></a></div>
+{% endblock %}
+{% block nav-global %}<a class="gt-admin-back" href="/">{% translate "← Kembali ke aplikasi" %}</a>{% endblock %}
